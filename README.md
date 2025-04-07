@@ -24,7 +24,7 @@ The application follows these architectural patterns:
 
 ## UI Design System
 
-The application implements a clean, professional UI inspired by enterprise automation platforms like UiPath:
+The application implements a clean, professional UI:
 
 - **Design Principles**:
   - Clean, minimalist aesthetic suitable for enterprise software
