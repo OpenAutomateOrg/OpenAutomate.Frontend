@@ -1,0 +1,137 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/.nyc_output
+/cypress/videos/
+/cypress/screenshots/
+/playwright-report/
+/test-results/
+
+# next.js
+/.next/
+/out/
+/.swc/
+.next.lock
+next-env.d.ts
+.next/
+.open-next/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# local env files
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+.turbo
+
+# Serverless
+.serverless/
+.serverless_nextjs/
+
+# PWA files
+**/public/workbox-*.js
+**/public/sw.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.cursor/
+
+# typescript
+*.tsbuildinfo
+
+# storybook
+/storybook-static
+build-storybook.log
+
+# Sentry
+.sentryclirc
+
+# Local History
+.history/
+.ionide
+
+# Cache
+.eslintcache
+.stylelintcache
+.cache/
+
+# Bundle analyzer
+/analyze/
+stats.html
+
+# sitemap
+public/robots.txt
+public/sitemap*.xml
+
+# MacOS
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Optional npm cache directory
+.npm
+
+# Temporary folders
+tmp/
+temp/
+
+# Generated types
+/src/types/generated/*
