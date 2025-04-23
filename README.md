@@ -31,18 +31,15 @@ The application implements a clean, professional UI:
   - Consistent spacing and sizing
   - Accessible to meet WCAG standards
   - Support for both light and dark modes
-  
 - **Component Patterns**:
   - Form components with consistent validation
   - Card-based layouts for information grouping
   - Consistent button hierarchy with enhanced hover effects
   - Table components for data presentation
-  
 - **Animation Effects**:
   - Button hover animations (scale, shadow, and y-axis translation)
   - Smooth transitions between states
   - Loading spinners for asynchronous operations
-  
 - **Page Layouts**:
   - Landing page with hero section, features, testimonials, and CTA areas
   - Dashboard with content sections and card grids
@@ -131,24 +128,24 @@ The application uses provider components for authentication and tenant context:
 
 ```tsx
 // Using authentication
-'use client';
+'use client'
 
-import { useAuth } from '@/lib/hooks/use-auth';
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export function MyComponent() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  
+  const { user, isAuthenticated, isLoading } = useAuth()
+
   // Component code
 }
 
 // Using tenant context
-'use client';
+;('use client')
 
-import { useTenant } from '@/components/providers/TenantProvider';
+import { useTenant } from '@/components/providers/TenantProvider'
 
 export function MyComponent() {
-  const { currentTenant } = useTenant();
-  
+  const { currentTenant } = useTenant()
+
   // Component code
 }
 ```
@@ -158,10 +155,10 @@ export function MyComponent() {
 The application uses shadcn/ui components with our custom styling:
 
 ```tsx
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 
 export function MyFeatureCard() {
   return (
@@ -172,7 +169,7 @@ export function MyFeatureCard() {
       </CardHeader>
       <CardContent>
         <p>Feature content</p>
-        <Button 
+        <Button
           className="transition-all duration-300 hover:translate-y-[-2px]"
           onClick={() => console.log('Button clicked')}
         >
@@ -180,7 +177,7 @@ export function MyFeatureCard() {
         </Button>
       </CardContent>
     </Card>
-  );
+  )
 }
 ```
 
@@ -189,24 +186,24 @@ export function MyFeatureCard() {
 For components that need browser APIs but also work with SSR:
 
 ```tsx
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 export function MyComponent() {
-  const [mounted, setMounted] = useState(false);
-  
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
-    setMounted(true);
-  }, []);
-  
+    setMounted(true)
+  }, [])
+
   // Use the same loading state for both server and client
   if (!mounted) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
-  
+
   // Client-side only content
-  return <div>Client content</div>;
+  return <div>Client content</div>
 }
 ```
 
@@ -215,23 +212,23 @@ export function MyComponent() {
 Use the API client for making requests to the backend:
 
 ```tsx
-import { apiClient } from '@/lib/api/client';
-import { useTenant } from '@/components/providers/TenantProvider';
+import { apiClient } from '@/lib/api/client'
+import { useTenant } from '@/components/providers/TenantProvider'
 
 export function MyComponent() {
-  const { currentTenant } = useTenant();
-  
+  const { currentTenant } = useTenant()
+
   const fetchData = async () => {
     try {
-      const response = await apiClient.get('/my-endpoint', { 
-        tenant: currentTenant 
-      });
+      const response = await apiClient.get('/my-endpoint', {
+        tenant: currentTenant,
+      })
       // Handle response
     } catch (error) {
       // Handle error
     }
-  };
-  
+  }
+
   // Component code
 }
 ```
@@ -247,8 +244,8 @@ export function MyComponent() {
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable              | Description            | Default                  |
+| --------------------- | ---------------------- | ------------------------ |
 | `NEXT_PUBLIC_API_URL` | URL of the backend API | `https://localhost:7240` |
 
 ## Deployment

@@ -10,23 +10,23 @@ type ApiError = {
 };
 
 // Default API URL - fallback to localhost in development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5252";
 
 // Default request headers
 const defaultHeaders = {
-  'Content-Type': 'application/json',
+  "Content-Type": "application/json",
 };
 
 /**
  * Generic function to make API requests
  */
 export async function fetchApi<T>(
-  endpoint: string, 
-  options: RequestInit = {}
+  endpoint: string,
+  options: RequestInit = {},
 ): Promise<T> {
-  const url = endpoint.startsWith('http') 
-    ? endpoint 
-    : `${API_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${API_URL}/${endpoint.startsWith("/") ? endpoint.slice(1) : endpoint}`;
 
   const response = await fetch(url, {
     ...options,
@@ -34,7 +34,7 @@ export async function fetchApi<T>(
       ...defaultHeaders,
       ...options.headers,
     },
-    credentials: 'include', // Include cookies for authentication
+    credentials: "include", // Include cookies for authentication
   });
 
   // Handle error responses
@@ -48,7 +48,7 @@ export async function fetchApi<T>(
       // Try to parse error details from response
       const errorBody = await response.json();
       errorData.details = errorBody.message || JSON.stringify(errorBody);
-    } catch (e) {
+    } catch {
       // If parsing fails, use status text
       errorData.details = response.statusText;
     }
@@ -62,37 +62,37 @@ export async function fetchApi<T>(
   }
 
   // Parse JSON response
-  return await response.json() as T;
+  return (await response.json()) as T;
 }
 
 /**
  * HTTP request methods with proper typing
  */
 export const api = {
-  get: <T>(endpoint: string, options?: RequestInit) => 
-    fetchApi<T>(endpoint, { ...options, method: 'GET' }),
-    
-  post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => 
-    fetchApi<T>(endpoint, { 
-      ...options, 
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined 
+  get: <T>(endpoint: string, options?: RequestInit) =>
+    fetchApi<T>(endpoint, { ...options, method: "GET" }),
+
+  post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
+    fetchApi<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => 
-    fetchApi<T>(endpoint, { 
-      ...options, 
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined 
+
+  put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
+    fetchApi<T>(endpoint, {
+      ...options,
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => 
-    fetchApi<T>(endpoint, { 
-      ...options, 
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined 
+
+  patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
+    fetchApi<T>(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  delete: <T>(endpoint: string, options?: RequestInit) => 
-    fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),
-}; 
+
+  delete: <T>(endpoint: string, options?: RequestInit) =>
+    fetchApi<T>(endpoint, { ...options, method: "DELETE" }),
+};

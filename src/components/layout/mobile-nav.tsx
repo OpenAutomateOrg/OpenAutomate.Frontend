@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Icons } from "@/components/ui/icons"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { User } from "@/types/auth"
+import * as React from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { Icons } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { User } from '@/types/auth'
 
 interface MobileNavProps {
   user: User | null
@@ -18,46 +18,33 @@ export function MobileNav({ user }: MobileNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = React.useState(false)
 
-  // Define navigation items based on authentication status
   const navItems = [
     {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: <Icons.home className="mr-2 h-4 w-4" />,
+      title: 'About Us',
+      href: '/about',
+      icon: <Icons.about className="mr-2 h-4 w-4" />,
       requiresAuth: true,
     },
     {
-      title: "Automations",
-      href: "/automations",
-      icon: <Icons.play className="mr-2 h-4 w-4" />,
+      title: 'Guides',
+      href: '/guide',
+      icon: <Icons.guide className="mr-2 h-4 w-4" />,
       requiresAuth: true,
     },
     {
-      title: "Reports",
-      href: "/reports",
-      icon: <Icons.chart className="mr-2 h-4 w-4" />,
+      title: 'Contact Us',
+      href: '/contact',
+      icon: <Icons.contact className="mr-2 h-4 w-4" />,
       requiresAuth: true,
     },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: <Icons.cog className="mr-2 h-4 w-4" />,
-      requiresAuth: true,
-    }
   ]
-
-  // Filter items based on authentication status
-  const filteredNavItems = navItems.filter(item => {
-    if (item.requiresAuth && !user) return false
-    return true
-  })
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+          className="mr-2 px-0 text-base hover:bg-orange-600/10 hover:text-orange-600 focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
         >
           <svg
             strokeWidth="1.5"
@@ -72,21 +59,21 @@ export function MobileNav({ user }: MobileNavProps) {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-            ></path>
+            />
             <path
               d="M3 12H16"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-            ></path>
+            />
             <path
               d="M3 19H21"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-            ></path>
+            />
           </svg>
           <span className="sr-only">Toggle Menu</span>
         </Button>
@@ -95,36 +82,36 @@ export function MobileNav({ user }: MobileNavProps) {
         <div className="px-7">
           <Link
             href="/"
-            className="flex items-center"
+            className="flex items-center text-lg font-bold hover:text-orange-600 transition-colors"
             onClick={() => setOpen(false)}
           >
-            <span className="font-bold">OpenAutomate</span>
+            OpenAutomate
           </Link>
         </div>
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="pl-1 pr-7">
             <nav className="flex flex-col space-y-2">
-              {filteredNavItems.map((item) => (
+              {navItems.map(({ title, href, icon }) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={href}
+                  href={href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                    pathname === item.href
-                      ? "bg-accent text-accent-foreground"
-                      : "transparent"
+                    'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
+                    pathname === href
+                      ? 'bg-orange-600/10 text-orange-600'
+                      : 'hover:bg-orange-600/10 hover:text-orange-600',
                   )}
                 >
-                  {item.icon}
-                  {item.title}
+                  {icon}
+                  {title}
                 </Link>
               ))}
               {!user && (
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
-                  className="flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground mt-4 bg-primary text-primary-foreground"
+                  className="flex items-center rounded-md px-3 py-2 text-sm font-medium mt-4 bg-orange-600 text-white hover:bg-orange-700 transition-colors"
                 >
                   <Icons.user className="mr-2 h-4 w-4" />
                   Sign In
@@ -136,4 +123,4 @@ export function MobileNav({ user }: MobileNavProps) {
       </SheetContent>
     </Sheet>
   )
-} 
+}
