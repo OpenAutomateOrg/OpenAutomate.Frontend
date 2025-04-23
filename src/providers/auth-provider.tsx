@@ -1,9 +1,20 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { authApi } from '@/lib/api/auth';
-import { useRouter } from 'next/navigation';
-import { User, AuthResponse, LoginRequest, RegisterRequest } from '@/types/auth';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { authApi } from "@/lib/api/auth";
+import { useRouter } from "next/navigation";
+import {
+  User,
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+} from "@/types/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -20,8 +31,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Local storage keys
-const TOKEN_KEY = 'openAutomate-token';
-const REFRESH_TOKEN_KEY = 'openAutomate-refresh-token';
+const TOKEN_KEY = "openAutomate-token";
+const REFRESH_TOKEN_KEY = "openAutomate-refresh-token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -33,18 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       setIsLoading(true);
-      
+
       try {
         // Check for stored token
         const token = localStorage.getItem(TOKEN_KEY);
-        
+
         if (token) {
           // If token exists, fetch current user
           const currentUser = await authApi.getCurrentUser();
           setUser(currentUser);
         }
       } catch (error) {
-        console.error('Authentication initialization failed:', error);
+        console.error("Authentication initialization failed:", error);
         // Clear tokens if initialization fails
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -52,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-    
+
     initAuth();
   }, []);
 
@@ -60,12 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await authApi.login(data);
       handleAuthResponse(response);
-    } catch (err: any) {
-      setError(err.details || err.message || 'Login failed');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Login failed");
+      } else {
+        setError("Login failed");
+      }
       throw err;
     } finally {
       setIsLoading(false);
@@ -76,12 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await authApi.register(data);
       handleAuthResponse(response);
-    } catch (err: any) {
-      setError(err.details || err.message || 'Registration failed');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Registration failed");
+      } else {
+        setError("Registration failed");
+      }
       throw err;
     } finally {
       setIsLoading(false);
@@ -91,17 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Logout function
   const logout = async () => {
     setIsLoading(true);
-    
+
     try {
       await authApi.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // Clear user and tokens
       setUser(null);
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      router.push('/login');
+      router.push("/login");
       setIsLoading(false);
     }
   };
@@ -109,22 +128,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Refresh token function
   const refreshToken = async () => {
     const currentRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    
+
     if (!currentRefreshToken) {
       setUser(null);
       return;
     }
-    
+
     try {
-      const response = await authApi.refreshToken({ refreshToken: currentRefreshToken });
+      const response = await authApi.refreshToken({
+        refreshToken: currentRefreshToken,
+      });
       handleAuthResponse(response);
     } catch (error) {
-      console.error('Failed to refresh token:', error);
+      console.error("Failed to refresh token:", error);
       // Clear user and tokens on refresh failure
       setUser(null);
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      router.push('/login');
+      router.push("/login");
     }
   };
 
@@ -133,18 +154,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Store tokens
     localStorage.setItem(TOKEN_KEY, response.token);
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-    
+
     // Set user
     setUser({
       id: response.id,
       email: response.email,
       firstName: response.firstName,
-      lastName: response.lastName
+      lastName: response.lastName,
     });
   };
 
   return (
-    <AuthContext.Provider 
+    <AuthContext.Provider
       value={{
         user,
         isLoading,
@@ -153,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshToken,
-        error
+        error,
       }}
     >
       {children}
@@ -164,10 +185,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // Hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  
+
   return context;
-}; 
+};

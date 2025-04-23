@@ -1,5 +1,5 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 /**
  * Combines multiple class names and Tailwind classes efficiently
@@ -12,10 +12,10 @@ export function cn(...inputs: ClassValue[]) {
  * Format a date object to a readable string
  */
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   }).format(date)
 }
 
@@ -23,9 +23,9 @@ export function formatDate(date: Date): string {
  * Format a currency value
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
   }).format(amount)
 }
 
@@ -36,7 +36,7 @@ export function truncateString(str: string, num: number): string {
   if (str.length <= num) {
     return str
   }
-  return str.slice(0, num) + "..."
+  return str.slice(0, num) + '...'
 }
 
 /**
@@ -51,6 +51,6 @@ export function delay(ms: number): Promise<void> {
  */
 export function snakeToCamel(str: string): string {
   return str.replace(/([-_][a-z])/g, (group) =>
-    group.toUpperCase().replace("-", "").replace("_", "")
+    group.toUpperCase().replace('-', '').replace('_', ''),
   )
 }
