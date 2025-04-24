@@ -9,7 +9,7 @@ export default function Page() {
     <div className="flex flex-1 flex-col bg-muted/20 min-h-screen">
       <div className="@container/main flex flex-1 flex-col gap-4 p-4 lg:p-6">
         {/* Search */}
-        <div className="sticky top-0 z-10 bg-background rounded-xl p-4 w-[20%] min-w-[200px]">
+        <div className=" top-0 z-10 bg-background rounded-xl p-4 w-[20%] min-w-[200px]">
           <SearchBar />
         </div>
 
