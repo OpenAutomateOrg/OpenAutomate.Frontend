@@ -12,7 +12,6 @@ import {
   Image,
   Laptop,
   Loader2,
-  LucideProps,
   Moon,
   MoreVertical,
   Pizza,
@@ -31,7 +30,10 @@ import {
   Cog,
   LogOut,
   RefreshCw,
-} from "lucide-react"
+  Newspaper,
+  NotebookPen,
+  Mail,
+} from 'lucide-react'
 
 export type Icon = LucideIcon
 
@@ -67,4 +69,7 @@ export const Icons = {
   cog: Cog,
   logout: LogOut,
   refresh: RefreshCw,
-} 
+  about: Newspaper,
+  guide: NotebookPen,
+  contact: Mail,
+}
