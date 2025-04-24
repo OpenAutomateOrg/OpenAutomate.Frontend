@@ -158,114 +158,128 @@ export function ChartAreaInteractive() {
   })
 
   return (
-    <Card className="@container/card">
-      <CardHeader className="relative">
-        <CardTitle>Total Visitors</CardTitle>
-        <CardDescription></CardDescription>
-        <div className="absolute  top-4 w-full flex gap-2 justify-between px-5">
-          <div className="flex gap-4 flex-wrap my-4">
-            <input
-              type="date"
-              onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
-              className="rounded-md border px-2 py-1"
-            />
-          </div>
-          <div className="flex gap-4 flex-wrap my-4">
-            <ToggleGroup
-              type="single"
-              value={timeRange}
-              onValueChange={setTimeRange}
-              variant="outline"
-              className="@[767px]/card:flex hidden"
-            >
-              <ToggleGroupItem value="90d" className="h-8 px-2.5">
-                Last 3 months
-              </ToggleGroupItem>
-              <ToggleGroupItem value="30d" className="h-8 px-2.5">
-                Last 30 days
-              </ToggleGroupItem>
-              <ToggleGroupItem value="7d" className="h-8 px-2.5">
-                Last 7 days
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="@[767px]/card:hidden flex w-40" aria-label="Select a value">
-                <SelectValue placeholder="Last 3 months" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="90d" className="rounded-lg">
+    <div className="*:data-[slot=card]:shadow-xs  grid grid-cols-1 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card">
+      <Card data-slot="card" className="@container/card">
+        <CardHeader className="relative">
+          <CardTitle>Total Visitors</CardTitle>
+          <CardDescription></CardDescription>
+          <div className="absolute top-4 w-full flex gap-2 justify-between px-5">
+            <div className="flex gap-4 flex-wrap my-4">
+              <input
+                type="date"
+                onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
+                className="rounded-md border hover:border-orange-600 px-2 py-1"
+              />
+            </div>
+            <div className="flex gap-4 flex-wrap my-4">
+              <ToggleGroup
+                type="single"
+                value={timeRange}
+                onValueChange={setTimeRange}
+                variant="outline"
+                className="@[767px]/card:flex hidden"
+              >
+                <ToggleGroupItem
+                  value="90d"
+                  className="h-8 px-2.5 data-[state=on]:bg-orange-600 data-[state=on]:text-white"
+                >
                   Last 3 months
-                </SelectItem>
-                <SelectItem value="30d" className="rounded-lg">
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="30d"
+                  className="h-8 px-2.5 data-[state=on]:bg-orange-600 data-[state=on]:text-white"
+                >
                   Last 30 days
-                </SelectItem>
-                <SelectItem value="7d" className="rounded-lg">
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="7d"
+                  className="h-8 px-2.5 data-[state=on]:bg-orange-600 data-[state=on]:text-white"
+                >
                   Last 7 days
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger
+                  className="@[767px]/card:hidden flex w-40 border border-orange-600 rounded-md px-2 py-1"
+                  aria-label="Select a value"
+                >
+                  <SelectValue placeholder="Last 3 months" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="90d" className="rounded-lg">
+                    Last 3 months
+                  </SelectItem>
+                  <SelectItem value="30d" className="rounded-lg">
+                    Last 30 days
+                  </SelectItem>
+                  <SelectItem value="7d" className="rounded-lg">
+                    Last 7 days
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={1.0} />
-                <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value)
-                return date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  }}
-                  indicator="dot"
-                />
-              }
-            />
-            <Area
-              dataKey="mobile"
-              type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
-              stackId="a"
-            />
-            <Area
-              dataKey="desktop"
-              type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
-              stackId="a"
-            />
-          </AreaChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className=" px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+            <AreaChart data={filteredData}>
+              <defs>
+                <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ea580c" stopOpacity={1.0} />
+                  <stop offset="95%" stopColor="#ea580c" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ea580c" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#ea580c" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  const date = new Date(value)
+                  return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => {
+                      return new Date(value).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    }}
+                    indicator="dot"
+                  />
+                }
+              />
+              <Area
+                dataKey="mobile"
+                type="natural"
+                fill="url(#fillMobile)"
+                stroke="#ea580c"
+                stackId="a"
+              />
+              <Area
+                dataKey="desktop"
+                type="natural"
+                fill="url(#fillDesktop)"
+                stroke="#ea580c"
+                stackId="a"
+              />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
