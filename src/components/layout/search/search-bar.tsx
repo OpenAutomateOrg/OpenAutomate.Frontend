@@ -25,7 +25,7 @@ export function SearchBar() {
       <div className="relative flex-1">
         <ArrowDown className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <select
-          className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-8 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full appearance-none rounded-md border border-input hover:border-orange-600 py-2 pl-8 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
           value={selectedValue}
           onChange={(e) => setSelectedValue(e.target.value)}
         >

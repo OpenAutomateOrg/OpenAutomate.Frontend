@@ -158,7 +158,7 @@ export function ChartAreaInteractive() {
   })
 
   return (
-    <div className="*:data-[slot=card]:shadow-xs  grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card lg:px-6">
+    <div className="*:data-[slot=card]:shadow-xs  grid grid-cols-1 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card">
       <Card data-slot="card" className="@container/card">
         <CardHeader className="relative">
           <CardTitle>Total Visitors</CardTitle>
@@ -168,7 +168,7 @@ export function ChartAreaInteractive() {
               <input
                 type="date"
                 onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
-                className="rounded-md border border-orange-600 px-2 py-1"
+                className="rounded-md border hover:border-orange-600 px-2 py-1"
               />
             </div>
             <div className="flex gap-4 flex-wrap my-4">
@@ -220,8 +220,8 @@ export function ChartAreaInteractive() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-          <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+        <CardContent className=" px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
             <AreaChart data={filteredData}>
               <defs>
                 <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
