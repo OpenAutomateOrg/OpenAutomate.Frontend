@@ -10,7 +10,8 @@
     "lint:fix": "next lint --fix --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "test": "jest --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
