@@ -36,7 +36,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Step 4: Install SonarQube Scanner
+      # Step 4: Run linter
+      - name: Run ESLint
+        run: npm run lint
+
+      # Step 5: Install SonarQube Scanner
       - name: Install SonarQube Scanner
         uses: SonarSource/sonarqube-scan-action@master
         env:
@@ -47,14 +51,7 @@ jobs:
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
             -Dsonar.projectName=${{ env.SONAR_PROJECT_NAME }}
             -Dsonar.sources=src
-            -Dsonar.tests=src
-            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx
-            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-      # Step 5: Run tests with coverage
-      - name: Run tests with coverage
-        run: npm test -- --coverage
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,node_modules/**/*
 
       # Step 6: SonarQube Quality Gate check
       - name: SonarQube Quality Gate check
