@@ -70,9 +70,9 @@ export function LoginForm() {
         rememberMe: data.rememberMe,
       })
       router.push(returnUrl)
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error('Login failed', err)
-      setError(err?.message || authError || 'Invalid email or password')
+      setError(err instanceof Error ? err.message : authError || 'Invalid email or password')
     } finally {
       setIsLoading(false)
     }

@@ -124,9 +124,7 @@ const userData = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Use the auth context to check if the user is an admin
-  const { user } = useAuth()
-  
+  // No need to get user if it's not being used
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
       <SidebarHeader>

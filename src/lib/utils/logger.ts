@@ -23,7 +23,7 @@ const styles: LogStyles = {
 /**
  * Logs a message with optional styling based on log level
  */
-export const log = (message: string, level: LogLevel = 'info', ...data: any[]) => {
+export const log = (message: string, level: LogLevel = 'info', ...data: unknown[]) => {
   // Only log in development environment
   if (process.env.NODE_ENV !== 'production') {
     const style = styles[level] || styles.default;
@@ -34,28 +34,28 @@ export const log = (message: string, level: LogLevel = 'info', ...data: any[]) =
 /**
  * Logs a success message
  */
-export const logSuccess = (message: string, ...data: any[]) => {
+export const logSuccess = (message: string, ...data: unknown[]) => {
   log(message, 'success', ...data);
 };
 
 /**
  * Logs an error message
  */
-export const logError = (message: string, ...data: any[]) => {
+export const logError = (message: string, ...data: unknown[]) => {
   log(message, 'error', ...data);
 };
 
 /**
  * Logs a warning message
  */
-export const logWarning = (message: string, ...data: any[]) => {
+export const logWarning = (message: string, ...data: unknown[]) => {
   log(message, 'warning', ...data);
 };
 
 /**
  * Logs authentication-related messages with special styling
  */
-export const logAuth = (message: string, data?: any) => {
+export const logAuth = (message: string, data?: Record<string, unknown> | string | number | boolean) => {
   if (process.env.NODE_ENV !== 'production') {
     console.group(`%c🔐 ${message}`, styles.group);
     

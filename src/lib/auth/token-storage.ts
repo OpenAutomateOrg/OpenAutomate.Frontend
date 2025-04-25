@@ -3,13 +3,16 @@
  * Implements a memory-first approach with localStorage fallback for resilience
  */
 
+// Import user type
+import type { User } from '@/types/auth';
+
 // Constants
 const TOKEN_KEY = 'oa_auth_token';
 const USER_KEY = 'oa_user';
 
 // In-memory storage (more secure than localStorage)
 let inMemoryToken: string | null = null;
-let inMemoryUser: any = null;
+let inMemoryUser: User | null = null;
 
 /**
  * Gets the authentication token, prioritizing in-memory storage
@@ -64,7 +67,7 @@ export const setAuthToken = (token: string | null): void => {
 /**
  * Gets the stored user data
  */
-export const getUser = (): any | null => {
+export const getUser = (): User | null => {
   // First check in-memory
   if (inMemoryUser) {
     return inMemoryUser;
@@ -76,7 +79,7 @@ export const getUser = (): any | null => {
       const storedUser = localStorage.getItem(USER_KEY);
       if (storedUser) {
         try {
-          const parsedUser = JSON.parse(storedUser);
+          const parsedUser = JSON.parse(storedUser) as User;
           // Save back to memory
           inMemoryUser = parsedUser;
           return parsedUser;
@@ -96,7 +99,7 @@ export const getUser = (): any | null => {
 /**
  * Sets the user data
  */
-export const setUser = (user: any | null): void => {
+export const setUser = (user: User | null): void => {
   // Update in-memory
   inMemoryUser = user;
 

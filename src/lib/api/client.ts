@@ -24,7 +24,7 @@ const defaultHeaders = {
 // Keep track of if we're currently refreshing the token
 let isRefreshing = false;
 // Queue of requests waiting for token refresh
-let failedQueue: { resolve: Function; reject: Function }[] = [];
+let failedQueue: { resolve: (token: string | null) => void; reject: (error: Error) => void }[] = [];
 
 // Helper to process the queue of pending requests
 const processQueue = (error: Error | null, token: string | null = null) => {

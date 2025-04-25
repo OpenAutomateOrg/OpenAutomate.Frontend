@@ -4,7 +4,7 @@
  */
 
 import logger from './logger';
-import { SystemRole } from '@/types/auth';
+import { SystemRole, User } from '@/types/auth';
 
 /**
  * Gets a user-friendly display name for a system role
@@ -21,7 +21,7 @@ const getSystemRoleName = (role: SystemRole): string => {
  * @param user The authenticated user information
  * @param token Token information (boolean indicators only for security)
  */
-export const logLoginSuccess = (user: any, token: { 
+export const logLoginSuccess = (user: User, token: { 
   received: boolean;
   refreshTokenReceived: boolean;
   expiration?: string 

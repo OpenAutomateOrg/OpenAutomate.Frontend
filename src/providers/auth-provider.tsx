@@ -12,7 +12,6 @@ import { authApi } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
 import {
   User,
-  AuthResponse,
   LoginRequest,
   RegisterRequest,
   SystemRole
