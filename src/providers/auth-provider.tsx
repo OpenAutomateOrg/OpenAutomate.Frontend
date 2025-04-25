@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import { authApi } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
@@ -14,31 +15,121 @@ import {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  SystemRole
 } from "@/types/auth";
+import {
+  getAuthToken,
+  setAuthToken,
+  getUser,
+  setUser,
+  clearAuthData,
+} from "@/lib/auth/token-storage";
+import logger from "@/lib/utils/logger";
+import authLogger from "@/lib/utils/auth-logger";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isSystemAdmin: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  refreshToken: () => Promise<boolean>;
   error: string | null;
 }
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Local storage keys
-const TOKEN_KEY = "openAutomate-token";
-const REFRESH_TOKEN_KEY = "openAutomate-refresh-token";
+// Token refresh interval (14 minutes - just before the 15 minute expiration)
+const TOKEN_REFRESH_INTERVAL = 14 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Computed property for system admin status
+  const isSystemAdmin = user?.systemRole === SystemRole.Admin;
+
+  // Refresh token implementation
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await authApi.refreshToken();
+      
+      // Update token in storage
+      setAuthToken(response.token);
+      
+      // Update user if it exists in the response
+      const userToSet = response.user || {
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        systemRole: response.systemRole || SystemRole.User
+      };
+      
+      setUser(userToSet);
+      setUserState(userToSet);
+      logger.success("Token refreshed successfully");
+      return true;
+    } catch (error) {
+      logger.error("Token refresh failed:", error);
+      // Clear auth data on refresh failure
+      clearAuthData();
+      setUserState(null);
+      return false;
+    }
+  }, []);
+
+  // Set up token refresh on interval and tab focus
+  useEffect(() => {
+    let refreshInterval: NodeJS.Timeout | null = null;
+
+    // Only set up refresh if user is authenticated
+    if (user) {
+      // Set up interval for token refresh
+      refreshInterval = setInterval(() => {
+        refreshToken();
+      }, TOKEN_REFRESH_INTERVAL);
+
+      // Set up focus event for token refresh
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          refreshToken();
+        }
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        if (refreshInterval) clearInterval(refreshInterval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      };
+    }
+
+    return () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
+  }, [user, refreshToken]);
+
+  // Handle token expired events
+  useEffect(() => {
+    const handleTokenExpired = () => {
+      logger.warning("Authentication token expired");
+      clearAuthData();
+      setUserState(null);
+      router.push("/login");
+    };
+
+    window.addEventListener("auth:token-expired", handleTokenExpired);
+
+    return () => {
+      window.removeEventListener("auth:token-expired", handleTokenExpired);
+    };
+  }, [router]);
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -47,25 +138,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         // Check for stored token
-        const token = localStorage.getItem(TOKEN_KEY);
+        const token = getAuthToken();
+        const userData = getUser();
 
-        if (token) {
-          // If token exists, fetch current user
-          const currentUser = await authApi.getCurrentUser();
-          setUser(currentUser);
+        if (token && userData) {
+          // If token and user exist, set user state
+          setUserState(userData);
+          logger.log("User restored from storage", "info", userData);
+          
+          // After setting user from storage, attempt to get fresh user data
+          try {
+            const currentUser = await authApi.getCurrentUser();
+            setUser(currentUser);
+            setUserState(currentUser);
+            logger.success("User data refreshed from API");
+          } catch (error) {
+            logger.warning("Failed to get current user, attempting token refresh");
+            // If fetching current user fails, try to refresh the token
+            const refreshed = await refreshToken();
+            if (!refreshed) {
+              clearAuthData();
+              setUserState(null);
+            }
+          }
         }
       } catch (error) {
-        console.error("Authentication initialization failed:", error);
+        logger.error("Authentication initialization failed:", error);
         // Clear tokens if initialization fails
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        clearAuthData();
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [refreshToken]);
 
   // Login function
   const login = async (data: LoginRequest) => {
@@ -74,12 +181,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await authApi.login(data);
-      handleAuthResponse(response);
+      
+      // Store token and user
+      setAuthToken(response.token);
+      
+      // Use user from response or create from response fields
+      const userData = response.user || {
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        systemRole: response.systemRole || SystemRole.User
+      };
+      
+      setUser(userData);
+      setUserState(userData);
+      
+      // Log authentication response for debugging with visually enhanced output
+      authLogger.loginSuccess(userData, {
+        received: !!response.token,
+        refreshTokenReceived: !!response.refreshToken,
+        expiration: response.refreshTokenExpiration
+      });
+      
+      // Also log with standard logger
+      logger.auth("Authentication Successful", {
+        user: {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          systemRole: userData.systemRole !== undefined ? 
+            `${SystemRole[userData.systemRole]} (${userData.systemRole})` : 'Not assigned'
+        },
+        authDetails: {
+          tokenReceived: !!response.token,
+          refreshTokenReceived: !!response.refreshToken,
+          tokenExpiration: response.refreshTokenExpiration
+        }
+      });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Login failed");
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorMessage = (err.message as string) || "Login failed";
+        setError(errorMessage);
+        logger.error("Login failed:", errorMessage);
       } else {
         setError("Login failed");
+        logger.error("Login failed: Unknown error");
       }
       throw err;
     } finally {
@@ -94,12 +242,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await authApi.register(data);
-      handleAuthResponse(response);
+      
+      // Store token and user
+      setAuthToken(response.token);
+      
+      // Use user from response or create from response fields
+      const userData = response.user || {
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        systemRole: response.systemRole || SystemRole.User
+      };
+      
+      setUser(userData);
+      setUserState(userData);
+      
+      // Log registration success
+      logger.auth("Registration Successful", {
+        user: {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          systemRole: userData.systemRole !== undefined ? 
+            `${SystemRole[userData.systemRole]} (${userData.systemRole})` : 'Not assigned'
+        },
+        tokenReceived: !!response.token
+      });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Registration failed");
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorMessage = (err.message as string) || "Registration failed";
+        setError(errorMessage);
+        logger.error("Registration failed:", errorMessage);
       } else {
         setError("Registration failed");
+        logger.error("Registration failed: Unknown error");
       }
       throw err;
     } finally {
@@ -113,55 +291,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       await authApi.logout();
+      authLogger.logout();
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error:", error);
     } finally {
       // Clear user and tokens
-      setUser(null);
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      clearAuthData();
+      setUserState(null);
       router.push("/login");
       setIsLoading(false);
     }
-  };
-
-  // Refresh token function
-  const refreshToken = async () => {
-    const currentRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (!currentRefreshToken) {
-      setUser(null);
-      return;
-    }
-
-    try {
-      const response = await authApi.refreshToken({
-        refreshToken: currentRefreshToken,
-      });
-      handleAuthResponse(response);
-    } catch (error) {
-      console.error("Failed to refresh token:", error);
-      // Clear user and tokens on refresh failure
-      setUser(null);
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      router.push("/login");
-    }
-  };
-
-  // Handle auth response
-  const handleAuthResponse = (response: AuthResponse) => {
-    // Store tokens
-    localStorage.setItem(TOKEN_KEY, response.token);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-
-    // Set user
-    setUser({
-      id: response.id,
-      email: response.email,
-      firstName: response.firstName,
-      lastName: response.lastName,
-    });
   };
 
   return (
@@ -170,6 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        isSystemAdmin,
         login,
         register,
         logout,
