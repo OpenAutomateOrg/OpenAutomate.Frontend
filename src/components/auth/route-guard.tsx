@@ -50,7 +50,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
   if (isLoading) {
     return (
       <div className="mx-auto flex h-full w-full flex-col items-center justify-center">
-        <Icons.spinner className="h-8 w-8 animate-spin text-orange-600" />
+        <Icons.Spinner className="h-8 w-8 animate-spin text-orange-600" />
       </div>
     )
   }

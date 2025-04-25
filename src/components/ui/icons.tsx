@@ -40,7 +40,7 @@ export type Icon = LucideIcon
 export const Icons = {
   logo: Command,
   close: X,
-  spinner: Loader2,
+  Spinner: Loader2,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   trash: Trash,
