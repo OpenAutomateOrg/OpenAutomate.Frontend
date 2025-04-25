@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserState(userToSet);
       logger.success("Token refreshed successfully");
       return true;
-    } catch (error) {
-      logger.error("Token refresh failed:", error);
+    } catch (err) {
+      logger.error("Token refresh failed:", err);
       // Clear auth data on refresh failure
       clearAuthData();
       setUserState(null);
@@ -151,8 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(currentUser);
             setUserState(currentUser);
             logger.success("User data refreshed from API");
-          } catch (error) {
-            logger.warning("Failed to get current user, attempting token refresh");
+          } catch (err) {
+            logger.warning("Failed to get current user, attempting token refresh", err);
             // If fetching current user fails, try to refresh the token
             const refreshed = await refreshToken();
             if (!refreshed) {
@@ -161,8 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         }
-      } catch (error) {
-        logger.error("Authentication initialization failed:", error);
+      } catch (err) {
+        logger.error("Authentication initialization failed:", err);
         // Clear tokens if initialization fails
         clearAuthData();
       } finally {
@@ -291,8 +291,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
       authLogger.logout();
-    } catch (error) {
-      logger.error("Logout error:", error);
+    } catch (err) {
+      logger.error("Logout error:", err);
     } finally {
       // Clear user and tokens
       clearAuthData();

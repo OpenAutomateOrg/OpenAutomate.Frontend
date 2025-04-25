@@ -21,7 +21,6 @@ import { NavSecondary } from '@/components/layout/sidebar/nav-secondary'
 import { NavUser } from '@/components/layout/sidebar/nav-user'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import { NavOrganization } from '@/components/layout/sidebar/nav-organization'
-import { useAuth } from '@/providers/auth-provider'
 import { RoleBasedContent } from '@/components/auth/role-based-content'
 
 // Common navigation items for all users
