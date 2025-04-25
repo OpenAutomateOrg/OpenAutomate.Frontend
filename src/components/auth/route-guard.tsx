@@ -49,7 +49,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="mx-auto flex h-full w-full flex-col items-center justify-center">
         <Icons.spinner className="h-8 w-8 animate-spin text-orange-600" />
       </div>
     )
