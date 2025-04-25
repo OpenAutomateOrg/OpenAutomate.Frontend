@@ -20,7 +20,7 @@ import {
   getAuthToken,
   setAuthToken,
   getUser,
-  setUser,
+  setUser as setStoredUser,
   clearAuthData,
 } from "@/lib/auth/token-storage";
 import logger from "@/lib/utils/logger";
@@ -45,7 +45,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_REFRESH_INTERVAL = 14 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUserState] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -70,15 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         systemRole: response.systemRole || SystemRole.User
       };
       
+      // Update in storage and local state
+      setStoredUser(userToSet);
       setUser(userToSet);
-      setUserState(userToSet);
       logger.success("Token refreshed successfully");
       return true;
     } catch (err) {
       logger.error("Token refresh failed:", err);
       // Clear auth data on refresh failure
       clearAuthData();
-      setUserState(null);
+      setUser(null);
       return false;
     }
   }, []);
@@ -119,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleTokenExpired = () => {
       logger.warning("Authentication token expired");
       clearAuthData();
-      setUserState(null);
+      setUser(null);
       router.push("/login");
     };
 
@@ -142,14 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (token && userData) {
           // If token and user exist, set user state
-          setUserState(userData);
+          setUser(userData);
           logger.log("User restored from storage", "info", userData);
           
           // After setting user from storage, attempt to get fresh user data
           try {
             const currentUser = await authApi.getCurrentUser();
             setUser(currentUser);
-            setUserState(currentUser);
             logger.success("User data refreshed from API");
           } catch (err) {
             logger.warning("Failed to get current user, attempting token refresh", err);
@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const refreshed = await refreshToken();
             if (!refreshed) {
               clearAuthData();
-              setUserState(null);
+              setUser(null);
             }
           }
         }
@@ -193,8 +193,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         systemRole: response.systemRole || SystemRole.User
       };
       
+      // Update in storage and local state
+      setStoredUser(userData);
       setUser(userData);
-      setUserState(userData);
       
       // Log authentication response for debugging with visually enhanced output
       authLogger.loginSuccess(userData, {
@@ -254,8 +255,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         systemRole: response.systemRole || SystemRole.User
       };
       
+      // Update in storage and local state
+      setStoredUser(userData);
       setUser(userData);
-      setUserState(userData);
       
       // Log registration success
       logger.auth("Registration Successful", {
@@ -296,7 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       // Clear user and tokens
       clearAuthData();
-      setUserState(null);
+      setUser(null);
       router.push("/login");
       setIsLoading(false);
     }

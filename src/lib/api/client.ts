@@ -39,6 +39,64 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 /**
+ * Create API error object from response
+ */
+const createApiError = async (response: Response): Promise<ApiError> => {
+  const errorData: ApiError = {
+    message: response.statusText,
+    status: response.status,
+  };
+
+  try {
+    // Try to parse error details from response
+    const errorBody = await response.json();
+    errorData.details = errorBody.message || JSON.stringify(errorBody);
+  } catch {
+    // If parsing fails, use status text
+    errorData.details = response.statusText;
+  }
+
+  return errorData;
+};
+
+/**
+ * Notify the app about token expiration
+ */
+const notifyTokenExpired = (): void => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('auth:token-expired'));
+  }
+};
+
+/**
+ * Handle network errors
+ */
+const handleNetworkError = (error: unknown): never => {
+  if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+    const apiError: ApiError = {
+      message: 'Network error. Please check your connection.',
+      status: 0,
+      details: error.message
+    };
+    throw apiError;
+  }
+  throw error;
+};
+
+/**
+ * Process successful response
+ */
+const processSuccessResponse = async <T>(response: Response): Promise<T> => {
+  // Return empty object for 204 No Content responses
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  // Parse JSON response
+  return (await response.json()) as T;
+};
+
+/**
  * Attempt to refresh the authentication token
  */
 const refreshToken = async (): Promise<string | null> => {
@@ -70,17 +128,59 @@ const refreshToken = async (): Promise<string | null> => {
 };
 
 /**
- * Generic function to make API requests
+ * Handle 401 unauthorized response
  */
-export async function fetchApi<T>(
+const handle401Response = async <T>(
   endpoint: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const url = endpoint.startsWith("http")
-    ? endpoint
-    : `${API_URL}/${endpoint.startsWith("/") ? endpoint.slice(1) : endpoint}`;
+  url: string,
+  options: RequestInit,
+  headers: Record<string, string>
+): Promise<T | null> => {
+  // Skip token refresh for login and refresh-token endpoints
+  if (endpoint.includes('refresh-token') || endpoint.includes('login')) {
+    notifyTokenExpired();
+    return null;
+  }
 
-  // Add authorization header if token exists and not already set
+  try {
+    const newToken = await refreshToken();
+    if (!newToken) return null;
+
+    // Retry the original request with the new token
+    headers.Authorization = `Bearer ${newToken}`;
+    const retriedResponse = await fetch(url, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+      
+    if (retriedResponse.ok) {
+      return processSuccessResponse<T>(retriedResponse);
+    }
+    return null;
+  } catch (refreshError) {
+    notifyTokenExpired();
+    console.error('Token refresh failed:', refreshError);
+    return null;
+  }
+};
+
+/**
+ * Get full API URL
+ */
+const getFullUrl = (endpoint: string): string => {
+  if (endpoint.startsWith("http")) {
+    return endpoint;
+  }
+  
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
+  return `${API_URL}/${cleanEndpoint}`;
+};
+
+/**
+ * Prepare request headers
+ */
+const prepareHeaders = (options: RequestInit): Record<string, string> => {
   const headers = { ...defaultHeaders, ...options.headers } as Record<string, string>;
   
   if (!headers.Authorization) {
@@ -89,6 +189,19 @@ export async function fetchApi<T>(
       headers.Authorization = `Bearer ${token}`;
     }
   }
+  
+  return headers;
+};
+
+/**
+ * Generic function to make API requests
+ */
+export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const url = getFullUrl(endpoint);
+  const headers = prepareHeaders(options);
 
   try {
     const response = await fetch(url, {
@@ -97,77 +210,24 @@ export async function fetchApi<T>(
       credentials: "include", // Include cookies for authentication
     });
 
-    // Handle error responses
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Only attempt token refresh if not already trying to refresh
-        if (!endpoint.includes('refresh-token') && !endpoint.includes('login')) {
-          try {
-            const newToken = await refreshToken();
-            if (newToken) {
-              // Retry the original request with the new token
-              headers.Authorization = `Bearer ${newToken}`;
-              const retriedResponse = await fetch(url, {
-                ...options,
-                headers,
-                credentials: "include",
-              });
-              
-              if (retriedResponse.ok) {
-                if (retriedResponse.status === 204) {
-                  return {} as T;
-                }
-                return (await retriedResponse.json()) as T;
-              }
-            }
-          } catch (refreshError) {
-            // If refresh fails, dispatch token expired event
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('auth:token-expired'));
-            }
-            console.error('Token refresh failed:', refreshError);
-          }
-        } else {
-          // If we're already trying to refresh or login and get a 401, we're truly unauthorized
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('auth:token-expired'));
-          }
-        }
+    // Handle successful responses
+    if (response.ok) {
+      return processSuccessResponse<T>(response);
+    }
+    
+    // Handle 401 Unauthorized responses
+    if (response.status === 401) {
+      const refreshResult = await handle401Response<T>(endpoint, url, options, headers);
+      if (refreshResult) {
+        return refreshResult;
       }
-
-      const errorData: ApiError = {
-        message: response.statusText,
-        status: response.status,
-      };
-
-      try {
-        // Try to parse error details from response
-        const errorBody = await response.json();
-        errorData.details = errorBody.message || JSON.stringify(errorBody);
-      } catch {
-        // If parsing fails, use status text
-        errorData.details = response.statusText;
-      }
-
-      throw errorData;
     }
 
-    // Return empty object for 204 No Content responses
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    // Parse JSON response
-    return (await response.json()) as T;
+    // For all other error responses, create and throw an API error
+    const errorData = await createApiError(response);
+    throw errorData;
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw {
-        message: 'Network error. Please check your connection.',
-        status: 0,
-        details: error.message
-      } as ApiError;
-    }
-    throw error;
+    return handleNetworkError(error);
   }
 }
 

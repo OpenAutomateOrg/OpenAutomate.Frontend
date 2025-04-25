@@ -35,16 +35,32 @@ const Alert = React.forwardRef<
 ))
 Alert.displayName = "Alert"
 
+interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  /**
+   * The content of the alert title.
+   * This is required for accessibility.
+   */
+  children: React.ReactNode;
+}
+
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h5
-    ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
-    {...props}
-  />
-))
+  AlertTitleProps
+>(({ className, children, ...props }, ref) => {
+  if (!children) {
+    console.warn("AlertTitle must have content for accessibility");
+  }
+  
+  return (
+    <h5
+      ref={ref}
+      className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+      {...props}
+    >
+      {children}
+    </h5>
+  );
+})
 AlertTitle.displayName = "AlertTitle"
 
 const AlertDescription = React.forwardRef<

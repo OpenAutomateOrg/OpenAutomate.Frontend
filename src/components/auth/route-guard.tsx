@@ -6,7 +6,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { Icons } from '@/components/ui/icons'
 
 interface RouteGuardProps {
-  children: React.ReactNode
+  readonly children: React.ReactNode;
 }
 
 // Paths that don't require authentication

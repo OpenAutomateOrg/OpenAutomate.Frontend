@@ -30,17 +30,40 @@ import {
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
+// Button content component to simplify the conditional rendering
+interface ActionButtonContentProps {
+  readonly isLoading: boolean;
+}
+
+function ActionButtonContent({ isLoading }: ActionButtonContentProps) {
+  if (isLoading) {
+    return (
+      <>
+        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+        Updating...
+      </>
+    )
+  }
+  
+  return (
+    <>
+      <CheckCircle className="h-4 w-4 mr-2" />
+      Apply Change
+    </>
+  )
+}
+
 // User table component to reduce duplication
 interface UserTableProps {
-  users: User[]
-  isLoading: boolean
-  error: string | null
-  pendingChanges: Record<string, SystemRole>
-  changingRole: boolean
-  emptyMessage: string
-  loadingMessage: string
-  onRoleChange: (userId: string, role: string) => void
-  onApplyChange: (userId: string) => Promise<void>
+  readonly users: readonly User[];
+  readonly isLoading: boolean;
+  readonly error: string | null;
+  readonly pendingChanges: Readonly<Record<string, SystemRole>>;
+  readonly changingRole: boolean;
+  readonly emptyMessage: string;
+  readonly loadingMessage: string;
+  readonly onRoleChange: (userId: string, role: string) => void;
+  readonly onApplyChange: (userId: string) => Promise<void>;
 }
 
 function UserTable({
@@ -64,6 +87,64 @@ function UserTable({
     )
   }
 
+  // Function to render the appropriate row content based on loading and data state
+  const renderTableContent = () => {
+    if (isLoading) {
+      return (
+        <TableRow>
+          <TableCell colSpan={4} className="text-center py-4">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+              {loadingMessage}
+            </div>
+          </TableCell>
+        </TableRow>
+      )
+    }
+    
+    if (users.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+            {emptyMessage}
+          </TableCell>
+        </TableRow>
+      )
+    }
+    
+    return users.map(user => (
+      <TableRow key={user.id}>
+        <TableCell>{user.firstName} {user.lastName}</TableCell>
+        <TableCell>{user.email}</TableCell>
+        <TableCell>
+          <Select
+            defaultValue={user.systemRole === SystemRole.Admin ? "admin" : "user"}
+            onValueChange={(value) => onRoleChange(user.id, value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Administrator</SelectItem>
+              <SelectItem value="user">Standard User</SelectItem>
+            </SelectContent>
+          </Select>
+        </TableCell>
+        <TableCell>
+          {pendingChanges[user.id] !== undefined && (
+            <Button 
+              onClick={() => onApplyChange(user.id)}
+              disabled={changingRole}
+              size="sm"
+            >
+              <ActionButtonContent isLoading={changingRole} />
+            </Button>
+          )}
+        </TableCell>
+      </TableRow>
+    ))
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -75,64 +156,7 @@ function UserTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={4} className="text-center py-4">
-              <div className="flex items-center justify-center">
-                <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                {loadingMessage}
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : users.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        ) : (
-          users.map(user => (
-            <TableRow key={user.id}>
-              <TableCell>{user.firstName} {user.lastName}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Select
-                  defaultValue={user.systemRole === SystemRole.Admin ? "admin" : "user"}
-                  onValueChange={(value) => onRoleChange(user.id, value)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="user">Standard User</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                {pendingChanges[user.id] !== undefined && (
-                  <Button 
-                    onClick={() => onApplyChange(user.id)}
-                    disabled={changingRole}
-                    size="sm"
-                  >
-                    {changingRole ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Apply Change
-                      </>
-                    )}
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))
-        )}
+        {renderTableContent()}
       </TableBody>
     </Table>
   )

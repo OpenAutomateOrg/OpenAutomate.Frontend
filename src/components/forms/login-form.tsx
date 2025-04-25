@@ -38,7 +38,7 @@ export function LoginForm() {
   const [error, setError] = React.useState<string | null>(null)
 
   // Check for return URL or expired token
-  const returnUrl = searchParams.get('returnUrl') || '/dashboard'
+  const returnUrl = searchParams.get('returnUrl') ?? '/dashboard'
   const isExpired = searchParams.get('expired') === 'true'
 
   // Show expired token message if needed
@@ -70,9 +70,9 @@ export function LoginForm() {
         rememberMe: data.rememberMe,
       })
       router.push(returnUrl)
-    } catch (err: Error | unknown) {
+    } catch (err: unknown) {
       console.error('Login failed', err)
-      setError(err instanceof Error ? err.message : authError || 'Invalid email or password')
+      setError(err instanceof Error ? err.message : authError ?? 'Invalid email or password')
     } finally {
       setIsLoading(false)
     }
