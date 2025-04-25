@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { AdminRouteGuard } from '@/components/auth/admin-route-guard'
 import { useSystemRoles } from '@/hooks/useSystemRoles'
-import { SystemRole } from '@/types/auth'
+import { SystemRole, User } from '@/types/auth'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -29,6 +29,114 @@ import {
 } from '@/components/ui/select'
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+
+// User table component to reduce duplication
+interface UserTableProps {
+  users: User[]
+  isLoading: boolean
+  error: string | null
+  pendingChanges: Record<string, SystemRole>
+  changingRole: boolean
+  emptyMessage: string
+  loadingMessage: string
+  onRoleChange: (userId: string, role: string) => void
+  onApplyChange: (userId: string) => Promise<void>
+}
+
+function UserTable({
+  users,
+  isLoading,
+  error,
+  pendingChanges,
+  changingRole,
+  emptyMessage,
+  loadingMessage,
+  onRoleChange,
+  onApplyChange
+}: UserTableProps) {
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>System Role</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={4} className="text-center py-4">
+              <div className="flex items-center justify-center">
+                <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                {loadingMessage}
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : users.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        ) : (
+          users.map(user => (
+            <TableRow key={user.id}>
+              <TableCell>{user.firstName} {user.lastName}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <Select
+                  defaultValue={user.systemRole === SystemRole.Admin ? "admin" : "user"}
+                  onValueChange={(value) => onRoleChange(user.id, value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="user">Standard User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell>
+                {pendingChanges[user.id] !== undefined && (
+                  <Button 
+                    onClick={() => onApplyChange(user.id)}
+                    disabled={changingRole}
+                    size="sm"
+                  >
+                    {changingRole ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Apply Change
+                      </>
+                    )}
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  )
+}
 
 export default function AdminUsersPage() {
   // Track users with pending role changes
@@ -107,84 +215,17 @@ export default function AdminUsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {adminError ? (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{adminError}</AlertDescription>
-              </Alert>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>System Role</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingAdmins ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4">
-                        <div className="flex items-center justify-center">
-                          <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                          Loading administrators...
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : adminUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                        No administrators found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    adminUsers.map(user => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.firstName} {user.lastName}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Select
-                            defaultValue="admin"
-                            onValueChange={(value) => handleRoleChange(user.id, value)}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Administrator</SelectItem>
-                              <SelectItem value="user">Standard User</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          {pendingChanges[user.id] !== undefined && (
-                            <Button 
-                              onClick={() => applyRoleChange(user.id)}
-                              disabled={changingRole}
-                              size="sm"
-                            >
-                              {changingRole ? (
-                                <>
-                                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                  Updating...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Apply Change
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
+            <UserTable
+              users={adminUsers}
+              isLoading={loadingAdmins}
+              error={adminError}
+              pendingChanges={pendingChanges}
+              changingRole={changingRole}
+              emptyMessage="No administrators found"
+              loadingMessage="Loading administrators..."
+              onRoleChange={handleRoleChange}
+              onApplyChange={applyRoleChange}
+            />
           </CardContent>
         </Card>
         
@@ -197,84 +238,17 @@ export default function AdminUsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {standardUserError ? (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{standardUserError}</AlertDescription>
-              </Alert>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>System Role</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingStandardUsers ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4">
-                        <div className="flex items-center justify-center">
-                          <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                          Loading users...
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : standardUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                        No standard users found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    standardUsers.map(user => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.firstName} {user.lastName}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Select
-                            defaultValue="user"
-                            onValueChange={(value) => handleRoleChange(user.id, value)}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Administrator</SelectItem>
-                              <SelectItem value="user">Standard User</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          {pendingChanges[user.id] !== undefined && (
-                            <Button 
-                              onClick={() => applyRoleChange(user.id)}
-                              disabled={changingRole}
-                              size="sm"
-                            >
-                              {changingRole ? (
-                                <>
-                                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                  Updating...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Apply Change
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
+            <UserTable
+              users={standardUsers}
+              isLoading={loadingStandardUsers}
+              error={standardUserError}
+              pendingChanges={pendingChanges}
+              changingRole={changingRole}
+              emptyMessage="No standard users found"
+              loadingMessage="Loading users..."
+              onRoleChange={handleRoleChange}
+              onApplyChange={applyRoleChange}
+            />
           </CardContent>
         </Card>
       </div>
