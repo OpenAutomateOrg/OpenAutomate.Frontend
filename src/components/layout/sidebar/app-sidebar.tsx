@@ -73,7 +73,7 @@ const data = {
     },
     {
       title: 'Adminitration',
-      url: '',
+      url: '/adminitration',
       icon: Settings2,
     },
   ],
