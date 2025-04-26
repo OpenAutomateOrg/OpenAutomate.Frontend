@@ -4,7 +4,6 @@ import type {
   LoginRequest,
   RegisterRequest,
   User,
-  RefreshTokenRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
@@ -16,42 +15,77 @@ import type {
 export const authApi = {
   /**
    * Log in an existing user
+   * Endpoint: POST /api/authen/login
    */
-  login: (data: LoginRequest) => api.post<AuthResponse>('api/auth/login', data),
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('api/authen/login', data, {
+      credentials: 'include', // Include cookies for refresh token
+    });
+    return response;
+  },
 
   /**
    * Register a new user
+   * Endpoint: POST /api/authen/register
    */
-  register: (data: RegisterRequest) => api.post<AuthResponse>('api/auth/register', data),
+  register: async (data: RegisterRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('api/authen/register', data, {
+      credentials: 'include', // Include cookies for refresh token
+    });
+    return response;
+  },
 
   /**
    * Get the current user profile
+   * Endpoint: GET /api/authen/user
    */
-  getCurrentUser: () => api.get<User>('api/users/current'),
+  getCurrentUser: async (): Promise<User> => {
+    const response = await api.get<User>('api/authen/user');
+    return response;
+  },
 
   /**
-   * Refresh the access token using a refresh token
+   * Refresh the access token using the HTTP-only cookie refresh token
+   * Endpoint: POST /api/authen/refresh-token
    */
-  refreshToken: (data: RefreshTokenRequest) =>
-    api.post<AuthResponse>('api/auth/refresh-token', data),
+  refreshToken: async (): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('api/authen/refresh-token', {}, {
+      credentials: 'include', // Include cookies for refresh token
+    });
+    return response;
+  },
 
   /**
-   * Log out the current user
+   * Log out the current user by revoking the refresh token
+   * Endpoint: POST /api/authen/revoke-token
    */
-  logout: () => api.post('api/auth/logout', {}),
+  logout: async (): Promise<void> => {
+    await api.post('api/authen/revoke-token', {}, {
+      credentials: 'include', // Include cookies for refresh token
+    });
+  },
 
   /**
    * Send a forgot password email
+   * Endpoint: POST /api/authen/forgot-password
    */
-  forgotPassword: (data: ForgotPasswordRequest) => api.post('api/auth/forgot-password', data),
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
+    await api.post('api/authen/forgot-password', data);
+  },
 
   /**
    * Reset password with a token
+   * Endpoint: POST /api/authen/reset-password
    */
-  resetPassword: (data: ResetPasswordRequest) => api.post('api/auth/reset-password', data),
+  resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
+    await api.post('api/authen/reset-password', data);
+  },
 
   /**
    * Change the current user's password
+   * Endpoint: POST /api/users/change-password
    */
-  changePassword: (data: ChangePasswordRequest) => api.post('api/users/change-password', data),
+  changePassword: async (data: ChangePasswordRequest): Promise<void> => {
+    await api.post('api/users/change-password', data);
+  },
 }
