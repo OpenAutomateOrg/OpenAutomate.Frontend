@@ -46,7 +46,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // Token refresh interval from config
 const TOKEN_REFRESH_INTERVAL = config.auth.tokenRefreshInterval;
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
