@@ -76,9 +76,10 @@ export function RegisterForm() {
       
       // Redirect to verification pending page in the auth route group
       router.push(`/verification-pending?email=${encodeURIComponent(data.email)}`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed', error)
-      setRegisterError(error.message || 'Registration failed. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.'
+      setRegisterError(errorMessage)
     } finally {
       setIsLoading(false)
     }

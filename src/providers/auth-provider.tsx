@@ -16,7 +16,6 @@ import {
   LoginRequest,
   RegisterRequest,
   SystemRole,
-  AuthResponse
 } from "@/types/auth";
 import {
   getAuthToken,
@@ -177,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshToken]);
 
   // Login function
-  const login = async (data: LoginRequest) => {
+  const login = useCallback(async (data: LoginRequest) => {
     setIsLoading(true);
     setError(null);
 
@@ -236,10 +235,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Register function
-  const register = async (data: RegisterRequest) => {
+  const register = useCallback(async (data: RegisterRequest) => {
     setIsLoading(true);
     setError(null);
 
@@ -268,10 +267,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Logout function
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
 
     try {
@@ -286,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push("/login");
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   return (
     <AuthContext.Provider

@@ -120,9 +120,10 @@ export const authApi = {
    */
   verifyEmail: async (token: string): Promise<boolean> => {
     try {
-      const response = await api.get(`${endpoints.verifyEmail}?token=${token}`);
+      await api.get(`${endpoints.verifyEmail}?token=${token}`);
       return true;
     } catch (error) {
+      console.error('Verification failed', error);
       return false;
     }
   },

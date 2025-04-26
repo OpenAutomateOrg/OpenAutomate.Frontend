@@ -30,11 +30,12 @@ export default function VerificationPendingPage() {
         title: 'Verification email sent',
         message: 'Please check your inbox for the verification link.'
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.'
       setAlert({
         type: 'error',
         title: 'Failed to resend email',
-        message: error.message || 'An unexpected error occurred.'
+        message: errorMessage
       })
     } finally {
       setIsResending(false)
@@ -47,8 +48,8 @@ export default function VerificationPendingPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Verify your email</CardTitle>
           <CardDescription className="text-center">
-            We've sent a verification email to{' '}
-            <span className="font-medium">{email || 'your email address'}</span>
+            We&apos;ve sent a verification email to{' '}
+            <span className="font-medium">{email ?? 'your email address'}</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -62,7 +63,7 @@ export default function VerificationPendingPage() {
           <div className="text-center text-sm text-muted-foreground">
             <p>Please check your inbox and click the link in the email to verify your account.</p>
             <p className="mt-2">
-              If you don't see the email, check your spam folder or request a new verification email.
+              If you don&apos;t see the email, check your spam folder or request a new verification email.
             </p>
           </div>
 
