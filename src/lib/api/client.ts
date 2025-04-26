@@ -5,6 +5,7 @@
 
 // Import browser-safe localStorage utility
 import { getAuthToken, setAuthToken } from '@/lib/auth/token-storage';
+import { config } from '@/lib/config';
 
 type ApiError = {
   message: string;
@@ -12,14 +13,8 @@ type ApiError = {
   details?: string;
 };
 
-// Default API URL - fallback to localhost in development
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5252";
-
-// Default request headers
-const defaultHeaders = {
-  "Content-Type": "application/json",
-  "Accept": "application/json"
-};
+// Default request headers from configuration
+const defaultHeaders = config.api.defaultHeaders;
 
 // Keep track of if we're currently refreshing the token
 let isRefreshing = false;
@@ -174,7 +169,7 @@ const getFullUrl = (endpoint: string): string => {
   }
   
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
-  return `${API_URL}/${cleanEndpoint}`;
+  return `${config.api.baseUrl}/${cleanEndpoint}`;
 };
 
 /**

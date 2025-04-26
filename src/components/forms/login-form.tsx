@@ -154,7 +154,7 @@ export function LoginForm() {
             className="w-full bg-orange-600 hover:bg-orange-700 transition-all duration-300 hover:translate-y-[-2px]"
             disabled={isLoading}
           >
-            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
         </form>

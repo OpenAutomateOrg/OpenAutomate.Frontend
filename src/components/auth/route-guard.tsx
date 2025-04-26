@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/hooks/use-auth'
 import { Icons } from '@/components/ui/icons'
+import { config } from '@/lib/config'
 
 interface RouteGuardProps {
   readonly children: React.ReactNode;
 }
 
-// Paths that don't require authentication
-const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password']
+// Paths that don't require authentication from the config
+const publicPaths = [
+  config.paths.auth.login,
+  config.paths.auth.register,
+  config.paths.auth.forgotPassword,
+  config.paths.auth.resetPassword,
+  config.paths.auth.verificationPending,
+  config.paths.auth.emailVerified,
+  config.paths.auth.verifyEmail
+]
 
 export function RouteGuard({ children }: RouteGuardProps) {
   const { isAuthenticated, isLoading, refreshToken } = useAuth()
@@ -31,7 +40,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
         if (!refreshed) {
           // If still not authenticated after refresh attempt, redirect to login
           setAuthorized(false)
-          router.push(`/login?returnUrl=${encodeURIComponent(pathname)}`)
+          router.push(`${config.paths.auth.login}?returnUrl=${encodeURIComponent(pathname)}`)
         } else {
           setAuthorized(true)
         }
