@@ -5,10 +5,11 @@
 
 // Import user type
 import type { User } from '@/types/auth';
+import { config } from '@/lib/config';
 
-// Constants
-const TOKEN_KEY = 'oa_auth_token';
-const USER_KEY = 'oa_user';
+// Storage keys from config
+const TOKEN_KEY = config.auth.tokenStorageKey;
+const USER_KEY = config.auth.userStorageKey;
 
 // In-memory storage (more secure than localStorage)
 let inMemoryToken: string | null = null;

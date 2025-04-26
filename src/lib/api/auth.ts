@@ -9,16 +9,32 @@ import type {
   ChangePasswordRequest,
 } from '@/types/auth'
 
+// API endpoints for authentication
+const endpoints = {
+  login: 'api/authen/login',
+  register: 'api/authen/register',
+  user: 'api/authen/user',
+  refreshToken: 'api/authen/refresh-token',
+  revokeToken: 'api/authen/revoke-token',
+  forgotPassword: 'api/authen/forgot-password',
+  resetPassword: 'api/authen/reset-password',
+  changePassword: 'api/users/change-password',
+  resendVerification: 'api/email/resend',
+  verifyEmail: 'api/email/verify'
+};
+
 /**
- * Authentication API functions
+ * Authentication API service
+ * Handles all authentication-related API calls
  */
 export const authApi = {
   /**
    * Log in an existing user
-   * Endpoint: POST /api/authen/login
+   * @param data Login credentials
+   * @returns Authentication response with token and user data
    */
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('api/authen/login', data, {
+    const response = await api.post<AuthResponse>(endpoints.login, data, {
       credentials: 'include', // Include cookies for refresh token
     });
     return response;
@@ -26,66 +42,88 @@ export const authApi = {
 
   /**
    * Register a new user
-   * Endpoint: POST /api/authen/register
+   * @param data Registration data including email, password, name
+   * @returns Response with user data
    */
-  register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('api/authen/register', data, {
-      credentials: 'include', // Include cookies for refresh token
+  register: async (data: RegisterRequest): Promise<User> => {
+    const response = await api.post<{ user: User, message: string }>(endpoints.register, data, {
+      credentials: 'include',
     });
-    return response;
+    return response.user;
   },
 
   /**
    * Get the current user profile
-   * Endpoint: GET /api/authen/user
+   * @returns User profile data
    */
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>('api/authen/user');
+    const response = await api.get<User>(endpoints.user);
     return response;
   },
 
   /**
    * Refresh the access token using the HTTP-only cookie refresh token
-   * Endpoint: POST /api/authen/refresh-token
+   * @returns New authentication tokens and user data
    */
   refreshToken: async (): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('api/authen/refresh-token', {}, {
-      credentials: 'include', // Include cookies for refresh token
+    const response = await api.post<AuthResponse>(endpoints.refreshToken, {}, {
+      credentials: 'include',
     });
     return response;
   },
 
   /**
    * Log out the current user by revoking the refresh token
-   * Endpoint: POST /api/authen/revoke-token
    */
   logout: async (): Promise<void> => {
-    await api.post('api/authen/revoke-token', {}, {
-      credentials: 'include', // Include cookies for refresh token
+    await api.post(endpoints.revokeToken, {}, {
+      credentials: 'include',
     });
   },
 
   /**
    * Send a forgot password email
-   * Endpoint: POST /api/authen/forgot-password
+   * @param data Email address for password reset
    */
   forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
-    await api.post('api/authen/forgot-password', data);
+    await api.post(endpoints.forgotPassword, data);
   },
 
   /**
    * Reset password with a token
-   * Endpoint: POST /api/authen/reset-password
+   * @param data Token and new password
    */
   resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
-    await api.post('api/authen/reset-password', data);
+    await api.post(endpoints.resetPassword, data);
   },
 
   /**
    * Change the current user's password
-   * Endpoint: POST /api/users/change-password
+   * @param data Current and new password
    */
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {
-    await api.post('api/users/change-password', data);
+    await api.post(endpoints.changePassword, data);
+  },
+
+  /**
+   * Resend verification email to a registered user
+   * @param email User's email address
+   */
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await api.post(endpoints.resendVerification, { email });
+  },
+
+  /**
+   * Verify email with token
+   * @param token Email verification token
+   * @returns Success status
+   */
+  verifyEmail: async (token: string): Promise<boolean> => {
+    try {
+      const response = await api.get(`${endpoints.verifyEmail}?token=${token}`);
+      return true;
+    } catch (error) {
+      return false;
+    }
   },
 }

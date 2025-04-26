@@ -7,6 +7,7 @@ import {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from "react";
 import { authApi } from "@/lib/api/auth";
 import { useRouter } from "next/navigation";
@@ -14,7 +15,8 @@ import {
   User,
   LoginRequest,
   RegisterRequest,
-  SystemRole
+  SystemRole,
+  AuthResponse
 } from "@/types/auth";
 import {
   getAuthToken,
@@ -25,6 +27,7 @@ import {
 } from "@/lib/auth/token-storage";
 import logger from "@/lib/utils/logger";
 import authLogger from "@/lib/utils/auth-logger";
+import { config } from "@/lib/config";
 
 interface AuthContextType {
   user: User | null;
@@ -32,17 +35,17 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isSystemAdmin: boolean;
   login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<User>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
   error: string | null;
 }
 
 // Create the auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token refresh interval (14 minutes - just before the 15 minute expiration)
-const TOKEN_REFRESH_INTERVAL = 14 * 60 * 1000;
+// Token refresh interval from config
+const TOKEN_REFRESH_INTERVAL = config.auth.tokenRefreshInterval;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -243,34 +246,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.register(data);
       
-      // Store token and user
-      setAuthToken(response.token);
+      // In email verification flow, we don't automatically log in the user
+      // So we don't set tokens or user data here
       
-      // Use user from response or create from response fields
-      const userData = response.user || {
-        id: response.id,
-        email: response.email,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        systemRole: response.systemRole || SystemRole.User
-      };
-      
-      // Update in storage and local state
-      setStoredUser(userData);
-      setUser(userData);
-      
-      // Log registration success
       logger.auth("Registration Successful", {
-        user: {
-          id: userData.id,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          systemRole: userData.systemRole !== undefined ? 
-            `${SystemRole[userData.systemRole]} (${userData.systemRole})` : 'Not assigned'
-        },
-        tokenReceived: !!response.token
+        email: data.email,
+        message: "Verification email sent"
       });
+      
+      return response;
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
         const errorMessage = (err.message as string) || "Registration failed";
@@ -306,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{
+      value={useMemo(() => ({
         user,
         isLoading,
         isAuthenticated: !!user,
@@ -316,14 +300,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         refreshToken,
         error,
-      }}
+      }), [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, error])}
     >
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Hook to use auth context
+// Hook to use auth context, deprecated - use the useAuth hook from hooks directory instead
 export const useAuth = () => {
   const context = useContext(AuthContext);
 

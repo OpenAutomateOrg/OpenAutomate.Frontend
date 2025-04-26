@@ -1,0 +1,90 @@
+'use client'
+
+import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { authApi } from '@/lib/api/auth'
+import { Icons } from '@/components/ui/icons'
+
+export default function VerificationPendingPage() {
+  const searchParams = useSearchParams()
+  const email = searchParams.get('email')
+  const [isResending, setIsResending] = useState(false)
+  const [alert, setAlert] = useState<{
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  } | null>(null)
+
+  const resendVerification = async () => {
+    if (!email) return
+    
+    setIsResending(true)
+    try {
+      await authApi.resendVerificationEmail(email)
+      setAlert({
+        type: 'success',
+        title: 'Verification email sent',
+        message: 'Please check your inbox for the verification link.'
+      })
+    } catch (error: any) {
+      setAlert({
+        type: 'error',
+        title: 'Failed to resend email',
+        message: error.message || 'An unexpected error occurred.'
+      })
+    } finally {
+      setIsResending(false)
+    }
+  }
+
+  return (
+    <div className="container flex-1 flex items-center justify-center py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Verify your email</CardTitle>
+          <CardDescription className="text-center">
+            We've sent a verification email to{' '}
+            <span className="font-medium">{email || 'your email address'}</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {alert && (
+            <Alert variant={alert.type === 'error' ? 'destructive' : 'default'}>
+              <AlertTitle>{alert.title}</AlertTitle>
+              <AlertDescription>{alert.message}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Please check your inbox and click the link in the email to verify your account.</p>
+            <p className="mt-2">
+              If you don't see the email, check your spam folder or request a new verification email.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <Button 
+              onClick={resendVerification} 
+              variant="outline" 
+              className="w-full"
+              disabled={isResending}
+            >
+              {isResending && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
+              {isResending ? 'Sending...' : 'Resend verification email'}
+            </Button>
+            
+            <Link href="/login">
+              <Button variant="ghost" className="w-full">
+                Return to login
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+} 
