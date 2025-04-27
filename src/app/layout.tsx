@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/providers/auth-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
+import { RouteGuard } from '@/components/auth/route-guard'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthProvider>
-            <div className="min-h-screen flex flex-col antialiased bg-background">{children}</div>
+            <RouteGuard>
+              <div className="min-h-screen flex flex-col antialiased bg-background">{children}</div>
+            </RouteGuard>
           </AuthProvider>
         </ThemeProvider>
       </body>
