@@ -1,26 +1,35 @@
-import { BarChart3, LineChart, Package, ShoppingCart, UserPlus, UserX, Users } from 'lucide-react'
+import {
+  LineChart,
+  Package,
+  History,
+  FileTerminal,
+  Loader,
+  CalendarSync,
+  TentTree,
+  ScanEye,
+} from 'lucide-react'
 import type { Tab } from '@/types/tabs'
 
 const executionsTab: Tab = {
   id: 'executions',
   title: 'Executions',
-  icon: Users,
+  icon: FileTerminal,
   hasSubTabs: true,
   subTabs: [
     {
       id: 'in-progress',
       title: 'In Progress',
-      icon: LineChart,
+      icon: Loader,
     },
     {
       id: 'schedules',
       title: 'Schedules',
-      icon: UserPlus,
+      icon: CalendarSync,
     },
     {
       id: 'historical',
       title: 'Historical',
-      icon: UserX,
+      icon: History,
     },
   ],
 }
@@ -28,7 +37,7 @@ const executionsTab: Tab = {
 const schedulesTab: Tab = {
   id: 'schedule',
   title: 'Schedule',
-  icon: ShoppingCart,
+  icon: CalendarSync,
   hasSubTabs: true,
   subTabs: [
     {
@@ -39,7 +48,7 @@ const schedulesTab: Tab = {
     {
       id: 'holidays',
       title: 'Holiday Settings',
-      icon: UserPlus,
+      icon: TentTree,
     },
   ],
 }
@@ -47,14 +56,14 @@ const schedulesTab: Tab = {
 const triggersTab: Tab = {
   id: 'triggers',
   title: 'Triggers',
-  icon: Package,
+  icon: ScanEye,
   hasSubTabs: false,
 }
 
 const packagesTab: Tab = {
   id: 'packages',
   title: 'Packages',
-  icon: BarChart3,
+  icon: Package,
   hasSubTabs: true,
 }
 

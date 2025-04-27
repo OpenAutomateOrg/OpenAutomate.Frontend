@@ -1,4 +1,4 @@
-import { BarChart3, Package, ShoppingCart, Users } from 'lucide-react'
+import { Tickets, Building2, SquareStack, Users } from 'lucide-react'
 import type { Tab } from '@/types/tabs'
 
 const usersTab: Tab = {
@@ -11,21 +11,21 @@ const usersTab: Tab = {
 const rolesTab: Tab = {
   id: 'roles',
   title: 'Roles',
-  icon: ShoppingCart,
+  icon: SquareStack,
   hasSubTabs: false,
 }
 
 const organizationUnitTab: Tab = {
   id: 'organization-unit',
   title: 'Oranization Unit',
-  icon: Package,
+  icon: Building2,
   hasSubTabs: false,
 }
 
 const licenseTab: Tab = {
   id: 'license',
   title: 'License',
-  icon: BarChart3,
+  icon: Tickets,
   hasSubTabs: true,
 }
 
