@@ -8,10 +8,10 @@ import { getAuthToken, setAuthToken } from '@/lib/auth/token-storage';
 import { config } from '@/lib/config';
 
 type ApiError = {
-  message: string;
-  status: number;
-  details?: string;
-};
+  message: string
+  status: number
+  details?: string
+}
 
 // Default request headers from configuration
 const defaultHeaders = config.api.defaultHeaders;
@@ -231,29 +231,29 @@ export async function fetchApi<T>(
  */
 export const api = {
   get: <T>(endpoint: string, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: "GET" }),
+    fetchApi<T>(endpoint, { ...options, method: 'GET' }),
 
   post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
     fetchApi<T>(endpoint, {
       ...options,
-      method: "POST",
+      method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     }),
 
   put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
     fetchApi<T>(endpoint, {
       ...options,
-      method: "PUT",
+      method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     }),
 
   patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
     fetchApi<T>(endpoint, {
       ...options,
-      method: "PATCH",
+      method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     }),
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: "DELETE" }),
-};
+    fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),
+}

@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import {
   createContext,
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   // Check if user is logged in on mount
   useEffect(() => {
     const initAuth = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
 
       try {
         // Check for stored token
@@ -168,9 +168,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         // Clear tokens if initialization fails
         clearAuthData();
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     initAuth();
   }, [refreshToken]);
@@ -231,9 +231,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setError("Login failed");
         logger.error("Login failed: Unknown error");
       }
-      throw err;
+      throw err
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }, []);
 
@@ -263,9 +263,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setError("Registration failed");
         logger.error("Registration failed: Unknown error");
       }
-      throw err;
+      throw err
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }, []);
 
@@ -303,16 +303,16 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 // Hook to use auth context, deprecated - use the useAuth hook from hooks directory instead
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
 
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider')
   }
 
-  return context;
-};
+  return context
+}

@@ -1,6 +1,7 @@
 import { AppSidebar } from '@/components/layout/sidebar/app-sidebar'
 import { SiteHeader } from '@/components/layout/sidebar/site-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { SearchProvider } from '@/components/layout/search/search-context'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex flex-1">
           <AppSidebar />
           <SidebarInset>
-            <main className="">{children}</main>
+            <SearchProvider>
+              <main className="">{children}</main>
+            </SearchProvider>
           </SidebarInset>
         </div>
       </SidebarProvider>
