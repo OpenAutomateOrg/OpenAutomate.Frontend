@@ -21,6 +21,11 @@ const publicPaths = [
   config.paths.auth.verifyEmail
 ]
 
+// Paths that require authentication but don't require organization context
+const authOnlyPaths = [
+  config.paths.auth.organizationSelector
+]
+
 export function RouteGuard({ children }: RouteGuardProps) {
   const { isAuthenticated, isLoading, refreshToken } = useAuth()
   const router = useRouter()
@@ -30,6 +35,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
   useEffect(() => {
     // Check if the route is protected
     const requiresAuth = !publicPaths.includes(pathname)
+    // Check if the route requires organization context
+    const requiresAuthOnly = authOnlyPaths.includes(pathname)
 
     // Authentication check
     const checkAuth = async () => {

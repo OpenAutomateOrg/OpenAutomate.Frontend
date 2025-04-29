@@ -20,8 +20,8 @@ export default function Page() {
 
         {/* Pie Charts */}
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className=" rounded-xl ">
+          {['users', 'processes', 'tasks'].map((id) => (
+            <div key={id} className=" rounded-xl ">
               <ChartPieLabel />
             </div>
           ))}

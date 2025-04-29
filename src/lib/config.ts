@@ -56,12 +56,13 @@ export const config = {
       resetPassword: '/reset-password',
       verificationPending: '/verification-pending',
       emailVerified: '/email-verified',
-      verifyEmail: '/verify-email'
+      verifyEmail: '/verify-email',
+      organizationSelector: '/organization-selector'
     },
     
     /**
      * Default redirect after login
      */
-    defaultRedirect: '/dashboard'
+    defaultRedirect: '/organization-selector'
   }
 } 
