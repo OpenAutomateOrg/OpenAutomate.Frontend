@@ -22,9 +22,9 @@ const publicPaths = [
 ]
 
 // Paths that require authentication but don't require organization context
-const authOnlyPaths = [
-  config.paths.auth.organizationSelector
-]
+// const authOnlyPaths = [
+//   config.paths.auth.organizationSelector
+// ]
 
 export function RouteGuard({ children }: RouteGuardProps) {
   const { isAuthenticated, isLoading, refreshToken } = useAuth()
