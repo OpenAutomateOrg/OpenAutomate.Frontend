@@ -1,15 +1,15 @@
 'use client'
-
 import { useState } from 'react'
-
 import type { Tab } from '@/types/tabs'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DataTable } from '../table/task-table'
 interface TabsCommonProps {
   tabsData: Tab[]
+  onViewDetailPage?: (id: string) => void
 }
 
-export function TabsCommon({ tabsData }: TabsCommonProps) {
+export function TabsCommon({ tabsData, onViewDetailPage }: TabsCommonProps) {
   const [activeTab, setActiveTab] = useState(tabsData[0].id)
   const [activeSubTabs, setActiveSubTabs] = useState(() => {
     // Initialize active sub-tabs for tabs that have them
@@ -45,7 +45,7 @@ export function TabsCommon({ tabsData }: TabsCommonProps) {
         >
           {tabsData.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
-              <tab.icon className="h-4 w-4" />
+              {tab.icon && <tab.icon className="h-4 w-4" />}
               <span className="hidden sm:inline">{tab.title}</span>
             </TabsTrigger>
           ))}
@@ -68,7 +68,7 @@ export function TabsCommon({ tabsData }: TabsCommonProps) {
                       value={subTab.id}
                       className="flex items-center gap-2"
                     >
-                      <subTab.icon className="h-4 w-4" />
+                      {subTab.icon && <subTab.icon className="h-4 w-4" />}
                       {subTab.title}
                     </TabsTrigger>
                   ))}
@@ -77,18 +77,32 @@ export function TabsCommon({ tabsData }: TabsCommonProps) {
                 {/* Sub-Tab Contents with Data Display */}
                 {tab.subTabs.map((subTab) => (
                   <TabsContent key={subTab.id} value={subTab.id}>
-                    <div className="rounded-lg">
-                      <div className="flex items-center gap-2 mb-4">
-                        <subTab.icon className="h-5 w-5" />
-                        <h2 className="text-lg font-semibold">{subTab.title}</h2>
-                      </div>
-                    </div>
+                    {subTab.tableData && subTab.columns && (
+                      <DataTable
+                        data={subTab.tableData}
+                        columns={subTab.columns}
+                        detailPath={`/detail/${tab.id}/${subTab.id}`}
+                        idField="id"
+                        searchField="name"
+                        onViewDetailPage={onViewDetailPage}
+                      />
+                    )}
                   </TabsContent>
                 ))}
               </Tabs>
             ) : (
               // Render data directly if this tab doesn't have sub-tabs
-              <div className="rounded-lg"></div>
+              tab.tableData &&
+              tab.columns && (
+                <DataTable
+                  data={tab.tableData}
+                  columns={tab.columns}
+                  detailPath={`/detail/${tab.id}`}
+                  idField="id"
+                  searchField="name"
+                  onViewDetailPage={onViewDetailPage}
+                />
+              )
             )}
           </TabsContent>
         ))}

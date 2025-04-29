@@ -1,62 +1,77 @@
-import { BarChart3, LineChart, Package, ShoppingCart, UserPlus, UserX, Users } from 'lucide-react'
+import { Bot, Settings, Users, FileText, Clock } from 'lucide-react'
 import type { Tab } from '@/types/tabs'
 
-const executionsTab: Tab = {
-  id: 'executions',
-  title: 'Executions',
-  icon: Users,
-  hasSubTabs: true,
-  subTabs: [
-    {
-      id: 'in-progress',
-      title: 'In Progress',
-      icon: LineChart,
-    },
-    {
-      id: 'schedules',
-      title: 'Schedules',
-      icon: UserPlus,
-    },
-    {
-      id: 'historical',
-      title: 'Historical',
-      icon: UserX,
-    },
-  ],
-}
-
-const schedulesTab: Tab = {
-  id: 'schedule',
-  title: 'Schedule',
-  icon: ShoppingCart,
-  hasSubTabs: true,
-  subTabs: [
-    {
-      id: 'sub-schedule',
-      title: 'Schedule',
-      icon: LineChart,
-    },
-    {
-      id: 'holidays',
-      title: 'Holiday Settings',
-      icon: UserPlus,
-    },
-  ],
-}
-
-const triggersTab: Tab = {
-  id: 'triggers',
-  title: 'Triggers',
-  icon: Package,
-  hasSubTabs: false,
-}
-
-const packagesTab: Tab = {
-  id: 'packages',
-  title: 'Packages',
-  icon: BarChart3,
-  hasSubTabs: true,
-}
-
-// Export all tabs data
-export const AutomationTabs: Tab[] = [executionsTab, schedulesTab, triggersTab, packagesTab]
+export const AutomationTabs: Tab[] = [
+  {
+    id: 'tasks',
+    title: 'Tasks',
+    icon: Bot,
+    hasSubTabs: true,
+    subTabs: [
+      {
+        id: 'active',
+        title: 'Active Tasks',
+        icon: Clock,
+        tableData: [
+          { id: 1, name: 'Task 1', status: 'Running', progress: '75%' },
+          { id: 2, name: 'Task 2', status: 'Running', progress: '50%' },
+        ],
+        columns: [
+          { key: 'name', label: 'Task Name', sortable: true },
+          { key: 'status', label: 'Status', sortable: true },
+          { key: 'progress', label: 'Progress', sortable: true },
+        ],
+      },
+      {
+        id: 'completed',
+        title: 'Completed Tasks',
+        icon: FileText,
+        tableData: [
+          { id: 3, name: 'Task 3', status: 'Completed', progress: '100%' },
+          { id: 4, name: 'Task 4', status: 'Completed', progress: '100%' },
+        ],
+        columns: [
+          { key: 'name', label: 'Task Name', sortable: true },
+          { key: 'status', label: 'Status', sortable: true },
+          { key: 'progress', label: 'Progress', sortable: true },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'users',
+    title: 'Users',
+    icon: Users,
+    tableData: [
+      { id: 1, name: 'John Doe', role: 'Admin', status: 'Active' },
+      { id: 2, name: 'Jane Smith', role: 'User', status: 'Active' },
+    ],
+    columns: [
+      { key: 'name', label: 'Name', sortable: true },
+      { key: 'role', label: 'Role', sortable: true },
+      { key: 'status', label: 'Status', sortable: true },
+    ],
+  },
+  {
+    id: 'settings',
+    title: 'Settings',
+    icon: Settings,
+    hasSubTabs: true,
+    subTabs: [
+      {
+        id: 'general',
+        title: 'General Settings',
+        icon: Settings,
+        tableData: [
+          { id: 1, name: 'Setting 1', value: 'Enabled', type: 'Boolean' },
+          { id: 2, name: 'Setting 2', value: 'Disabled', type: 'Boolean' },
+        ],
+        columns: [
+          { key: 'name', label: 'Setting Name', sortable: true },
+          { key: 'value', label: 'Value', sortable: true },
+          { key: 'type', label: 'Type', sortable: true },
+        ],
+      },
+    ],
+  },
+]
