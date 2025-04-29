@@ -119,7 +119,7 @@ export default function OrganizationSelectorPage() {
           // No organizations - show empty state
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">
-              You don't belong to any organization units yet.
+              You don&apos;t belong to any organization units yet.
             </p>
             <p className="text-muted-foreground">
               Create your first organization to get started.

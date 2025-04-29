@@ -36,7 +36,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
     // Check if the route is protected
     const requiresAuth = !publicPaths.includes(pathname)
     // Check if the route requires organization context
-    const requiresAuthOnly = authOnlyPaths.includes(pathname)
+    // const requiresAuthOnly = authOnlyPaths.includes(pathname)
 
     // Authentication check
     const checkAuth = async () => {

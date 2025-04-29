@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { organizationUnitApi } from '@/lib/api/organization-units'
-import { OrganizationUnit, OrganizationUnitsResponse } from '@/types/organization'
+import { OrganizationUnit } from '@/types/organization'
 import { useRouter } from 'next/navigation'
 
 // Cache time in milliseconds (5 seconds)
