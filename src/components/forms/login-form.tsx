@@ -20,6 +20,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { config } from '@/lib/config'
 
 // Form validation schema
 const formSchema = z.object({
@@ -38,7 +39,7 @@ export function LoginForm() {
   const [error, setError] = React.useState<string | null>(null)
 
   // Check for return URL or expired token
-  const returnUrl = searchParams.get('returnUrl') ?? '/dashboard'
+  const returnUrl = searchParams.get('returnUrl') ?? config.paths.auth.organizationSelector
   const isExpired = searchParams.get('expired') === 'true'
 
   // Show expired token message if needed
