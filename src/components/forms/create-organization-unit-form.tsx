@@ -16,10 +16,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { organizationUnitApi } from '@/lib/api/organization-units'
+import { cn } from '@/lib/utils'
 
 // Form validation schema
 const formSchema = z.object({
@@ -30,8 +30,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 interface CreateOrganizationUnitFormProps {
-  onSuccess?: (slug: string) => void;
-  onCancel?: () => void;
+  readonly onSuccess?: (slug: string) => void;
+  readonly onCancel?: () => void;
 }
 
 export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrganizationUnitFormProps) {
@@ -113,11 +113,14 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
               <FormItem>
                 <FormLabel>Description (Optional)</FormLabel>
                 <FormControl>
-                  <Textarea 
+                  <textarea
                     placeholder="A brief description of your organization"
                     {...field} 
                     disabled={isLoading}
-                    className="resize-none"
+                    className={cn(
+                      "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                      "resize-none"
+                    )}
                     rows={3}
                   />
                 </FormControl>
