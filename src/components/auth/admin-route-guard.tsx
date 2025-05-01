@@ -46,7 +46,7 @@ export function AdminRouteGuard({
   
   // If still loading, show loading component
   if (isLoading) {
-    return loadingComponent || (
+    return loadingComponent ? <>{loadingComponent}</> : (
       <div className="w-full p-8 space-y-4">
         <Skeleton className="h-12 w-full rounded-lg" />
         <Skeleton className="h-60 w-full rounded-lg" />
@@ -56,5 +56,6 @@ export function AdminRouteGuard({
   }
   
   // If user is admin, show the protected content
-  return isSystemAdmin ? <>{children}</> : null
+  // Always wrap children in a fragment to ensure a React element is returned
+  return isSystemAdmin ? <>{children}</> : <></>
 } 
