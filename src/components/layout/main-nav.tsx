@@ -3,18 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { User } from '@/types/auth'
 
-interface MainNavProps {
-  user: User | null
-}
-
-export function MainNav({ user }: MainNavProps) {
+export function MainNav() {
   const pathname = usePathname()
-  const isAuthenticated = !!user
 
-  // Define base navigation items
-  const baseNavItems = [
+  const navItems = [
     {
       title: 'About Us',
       href: '/about',
@@ -28,17 +21,6 @@ export function MainNav({ user }: MainNavProps) {
       href: '/contact',
     },
   ]
-
-  // Add user-specific nav items when authenticated
-  const navItems = isAuthenticated
-    ? [
-        ...baseNavItems,
-        {
-          title: 'Dashboard',
-          href: '/dashboard',
-        },
-      ]
-    : baseNavItems
 
   return (
     <div className="mr-4 hidden md:flex">

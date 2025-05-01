@@ -34,8 +34,8 @@ export function RoleBasedContent({
   const { user, isLoading } = useAuth()
   
   // Show fallback while loading or if user isn't authenticated
-  if (isLoading || !user) return <>{fallback}</>
+  if (isLoading || !user) return fallback
   
   // Render content based on user's system role
-  return <>{user.systemRole === SystemRole.Admin ? adminContent : userContent}</>
+  return user.systemRole === SystemRole.Admin ? adminContent : userContent
 } 
