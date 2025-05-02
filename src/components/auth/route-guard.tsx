@@ -18,7 +18,13 @@ const publicPaths = [
   config.paths.auth.resetPassword,
   config.paths.auth.verificationPending,
   config.paths.auth.emailVerified,
-  config.paths.auth.verifyEmail
+  config.paths.auth.verifyEmail,
+  // Public routes that shouldn't require authentication
+  '/',
+  '/about',
+  '/guide',
+  '/contact',
+  '/docs'
 ]
 
 // Paths that require authentication but don't require organization context
@@ -33,10 +39,16 @@ export function RouteGuard({ children }: RouteGuardProps) {
   const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    // Check if the route is protected
-    const requiresAuth = !publicPaths.includes(pathname)
-    // Check if the route requires organization context
-    // const requiresAuthOnly = authOnlyPaths.includes(pathname)
+    // Check if the current path is public by exact match
+    const isPublicPath = publicPaths.includes(pathname)
+    
+    // Also check if the path starts with a public path prefix (for nested routes)
+    const isPublicPathPrefix = publicPaths.some(path => 
+      path !== '/' && pathname.startsWith(path + '/')
+    )
+    
+    // Route does not require authentication if it's a public path
+    const requiresAuth = !(isPublicPath || isPublicPathPrefix)
 
     // Authentication check
     const checkAuth = async () => {
