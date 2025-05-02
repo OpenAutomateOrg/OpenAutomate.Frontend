@@ -3,8 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { HTMLAttributes } from 'react'
+import { User } from '@/types/auth'
 
-export function MainNav() {
+interface MainNavProps extends HTMLAttributes<HTMLDivElement> {
+  user?: User | null
+}
+
+export function MainNav({ 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  user, 
+  ...props 
+}: MainNavProps) {
   const pathname = usePathname()
 
   const navItems = [
@@ -23,7 +33,7 @@ export function MainNav() {
   ]
 
   return (
-    <div className="mr-4 hidden md:flex">
+    <div className="mr-4 hidden md:flex" {...props}>
       <nav className="flex items-center space-x-6 text-sm font-medium">
         {navItems.map(({ title, href }) => (
           <Link
