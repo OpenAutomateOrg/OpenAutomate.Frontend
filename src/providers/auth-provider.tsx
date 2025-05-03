@@ -33,7 +33,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isSystemAdmin: boolean;
-  login: (data: LoginRequest) => Promise<void>;
+  login: (data: LoginRequest) => Promise<User | void>;
   register: (data: RegisterRequest) => Promise<User>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
@@ -176,7 +176,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   }, [refreshToken]);
 
   // Login function
-  const login = useCallback(async (data: LoginRequest) => {
+  const login = useCallback(async (data: LoginRequest): Promise<User | void> => {
     setIsLoading(true);
     setError(null);
 
@@ -199,43 +199,30 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       setStoredUser(userData);
       setUser(userData);
       
-      // Log authentication response for debugging with visually enhanced output
-      authLogger.loginSuccess(userData, {
-        received: !!response.token,
-        refreshTokenReceived: !!response.refreshToken,
-        expiration: response.refreshTokenExpiration
-      });
+      // Log authentication success with standard logger
+      logger.success(`User logged in: ${userData.email}`);
       
-      // Also log with standard logger
-      logger.auth("Authentication Successful", {
-        user: {
-          id: userData.id,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          systemRole: userData.systemRole !== undefined ? 
-            `${SystemRole[userData.systemRole]} (${userData.systemRole})` : 'Not assigned'
-        },
-        authDetails: {
-          tokenReceived: !!response.token,
-          refreshTokenReceived: !!response.refreshToken,
-          tokenExpiration: response.refreshTokenExpiration
-        }
-      });
+      // Always redirect to organization selector first
+      // This lets the user choose which tenant to access
+      router.push(config.paths.defaultRedirect);
+      
+      return userData;
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err.message as string) || "Login failed";
-        setError(errorMessage);
-        logger.error("Login failed:", errorMessage);
-      } else {
-        setError("Login failed");
-        logger.error("Login failed: Unknown error");
-      }
-      throw err
+      // Handle API error with type safety
+      const errorMessage = 
+        typeof err === 'object' && err !== null
+          ? (err as { response?: { data?: { message?: string } }, message?: string })?.response?.data?.message 
+            || (err as { message?: string })?.message 
+            || "An error occurred during login"
+          : "An error occurred during login";
+      
+      setError(errorMessage);
+      logger.error("Login failed:", err);
+      throw err;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, []);
+  }, [router]);
 
   // Register function
   const register = useCallback(async (data: RegisterRequest) => {

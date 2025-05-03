@@ -9,8 +9,7 @@ import {
   Settings2,
   FileKey2,
   House,
-  GalleryVerticalEnd,
-  AudioWaveform,
+  Building2,
   Command,
   Users,
   ShieldAlert
@@ -22,108 +21,123 @@ import { NavUser } from '@/components/layout/sidebar/nav-user'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import { NavOrganization } from '@/components/layout/sidebar/nav-organization'
 import { RoleBasedContent } from '@/components/auth/role-based-content'
+import { useParams } from 'next/navigation'
+import { useOrganizationUnits } from '@/hooks/use-organization-units'
+import { useAuth } from '@/hooks/use-auth'
 
-// Common navigation items for all users
-const commonNavItems = [
-  {
-    title: 'Home',
-    url: '/dashboard',
-    icon: House,
-    isActive: true,
-  },
-  {
-    title: 'Automation',
-    url: '/automation',
-    icon: Cog,
-  },
-  {
-    title: 'Agent',
-    url: '/agent',
-    icon: Bot,
-  },
-  {
-    title: 'Asset',
-    url: '/asset',
-    icon: FileKey2,
-  },
-]
-
-// Admin-only navigation items
-const adminNavItems = [
-  {
-    title: 'Administration',
-    url: '/admin',
-    icon: Settings2,
-  },
-  {
-    title: 'System Users',
-    url: '/admin/users',
-    icon: Users,
-  },
-  {
-    title: 'System Security',
-    url: '/admin/security',
-    icon: ShieldAlert,
-  },
-]
-
-// Standard user navigation items (potentially different from admin)
-const userNavItems = [
-  {
-    title: 'Settings',
-    url: '/settings',
-    icon: Settings2,
-  },
-]
-
-// Secondary navigation items (support, feedback, etc.)
-const secondaryNavItems = [
-  {
-    title: 'Support',
-    url: '#',
-    icon: LifeBuoy,
-  },
-  {
-    title: 'Feedback',
-    url: '#',
-    icon: Send,
-  },
-]
-
-// Organization data (this could be fetched from an API)
-const organizationData = [
-  {
-    name: 'Acme Inc',
-    logo: GalleryVerticalEnd,
-    plan: 'Enterprise',
-    url: '/organizations/acme-inc',
-    icon: GalleryVerticalEnd,
-  },
-  {
-    name: 'Acme Corp.',
-    logo: AudioWaveform,
-    plan: 'Startup',
-    url: '/organizations/acme-corp',
-    icon: AudioWaveform,
-  },
-  {
-    name: 'Evil Corp.',
-    logo: Command,
-    plan: 'Free',
-    url: '/organizations/evil-corp',
-    icon: Command,
-  },
-]
-
-// User data (this would be replaced with actual user data)
-const userData = {
-  name: 'shadcn',
-  email: 'm@example.com',
-  avatar: '/avatars/shadcn.jpg',
+// Map to associate organization name with an icon
+const organizationIcons: Record<string, typeof Building2> = {
+  default: Building2,
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // No need to get user if it's not being used
+  const params = useParams()
+  const tenantSlug = params?.tenant as string
+  const { organizationUnits } = useOrganizationUnits()
+  const { user } = useAuth()
+
+  // Transform organization units to the format expected by NavOrganization
+  const organizationData = React.useMemo(() => {
+    return organizationUnits.map(org => ({
+      name: org.name,
+      // Use org description or slug as additional info
+      plan: org.description || org.slug,
+      url: `/${org.slug}/dashboard`,
+      icon: organizationIcons[org.slug] || organizationIcons.default,
+      // Mark the current tenant
+      isActive: org.slug === tenantSlug
+    }))
+  }, [organizationUnits, tenantSlug])
+
+  // Function to create tenant-specific URLs
+  const createTenantUrl = (path: string) => {
+    if (!tenantSlug) return path
+    return `/${tenantSlug}${path}`
+  }
+
+  // Common navigation items for all users with tenant context
+  const commonNavItems = [
+    {
+      title: 'Home',
+      url: createTenantUrl('/dashboard'),
+      icon: House,
+      isActive: true,
+    },
+    {
+      title: 'Automation',
+      url: createTenantUrl('/automation'),
+      icon: Cog,
+    },
+    {
+      title: 'Agent',
+      url: createTenantUrl('/agent'),
+      icon: Bot,
+    },
+    {
+      title: 'Asset',
+      url: createTenantUrl('/asset'),
+      icon: FileKey2,
+    },
+  ]
+
+  // Admin-only navigation items (system-level, not tenant-specific)
+  const adminNavItems = [
+    {
+      title: 'Administration',
+      url: '/admin',
+      icon: Settings2,
+    },
+    {
+      title: 'System Users',
+      url: '/admin/users',
+      icon: Users,
+    },
+    {
+      title: 'System Security',
+      url: '/admin/security',
+      icon: ShieldAlert,
+    },
+  ]
+
+  // Standard user navigation items with tenant context
+  const userNavItems = [
+    {
+      title: 'Settings',
+      url: createTenantUrl('/settings'),
+      icon: Settings2,
+    },
+  ]
+
+  // Secondary navigation items (support, feedback, etc.)
+  const secondaryNavItems = [
+    {
+      title: 'Support',
+      url: '#',
+      icon: LifeBuoy,
+    },
+    {
+      title: 'Feedback',
+      url: '#',
+      icon: Send,
+    },
+    {
+      title: 'Switch Organization',
+      url: '/organization-selector',
+      icon: Command,
+    },
+  ]
+
+  // User data from auth context
+  const userData = user ? {
+    name: `${user.firstName} ${user.lastName}`.trim() || user.email,
+    email: user.email,
+    avatar: '/avatars/placeholder.png', // Default avatar image
+  } : {
+    name: 'User',
+    email: 'Loading...',
+    avatar: '/avatars/placeholder.png',
+  }
+
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
       <SidebarHeader>
