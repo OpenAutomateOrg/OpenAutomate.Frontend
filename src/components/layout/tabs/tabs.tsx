@@ -1,26 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import type { Tab } from '@/types/tabs'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface TabsCommonProps {
   tabsData: Tab[]
+  // If true, will sync tab state with URL search params (default: true)
+  useUrlParams?: boolean
 }
 
-export function TabsCommon({ tabsData }: TabsCommonProps) {
-  const [activeTab, setActiveTab] = useState(tabsData[0].id)
-  const [activeSubTabs, setActiveSubTabs] = useState(() => {
-    // Initialize active sub-tabs for tabs that have them
+export function TabsCommon({ tabsData, useUrlParams = true }: TabsCommonProps) {
+  const searchParams = useSearchParams()
+  
+  // Get initial active tab from URL if available, otherwise use first tab
+  const initialTabId = searchParams.get('tab') || tabsData[0].id
+  const [activeTab, setActiveTab] = useState(initialTabId)
+  
+  // Initialize active sub-tabs
+  const [activeSubTabs, setActiveSubTabs] = useState<Record<string, string>>({})
+  
+  // Initialize sub-tabs on component mount and URL changes
+  useEffect(() => {
+    // Get default sub-tab for each tab
     const initialSubTabs: Record<string, string> = {}
     tabsData.forEach((tab) => {
       if (tab.hasSubTabs && tab.subTabs && tab.subTabs.length > 0) {
-        initialSubTabs[tab.id] = tab.subTabs[0].id
+        // Check for sub-tab in URL or use the first one
+        const subTabParam = searchParams.get(`${tab.id}_subtab`)
+        initialSubTabs[tab.id] = subTabParam || tab.subTabs[0].id
       }
     })
-    return initialSubTabs
-  })
+    
+    setActiveSubTabs(initialSubTabs)
+    
+    // Update active tab from URL
+    const tabFromUrl = searchParams.get('tab')
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabsData, searchParams])
 
   // Handle main tab change
   const handleTabChange = (value: string) => {
@@ -38,7 +59,13 @@ export function TabsCommon({ tabsData }: TabsCommonProps) {
   return (
     <div className="flex flex-col space-y-6">
       {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={handleTabChange} 
+        className="w-full"
+        useUrlParams={useUrlParams}
+        paramName="tab"
+      >
         <TabsList
           className="grid w-full"
           style={{ gridTemplateColumns: `repeat(${tabsData.length}, minmax(0, 1fr))` }}
@@ -60,6 +87,8 @@ export function TabsCommon({ tabsData }: TabsCommonProps) {
                 value={activeSubTabs[tab.id] || (tab.subTabs[0]?.id ?? '')}
                 onValueChange={(value) => handleSubTabChange(tab.id, value)}
                 className="w-full"
+                useUrlParams={useUrlParams}
+                paramName={`${tab.id}_subtab`}
               >
                 <TabsList className="mb-4">
                   {tab.subTabs.map((subTab) => (

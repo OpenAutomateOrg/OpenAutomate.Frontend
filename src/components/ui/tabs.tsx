@@ -2,14 +2,57 @@
 
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 
-function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
+  // If true, will sync tab state with URL search params
+  useUrlParams?: boolean;
+  // The param name to use in the URL (defaults to 'tab')
+  paramName?: string;
+}
+
+function Tabs({ 
+  className, 
+  useUrlParams = false,
+  paramName = 'tab',
+  value: controlledValue,
+  onValueChange: controlledOnValueChange,
+  ...props 
+}: TabsProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  
+  // Handle URL parameter sync if enabled
+  const handleValueChange = React.useCallback((newValue: string) => {
+    if (controlledOnValueChange) {
+      controlledOnValueChange(newValue)
+    }
+    
+    if (useUrlParams) {
+      // Create new URLSearchParams with current params
+      const params = new URLSearchParams(searchParams.toString())
+      
+      // Update the tab parameter
+      params.set(paramName, newValue)
+      
+      // Update URL without refreshing the page
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [controlledOnValueChange, useUrlParams, paramName, router, pathname, searchParams])
+  
+  // Get value from URL if enabled
+  const urlValue = useUrlParams ? (searchParams.get(paramName) || undefined) : undefined
+  const value = urlValue || controlledValue
+  
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
       className={cn('flex flex-col gap-2', className)}
+      value={value}
+      onValueChange={handleValueChange}
       {...props}
     />
   )
