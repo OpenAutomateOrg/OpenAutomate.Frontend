@@ -1,11 +1,24 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { LoginForm } from '@/components/forms/login-form'
 import { Header } from '@/components/layout/header'
+import { Icons } from '@/components/ui/icons'
 
 export const metadata: Metadata = {
   title: 'Login | OpenAutomate',
   description: 'Login to your OpenAutomate account',
+}
+
+// Loading fallback for the login form
+function LoginFormLoading() {
+  return (
+    <div className="grid gap-6">
+      <div className="flex justify-center py-8">
+        <Icons.Spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    </div>
+  )
 }
 
 export default function LoginPage() {
@@ -20,7 +33,9 @@ export default function LoginPage() {
               Enter your email and password to continue
             </p>
           </div>
-          <LoginForm />
+          <Suspense fallback={<LoginFormLoading />}>
+            <LoginForm />
+          </Suspense>
           <p className="px-8 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
             <Link

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useOrganizationUnits } from '@/hooks/use-organization-units'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -11,7 +11,8 @@ import { ChevronRight, PlusCircle, RefreshCw } from 'lucide-react'
 import { CreateOrganizationUnitForm } from '@/components/forms/create-organization-unit-form'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
-export default function OrganizationSelectorPage() {
+// Client component that uses search params
+function TenantSelectorContent() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { organizationUnits, isLoading, error, selectOrganizationUnit, refresh } = useOrganizationUnits()
   const router = useRouter()
@@ -82,8 +83,8 @@ export default function OrganizationSelectorPage() {
     
     // Update URL to reflect the new state (for bookmark-ability)
     const url = newShouldStay 
-      ? '/organization-selector?force=true' 
-      : '/organization-selector?force=false'
+      ? '/tenant-selector?force=true' 
+      : '/tenant-selector?force=false'
     
     // Only update URL, don't navigate
     window.history.replaceState({}, '', url)
@@ -270,5 +271,26 @@ export default function OrganizationSelectorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Loading fallback component
+function TenantSelectorLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main page component with Suspense boundary
+export default function TenantSelectorPage() {
+  return (
+    <Suspense fallback={<TenantSelectorLoading />}>
+      <TenantSelectorContent />
+    </Suspense>
   )
 } 

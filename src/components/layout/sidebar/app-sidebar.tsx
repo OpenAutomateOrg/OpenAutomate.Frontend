@@ -122,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: 'Switch Organization',
-      url: '/organization-selector',
+      url: '/tenant-selector',
       icon: Command,
     },
   ]

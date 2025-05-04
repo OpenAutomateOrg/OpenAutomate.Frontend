@@ -149,7 +149,7 @@ Open [http://localhost:3001](http://localhost:3001) in your browser to see the a
 If you experience redirect loops between the public website and orchestrator:
 
 1. Clear browser cookies for both domains
-2. Check that your next.config.ts doesn't contain redirects from / to /organization-selector
+2. Check that your next.config.ts doesn't contain redirects from / to /tenant-selector
 3. Ensure both applications have correct environment variables pointing to each other
 4. Try using incognito/private browsing mode to test without existing cookies
 5. Check for authentication-related code in shared components

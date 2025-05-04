@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import type { Tab } from '@/types/tabs'
@@ -12,7 +12,18 @@ interface TabsCommonProps {
   useUrlParams?: boolean
 }
 
-export function TabsCommon({ tabsData, useUrlParams = true }: TabsCommonProps) {
+// Loading component for tabs
+function TabsLoading() {
+  return (
+    <div className="flex flex-col space-y-6">
+      <div className="w-full bg-muted animate-pulse h-10 rounded-lg"></div>
+      <div className="w-full bg-muted animate-pulse h-40 rounded-lg"></div>
+    </div>
+  )
+}
+
+// Inner content component that uses search params
+function TabsCommonContent({ tabsData, useUrlParams = true }: TabsCommonProps) {
   const searchParams = useSearchParams()
   
   // Get initial active tab from URL if available, otherwise use first tab
@@ -123,5 +134,14 @@ export function TabsCommon({ tabsData, useUrlParams = true }: TabsCommonProps) {
         ))}
       </Tabs>
     </div>
+  )
+}
+
+// Main component with Suspense boundary
+export function TabsCommon(props: TabsCommonProps) {
+  return (
+    <Suspense fallback={<TabsLoading />}>
+      <TabsCommonContent {...props} />
+    </Suspense>
   )
 }

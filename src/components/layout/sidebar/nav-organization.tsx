@@ -119,7 +119,7 @@ export function NavOrganization({ organizations }: NavOrganizationProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => router.push('/organization-selector')}
+                    onClick={() => router.push('/tenant-selector')}
                     className="flex items-center gap-2"
                   >
                     <span className="flex h-4 w-4 items-center justify-center">+</span>

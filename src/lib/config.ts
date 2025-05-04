@@ -77,12 +77,12 @@ export const config = {
       verificationPending: '/verification-pending',
       emailVerified: '/email-verified',
       verifyEmail: '/verify-email',
-      organizationSelector: '/organization-selector'
+      organizationSelector: '/tenant-selector'
     },
     
     /**
      * Default redirect after login
      */
-    defaultRedirect: '/organization-selector'
+    defaultRedirect: '/tenant-selector'
   }
 } 

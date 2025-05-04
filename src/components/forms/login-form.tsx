@@ -31,7 +31,10 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
+// This is a client component that accesses search params
 export function LoginForm() {
+  // The component using useSearchParams must be wrapped in a 
+  // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, error: authError } = useAuth()
