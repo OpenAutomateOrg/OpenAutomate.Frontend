@@ -21,7 +21,7 @@ export function SiteHeader() {
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Link className="font-bold text-xl text-orange-600" href="">
-          OpenAutoMate
+          OpenAutomate
         </Link>
         <div className="w-full sm:ml-auto sm:w-auto">
           <LanguageSwitcher />

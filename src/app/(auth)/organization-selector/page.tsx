@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useOrganizationUnits } from '@/hooks/use-organization-units'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,8 +15,15 @@ export default function OrganizationSelectorPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { organizationUnits, isLoading, error, selectOrganizationUnit, refresh } = useOrganizationUnits()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  // Get the force parameter from URL, default to true to prevent auto-redirect
+  const forceStay = searchParams.get('force') !== 'false'
+  
+  // Also store a state of the force parameter to prevent flickers
+  const [shouldStayOnPage, setShouldStayOnPage] = useState(true)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -25,12 +32,23 @@ export default function OrganizationSelectorPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
-  // If user belongs to only one organization, auto-redirect to it
+  // Initialize the shouldStayOnPage state based on URL param (only on mount)
   useEffect(() => {
-    if (!isLoading && organizationUnits.length === 1) {
+    setShouldStayOnPage(forceStay)
+  }, [forceStay])
+
+  // If user belongs to only one organization, auto-redirect to it
+  // unless the force parameter is set to keep them on this page
+  useEffect(() => {
+    // Double-check - only redirect if:
+    // 1. Not loading
+    // 2. Has exactly 1 organization
+    // 3. Not forcing to stay on this page
+    // 4. Page has fully mounted
+    if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
       selectOrganizationUnit(organizationUnits[0].slug)
     }
-  }, [isLoading, organizationUnits, selectOrganizationUnit])
+  }, [isLoading, organizationUnits, selectOrganizationUnit, shouldStayOnPage])
 
   // Setup visibility change listener for refresh
   useEffect(() => {
@@ -57,6 +75,20 @@ export default function OrganizationSelectorPage() {
     setTimeout(() => setIsRefreshing(false), 500)
   }
 
+  // Toggle the auto-redirect behavior
+  const toggleAutoRedirect = () => {
+    const newShouldStay = !shouldStayOnPage
+    setShouldStayOnPage(newShouldStay)
+    
+    // Update URL to reflect the new state (for bookmark-ability)
+    const url = newShouldStay 
+      ? '/organization-selector?force=true' 
+      : '/organization-selector?force=false'
+    
+    // Only update URL, don't navigate
+    window.history.replaceState({}, '', url)
+  }
+
   // While everything is loading, show loading state
   if (authLoading || isLoading) {
     return (
@@ -72,7 +104,11 @@ export default function OrganizationSelectorPage() {
   // Handle successful organization creation
   const handleOrganizationCreated = (slug: string) => {
     refresh() // Refresh the list first (in case user wants to create another)
-    selectOrganizationUnit(slug) // Navigate to the newly created organization
+    
+    // Only auto-navigate if not forcing to stay on this page
+    if (!shouldStayOnPage) {
+      selectOrganizationUnit(slug) // Navigate to the newly created organization
+    }
   }
 
   // Show organization selector
@@ -209,8 +245,21 @@ export default function OrganizationSelectorPage() {
           </div>
         )}
 
+        {/* Auto-redirect toggle */}
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            className="text-xs text-muted-foreground"
+            onClick={toggleAutoRedirect}
+          >
+            {shouldStayOnPage 
+              ? "Enable auto-redirect to default organization" 
+              : "Disable auto-redirect to default organization"}
+          </Button>
+        </div>
+
         {/* Need to sign in with another account */}
-        <div className="mt-8 text-center">
+        <div className="mt-2 text-center">
           <Button
             variant="link"
             className="text-primary underline"

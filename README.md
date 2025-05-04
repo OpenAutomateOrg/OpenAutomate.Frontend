@@ -1,8 +1,25 @@
-# OpenAutomate Frontend
+# OpenAutomate Cloud Orchestrator
 
 [![Quality Gate Status](http://sonar.openautomate.me/api/project_badges/measure?project=openautomate-frontend&metric=alert_status&token=sqb_385511a0b7550c1ba5639883e04e3910615d17f4)](http://sonar.openautomate.me/dashboard?id=openautomate-frontend)
 
-The frontend application for OpenAutomate - an open-source business process automation management platform. This repository contains the Next.js web application that provides the user interface for managing automation processes, bot agents, packages, and executions.
+This is the **Cloud Orchestrator** application for OpenAutomate - an open-source business process automation management platform. This repository contains the tenant-specific Next.js application that provides authenticated access to manage automation processes, bot agents, packages, and executions.
+
+## Frontend Architecture
+
+OpenAutomate uses a split frontend architecture consisting of two separate applications:
+
+1. **Public Website (openautomate.me)**
+   - Marketing content, documentation, landing pages
+   - Public information, pricing, features
+   - Simple "Launch Orchestrator" button redirecting to this app
+
+2. **Cloud Orchestrator (cloud.openautomate.me - this repository)**
+   - Tenant-specific application (similar to UiPath Orchestrator)
+   - Multi-tenant implementation with organization-based routing
+   - Authentication, authorization, and tenant context management
+   - All tenant-specific functionality (automations, bot agents, schedules, etc.)
+
+This separation provides clear division of concerns, improved security, and independent scaling for each application.
 
 ## Technology Stack
 
@@ -43,9 +60,9 @@ The application implements a clean, professional UI:
   - Smooth transitions between states
   - Loading spinners for asynchronous operations
 - **Page Layouts**:
-  - Landing page with hero section, features, testimonials, and CTA areas
   - Dashboard with content sections and card grids
   - Authentication pages with centered forms and clear pathways
+  - Tenant-specific views for organization data
 
 ## Project Structure
 
@@ -108,6 +125,7 @@ cp .env.local.example .env.local
 
 ```
 NEXT_PUBLIC_API_URL=https://localhost:7240
+NEXT_PUBLIC_WEBSITE_URL=http://localhost:3000
 ```
 
 ### Running the Application
@@ -115,12 +133,40 @@ NEXT_PUBLIC_API_URL=https://localhost:7240
 Start the development server:
 
 ```bash
-npm run dev
+npm run dev -- --port 3001
 # or
-yarn dev
+yarn dev --port 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+Open [http://localhost:3001](http://localhost:3001) in your browser to see the application.
+
+> **Note:** The public website typically runs on port 3000, while this orchestrator application runs on port 3001 to allow both to run simultaneously during development.
+
+## Troubleshooting
+
+### Redirect Loop Issues
+
+If you experience redirect loops between the public website and orchestrator:
+
+1. Clear browser cookies for both domains
+2. Check that your next.config.ts doesn't contain redirects from / to /organization-selector
+3. Ensure both applications have correct environment variables pointing to each other
+4. Try using incognito/private browsing mode to test without existing cookies
+5. Check for authentication-related code in shared components
+
+### Development with Split Architecture
+
+When developing locally with both applications:
+
+```bash
+# Terminal 1 - Public Website
+cd OpenAutomate.PublicSite
+npm run dev -- --port 3000
+
+# Terminal 2 - Cloud Orchestrator
+cd OpenAutomate.Frontend  
+npm run dev -- --port 3001
+```
 
 ## Development Guidelines
 
@@ -237,7 +283,7 @@ export function MyComponent() {
 
 ## Available Scripts
 
-- `npm run dev` - Start the development server
+- `npm run dev -- --port 3001` - Start the development server on port 3001
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint to check for code quality issues
@@ -246,9 +292,10 @@ export function MyComponent() {
 
 ## Environment Variables
 
-| Variable              | Description            | Default                  |
-| --------------------- | ---------------------- | ------------------------ |
-| `NEXT_PUBLIC_API_URL` | URL of the backend API | `https://localhost:7240` |
+| Variable                    | Description                          | Default                  |
+| --------------------------- | ------------------------------------ | ------------------------ |
+| `NEXT_PUBLIC_API_URL`       | URL of the backend API               | `https://localhost:7240` |
+| `NEXT_PUBLIC_WEBSITE_URL`   | URL of the public website            | `http://localhost:3000`  |
 
 ## Deployment
 
@@ -261,7 +308,7 @@ npm run start
 
 ### Vercel Deployment
 
-The easiest way to deploy the application is with [Vercel](https://vercel.com/), the platform built by the creators of Next.js:
+The easiest way to deploy the application is with [Vercel](https://vercel.com/):
 
 1. Push your code to a GitHub repository
 2. Import the project into Vercel
@@ -282,4 +329,5 @@ The easiest way to deploy the application is with [Vercel](https://vercel.com/),
 
 ## Related Projects
 
-- [OpenAutomate Backend](https://github.com/yourusername/openautomate-backend) - The backend API for OpenAutomate
+- [OpenAutomate Backend](https://github.com/yourusername/openautomate-backend) - The backend API
+- [OpenAutomate Public Website](https://github.com/yourusername/openautomate-public-site) - The public marketing website
