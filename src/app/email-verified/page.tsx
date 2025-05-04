@@ -1,13 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { config } from '@/lib/config'
 
-export default function EmailVerifiedPage() {
+// Loading component for suspense fallback
+function EmailVerificationLoading() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md p-6 space-y-4 text-center">
+        <h1 className="text-2xl font-bold">Verifying your email...</h1>
+        <p className="text-gray-500">Please wait while we confirm your email verification.</p>
+      </div>
+    </div>
+  )
+}
+
+// Client component that uses search params
+function EmailVerifiedContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -31,14 +44,7 @@ export default function EmailVerifiedPage() {
   }
   
   if (loading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md p-6 space-y-4 text-center">
-          <h1 className="text-2xl font-bold">Verifying your email...</h1>
-          <p className="text-gray-500">Please wait while we confirm your email verification.</p>
-        </div>
-      </div>
-    )
+    return <EmailVerificationLoading />
   }
   
   return (
@@ -82,5 +88,14 @@ export default function EmailVerifiedPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Main page component with Suspense boundary
+export default function EmailVerifiedPage() {
+  return (
+    <Suspense fallback={<EmailVerificationLoading />}>
+      <EmailVerifiedContent />
+    </Suspense>
   )
 } 

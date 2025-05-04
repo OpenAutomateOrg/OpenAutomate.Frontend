@@ -5,6 +5,26 @@
 
 export const config = {
   /**
+   * Application information
+   */
+  app: {
+    /**
+     * Application name
+     */
+    name: 'OpenAutomate Orchestrator',
+    
+    /**
+     * Application URL - different for dev and production
+     */
+    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    
+    /**
+     * Production domain - used for cookies in production
+     */
+    domain: process.env.NODE_ENV === 'production' ? 'cloud.openautomate.me' : 'localhost'
+  },
+  
+  /**
    * API configuration
    */
   api: {
@@ -57,12 +77,12 @@ export const config = {
       verificationPending: '/verification-pending',
       emailVerified: '/email-verified',
       verifyEmail: '/verify-email',
-      organizationSelector: '/organization-selector'
+      organizationSelector: '/tenant-selector'
     },
     
     /**
      * Default redirect after login
      */
-    defaultRedirect: '/organization-selector'
+    defaultRedirect: '/tenant-selector'
   }
 } 

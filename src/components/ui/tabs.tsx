@@ -2,10 +2,69 @@
 
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 
-function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
+  // If true, will sync tab state with URL search params
+  useUrlParams?: boolean;
+  // The param name to use in the URL (defaults to 'tab')
+  paramName?: string;
+}
+
+// Inner component that uses search params - must be wrapped in Suspense by consumers
+function TabsWithParams({ 
+  className, 
+  useUrlParams = false,
+  paramName = 'tab',
+  value: controlledValue,
+  onValueChange: controlledOnValueChange,
+  ...props 
+}: TabsProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  
+  // Handle URL parameter sync if enabled
+  const handleValueChange = React.useCallback((newValue: string) => {
+    if (controlledOnValueChange) {
+      controlledOnValueChange(newValue)
+    }
+    
+    if (useUrlParams) {
+      // Create new URLSearchParams with current params
+      const params = new URLSearchParams(searchParams.toString())
+      
+      // Update the tab parameter
+      params.set(paramName, newValue)
+      
+      // Update URL without refreshing the page
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [controlledOnValueChange, useUrlParams, paramName, router, pathname, searchParams])
+  
+  // Get value from URL if enabled
+  const urlValue = useUrlParams ? (searchParams.get(paramName) || undefined) : undefined
+  const value = urlValue || controlledValue
+  
+  return (
+    <TabsPrimitive.Root
+      data-slot="tabs"
+      className={cn('flex flex-col gap-2', className)}
+      value={value}
+      onValueChange={handleValueChange}
+      {...props}
+    />
+  )
+}
+
+// Standard Tabs component without params for when URL sync is not needed
+function TabsNoParams({ 
+  className, 
+  ...props 
+}: TabsProps) {
+  // This version doesn't use search params, for when useUrlParams is false
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -13,6 +72,17 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
       {...props}
     />
   )
+}
+
+// Export a single Tabs component that handles both cases
+function Tabs(props: TabsProps) {
+  // If URL params are not needed, use the simpler version
+  if (!props.useUrlParams) {
+    return <TabsNoParams {...props} />
+  }
+  
+  // If URL params are needed, the component must be wrapped in Suspense by the consumer
+  return <TabsWithParams {...props} />
 }
 
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
