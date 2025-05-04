@@ -4,54 +4,127 @@ import type {
   LoginRequest,
   RegisterRequest,
   User,
-  RefreshTokenRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
 } from '@/types/auth'
 
+// API endpoints for authentication
+const endpoints = {
+  login: 'api/authen/login',
+  register: 'api/authen/register',
+  user: 'api/authen/user',
+  refreshToken: 'api/authen/refresh-token',
+  revokeToken: 'api/authen/revoke-token',
+  forgotPassword: 'api/authen/forgot-password',
+  resetPassword: 'api/authen/reset-password',
+  changePassword: 'api/users/change-password',
+  resendVerification: 'api/email/resend',
+  verifyEmail: 'api/email/verify'
+};
+
 /**
- * Authentication API functions
+ * Authentication API service
+ * Handles all authentication-related API calls
  */
 export const authApi = {
   /**
    * Log in an existing user
+   * @param data Login credentials
+   * @returns Authentication response with token and user data
    */
-  login: (data: LoginRequest) => api.post<AuthResponse>('api/auth/login', data),
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>(endpoints.login, data, {
+      credentials: 'include', // Include cookies for refresh token
+    });
+    return response;
+  },
 
   /**
    * Register a new user
+   * @param data Registration data including email, password, name
+   * @returns Response with user data
    */
-  register: (data: RegisterRequest) => api.post<AuthResponse>('api/auth/register', data),
+  register: async (data: RegisterRequest): Promise<User> => {
+    const response = await api.post<{ user: User, message: string }>(endpoints.register, data, {
+      credentials: 'include',
+    });
+    return response.user;
+  },
 
   /**
    * Get the current user profile
+   * @returns User profile data
    */
-  getCurrentUser: () => api.get<User>('api/users/current'),
+  getCurrentUser: async (): Promise<User> => {
+    const response = await api.get<User>(endpoints.user);
+    return response;
+  },
 
   /**
-   * Refresh the access token using a refresh token
+   * Refresh the access token using the HTTP-only cookie refresh token
+   * @returns New authentication tokens and user data
    */
-  refreshToken: (data: RefreshTokenRequest) =>
-    api.post<AuthResponse>('api/auth/refresh-token', data),
+  refreshToken: async (): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>(endpoints.refreshToken, {}, {
+      credentials: 'include',
+    });
+    return response;
+  },
 
   /**
-   * Log out the current user
+   * Log out the current user by revoking the refresh token
    */
-  logout: () => api.post('api/auth/logout', {}),
+  logout: async (): Promise<void> => {
+    await api.post(endpoints.revokeToken, {}, {
+      credentials: 'include',
+    });
+  },
 
   /**
    * Send a forgot password email
+   * @param data Email address for password reset
    */
-  forgotPassword: (data: ForgotPasswordRequest) => api.post('api/auth/forgot-password', data),
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
+    await api.post(endpoints.forgotPassword, data);
+  },
 
   /**
    * Reset password with a token
+   * @param data Token and new password
    */
-  resetPassword: (data: ResetPasswordRequest) => api.post('api/auth/reset-password', data),
+  resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
+    await api.post(endpoints.resetPassword, data);
+  },
 
   /**
    * Change the current user's password
+   * @param data Current and new password
    */
-  changePassword: (data: ChangePasswordRequest) => api.post('api/users/change-password', data),
+  changePassword: async (data: ChangePasswordRequest): Promise<void> => {
+    await api.post(endpoints.changePassword, data);
+  },
+
+  /**
+   * Resend verification email to a registered user
+   * @param email User's email address
+   */
+  resendVerificationEmail: async (email: string): Promise<void> => {
+    await api.post(endpoints.resendVerification, { email });
+  },
+
+  /**
+   * Verify email with token
+   * @param token Email verification token
+   * @returns Success status
+   */
+  verifyEmail: async (token: string): Promise<boolean> => {
+    try {
+      await api.get(`${endpoints.verifyEmail}?token=${token}`);
+      return true;
+    } catch (error) {
+      console.error('Verification failed', error);
+      return false;
+    }
+  },
 }

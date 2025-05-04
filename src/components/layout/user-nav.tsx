@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuth } from '@/providers/auth-provider'
+import { useParams } from 'next/navigation'
 
 interface UserNavProps {
   user: User | null
@@ -22,6 +23,8 @@ interface UserNavProps {
 
 export function UserNav({ user }: UserNavProps) {
   const { logout } = useAuth()
+  const params = useParams()
+  const tenantSlug = params?.tenant as string
 
   if (!user) return null
 
@@ -29,6 +32,14 @@ export function UserNav({ user }: UserNavProps) {
   const getInitials = () => {
     if (!user) return '??'
     return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
+  }
+
+  // Construct tenant-aware paths
+  const getTenantPath = (path: string) => {
+    if (!tenantSlug) {
+      return '/organization-selector'
+    }
+    return `/${tenantSlug}${path}`
   }
 
   return (
@@ -53,21 +64,27 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard">
+            <Link href={getTenantPath('/dashboard')}>
               <Icons.home className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/profile">
+            <Link href={getTenantPath('/profile')}>
               <Icons.user className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">
+            <Link href={getTenantPath('/settings')}>
               <Icons.settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/organization-selector">
+              <Icons.settings className="mr-2 h-4 w-4" />
+              <span>Switch Organization</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

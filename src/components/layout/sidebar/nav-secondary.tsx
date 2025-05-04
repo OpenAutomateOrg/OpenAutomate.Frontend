@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { type LucideIcon } from 'lucide-react'
+import Link from 'next/link'
 
 import {
   SidebarGroup,
@@ -30,10 +31,10 @@ export function NavSecondary({
                 size="sm"
                 className="hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
               >
-                <a href={item.url}>
+                <Link href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

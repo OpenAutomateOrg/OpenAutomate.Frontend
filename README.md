@@ -1,5 +1,7 @@
 # OpenAutomate Frontend
 
+[![Quality Gate Status](http://sonar.openautomate.me/api/project_badges/measure?project=openautomate-frontend&metric=alert_status&token=sqb_385511a0b7550c1ba5639883e04e3910615d17f4)](http://sonar.openautomate.me/dashboard?id=openautomate-frontend)
+
 The frontend application for OpenAutomate - an open-source business process automation management platform. This repository contains the Next.js web application that provides the user interface for managing automation processes, bot agents, packages, and executions.
 
 ## Technology Stack

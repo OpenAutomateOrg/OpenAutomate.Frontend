@@ -9,9 +9,10 @@ import {
   Settings2,
   FileKey2,
   House,
-  GalleryVerticalEnd,
-  AudioWaveform,
+  Building2,
   Command,
+  Users,
+  ShieldAlert
 } from 'lucide-react'
 
 import { NavMain } from '@/components/layout/sidebar/nav-main'
@@ -19,65 +20,96 @@ import { NavSecondary } from '@/components/layout/sidebar/nav-secondary'
 import { NavUser } from '@/components/layout/sidebar/nav-user'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import { NavOrganization } from '@/components/layout/sidebar/nav-organization'
+import { RoleBasedContent } from '@/components/auth/role-based-content'
+import { useParams } from 'next/navigation'
+import { useOrganizationUnits } from '@/hooks/use-organization-units'
+import { useAuth } from '@/hooks/use-auth'
 
-const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  organizations: [
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-      url: '/organizations/acme-inc',
-      icon: GalleryVerticalEnd,
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-      url: '/organizations/acme-corp',
-      icon: AudioWaveform,
-    },
-    {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
-      url: '/organizations/evil-corp',
-      icon: Command,
-    },
-  ],
-  navMain: [
+// Map to associate organization name with an icon
+const organizationIcons: Record<string, typeof Building2> = {
+  default: Building2,
+}
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const params = useParams()
+  const tenantSlug = params?.tenant as string
+  const { organizationUnits } = useOrganizationUnits()
+  const { user } = useAuth()
+
+  // Transform organization units to the format expected by NavOrganization
+  const organizationData = React.useMemo(() => {
+    return organizationUnits.map(org => ({
+      name: org.name,
+      // Use org description or slug as additional info
+      plan: org.description || org.slug,
+      url: `/${org.slug}/dashboard`,
+      icon: organizationIcons[org.slug] || organizationIcons.default,
+      // Mark the current tenant
+      isActive: org.slug === tenantSlug
+    }))
+  }, [organizationUnits, tenantSlug])
+
+  // Function to create tenant-specific URLs
+  const createTenantUrl = (path: string) => {
+    if (!tenantSlug) return path
+    return `/${tenantSlug}${path}`
+  }
+
+  // Common navigation items for all users with tenant context
+  const commonNavItems = [
     {
       title: 'Home',
-      url: '/dashboard',
+      url: createTenantUrl('/dashboard'),
       icon: House,
       isActive: true,
     },
     {
       title: 'Automation',
-      url: '/automation',
+      url: createTenantUrl('/automation'),
       icon: Cog,
     },
     {
       title: 'Agent',
-      url: '/agent',
+      url: createTenantUrl('/agent'),
       icon: Bot,
     },
     {
       title: 'Asset',
-      url: '/asset',
+      url: createTenantUrl('/asset'),
       icon: FileKey2,
     },
+  ]
+
+  // Admin-only navigation items (system-level, not tenant-specific)
+  const adminNavItems = [
     {
-      title: 'Adminitration',
-      url: '/adminitration',
+      title: 'Administration',
+      url: '/admin',
       icon: Settings2,
     },
-  ],
-  navSecondary: [
+    {
+      title: 'System Users',
+      url: '/admin/users',
+      icon: Users,
+    },
+    {
+      title: 'System Security',
+      url: '/admin/security',
+      icon: ShieldAlert,
+    },
+  ]
+
+  // Standard user navigation items with tenant context
+  const userNavItems = [
+    {
+      title: 'Settings',
+      url: createTenantUrl('/settings'),
+      icon: Settings2,
+    },
+  ]
+
+  // Secondary navigation items (support, feedback, etc.)
+  const secondaryNavItems = [
     {
       title: 'Support',
       url: '#',
@@ -88,21 +120,41 @@ const data = {
       url: '#',
       icon: Send,
     },
-  ],
-}
+    {
+      title: 'Switch Organization',
+      url: '/organization-selector',
+      icon: Command,
+    },
+  ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // User data from auth context
+  const userData = user ? {
+    name: `${user.firstName} ${user.lastName}`.trim() || user.email,
+    email: user.email,
+    avatar: '/avatars/placeholder.png', // Default avatar image
+  } : {
+    name: 'User',
+    email: 'Loading...',
+    avatar: '/avatars/placeholder.png',
+  }
+
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
       <SidebarHeader>
-        <NavOrganization organizations={data.organizations} />
+        <NavOrganization organizations={organizationData} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* Main navigation with role-based items */}
+        <RoleBasedContent
+          adminContent={<NavMain items={[...commonNavItems, ...adminNavItems]} />}
+          userContent={<NavMain items={[...commonNavItems, ...userNavItems]} />}
+          fallback={<NavMain items={commonNavItems} />}
+        />
+        
+        <NavSecondary items={secondaryNavItems} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
   )

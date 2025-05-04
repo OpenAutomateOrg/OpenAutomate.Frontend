@@ -1,10 +1,10 @@
-import { Package } from 'lucide-react'
+import { FileKey2 } from 'lucide-react'
 import type { Tab } from '@/types/tabs'
 
 const assetsTab: Tab = {
   id: 'asset',
   title: 'Asset',
-  icon: Package,
+  icon: FileKey2,
   hasSubTabs: false,
 }
 
