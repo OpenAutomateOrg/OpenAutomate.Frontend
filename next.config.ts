@@ -1,21 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* Orchestrator Application Configuration */
+  /* Public Website Configuration */
   
   // Disable dev indicators in development
   devIndicators: false,
-  
-  // Configure redirects from home to organization selector
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/organization-selector',
-        permanent: true,
-      },
-    ]
-  },
   
   // Configure headers for security
   async headers() {

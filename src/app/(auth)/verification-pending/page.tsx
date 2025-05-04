@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,27 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { authApi } from '@/lib/api/auth'
 import { Icons } from '@/components/ui/icons'
 
-export default function VerificationPendingPage() {
+// Loading fallback component
+function VerificationPendingLoading() {
+  return (
+    <div className="container flex-1 flex items-center justify-center py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Loading...</CardTitle>
+          <CardDescription className="text-center">
+            Please wait while we load your verification status
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 flex justify-center">
+          <Icons.Spinner className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Client component that uses search params
+function VerificationPendingContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
   const [isResending, setIsResending] = useState(false)
@@ -87,5 +107,14 @@ export default function VerificationPendingPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+// Main page component with Suspense boundary
+export default function VerificationPendingPage() {
+  return (
+    <Suspense fallback={<VerificationPendingLoading />}>
+      <VerificationPendingContent />
+    </Suspense>
   )
 } 

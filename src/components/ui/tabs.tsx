@@ -13,7 +13,8 @@ interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
   paramName?: string;
 }
 
-function Tabs({ 
+// Inner component that uses search params - must be wrapped in Suspense by consumers
+function TabsWithParams({ 
   className, 
   useUrlParams = false,
   paramName = 'tab',
@@ -56,6 +57,32 @@ function Tabs({
       {...props}
     />
   )
+}
+
+// Standard Tabs component without params for when URL sync is not needed
+function TabsNoParams({ 
+  className, 
+  ...props 
+}: TabsProps) {
+  // This version doesn't use search params, for when useUrlParams is false
+  return (
+    <TabsPrimitive.Root
+      data-slot="tabs"
+      className={cn('flex flex-col gap-2', className)}
+      {...props}
+    />
+  )
+}
+
+// Export a single Tabs component that handles both cases
+function Tabs(props: TabsProps) {
+  // If URL params are not needed, use the simpler version
+  if (!props.useUrlParams) {
+    return <TabsNoParams {...props} />
+  }
+  
+  // If URL params are needed, the component must be wrapped in Suspense by the consumer
+  return <TabsWithParams {...props} />
 }
 
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {

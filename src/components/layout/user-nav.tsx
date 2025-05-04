@@ -37,7 +37,7 @@ export function UserNav({ user }: UserNavProps) {
   // Construct tenant-aware paths
   const getTenantPath = (path: string) => {
     if (!tenantSlug) {
-      return '/organization-selector'
+      return '/tenant-selector'
     }
     return `/${tenantSlug}${path}`
   }
@@ -82,7 +82,7 @@ export function UserNav({ user }: UserNavProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/organization-selector">
+            <Link href="/tenant-selector">
               <Icons.settings className="mr-2 h-4 w-4" />
               <span>Switch Organization</span>
             </Link>
