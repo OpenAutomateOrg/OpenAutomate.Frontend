@@ -12,7 +12,7 @@ import {
   Building2,
   Command,
   Users,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react'
 
 import { NavMain } from '@/components/layout/sidebar/nav-main'
@@ -38,14 +38,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Transform organization units to the format expected by NavOrganization
   const organizationData = React.useMemo(() => {
-    return organizationUnits.map(org => ({
+    return organizationUnits.map((org) => ({
       name: org.name,
       // Use org description or slug as additional info
       plan: org.description || org.slug,
       url: `/${org.slug}/dashboard`,
       icon: organizationIcons[org.slug] || organizationIcons.default,
       // Mark the current tenant
-      isActive: org.slug === tenantSlug
+      isActive: org.slug === tenantSlug,
     }))
   }, [organizationUnits, tenantSlug])
 
@@ -65,13 +65,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: 'Automation',
-      url: createTenantUrl('/automation'),
+      url: createTenantUrl('/automation/executions'),
       icon: Cog,
+      items: [
+        {
+          title: 'Executions',
+          url: createTenantUrl('/automation/executions'),
+        },
+        {
+          title: 'Schedule',
+          url: createTenantUrl('/automation/schedule'),
+        },
+        {
+          title: 'Triggers',
+          url: createTenantUrl('/automation/triggers'),
+        },
+        {
+          title: 'Packages',
+          url: createTenantUrl('/automation/packages'),
+        },
+      ],
     },
     {
       title: 'Agent',
       url: createTenantUrl('/agent'),
       icon: Bot,
+      items: [
+        {
+          title: 'Agent',
+          url: createTenantUrl('/agent'),
+        },
+        {
+          title: 'Agent Groups',
+          url: createTenantUrl('/agent/groups'),
+        },
+      ],
     },
     {
       title: 'Asset',
@@ -84,8 +112,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const adminNavItems = [
     {
       title: 'Administration',
-      url: '/admin',
+      url: '/adminitration/users',
       icon: Settings2,
+      items: [
+        {
+          title: 'Users',
+          url: '/adminitration/users',
+        },
+        {
+          title: 'Roles',
+          url: '/adminitration/roles',
+        },
+        {
+          title: 'Organizations',
+          url: '/adminitration/Organizations',
+        },
+        {
+          title: 'Licenses',
+          url: '/adminitration/licenses',
+        },
+      ],
     },
     {
       title: 'System Users',
@@ -128,15 +174,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ]
 
   // User data from auth context
-  const userData = user ? {
-    name: `${user.firstName} ${user.lastName}`.trim() || user.email,
-    email: user.email,
-    avatar: '/avatars/placeholder.png', // Default avatar image
-  } : {
-    name: 'User',
-    email: 'Loading...',
-    avatar: '/avatars/placeholder.png',
-  }
+  const userData = user
+    ? {
+        name: `${user.firstName} ${user.lastName}`.trim() || user.email,
+        email: user.email,
+        avatar: '/avatars/placeholder.png', // Default avatar image
+      }
+    : {
+        name: 'User',
+        email: 'Loading...',
+        avatar: '/avatars/placeholder.png',
+      }
 
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
@@ -150,7 +198,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           userContent={<NavMain items={[...commonNavItems, ...userNavItems]} />}
           fallback={<NavMain items={commonNavItems} />}
         />
-        
+
         <NavSecondary items={secondaryNavItems} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
