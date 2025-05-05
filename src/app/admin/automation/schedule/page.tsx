@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button'
 import DataTable from '@/components/layout/table/table_common'
 import { FilterBar } from '@/components/layout/table/filter-bar'
 import { CreateEditModal } from '@/components/layout/modal/create-edit-modal'
+import { Product, Customer } from '@/types/interfaces'
 
 import { PlusCircle } from 'lucide-react'
 
 // Sample data for Tab A
-const tabAData = [
+const tabAData: Product[] = [
   {
     id: '1',
     name: 'Product A',
@@ -20,42 +21,11 @@ const tabAData = [
     price: '$299',
     stock: 45,
   },
-  {
-    id: '2',
-    name: 'Product B',
-    category: 'Clothing',
-    status: 'Active',
-    price: '$59',
-    stock: 120,
-  },
-  {
-    id: '3',
-    name: 'Product C',
-    category: 'Electronics',
-    status: 'Inactive',
-    price: '$199',
-    stock: 0,
-  },
-  {
-    id: '4',
-    name: 'Product D',
-    category: 'Home',
-    status: 'Active',
-    price: '$89',
-    stock: 32,
-  },
-  {
-    id: '5',
-    name: 'Product E',
-    category: 'Clothing',
-    status: 'Active',
-    price: '$49',
-    stock: 78,
-  },
+  // ... other products
 ]
 
 // Sample data for Tab B
-const tabBData = [
+const tabBData: Customer[] = [
   {
     id: '1',
     name: 'Customer A',
@@ -64,38 +34,7 @@ const tabBData = [
     status: 'Active',
     orders: 12,
   },
-  {
-    id: '2',
-    name: 'Customer B',
-    email: 'customer.b@example.com',
-    region: 'South',
-    status: 'Active',
-    orders: 5,
-  },
-  {
-    id: '3',
-    name: 'Customer C',
-    email: 'customer.c@example.com',
-    region: 'East',
-    status: 'Inactive',
-    orders: 0,
-  },
-  {
-    id: '4',
-    name: 'Customer D',
-    email: 'customer.d@example.com',
-    region: 'West',
-    status: 'Active',
-    orders: 8,
-  },
-  {
-    id: '5',
-    name: 'Customer E',
-    email: 'customer.e@example.com',
-    region: 'North',
-    status: 'Active',
-    orders: 3,
-  },
+  // ... other customers
 ]
 
 // Column definitions for Tab A
@@ -138,15 +77,24 @@ const tabBFilterOptions = [
 
 export default function Dashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('tab-a')
-  const [tabAFilters, setTabAFilters] = useState({})
-  const [tabBFilters, setTabBFilters] = useState({})
+  const [activeTab, setActiveTab] = useState<'tab-a' | 'tab-b'>('tab-a')
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as 'tab-a' | 'tab-b')
+  }
+  const [tabAFilters, setTabAFilters] = useState<Record<string, string>>({})
+  const [tabBFilters, setTabBFilters] = useState<Record<string, string>>({})
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [selectedItem, setSelectedItem] = useState<Product | Customer | null>(null)
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+  const totalPagesTabA = Math.ceil(tabAData.length / pageSize)
+  const totalPagesTabB = Math.ceil(tabBData.length / pageSize)
 
   // Handle row click to navigate to detail page
-  const handleRowClick = (item: any) => {
+  const handleRowClick = (item: Product | Customer) => {
     if (activeTab === 'tab-a') {
       router.push(`/products/${item.id}`)
     } else {
@@ -155,7 +103,7 @@ export default function Dashboard() {
   }
 
   // Handle edit action from row menu
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: Product | Customer) => {
     setSelectedItem(item)
     setModalMode('edit')
     setIsModalOpen(true)
@@ -169,15 +117,14 @@ export default function Dashboard() {
   }
 
   // Handle modal submission
-  const handleModalSubmit = (data: any) => {
-    // In a real app, this would update the data source
+  const handleModalSubmit = (data: Product | Customer) => {
     console.log('Form submitted:', data)
     setIsModalOpen(false)
     // Would typically refresh data here
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div>
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -206,6 +153,11 @@ export default function Dashboard() {
             columns={tabAColumns}
             onRowClick={handleRowClick}
             onEdit={handleEdit}
+            currentPage={currentPage}
+            totalPages={totalPagesTabA}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={() => {}} // implement if needed
           />
         </TabsContent>
 
@@ -229,6 +181,11 @@ export default function Dashboard() {
             columns={tabBColumns}
             onRowClick={handleRowClick}
             onEdit={handleEdit}
+            currentPage={currentPage}
+            totalPages={totalPagesTabB}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={() => {}}
           />
         </TabsContent>
       </Tabs>
