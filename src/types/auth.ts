@@ -10,11 +10,11 @@ export enum SystemRole {
    * Standard user with access limited to assigned tenant and permissions
    */
   User = 0,
-  
+
   /**
    * System administrator with full access to system-wide functionality
    */
-  Admin = 1
+  Admin = 1,
 }
 
 export interface User {

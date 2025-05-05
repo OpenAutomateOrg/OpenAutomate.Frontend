@@ -2,10 +2,10 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /* Public Website Configuration */
-  
+
   // Disable dev indicators in development
   devIndicators: false,
-  
+
   // Configure headers for security
   async headers() {
     return [
@@ -15,34 +15,34 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          }
-        ]
-      }
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
     ]
   },
-  
+
   // Image optimization configuration
   images: {
-    domains: ['assets.openautomate.me']
+    domains: ['assets.openautomate.me'],
   },
-  
+
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 }

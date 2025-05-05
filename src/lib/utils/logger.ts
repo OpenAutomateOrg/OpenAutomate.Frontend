@@ -2,10 +2,10 @@
  * Logger utility with styled console output for development purposes
  */
 
-type LogLevel = 'info' | 'success' | 'warning' | 'error' | 'auth';
+type LogLevel = 'info' | 'success' | 'warning' | 'error' | 'auth'
 
 interface LogStyles {
-  [key: string]: string;
+  [key: string]: string
 }
 
 // Style configuration for different log types
@@ -18,7 +18,7 @@ const styles: LogStyles = {
   default: 'color: #34495e; font-weight: normal;',
   group: 'color: #2c3e50; font-weight: bold; font-size: 1.1em;',
   object: 'color: #7f8c8d; font-weight: normal;',
-};
+}
 
 /**
  * Logs a message with optional styling based on log level
@@ -26,51 +26,54 @@ const styles: LogStyles = {
 export const log = (message: string, level: LogLevel = 'info', ...data: unknown[]) => {
   // Only log in development environment
   if (process.env.NODE_ENV !== 'production') {
-    const style = styles[level] || styles.default;
-    console.log(`%c${message}`, style, ...data);
+    const style = styles[level] || styles.default
+    console.log(`%c${message}`, style, ...data)
   }
-};
+}
 
 /**
  * Logs a success message
  */
 export const logSuccess = (message: string, ...data: unknown[]) => {
-  log(message, 'success', ...data);
-};
+  log(message, 'success', ...data)
+}
 
 /**
  * Logs an error message
  */
 export const logError = (message: string, ...data: unknown[]) => {
-  log(message, 'error', ...data);
-};
+  log(message, 'error', ...data)
+}
 
 /**
  * Logs a warning message
  */
 export const logWarning = (message: string, ...data: unknown[]) => {
-  log(message, 'warning', ...data);
-};
+  log(message, 'warning', ...data)
+}
 
 /**
  * Logs authentication-related messages with special styling
  */
-export const logAuth = (message: string, data?: Record<string, unknown> | string | number | boolean) => {
+export const logAuth = (
+  message: string,
+  data?: Record<string, unknown> | string | number | boolean,
+) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.group(`%c🔐 ${message}`, styles.group);
-    
+    console.group(`%c🔐 ${message}`, styles.group)
+
     if (data) {
       if (typeof data === 'object') {
-        console.log('%cDetails:', styles.object);
-        console.table(data);
+        console.log('%cDetails:', styles.object)
+        console.table(data)
       } else {
-        console.log(data);
+        console.log(data)
       }
     }
-    
-    console.groupEnd();
+
+    console.groupEnd()
   }
-};
+}
 
 /**
  * Creates a styled divider in the console
@@ -78,12 +81,12 @@ export const logAuth = (message: string, data?: Record<string, unknown> | string
 export const logDivider = (label?: string) => {
   if (process.env.NODE_ENV !== 'production') {
     if (label) {
-      console.log(`%c---------------- ${label} ----------------`, styles.info);
+      console.log(`%c---------------- ${label} ----------------`, styles.info)
     } else {
-      console.log('%c----------------------------------------', styles.info);
+      console.log('%c----------------------------------------', styles.info)
     }
   }
-};
+}
 
 // Export as default object
 const logger = {
@@ -92,7 +95,7 @@ const logger = {
   error: logError,
   warning: logWarning,
   auth: logAuth,
-  divider: logDivider
-};
+  divider: logDivider,
+}
 
-export default logger; 
+export default logger

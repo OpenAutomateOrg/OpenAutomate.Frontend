@@ -20,8 +20,8 @@ const endpoints = {
   resetPassword: 'api/authen/reset-password',
   changePassword: 'api/users/change-password',
   resendVerification: 'api/email/resend',
-  verifyEmail: 'api/email/verify'
-};
+  verifyEmail: 'api/email/verify',
+}
 
 /**
  * Authentication API service
@@ -36,8 +36,8 @@ export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>(endpoints.login, data, {
       credentials: 'include', // Include cookies for refresh token
-    });
-    return response;
+    })
+    return response
   },
 
   /**
@@ -46,10 +46,10 @@ export const authApi = {
    * @returns Response with user data
    */
   register: async (data: RegisterRequest): Promise<User> => {
-    const response = await api.post<{ user: User, message: string }>(endpoints.register, data, {
+    const response = await api.post<{ user: User; message: string }>(endpoints.register, data, {
       credentials: 'include',
-    });
-    return response.user;
+    })
+    return response.user
   },
 
   /**
@@ -57,8 +57,8 @@ export const authApi = {
    * @returns User profile data
    */
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>(endpoints.user);
-    return response;
+    const response = await api.get<User>(endpoints.user)
+    return response
   },
 
   /**
@@ -66,19 +66,27 @@ export const authApi = {
    * @returns New authentication tokens and user data
    */
   refreshToken: async (): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>(endpoints.refreshToken, {}, {
-      credentials: 'include',
-    });
-    return response;
+    const response = await api.post<AuthResponse>(
+      endpoints.refreshToken,
+      {},
+      {
+        credentials: 'include',
+      },
+    )
+    return response
   },
 
   /**
    * Log out the current user by revoking the refresh token
    */
   logout: async (): Promise<void> => {
-    await api.post(endpoints.revokeToken, {}, {
-      credentials: 'include',
-    });
+    await api.post(
+      endpoints.revokeToken,
+      {},
+      {
+        credentials: 'include',
+      },
+    )
   },
 
   /**
@@ -86,7 +94,7 @@ export const authApi = {
    * @param data Email address for password reset
    */
   forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
-    await api.post(endpoints.forgotPassword, data);
+    await api.post(endpoints.forgotPassword, data)
   },
 
   /**
@@ -94,7 +102,7 @@ export const authApi = {
    * @param data Token and new password
    */
   resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
-    await api.post(endpoints.resetPassword, data);
+    await api.post(endpoints.resetPassword, data)
   },
 
   /**
@@ -102,7 +110,7 @@ export const authApi = {
    * @param data Current and new password
    */
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {
-    await api.post(endpoints.changePassword, data);
+    await api.post(endpoints.changePassword, data)
   },
 
   /**
@@ -110,7 +118,7 @@ export const authApi = {
    * @param email User's email address
    */
   resendVerificationEmail: async (email: string): Promise<void> => {
-    await api.post(endpoints.resendVerification, { email });
+    await api.post(endpoints.resendVerification, { email })
   },
 
   /**
@@ -120,11 +128,11 @@ export const authApi = {
    */
   verifyEmail: async (token: string): Promise<boolean> => {
     try {
-      await api.get(`${endpoints.verifyEmail}?token=${token}`);
-      return true;
+      await api.get(`${endpoints.verifyEmail}?token=${token}`)
+      return true
     } catch (error) {
-      console.error('Verification failed', error);
-      return false;
+      console.error('Verification failed', error)
+      return false
     }
   },
 }

@@ -24,29 +24,29 @@ function EmailVerifiedContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  
+
   // Get verification params
   const success = searchParams.get('success') === 'true'
   const reason = searchParams.get('reason')
-  
+
   useEffect(() => {
     // Simulate loading to ensure all params are processed
     const timer = setTimeout(() => {
       setLoading(false)
     }, 500)
-    
+
     return () => clearTimeout(timer)
   }, [])
-  
+
   // Handle redirect to login
   const handleLoginRedirect = () => {
     router.push(config.paths.auth.login)
   }
-  
+
   if (loading) {
     return <EmailVerificationLoading />
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-md p-6 space-y-6 text-center">
@@ -70,7 +70,8 @@ function EmailVerifiedContent() {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
                 {reason === 'invalid-token' && 'The verification link is invalid or has expired.'}
-                {reason === 'verification-failed' && 'We couldn\'t verify your email. Please try again later.'}
+                {reason === 'verification-failed' &&
+                  "We couldn't verify your email. Please try again later."}
                 {reason === 'missing-token' && 'No verification token was provided.'}
                 {reason === 'server-error' && 'A server error occurred. Please try again later.'}
                 {!reason && 'An unknown error occurred during verification.'}
@@ -98,4 +99,4 @@ export default function EmailVerifiedPage() {
       <EmailVerifiedContent />
     </Suspense>
   )
-} 
+}

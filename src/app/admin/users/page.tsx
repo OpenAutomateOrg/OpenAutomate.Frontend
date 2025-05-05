@@ -13,13 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -32,7 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Button content component to simplify the conditional rendering
 interface ActionButtonContentProps {
-  readonly isLoading: boolean;
+  readonly isLoading: boolean
 }
 
 function ActionButtonContent({ isLoading }: ActionButtonContentProps) {
@@ -44,7 +38,7 @@ function ActionButtonContent({ isLoading }: ActionButtonContentProps) {
       </>
     )
   }
-  
+
   return (
     <>
       <CheckCircle className="h-4 w-4 mr-2" />
@@ -55,15 +49,15 @@ function ActionButtonContent({ isLoading }: ActionButtonContentProps) {
 
 // User table component to reduce duplication
 interface UserTableProps {
-  readonly users: readonly User[];
-  readonly isLoading: boolean;
-  readonly error: string | null;
-  readonly pendingChanges: Readonly<Record<string, SystemRole>>;
-  readonly changingRole: boolean;
-  readonly emptyMessage: string;
-  readonly loadingMessage: string;
-  readonly onRoleChange: (userId: string, role: string) => void;
-  readonly onApplyChange: (userId: string) => Promise<void>;
+  readonly users: readonly User[]
+  readonly isLoading: boolean
+  readonly error: string | null
+  readonly pendingChanges: Readonly<Record<string, SystemRole>>
+  readonly changingRole: boolean
+  readonly emptyMessage: string
+  readonly loadingMessage: string
+  readonly onRoleChange: (userId: string, role: string) => void
+  readonly onApplyChange: (userId: string) => Promise<void>
 }
 
 function UserTable({
@@ -75,7 +69,7 @@ function UserTable({
   emptyMessage,
   loadingMessage,
   onRoleChange,
-  onApplyChange
+  onApplyChange,
 }: UserTableProps) {
   if (error) {
     return (
@@ -101,7 +95,7 @@ function UserTable({
         </TableRow>
       )
     }
-    
+
     if (users.length === 0) {
       return (
         <TableRow>
@@ -111,14 +105,16 @@ function UserTable({
         </TableRow>
       )
     }
-    
-    return users.map(user => (
+
+    return users.map((user) => (
       <TableRow key={user.id}>
-        <TableCell>{user.firstName} {user.lastName}</TableCell>
+        <TableCell>
+          {user.firstName} {user.lastName}
+        </TableCell>
         <TableCell>{user.email}</TableCell>
         <TableCell>
           <Select
-            defaultValue={user.systemRole === SystemRole.Admin ? "admin" : "user"}
+            defaultValue={user.systemRole === SystemRole.Admin ? 'admin' : 'user'}
             onValueChange={(value) => onRoleChange(user.id, value)}
           >
             <SelectTrigger className="w-[180px]">
@@ -132,11 +128,7 @@ function UserTable({
         </TableCell>
         <TableCell>
           {pendingChanges[user.id] !== undefined && (
-            <Button 
-              onClick={() => onApplyChange(user.id)}
-              disabled={changingRole}
-              size="sm"
-            >
+            <Button onClick={() => onApplyChange(user.id)} disabled={changingRole} size="sm">
               <ActionButtonContent isLoading={changingRole} />
             </Button>
           )}
@@ -155,9 +147,7 @@ function UserTable({
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
-        {renderTableContent()}
-      </TableBody>
+      <TableBody>{renderTableContent()}</TableBody>
     </Table>
   )
 }
@@ -165,7 +155,7 @@ function UserTable({
 export default function AdminUsersPage() {
   // Track users with pending role changes
   const [pendingChanges, setPendingChanges] = useState<Record<string, SystemRole>>({})
-  
+
   // Use the system roles hook with both user types fetched
   const {
     adminUsers,
@@ -177,51 +167,53 @@ export default function AdminUsersPage() {
     setUserRole,
     changingRole,
     changeRoleError,
-    refreshUsers
+    refreshUsers,
   } = useSystemRoles({
     fetchAdmins: true,
-    fetchStandardUsers: true
+    fetchStandardUsers: true,
   })
-  
+
   // Helper to handle role change selection
   const handleRoleChange = (userId: string, role: string) => {
     setPendingChanges({
       ...pendingChanges,
-      [userId]: role === 'admin' ? SystemRole.Admin : SystemRole.User
+      [userId]: role === 'admin' ? SystemRole.Admin : SystemRole.User,
     })
   }
-  
+
   // Helper to apply a role change
   const applyRoleChange = async (userId: string) => {
     if (!pendingChanges[userId]) return
-    
+
     const success = await setUserRole(userId, pendingChanges[userId])
-    
+
     if (success) {
       // Clear the pending change after successful update
-      setPendingChanges(current => {
+      setPendingChanges((current) => {
         const updated = { ...current }
         delete updated[userId]
         return updated
       })
     }
   }
-  
+
   return (
     <AdminRouteGuard>
       <div className="container py-8 space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">User System Roles</h1>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={refreshUsers}
             disabled={loadingAdmins || loadingStandardUsers}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${(loadingAdmins || loadingStandardUsers) ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loadingAdmins || loadingStandardUsers ? 'animate-spin' : ''}`}
+            />
             Refresh
           </Button>
         </div>
-        
+
         {changeRoleError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -229,14 +221,12 @@ export default function AdminUsersPage() {
             <AlertDescription>{changeRoleError}</AlertDescription>
           </Alert>
         )}
-        
+
         {/* Admin Users Section */}
         <Card>
           <CardHeader>
             <CardTitle>System Administrators</CardTitle>
-            <CardDescription>
-              Users with full access to system-wide functionality
-            </CardDescription>
+            <CardDescription>Users with full access to system-wide functionality</CardDescription>
           </CardHeader>
           <CardContent>
             <UserTable
@@ -252,7 +242,7 @@ export default function AdminUsersPage() {
             />
           </CardContent>
         </Card>
-        
+
         {/* Standard Users Section */}
         <Card>
           <CardHeader>
@@ -278,4 +268,4 @@ export default function AdminUsersPage() {
       </div>
     </AdminRouteGuard>
   )
-} 
+}
