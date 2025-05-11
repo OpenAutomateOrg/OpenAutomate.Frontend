@@ -3,11 +3,11 @@
 import { Table } from '@tanstack/react-table'
 import { X } from 'lucide-react'
 
-import { Button } from '@/registry/new-york/ui/button'
-import { Input } from '@/registry/new-york/ui/input'
-import { DataTableViewOptions } from '@/app/(app)/examples/tasks/components/data-table-view-options'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { DataTableViewOptions } from './data-table-view-options'
 
-import { priorities, statuses } from '../data/data'
+import { priorities, statuses } from '../../data/data'
 import { DataTableFacetedFilter } from './data-table-faceted-filter'
 
 interface DataTableToolbarProps<TData> {

@@ -69,3 +69,15 @@ export const priorities = [
     icon: ArrowUp,
   },
 ]
+
+export const types = [
+  { value: 'hardware', label: 'Hardware' },
+  { value: 'software', label: 'Software' },
+  { value: 'service', label: 'Service' },
+]
+
+export const kinds = [
+  { value: 'internal', label: 'Internal' },
+  { value: 'external', label: 'External' },
+  { value: 'third-party', label: 'Third Party' },
+]
