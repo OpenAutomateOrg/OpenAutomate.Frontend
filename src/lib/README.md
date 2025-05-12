@@ -37,11 +37,11 @@ export const someApi = {
     const response = await api.get<SomeType>('api/some-endpoint')
     return response
   },
-  
+
   createSomething: async (data: SomeCreateType): Promise<SomeType> => {
     const response = await api.post<SomeType>('api/some-endpoint', data)
     return response
-  }
+  },
 }
 ```
 
@@ -73,4 +73,4 @@ When working with existing code, please:
 
 1. Move any service in `services/` to the appropriate location in `lib/api/`
 2. Update imports across the codebase
-3. Add deprecation notices to old files until they can be safely removed 
+3. Add deprecation notices to old files until they can be safely removed

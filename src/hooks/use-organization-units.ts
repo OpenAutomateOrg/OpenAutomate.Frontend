@@ -13,7 +13,7 @@ export function useOrganizationUnits() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  
+
   // Using refs to track fetch state without causing re-renders
   const fetchingRef = useRef(false)
   const lastFetchTimeRef = useRef(0)
@@ -24,21 +24,21 @@ export function useOrganizationUnits() {
     if (fetchingRef.current) {
       return
     }
-    
+
     // Return cached data if within cache time and not forced
     const now = Date.now()
     if (!force && lastFetchTimeRef.current > 0 && now - lastFetchTimeRef.current < CACHE_TIME) {
       return
     }
-    
+
     try {
       fetchingRef.current = true
       setIsLoading(true)
       setError(null)
-      
+
       const response = await organizationUnitApi.getMyOrganizationUnits()
       setOrganizationUnits(response.organizationUnits)
-      
+
       // Update timestamp
       lastFetchTimeRef.current = Date.now()
     } catch (err) {
@@ -58,15 +58,18 @@ export function useOrganizationUnits() {
     }
   }, [fetchOrganizationUnits])
 
-  const selectOrganizationUnit = useCallback((slug: string) => {
-    router.push(`/${slug}/dashboard`)
-  }, [router])
+  const selectOrganizationUnit = useCallback(
+    (slug: string) => {
+      router.push(`/${slug}/dashboard`)
+    },
+    [router],
+  )
 
   return {
     organizationUnits,
     isLoading,
     error,
     refresh: () => fetchOrganizationUnits(true), // Force refresh
-    selectOrganizationUnit
+    selectOrganizationUnit,
   }
-} 
+}

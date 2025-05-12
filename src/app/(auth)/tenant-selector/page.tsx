@@ -9,20 +9,28 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, PlusCircle, RefreshCw } from 'lucide-react'
 import { CreateOrganizationUnitForm } from '@/components/forms/create-organization-unit-form'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 // Client component that uses search params
 function TenantSelectorContent() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-  const { organizationUnits, isLoading, error, selectOrganizationUnit, refresh } = useOrganizationUnits()
+  const { organizationUnits, isLoading, error, selectOrganizationUnit, refresh } =
+    useOrganizationUnits()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  
+
   // Get the force parameter from URL, default to true to prevent auto-redirect
   const forceStay = searchParams.get('force') !== 'false'
-  
+
   // Also store a state of the force parameter to prevent flickers
   const [shouldStayOnPage, setShouldStayOnPage] = useState(true)
 
@@ -80,12 +88,10 @@ function TenantSelectorContent() {
   const toggleAutoRedirect = () => {
     const newShouldStay = !shouldStayOnPage
     setShouldStayOnPage(newShouldStay)
-    
+
     // Update URL to reflect the new state (for bookmark-ability)
-    const url = newShouldStay 
-      ? '/tenant-selector?force=true' 
-      : '/tenant-selector?force=false'
-    
+    const url = newShouldStay ? '/tenant-selector?force=true' : '/tenant-selector?force=false'
+
     // Only update URL, don't navigate
     window.history.replaceState({}, '', url)
   }
@@ -105,7 +111,7 @@ function TenantSelectorContent() {
   // Handle successful organization creation
   const handleOrganizationCreated = (slug: string) => {
     refresh() // Refresh the list first (in case user wants to create another)
-    
+
     // Only auto-navigate if not forcing to stay on this page
     if (!shouldStayOnPage) {
       selectOrganizationUnit(slug) // Navigate to the newly created organization
@@ -119,13 +125,7 @@ function TenantSelectorContent() {
         {/* Logo and header */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="mb-4">
-            <Image
-              src="/logo-oa.png"
-              alt="OpenAutomate Logo"
-              width={500}
-              height={76}
-              priority
-            />
+            <Image src="/logo-oa.png" alt="OpenAutomate Logo" width={500} height={76} priority />
           </div>
           <div className="flex items-center gap-2 mt-2">
             <div className="relative h-8 w-8 rounded-full overflow-hidden border">
@@ -140,10 +140,10 @@ function TenantSelectorContent() {
         {/* Header with refresh button */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-medium">Your Organization Units</h2>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={handleManualRefresh} 
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleManualRefresh}
             disabled={isRefreshing || isLoading}
             className="w-8 h-8"
           >
@@ -158,21 +158,19 @@ function TenantSelectorContent() {
             <p className="text-muted-foreground">
               You don&apos;t belong to any organization units yet.
             </p>
-            <p className="text-muted-foreground">
-              Create your first organization to get started.
-            </p>
-            
+            <p className="text-muted-foreground">Create your first organization to get started.</p>
+
             <Card className="p-6 mt-6">
               {showCreateForm ? (
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Create New Organization</h3>
-                  <CreateOrganizationUnitForm 
+                  <CreateOrganizationUnitForm
                     onSuccess={handleOrganizationCreated}
                     onCancel={() => setShowCreateForm(false)}
                   />
                 </div>
               ) : (
-                <Button 
+                <Button
                   className="w-full bg-orange-600 hover:bg-orange-700 transition-all duration-300 hover:translate-y-[-2px]"
                   onClick={() => setShowCreateForm(true)}
                 >
@@ -187,16 +185,14 @@ function TenantSelectorContent() {
           <>
             {/* Selection instructions */}
             <div className="text-center mb-6">
-              <p className="text-muted-foreground">
-                Choose an organization unit to continue:
-              </p>
+              <p className="text-muted-foreground">Choose an organization unit to continue:</p>
             </div>
 
             {/* Organization list */}
             <div className="space-y-4">
               {organizationUnits.map((org) => (
-                <Card 
-                  key={org.id} 
+                <Card
+                  key={org.id}
                   className="hover:bg-accent transition-colors cursor-pointer"
                   onClick={() => selectOrganizationUnit(org.slug)}
                 >
@@ -218,10 +214,7 @@ function TenantSelectorContent() {
             {/* Create new organization */}
             <Dialog>
               <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full mt-4 border-dashed"
-                >
+                <Button variant="outline" className="w-full mt-4 border-dashed">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Create New Organization
                 </Button>
@@ -253,9 +246,9 @@ function TenantSelectorContent() {
             className="text-xs text-muted-foreground"
             onClick={toggleAutoRedirect}
           >
-            {shouldStayOnPage 
-              ? "Enable auto-redirect to default organization" 
-              : "Disable auto-redirect to default organization"}
+            {shouldStayOnPage
+              ? 'Enable auto-redirect to default organization'
+              : 'Disable auto-redirect to default organization'}
           </Button>
         </div>
 
@@ -293,4 +286,4 @@ export default function TenantSelectorPage() {
       <TenantSelectorContent />
     </Suspense>
   )
-} 
+}

@@ -1,5 +1,9 @@
-import { api } from './client';
-import { OrganizationUnit, OrganizationUnitsResponse, CreateOrganizationUnitDto } from '@/types/organization';
+import { api } from './client'
+import {
+  OrganizationUnit,
+  OrganizationUnitsResponse,
+  CreateOrganizationUnitDto,
+} from '@/types/organization'
 
 export const organizationUnitApi = {
   /**
@@ -7,8 +11,8 @@ export const organizationUnitApi = {
    * @returns Promise with organization units response
    */
   getMyOrganizationUnits: async (): Promise<OrganizationUnitsResponse> => {
-    const response = await api.get<OrganizationUnitsResponse>('/api/ou/my-ous');
-    return response;
+    const response = await api.get<OrganizationUnitsResponse>('/api/ou/my-ous')
+    return response
   },
 
   /**
@@ -17,8 +21,8 @@ export const organizationUnitApi = {
    * @returns Promise with organization unit
    */
   getBySlug: async (slug: string): Promise<OrganizationUnit> => {
-    const response = await api.get<OrganizationUnit>(`/api/ou/slug/${slug}`);
-    return response;
+    const response = await api.get<OrganizationUnit>(`/api/ou/slug/${slug}`)
+    return response
   },
 
   /**
@@ -27,8 +31,8 @@ export const organizationUnitApi = {
    * @returns Promise with organization unit
    */
   getById: async (id: string): Promise<OrganizationUnit> => {
-    const response = await api.get<OrganizationUnit>(`/api/ou/${id}`);
-    return response;
+    const response = await api.get<OrganizationUnit>(`/api/ou/${id}`)
+    return response
   },
 
   /**
@@ -37,7 +41,7 @@ export const organizationUnitApi = {
    * @returns Promise with the newly created organization unit
    */
   create: async (data: CreateOrganizationUnitDto): Promise<OrganizationUnit> => {
-    const response = await api.post<OrganizationUnit>('/api/ou/create', data);
-    return response;
-  }
-}; 
+    const response = await api.post<OrganizationUnit>('/api/ou/create', data)
+    return response
+  },
+}

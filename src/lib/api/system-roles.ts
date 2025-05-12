@@ -11,7 +11,7 @@ import { SystemRole, User, SetSystemRoleDto } from '@/types/auth'
 export const systemRolesApi = {
   /**
    * Get users by role
-   * 
+   *
    * @param role The system role to filter by
    * @returns Array of users with the specified role
    */
@@ -23,7 +23,7 @@ export const systemRolesApi = {
 
   /**
    * Set a user's system role
-   * 
+   *
    * @param userId The ID of the user to update
    * @param dto The data transfer object containing the new role
    * @returns The updated user
@@ -37,12 +37,12 @@ export const systemRolesApi = {
 
   /**
    * Get all system roles
-   * 
+   *
    * @returns Array of available system roles
    */
   async getAllRoles(): Promise<{ id: SystemRole; name: string }[]> {
     return fetchApi<{ id: SystemRole; name: string }[]>('api/system-roles', {
       method: 'GET',
     })
-  }
-} 
+  },
+}

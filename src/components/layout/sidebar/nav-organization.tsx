@@ -36,12 +36,12 @@ interface NavOrganizationProps {
 
 export function NavOrganization({ organizations }: NavOrganizationProps) {
   const router = useRouter()
-  
+
   // Find active organization
   const activeOrg = React.useMemo(() => {
-    return organizations.find(org => org.isActive) || organizations[0]
+    return organizations.find((org) => org.isActive) || organizations[0]
   }, [organizations])
-  
+
   // Handle organization selection
   const handleSelectOrg = (url: string) => {
     router.push(url)
@@ -102,16 +102,14 @@ export function NavOrganization({ organizations }: NavOrganizationProps) {
                       key={org.name}
                       onClick={() => handleSelectOrg(org.url)}
                       className={cn(
-                        "flex items-center gap-2",
-                        org.isActive ? 'bg-muted' : undefined
+                        'flex items-center gap-2',
+                        org.isActive ? 'bg-muted' : undefined,
                       )}
                     >
                       <org.icon className="size-4" />
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-medium">{org.name}</span>
-                        {org.plan && (
-                          <span className="truncate text-xs">{org.plan}</span>
-                        )}
+                        {org.plan && <span className="truncate text-xs">{org.plan}</span>}
                       </div>
                     </DropdownMenuItem>
                   ))}
