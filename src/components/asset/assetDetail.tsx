@@ -21,11 +21,11 @@ export default function AssetDetail({ id }: AssetDetailProps) {
     // TODO: Replace with actual API call
     const mockAsset: AssetRow = {
       id,
-      name: 'Laptop Dell XPS 13',
+      key: 'laptop-dell-xps-13',
       type: 'Hardware',
-      value: '$1,299',
+      description: 'Laptop Dell XPS 13',
       createdBy: 'John Doe',
-      label: 'IT Equipment',
+      label: 'Laptop Dell XPS 13',
       status: 'Active',
     }
     setAsset(mockAsset)
@@ -55,7 +55,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Name</p>
-                <p className="text-base font-medium border-b pb-1">{asset.name}</p>
+                <p className="text-base font-medium border-b pb-1">{asset.label}</p>
               </div>
 
               <div>
@@ -95,7 +95,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             <TabsContent value="common" className="mt-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Value</p>
-                <p className="text-base font-medium">{asset.value}</p>
+                <p className="text-base font-medium">{asset.label}</p>
               </div>
             </TabsContent>
 
