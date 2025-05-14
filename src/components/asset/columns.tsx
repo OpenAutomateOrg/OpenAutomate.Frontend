@@ -1,6 +1,6 @@
 'use client'
 
-import { ColumnDef, Table, Column, Row, FilterFn } from '@tanstack/react-table'
+import { ColumnDef, Table, Column, Row } from '@tanstack/react-table'
 import React from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
@@ -55,7 +55,7 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: any[]) => {
+    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
       return value.includes(row.getValue(id))
     },
   },
@@ -70,7 +70,7 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: any[]) => {
+    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
       return value.includes(row.getValue(id))
     },
   },

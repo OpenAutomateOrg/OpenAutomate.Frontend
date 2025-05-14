@@ -45,8 +45,8 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   useEffect(() => {
     if (!tenant || !isOpen) return
     import('@/lib/api/client').then(({ api }) =>
-      api.get<any[]>(`${tenant}/api/agents`).then((res) => {
-        setAgents(res.map((a: any) => ({ id: a.id, name: a.name })))
+      api.get<{ id: string; name: string }[]>(`${tenant}/api/agents`).then((res) => {
+        setAgents(res.map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })))
       })
     )
   }, [tenant, isOpen])
@@ -68,11 +68,11 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
     setSubmitting(true)
     setError(null)
     try {
-      let payload: any = {
+      const payload = {
         key,
         description,
         value,
-        botAgentIds: addedAgents.map((a: { id: string, name: string }) => a.id),
+        botAgentIds: addedAgents.map((a) => a.id),
         type: Number(type)
       }
       await import('@/lib/api/client').then(({ api }) =>
@@ -81,10 +81,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
       resetForm()
       onClose()
       if (onCreated) onCreated()
-    } catch (err) {
+    } catch (err: unknown) {
       setError(
         typeof err === 'object' && err !== null && 'message' in err
-          ? (err as any).message
+          ? (err as { message: string }).message
           : 'Failed to create asset',
       )
     } finally {

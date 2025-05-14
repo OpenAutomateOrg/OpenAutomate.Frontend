@@ -41,7 +41,7 @@ export default function AssetInterface() {
 
   const params = useParams()
   const tenant = params?.tenant as string
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<AssetRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -55,12 +55,12 @@ export default function AssetInterface() {
     if (!tenant) return
     setLoading(true)
     setError(null)
-    api.get<any[]>(`${tenant}/api/assets`)
+    api.get<AssetRow[]>(`${tenant}/api/assets`)
       .then(setData)
-      .catch((err) => {
+      .catch((err: unknown) => {
         setError(
           typeof err === 'object' && err !== null && 'message' in err
-            ? (err as any).message
+            ? (err as { message: string }).message
             : 'Failed to fetch assets',
         )
       })
@@ -114,12 +114,12 @@ export default function AssetInterface() {
   const handleAssetCreated = () => {
     setLoading(true)
     setError(null)
-    api.get<any[]>(`${tenant}/api/assets`)
+    api.get<AssetRow[]>(`${tenant}/api/assets`)
       .then(setData)
-      .catch((err) => {
+      .catch((err: unknown) => {
         setError(
           typeof err === 'object' && err !== null && 'message' in err
-            ? (err as any).message
+            ? (err as { message: string }).message
             : 'Failed to fetch assets',
         )
       })
@@ -169,7 +169,7 @@ export default function AssetInterface() {
         onClose={() => setIsModalOpen(false)}
         mode={modalMode}
         onCreated={handleAssetCreated}
-        existingKeys={data.map((item) => item.key)}
+        existingKeys={data.map((item: AssetRow) => item.key)}
       />
     </>
   )
