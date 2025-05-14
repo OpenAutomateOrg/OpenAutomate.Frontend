@@ -1,13 +1,13 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import { PlusCircle, Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
-import { useState } from 'react'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
 import {
   useReactTable,
@@ -21,12 +21,13 @@ import {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
+import { api } from '@/lib/api/client'
 
 export const assetSchema = z.object({
   id: z.string(),
-  name: z.string(),
+  key: z.string(),
   type: z.string(),
-  value: z.string(),
+  description: z.string(),
   createdBy: z.string(),
   label: z.string(),
   status: z.string(),
@@ -36,61 +37,35 @@ export type AssetRow = z.infer<typeof assetSchema>
 
 export default function AssetInterface() {
   const router = useRouter()
-  const initialData: AssetRow[] = [
-    {
-      id: '1',
-      name: 'bot',
-      type: 'Hardware',
-      value: '$1,299',
-      createdBy: 'John Doe',
-      label: 'IT Equipment',
-      status: 'Active',
-    },
-    {
-      id: '2',
-      name: 'Microsoft Office License',
-      type: 'Software',
-      value: '$149',
-      createdBy: 'Jane Smith',
-      label: 'Software License',
-      status: 'Active',
-    },
-    {
-      id: '3',
-      name: 'Office Chair',
-      type: 'Furniture',
-      value: '$299',
-      createdBy: 'Mike Johnson',
-      label: 'Office Furniture',
-      status: 'Inactive',
-    },
-    {
-      id: '4',
-      name: 'Adobe Creative Cloud',
-      type: 'Software',
-      value: '$599/year',
-      createdBy: 'Sarah Wilson',
-      label: 'Design Software',
-      status: 'Active',
-    },
-    {
-      id: '5',
-      name: 'Network Printer',
-      type: 'Hardware',
-      value: '$899',
-      createdBy: 'David Brown',
-      label: 'IT Equipment',
-      status: 'Active',
-    },
-  ]
 
-  const [data] = useState<AssetRow[]>(initialData)
+
+  const params = useParams()
+  const tenant = params?.tenant as string
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+
+  useEffect(() => {
+    if (!tenant) return
+    setLoading(true)
+    setError(null)
+    api.get<any[]>(`${tenant}/api/assets`)
+      .then(setData)
+      .catch((err) => {
+        setError(
+          typeof err === 'object' && err !== null && 'message' in err
+            ? (err as any).message
+            : 'Failed to fetch assets',
+        )
+      })
+      .finally(() => setLoading(false))
+  }, [tenant])
 
   const table = useReactTable({
     data,
@@ -131,15 +106,39 @@ export default function AssetInterface() {
     console.log('Export clicked')
   }
 
+  const handleCreateAsset = () => {
+    setModalMode('create')
+    setIsModalOpen(true)
+  }
+
+  const handleAssetCreated = () => {
+    setLoading(true)
+    setError(null)
+    api.get<any[]>(`${tenant}/api/assets`)
+      .then(setData)
+      .catch((err) => {
+        setError(
+          typeof err === 'object' && err !== null && 'message' in err
+            ? (err as any).message
+            : 'Failed to fetch assets',
+        )
+      })
+      .finally(() => setLoading(false))
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-40">Loading assets...</div>
+  }
+  if (error) {
+    return <div className="flex items-center justify-center h-40 text-red-500">{error}</div>
+  }
+
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-end gap-2">
           <Button
-            onClick={() => {
-              setModalMode('create')
-              setIsModalOpen(true)
-            }}
+            onClick={handleCreateAsset}
             className="flex items-center justify-center"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -167,10 +166,10 @@ export default function AssetInterface() {
       </div>
       <CreateEditModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-        }}
+        onClose={() => setIsModalOpen(false)}
         mode={modalMode}
+        onCreated={handleAssetCreated}
+        existingKeys={data.map((item) => item.key)}
       />
     </>
   )
