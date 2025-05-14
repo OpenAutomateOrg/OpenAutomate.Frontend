@@ -18,8 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
 import { useParams } from 'next/navigation'
 
 interface ItemModalProps {
@@ -31,15 +29,10 @@ interface ItemModalProps {
 }
 
 export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys = [] }: ItemModalProps) {
-  const [category, setCategory] = useState('')
   const [value, setValue] = useState('')
   const [key, setKey] = useState('')
   const [type, setType] = useState('0')
   const [description, setDescription] = useState('')
-  const [tab, setTab] = useState<'common' | 'agent'>('common')
-  const [agent, setAgent] = useState('')
-  const [agentValue, setAgentValue] = useState('')
-  const [agentValues, setAgentValues] = useState<{ agent: string; value: string }[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const params = useParams() as { tenant?: string }
@@ -96,14 +89,6 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
       )
     } finally {
       setSubmitting(false)
-    }
-  }
-
-  const handleAddAgentValue = () => {
-    if (agent && agentValue) {
-      setAgentValues([...agentValues, { agent, value: agentValue }])
-      setAgent('')
-      setAgentValue('')
     }
   }
 
