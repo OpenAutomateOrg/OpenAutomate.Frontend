@@ -37,12 +37,12 @@ export const columns: ColumnDef<AssetRow>[] = [
     // cell: ({ row }) => <DataTableRowActions row={row} />,
   },
   {
-    accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    accessorKey: 'key',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Key" />,
     cell: ({ row }) => {
       return (
         <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">{row.getValue('name')}</span>
+          <span className="max-w-[500px] truncate font-medium">{row.getValue('key')}</span>
         </div>
       )
     },
@@ -51,9 +51,10 @@ export const columns: ColumnDef<AssetRow>[] = [
     accessorKey: 'type',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
     cell: ({ row }) => {
+      const typeValue = row.getValue('type');
       return (
         <div className="flex w-[100px] items-center">
-          <span>{row.getValue('type')}</span>
+          <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
         </div>
       )
     },
@@ -62,26 +63,13 @@ export const columns: ColumnDef<AssetRow>[] = [
     },
   },
   {
-    accessorKey: 'value',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Value" />,
+    accessorKey: 'description',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
     cell: ({ row }) => {
+      const desc = row.getValue('description');
       return (
         <div className="flex items-center">
-          <span>{row.getValue('value')}</span>
-        </div>
-      )
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
-  },
-  {
-    accessorKey: 'createdBy',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created By" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue('createdBy')}</span>
+          <span>{typeof desc === 'string' && desc.trim() ? desc : 'N/a'}</span>
         </div>
       )
     },
