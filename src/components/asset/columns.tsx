@@ -1,6 +1,7 @@
 'use client'
 
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Table, Column, Row, FilterFn } from '@tanstack/react-table'
+import React from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -11,20 +12,20 @@ import { DataTableColumnHeader } from '@/components/layout/table/data-table-colu
 export const columns: ColumnDef<AssetRow>[] = [
   {
     id: 'select',
-    header: ({ table }) => (
+    header: ({ table }: { table: Table<AssetRow> }) => (
       <Checkbox
         checked={
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        onCheckedChange={(value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }) => (
+    cell: ({ row }: { row: Row<AssetRow> }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
         aria-label="Select row"
         className="translate-y-[2px]"
       />
@@ -33,13 +34,9 @@ export const columns: ColumnDef<AssetRow>[] = [
     enableHiding: false,
   },
   {
-    id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
-  },
-  {
     accessorKey: 'key',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Key" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" />,
+    cell: ({ row }: { row: Row<AssetRow> }) => {
       return (
         <div className="flex space-x-2">
           <span className="max-w-[500px] truncate font-medium">{row.getValue('key')}</span>
@@ -49,8 +46,8 @@ export const columns: ColumnDef<AssetRow>[] = [
   },
   {
     accessorKey: 'type',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" />,
+    cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type');
       return (
         <div className="flex w-[100px] items-center">
@@ -58,14 +55,14 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row, id, value) => {
+    filterFn: (row: Row<AssetRow>, id: string, value: any[]) => {
       return value.includes(row.getValue(id))
     },
   },
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" />,
+    cell: ({ row }: { row: Row<AssetRow> }) => {
       const desc = row.getValue('description');
       return (
         <div className="flex items-center">
@@ -73,7 +70,7 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row, id, value) => {
+    filterFn: (row: Row<AssetRow>, id: string, value: any[]) => {
       return value.includes(row.getValue(id))
     },
   },
