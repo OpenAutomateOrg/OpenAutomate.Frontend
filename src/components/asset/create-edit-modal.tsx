@@ -35,7 +35,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const params = useParams() as { tenant?: string }
+  const params = useParams()
   const tenant = params.tenant || ''
   const [agents, setAgents] = useState<{ id: string; name: string }[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState('')
@@ -43,13 +43,20 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   const isEditing = mode === 'edit'
 
   useEffect(() => {
-    if (!tenant || !isOpen) return
-    import('@/lib/api/client').then(({ api }) =>
-      api.get<{ id: string; name: string }[]>(`${tenant}/api/agents`).then((res) => {
-        setAgents(res.map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })))
-      })
-    )
-  }, [tenant, isOpen])
+    if (!tenant || !isOpen) return;
+
+    const fetchAgents = async () => {
+      try {
+        const { api } = await import('@/lib/api/client');
+        const res = await api.get<{ id: string; name: string }[]>(`${tenant}/api/agents`);
+        setAgents(res.map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })));
+      } catch (err) {
+        console.error('Error fetching agents:', err);
+      }
+    };
+
+    fetchAgents();
+  }, [tenant, isOpen]);
 
   const validateForm = () => {
     if (!key.trim()) return false
@@ -164,7 +171,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
             <Input
               id="value"
               value={value}
-              onChange={e => setValue(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
               placeholder="Type a string value"
               type={type === '1' ? 'password' : 'text'}
             />
@@ -174,7 +181,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
               Agent<span className="text-red-500">*</span>
             </Label>
             <div className="flex gap-2">
-              <Select value={selectedAgentId} onValueChange={v => setSelectedAgentId(v)}>
+              <Select value={selectedAgentId} onValueChange={(v: string) => setSelectedAgentId(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Agent..." />
                 </SelectTrigger>
@@ -199,7 +206,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
                   </tr>
                 </thead>
                 <tbody>
-                  {addedAgents.map(agent => (
+                  {addedAgents.map((agent: { id: string; name: string }) => (
                     <tr key={agent.id}>
                       <td className="border px-2 py-1 text-center">
                         <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveAgent(agent.id)}>
