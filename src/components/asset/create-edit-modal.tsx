@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,52 +18,91 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
+import { useParams } from 'next/navigation'
 
 interface ItemModalProps {
   isOpen: boolean
   onClose: () => void
   mode: 'create' | 'edit'
+  onCreated?: () => void
+  existingKeys?: string[]
 }
 
-export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [price, setPrice] = useState('')
-  const [assignToUsers, setAssignToUsers] = useState(false)
+type Agent = { id: string; name: string }
 
+export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys = [] }: ItemModalProps) {
+  const [value, setValue] = useState('')
+  const [key, setKey] = useState('')
+  const [type, setType] = useState('0')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const params = useParams()
+  const tenant = params.tenant || ''
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [selectedAgentId, setSelectedAgentId] = useState('')
+  const [addedAgents, setAddedAgents] = useState<Agent[]>([])
   const isEditing = mode === 'edit'
 
+  useEffect(() => {
+    if (!tenant || !isOpen) return;
+    const fetchAgents = async () => {
+      try {
+        const { api } = await import('@/lib/api/client');
+        const res = await api.get<Agent[]>(`${tenant}/api/agents`);
+        setAgents(res.map((a: Agent) => ({ id: a.id, name: a.name })));
+      } catch (err) {
+        console.error('Error fetching agents:', err);
+      }
+    };
+    fetchAgents();
+  }, [tenant, isOpen]);
+
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!name.trim()) {
-      newErrors.name = 'Name is required'
+    if (!key.trim() || !type.trim() || !value.trim() || addedAgents.length === 0) return false
+    if (existingKeys.includes(key.trim())) {
+      setError('Key already exists. Please choose a unique key.')
+      return false
     }
-
-    if (!category.trim()) {
-      newErrors.category = 'Category is required'
-    }
-
-    if (!price.trim()) {
-      newErrors.price = 'Price is required'
-    } else if (isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
-      newErrors.price = 'Price must be a positive number'
-    }
-
-    return Object.keys(newErrors).length === 0
+    return true
   }
 
-  const handleSubmit = () => {
-    if (validateForm()) {
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const payload = {
+        key,
+        description,
+        value,
+        botAgentIds: addedAgents.map((a: Agent) => a.id),
+        type: Number(type)
+      }
+      const { api } = await import('@/lib/api/client')
+      await api.post(`${tenant}/api/assets`, payload)
+      resetForm()
+      onClose()
+      if (onCreated) onCreated()
+    } catch (err: unknown) {
+      setError(
+        typeof err === 'object' && err !== null && 'message' in err
+          ? (err as { message: string }).message
+          : 'Failed to create asset'
+      )
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const resetForm = () => {
-    setName('')
-    setCategory('')
-    setPrice('')
+    setValue('')
+    setKey('')
+    setType('0')
+    setDescription('')
+    setError(null)
+    setSelectedAgentId('')
+    setAddedAgents([])
   }
 
   const handleClose = () => {
@@ -71,138 +110,121 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
     onClose()
   }
 
+  const handleAddAgent = () => {
+    if (!selectedAgentId) return
+    const agent = agents.find((a: Agent) => a.id === selectedAgentId)
+    if (!agent || addedAgents.some((a: Agent) => a.id === agent.id)) return
+    setAddedAgents([...addedAgents, agent])
+    setSelectedAgentId('')
+  }
+
+  const handleRemoveAgent = (id: string) => {
+    setAddedAgents(addedAgents.filter((a: Agent) => a.id !== id))
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit AssetAsset' : 'Create a new Asset'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Asset' : 'Create a new Asset'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="name" className="text-sm">
-              Name<span className="text-red-500">*</span>
+            <Label htmlFor="key" className="text-sm">
+              Key<span className="text-red-500">*</span>
             </Label>
-            <Input id="name" />
+            <Input id="key" value={key} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKey(e.target.value)} />
+            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="description" className="text-sm">
+              Description
+            </Label>
+            <Input id="description" value={description} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)} placeholder="Enter description (optional)" />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="type" className="text-sm">
               Type<span className="text-red-500">*</span>
             </Label>
-            <Select defaultValue="STRING">
+            <Select value={type} onValueChange={(v: string) => setType(v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="STRING">STRING</SelectItem>
-                <SelectItem value="NUMBER">NUMBER</SelectItem>
-                <SelectItem value="BOOLEAN">BOOLEAN</SelectItem>
-                <SelectItem value="OBJECT">OBJECT</SelectItem>
+                <SelectItem value="0">String</SelectItem>
+                <SelectItem value="1">Secret</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <Tabs defaultValue="common" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger
-                value="common"
-                className="text-sm text-red-500 data-[state=active]:text-red-500 data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:rounded-none data-[state=active]:shadow-none"
-              >
-                Common Value
-              </TabsTrigger>
-              <TabsTrigger
-                value="agent"
-                className="text-sm data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:rounded-none data-[state=active]:shadow-none"
-              >
-                Value Per Agent
-              </TabsTrigger>
-            </TabsList>
+          <div className="grid gap-2">
+            <Label htmlFor="value" className="text-sm">
+              Value<span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="value"
+              value={value}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+              placeholder="Type a string value"
+              type={type === '1' ? 'password' : 'text'}
+            />
+          </div>
 
-            <TabsContent value="common" className="mt-4">
-              <div className="grid gap-2">
-                <Label htmlFor="value" className="text-sm">
-                  Value<span className="text-red-500">*</span>
-                </Label>
-                <Input id="value" placeholder="Type a string value" />
-              </div>
+          <div className="grid gap-2">
+            <Label htmlFor="agent" className="text-sm">
+              Agent<span className="text-red-500">*</span>
+            </Label>
+            <div className="flex gap-2">
+              <Select value={selectedAgentId} onValueChange={(v: string) => setSelectedAgentId(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Agent..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents.map((agent: Agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="button" onClick={handleAddAgent} disabled={!selectedAgentId}>
+                Add
+              </Button>
+            </div>
+          </div>
 
-              <div className="flex items-center space-x-2 mt-4">
-                <Switch
-                  id="assign-users"
-                  checked={assignToUsers}
-                  onCheckedChange={setAssignToUsers}
-                />
-                <Label htmlFor="assign-users" className="text-sm">
-                  Assign all values to specific users
-                </Label>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="agent" className="mt-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="agent" className="text-sm">
-                    Agent<span className="text-red-500">*</span>
-                  </Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Agent..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="agent1">Agent 1</SelectItem>
-                      <SelectItem value="agent2">Agent 2</SelectItem>
-                      <SelectItem value="agent3">Agent 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="agentValue" className="text-sm">
-                    Value<span className="text-red-500">*</span>
-                  </Label>
-                  <Input id="agentValue" placeholder="Type a string value" />
-                </div>
-
-                <div>
-                  <Button
-                    variant="secondary"
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  >
-                    Add
-                  </Button>
-                </div>
-
-                <div className="mt-2">
-                  <div className="bg-gray-50 rounded-sm">
-                    <div className="grid grid-cols-4 gap-2 p-3 text-sm font-medium text-gray-500">
-                      <div>Action</div>
-                      <div>Agent</div>
-                      <div>Value</div>
-                      <div>Assign to</div>
-                    </div>
-                    <div className="p-4 text-center text-sm text-gray-500">No data...</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 mt-4">
-                  <Switch
-                    id="assign-users-agent"
-                    checked={assignToUsers}
-                    onCheckedChange={setAssignToUsers}
-                  />
-                  <Label htmlFor="assign-users-agent" className="text-sm">
-                    Assign all values to specific users
-                  </Label>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          {addedAgents.length > 0 && (
+            <div className="mt-4">
+              <table className="min-w-full border text-sm">
+                <thead>
+                  <tr>
+                    <th className="border px-2 py-1">Action</th>
+                    <th className="border px-2 py-1">Agent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {addedAgents.map((agent: Agent) => (
+                    <tr key={agent.id}>
+                      <td className="border px-2 py-1 text-center">
+                        <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveAgent(agent.id)}>
+                          🗑️
+                        </Button>
+                      </td>
+                      <td className="border px-2 py-1">{agent.name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>{isEditing ? 'Save Changes' : 'Add Item'}</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {isEditing ? 'Save Changes' : 'Add Item'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
