@@ -9,7 +9,7 @@ import { CreateEditModal } from '@/components/agent/create-edit-modal'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
-import { agentApi, AgentResponse } from '@/lib/api/agent'
+import { agentApi } from '@/lib/api/agent'
 import {
   useReactTable,
   getCoreRowModel,
@@ -60,9 +60,13 @@ export default function AgentInterface() {
         lastConnected: agent.lastConnected || null
       }))
       setData(formattedAgents)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching agents:', err)
-      setError(err.message || 'Failed to load agents')
+      let errorMessage = 'Failed to load agents';
+      if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+        errorMessage = err.message;
+      }
+      setError(errorMessage)
       setData([])
     } finally {
       setIsLoading(false)

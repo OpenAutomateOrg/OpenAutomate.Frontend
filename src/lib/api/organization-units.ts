@@ -5,14 +5,34 @@ import {
   CreateOrganizationUnitDto,
 } from '@/types/organization'
 
+/**
+ * Get current tenant from URL
+ */
+const getCurrentTenant = (): string => {
+  // Extract tenant from URL path or use a default
+  if (typeof window !== 'undefined') {
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts.length > 1 && pathParts[1]) {
+      return pathParts[1];
+    }
+  }
+  return 'default'; // Fallback tenant
+};
+
 export const organizationUnitApi = {
   /**
    * Get all organization units that the current user belongs to
    * @returns Promise with organization units response
    */
   getMyOrganizationUnits: async (): Promise<OrganizationUnitsResponse> => {
-    const response = await api.get<OrganizationUnitsResponse>('/api/ou/my-ous')
-    return response
+    try {
+      const tenant = getCurrentTenant();
+      const response = await api.get<OrganizationUnitsResponse>(`${tenant}/api/ou/my-ous`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching organization units:', error);
+      throw error;
+    }
   },
 
   /**
@@ -21,7 +41,8 @@ export const organizationUnitApi = {
    * @returns Promise with organization unit
    */
   getBySlug: async (slug: string): Promise<OrganizationUnit> => {
-    const response = await api.get<OrganizationUnit>(`/api/ou/slug/${slug}`)
+    const tenant = getCurrentTenant();
+    const response = await api.get<OrganizationUnit>(`${tenant}/api/ou/slug/${slug}`)
     return response
   },
 
@@ -31,7 +52,8 @@ export const organizationUnitApi = {
    * @returns Promise with organization unit
    */
   getById: async (id: string): Promise<OrganizationUnit> => {
-    const response = await api.get<OrganizationUnit>(`/api/ou/${id}`)
+    const tenant = getCurrentTenant();
+    const response = await api.get<OrganizationUnit>(`${tenant}/api/ou/${id}`)
     return response
   },
 
@@ -41,7 +63,8 @@ export const organizationUnitApi = {
    * @returns Promise with the newly created organization unit
    */
   create: async (data: CreateOrganizationUnitDto): Promise<OrganizationUnit> => {
-    const response = await api.post<OrganizationUnit>('/api/ou/create', data)
+    const tenant = getCurrentTenant();
+    const response = await api.post<OrganizationUnit>(`${tenant}/api/ou/create`, data)
     return response
   },
 }

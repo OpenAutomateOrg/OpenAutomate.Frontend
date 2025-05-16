@@ -35,15 +35,37 @@ export function useOrganizationUnits() {
       fetchingRef.current = true
       setIsLoading(true)
       setError(null)
+      
+      lastFetchTimeRef.current = Date.now() // Update timestamp before fetch
 
       const response = await organizationUnitApi.getMyOrganizationUnits()
-      setOrganizationUnits(response.organizationUnits)
-
-      // Update timestamp
-      lastFetchTimeRef.current = Date.now()
-    } catch (err) {
+      setOrganizationUnits(response.organizationUnits || [])
+    } catch (err: unknown) {
       console.error('Failed to fetch organization units:', err)
-      setError('Failed to fetch organization units. Please try again later.')
+      
+      let errorMessage = 'Failed to fetch organization units. Please try again later.'
+      
+      // Extract more specific error message if available
+      if (err && typeof err === 'object') {
+        const errObj = err as Record<string, unknown>
+        if (errObj.message && typeof errObj.message === 'string') {
+          errorMessage = errObj.message
+        } else if (errObj.details && typeof errObj.details === 'string') {
+          errorMessage = errObj.details
+        }
+        
+        // Check if it's a network or authorization error
+        if (errObj.status === 0) {
+          errorMessage = 'Network error. Please check your connection and try again.'
+        } else if (errObj.status === 401) {
+          errorMessage = 'You are not authorized to access organization units. Please log in again.'
+          // Optionally redirect to login page
+          // router.push('/login')
+        }
+      }
+      
+      setError(errorMessage)
+      setOrganizationUnits([]) // Clear data on error
     } finally {
       setIsLoading(false)
       fetchingRef.current = false

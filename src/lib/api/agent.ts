@@ -22,6 +22,15 @@ export interface CreateAgentPayload {
 }
 
 /**
+ * API ping response
+ */
+interface PingResponse {
+  status: string
+  version: string
+  timestamp: string
+}
+
+/**
  * Get current tenant from URL
  */
 const getCurrentTenant = (): string => {
@@ -45,7 +54,7 @@ export const agentApi = {
   testConnection: async (): Promise<boolean> => {
     try {
       const tenant = getCurrentTenant();
-      await api.get<any>(`${tenant}/api/ping`)
+      await api.get<PingResponse>(`${tenant}/api/ping`)
       return true
     } catch (error) {
       console.error('API connection test failed:', error)

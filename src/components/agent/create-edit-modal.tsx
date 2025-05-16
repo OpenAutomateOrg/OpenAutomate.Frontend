@@ -73,23 +73,27 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
         }
       }, 1500)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating agent:', error);
       
       // Try to extract more detailed error information
       let errorMessage = 'Failed to create agent. Please try again.';
       
-      if (error.details) {
-        errorMessage = error.details;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      // If error is a network error
-      if (error.status === 0) {
-        errorMessage = 'Network error. Please check your connection and API server status.';
-      } else if (error.status) {
-        errorMessage += ` (Status: ${error.status})`;
+      if (error && typeof error === 'object') {
+        const errorObj = error as Record<string, unknown>;
+        
+        if (errorObj.details && typeof errorObj.details === 'string') {
+          errorMessage = errorObj.details;
+        } else if (errorObj.message && typeof errorObj.message === 'string') {
+          errorMessage = errorObj.message;
+        }
+        
+        // If error is a network error
+        if (errorObj.status === 0) {
+          errorMessage = 'Network error. Please check your connection and API server status.';
+        } else if (errorObj.status && typeof errorObj.status === 'number') {
+          errorMessage += ` (Status: ${errorObj.status})`;
+        }
       }
       
       setStatusMessage({
