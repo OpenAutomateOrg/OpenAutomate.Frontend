@@ -67,15 +67,22 @@ const notifyTokenExpired = (): void => {
  * Handle network errors
  */
 const handleNetworkError = (error: unknown): never => {
-  if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-    const apiError: ApiError = {
-      message: 'Network error. Please check your connection.',
-      status: 0,
-      details: error.message,
-    }
-    throw apiError
+  // Create a standardized error object
+  const apiError: ApiError = {
+    message: 'Network error. Please check your connection.',
+    status: 0,
+    details: error instanceof Error ? error.message : String(error),
   }
-  throw error
+  
+  if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+    throw apiError;
+  } else if (error instanceof Error) {
+    apiError.message = error.message;
+    throw apiError;
+  } else {
+    // For unknown error types
+    throw apiError;
+  }
 }
 
 /**

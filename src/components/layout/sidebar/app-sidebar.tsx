@@ -90,16 +90,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: 'Agent',
       url: createTenantUrl('/agent'),
       icon: Bot,
-      items: [
-        {
-          title: 'Agent',
-          url: createTenantUrl('/agent'),
-        },
-        {
-          title: 'Agent Groups',
-          url: createTenantUrl('/agent/groups'),
-        },
-      ],
     },
     {
       title: 'Asset',

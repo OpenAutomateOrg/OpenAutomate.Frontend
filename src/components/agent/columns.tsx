@@ -47,17 +47,7 @@ export const columns: ColumnDef<AgentRow>[] = [
       )
     },
   },
-  {
-    accessorKey: 'version',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue('version')}</span>
-        </div>
-      )
-    },
-  },
+ 
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
@@ -65,17 +55,6 @@ export const columns: ColumnDef<AgentRow>[] = [
       return (
         <div className="flex items-center">
           <span>{row.getValue('status')}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'agentGroup',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent Group" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue('agentGroup')}</span>
         </div>
       )
     },
@@ -92,23 +71,12 @@ export const columns: ColumnDef<AgentRow>[] = [
     },
   },
   {
-    accessorKey: 'machineUsername',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Username" />,
+    accessorKey: 'lastConnected',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Connected" />,
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue('machineUsername')}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span className="max-w-[500px] truncate">{row.getValue('description')}</span>
+          <span>{row.getValue('lastConnected')}</span>
         </div>
       )
     },

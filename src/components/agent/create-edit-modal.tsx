@@ -10,27 +10,22 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Copy } from 'lucide-react'
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAgentApi, AgentApiError, AgentApiErrorType } from '@/lib/api/agent'
 
 interface ItemModalProps {
   isOpen: boolean
   onClose: () => void
   mode: 'create' | 'edit'
+  onSuccess?: () => void
 }
 
-export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
+export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalProps) {
+  const agentApi = useAgentApi()
   const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [price, setPrice] = useState('')
-
-  const [key] = useState('2dda9826-f37d-96e6-e2d6-92c19bf637c0')
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(key)
-  }
+  const [machineName, setMachineName] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const isEditing = mode === 'edit'
 
@@ -41,28 +36,65 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
       newErrors.name = 'Name is required'
     }
 
-    if (!category.trim()) {
-      newErrors.category = 'Category is required'
+    if (!machineName.trim()) {
+      newErrors.machineName = 'Machine name is required'
     }
 
-    if (!price.trim()) {
-      newErrors.price = 'Price is required'
-    } else if (isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
-      newErrors.price = 'Price must be a positive number'
-    }
-
+    setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
+      setIsSubmitting(true)
+      setApiError(null)
+      
+      try {
+        // Submit data to the API
+        await agentApi.create({
+          name,
+          machineName
+        })
+        
+        // Reset form and close modal
+        resetForm()
+        onClose()
+        
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess()
+        }
+      } catch (error) {
+        if (error instanceof AgentApiError) {
+          // Handle specific API errors
+          switch (error.type) {
+            case AgentApiErrorType.VALIDATION:
+              setApiError('Please check the form fields and try again.')
+              break
+            case AgentApiErrorType.AUTHENTICATION:
+              setApiError('You do not have permission to create agents.')
+              break
+            case AgentApiErrorType.NETWORK:
+              setApiError('Network error. Please check your connection and try again.')
+              break
+            default:
+              setApiError(`Error creating agent: ${error.message}`)
+          }
+        } else {
+          setApiError('An unexpected error occurred. Please try again.')
+        }
+        console.error('Error creating agent:', error)
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
   const resetForm = () => {
     setName('')
-    setCategory('')
-    setPrice('')
+    setMachineName('')
+    setErrors({})
+    setApiError(null)
   }
 
   const handleClose = () => {
@@ -72,128 +104,54 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] p-6">
+      <DialogContent className="sm:max-w-[500px] p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="agent">
-          <TabsList className="border-b w-full rounded-none mb-6 gap-8">
-            <TabsTrigger
-              value="agent"
-              className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:text-red-500 pb-2"
-            >
-              Agent
-            </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:text-red-500 pb-2"
-            >
-              Agent Settings
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="agent" className="space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="key" className="block text-sm">
-                Key<span className="text-red-500">*</span>
-              </label>
-              <div className="flex">
-                <Input id="key" value={key} readOnly className="flex-1" />
-                <Button variant="ghost" size="icon" onClick={copyToClipboard} className="ml-2">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+        
+        <div className="space-y-4 py-4">
+          {apiError && (
+            <div className="p-3 text-sm rounded-md bg-red-50 text-red-600 border border-red-200">
+              {apiError}
             </div>
+          )}
+          
+          <div className="space-y-1">
+            <label htmlFor="name" className="block text-sm">
+              Name<span className="text-red-500">*</span>
+            </label>
+            <Input 
+              id="name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={errors.name ? "border-red-500" : ""}
+              disabled={isSubmitting}
+            />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+          </div>
 
-            <div className="space-y-1">
-              <label htmlFor="name" className="block text-sm">
-                Name<span className="text-red-500">*</span>
-              </label>
-              <Input id="name" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="machine-name" className="block text-sm">
-                Machine name<span className="text-red-500">*</span>
-              </label>
-              <Input id="machine-name" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="description" className="block text-sm">
-                Description
-              </label>
-              <Textarea id="description" />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Windows Session</h3>
-              <div className="flex gap-6 mb-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="windowsSession"
-                    value="console"
-                    defaultChecked
-                    className="h-4 w-4"
-                  />
-                  <span>Console</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="windowsSession" value="rdp" className="h-4 w-4" />
-                  <span>RDP</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="h-4 w-4" />
-                <span>Login To Console</span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="h-4 w-4" />
-                <span>Font Smoothing</span>
-              </label>
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="resolution-width" className="block text-sm">
-                Resolution Width
-              </label>
-              <Input id="resolution-width" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="resolution-height" className="block text-sm">
-                Resolution Height
-              </label>
-              <Input id="resolution-height" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="resolution-depth" className="block text-sm">
-                Resolution Depth
-              </label>
-              <Input id="resolution-depth" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="others" className="block text-sm">
-                Others
-              </label>
-              <Input id="others" />
-            </div>
-          </TabsContent>
-        </Tabs>
+          <div className="space-y-1">
+            <label htmlFor="machine-name" className="block text-sm">
+              Machine name<span className="text-red-500">*</span>
+            </label>
+            <Input 
+              id="machine-name" 
+              value={machineName}
+              onChange={(e) => setMachineName(e.target.value)}
+              className={errors.machineName ? "border-red-500" : ""}
+              disabled={isSubmitting}
+            />
+            {errors.machineName && <p className="text-red-500 text-xs mt-1">{errors.machineName}</p>}
+          </div>
+        </div>
+        
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>{isEditing ? 'Save Changes' : 'Add Agent'}</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Processing...' : isEditing ? 'Save Changes' : 'Add Agent'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

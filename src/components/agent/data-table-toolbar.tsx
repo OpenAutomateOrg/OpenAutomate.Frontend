@@ -16,13 +16,11 @@ import {
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
-  agentGroups: { value: string; label: string }[] // Options for Agent Group filter
   statuses: { value: string; label: string }[] // Options for Status filter
 }
 
 export function DataTableToolbar<TData>({
   table,
-  agentGroups,
   statuses,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
@@ -37,25 +35,6 @@ export function DataTableToolbar<TData>({
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-
-        {/* Agent Group Filter */}
-        {table.getColumn('agentGroup') && (
-          <Select
-            onValueChange={(value) => table.getColumn('agentGroup')?.setFilterValue(value)}
-            value={(table.getColumn('agentGroup')?.getFilterValue() as string) ?? ''}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select agent group" />
-            </SelectTrigger>
-            <SelectContent>
-              {agentGroups.map((group) => (
-                <SelectItem key={group.value} value={group.value}>
-                  {group.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
 
         {/* Status Filter */}
         {table.getColumn('status') && (
