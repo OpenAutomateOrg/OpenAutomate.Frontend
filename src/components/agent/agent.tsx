@@ -4,11 +4,12 @@ import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CreateEditModal } from '@/components/agent/create-edit-modal'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
+import { agentApi, AgentResponse } from '@/lib/api/agent'
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,91 +26,53 @@ import {
 export const agentSchema = z.object({
   id: z.string(),
   name: z.string(),
-  version: z.string(),
-  status: z.string(),
-  agent: z.string(),
-  agentGroup: z.object({
-    id: z.string(),
-    name: z.string(),
-  }),
-  type: z.enum(['PRODUCTION', 'DEVELOPMENT', 'TESTING']),
-  key: z.string(),
   machineName: z.string(),
-  machineUsername: z.string(),
-  description: z.string(),
-  createdBy: z.string(),
+  machineKey: z.string(),
+  status: z.string(),
+  lastConnected: z.string().nullable().optional(),
+  isActive: z.boolean(),
 })
 
 export type AgentRow = z.infer<typeof agentSchema>
 
 export default function AgentInterface() {
   const router = useRouter()
-  const initialData: AgentRow[] = [
-    {
-      id: '1',
-      name: 'Agent-001',
-      version: '1.0.0',
-      status: 'Active',
-      agent: 'Agent-001',
-      agentGroup: { id: '1', name: 'Production' },
-      type: 'PRODUCTION',
-      key: 'agent-001-key',
-      machineName: 'PROD-SERVER-01',
-      machineUsername: 'system_admin',
-      description: 'Production server monitoring agent',
-      createdBy: 'System',
-    },
-    {
-      id: '2',
-      name: 'Agent-002',
-      version: '1.0.1',
-      status: 'Active',
-      agent: 'Agent-002',
-      agentGroup: { id: '2', name: 'DEV' },
-      type: 'DEVELOPMENT',
-      key: 'agent-002-key',
-      machineName: 'DEV-PC-01',
-      machineUsername: 'dev_user',
-      description: 'Development environment agent',
-      createdBy: 'System',
-    },
-    {
-      id: '3',
-      name: 'Agent-003',
-      version: '1.0.0',
-      status: 'Inactive',
-      agent: 'Agent-003',
-      agentGroup: { id: '3', name: 'Test' },
-      type: 'TESTING',
-      key: 'agent-003-key',
-      machineName: 'TEST-SERVER-01',
-      machineUsername: 'test_user',
-      description: 'Test environment agent',
-      createdBy: 'System',
-    },
-    {
-      id: '4',
-      name: 'Agent-004',
-      version: '1.0.2',
-      status: 'Active',
-      agent: 'Agent-004',
-      agentGroup: { id: '4', name: 'PM' },
-      type: 'PRODUCTION',
-      key: 'agent-004-key',
-      machineName: 'PROD-SERVER-02',
-      machineUsername: 'system_admin',
-      description: 'Backup server agent',
-      createdBy: 'System',
-    },
-  ]
-
-  const [data] = useState<AgentRow[]>(initialData)
+  const [data, setData] = useState<AgentRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+
+  // Fetch agent data
+  const fetchAgents = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const agents = await agentApi.getAll()
+      // Convert API response to AgentRow type
+      const formattedAgents: AgentRow[] = agents.map(agent => ({
+        ...agent,
+        lastConnected: agent.lastConnected || null
+      }))
+      setData(formattedAgents)
+    } catch (err: any) {
+      console.error('Error fetching agents:', err)
+      setError(err.message || 'Failed to load agents')
+      setData([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch agents on component mount
+  useEffect(() => {
+    fetchAgents()
+  }, [])
 
   const table = useReactTable({
     data,
@@ -143,27 +106,43 @@ export default function AgentInterface() {
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
-        <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => {
-              setModalMode('create')
-              setIsModalOpen(true)
-            }}
-            className="flex items-center justify-center"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create
-          </Button>
+        <div className="flex items-center justify-between">
+          <div>
+            {error && <div className="text-red-500">{error}</div>}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => {
+                setModalMode('create')
+                setIsModalOpen(true)
+              }}
+              className="flex items-center justify-center"
+              disabled={isLoading}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create
+            </Button>
+          </div>
         </div>
         <DataTableToolbar
           table={table}
-          agentGroups={[]}
           statuses={[
-            { value: 'Active', label: 'Active' },
-            { value: 'Inactive', label: 'Inactive' },
+            { value: 'Online', label: 'Online' },
+            { value: 'Offline', label: 'Offline' },
           ]}
         />
-        <DataTable data={data} columns={columns} onRowClick={handleRowClick} table={table} />
+        {isLoading ? (
+          <div className="flex justify-center items-center p-8">
+            Loading agents...
+          </div>
+        ) : (
+          <DataTable 
+            data={data} 
+            columns={columns} 
+            onRowClick={handleRowClick} 
+            table={table}
+          />
+        )}
       </div>
       <CreateEditModal
         isOpen={isModalOpen}
@@ -171,6 +150,7 @@ export default function AgentInterface() {
           setIsModalOpen(false)
         }}
         mode={modalMode}
+        onSuccess={fetchAgents}
       />
     </>
   )

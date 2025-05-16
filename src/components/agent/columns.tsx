@@ -1,8 +1,9 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { format } from 'date-fns'
 
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
@@ -48,12 +49,23 @@ export const columns: ColumnDef<AgentRow>[] = [
     },
   },
   {
-    accessorKey: 'version',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
+    accessorKey: 'machineName',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Name" />,
     cell: ({ row }) => {
       return (
         <div className="flex items-center">
-          <span>{row.getValue('version')}</span>
+          <span>{row.getValue('machineName')}</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'machineKey',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Key" />,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center">
+          <span>{row.getValue('machineKey')}</span>
         </div>
       )
     },
@@ -70,58 +82,31 @@ export const columns: ColumnDef<AgentRow>[] = [
     },
   },
   {
-    accessorKey: 'agentGroup',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent Group" />,
+    accessorKey: 'lastConnected',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Connected" />,
     cell: ({ row }) => {
+      const timestamp = row.getValue('lastConnected') as string;
+      // Format the date if it exists, otherwise show "Never"
+      const formattedDate = timestamp ? format(new Date(timestamp), 'MMM dd, yyyy HH:mm:ss') : 'Never';
       return (
         <div className="flex items-center">
-          <span>{row.getValue('agentGroup')}</span>
+          <span>{formattedDate}</span>
         </div>
       )
     },
   },
   {
-    accessorKey: 'machineName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine name" />,
+    accessorKey: 'isActive',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Active" />,
     cell: ({ row }) => {
+      const isActive = Boolean(row.getValue('isActive'));
       return (
         <div className="flex items-center">
-          <span>{row.getValue('machineName')}</span>
+          <Badge variant={isActive ? "default" : "destructive"}>
+            {isActive ? "Active" : "Inactive"}
+          </Badge>
         </div>
       )
     },
-  },
-  {
-    accessorKey: 'machineUsername',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Username" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue('machineUsername')}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span className="max-w-[500px] truncate">{row.getValue('description')}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'createdBy',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created By" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center">
-          <span>{row.getValue('createdBy')}</span>
-        </div>
-      )
-    },
-  },
+  }
 ]

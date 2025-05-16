@@ -10,27 +10,22 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Copy } from 'lucide-react'
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { agentApi } from '@/lib/api/agent'
 
 interface ItemModalProps {
   isOpen: boolean
   onClose: () => void
   mode: 'create' | 'edit'
+  onSuccess?: () => void
 }
 
-export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
+export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalProps) {
   const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [price, setPrice] = useState('')
-
-  const [key] = useState('2dda9826-f37d-96e6-e2d6-92c19bf637c0')
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(key)
-  }
+  const [machineName, setMachineName] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   const isEditing = mode === 'edit'
 
@@ -41,28 +36,76 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
       newErrors.name = 'Name is required'
     }
 
-    if (!category.trim()) {
-      newErrors.category = 'Category is required'
+    if (!machineName.trim()) {
+      newErrors.machineName = 'Machine name is required'
     }
 
-    if (!price.trim()) {
-      newErrors.price = 'Price is required'
-    } else if (isNaN(Number.parseFloat(price)) || Number.parseFloat(price) <= 0) {
-      newErrors.price = 'Price must be a positive number'
-    }
-
+    setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (validateForm()) {
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+
+    setIsLoading(true)
+    setStatusMessage(null)
+    
+    try {
+      // Create new agent
+      await agentApi.create({
+        name,
+        machineName
+      })
+
+      setStatusMessage({
+        type: 'success', 
+        message: `Agent ${isEditing ? 'updated' : 'created'} successfully.`
+      })
+
+      // Reset form and close modal after a brief delay to show success message
+      setTimeout(() => {
+        resetForm()
+        onClose()
+        
+        // Trigger refresh of data if success callback provided
+        if (onSuccess) {
+          onSuccess()
+        }
+      }, 1500)
+      
+    } catch (error: any) {
+      console.error('Error creating agent:', error);
+      
+      // Try to extract more detailed error information
+      let errorMessage = 'Failed to create agent. Please try again.';
+      
+      if (error.details) {
+        errorMessage = error.details;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // If error is a network error
+      if (error.status === 0) {
+        errorMessage = 'Network error. Please check your connection and API server status.';
+      } else if (error.status) {
+        errorMessage += ` (Status: ${error.status})`;
+      }
+      
+      setStatusMessage({
+        type: 'error',
+        message: errorMessage
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const resetForm = () => {
     setName('')
-    setCategory('')
-    setPrice('')
+    setMachineName('')
+    setErrors({})
+    setStatusMessage(null)
   }
 
   const handleClose = () => {
@@ -75,6 +118,15 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
+          {statusMessage && (
+            <div className={`mt-2 p-2 text-sm rounded ${
+              statusMessage.type === 'success' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {statusMessage.message}
+            </div>
+          )}
         </DialogHeader>
         <Tabs defaultValue="agent">
           <TabsList className="border-b w-full rounded-none mb-6 gap-8">
@@ -94,36 +146,31 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
 
           <TabsContent value="agent" className="space-y-4">
             <div className="space-y-1">
-              <label htmlFor="key" className="block text-sm">
-                Key<span className="text-red-500">*</span>
-              </label>
-              <div className="flex">
-                <Input id="key" value={key} readOnly className="flex-1" />
-                <Button variant="ghost" size="icon" onClick={copyToClipboard} className="ml-2">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-1">
               <label htmlFor="name" className="block text-sm">
                 Name<span className="text-red-500">*</span>
               </label>
-              <Input id="name" />
+              <Input 
+                id="name" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter agent name"
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
 
             <div className="space-y-1">
               <label htmlFor="machine-name" className="block text-sm">
                 Machine name<span className="text-red-500">*</span>
               </label>
-              <Input id="machine-name" />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="description" className="block text-sm">
-                Description
-              </label>
-              <Textarea id="description" />
+              <Input 
+                id="machine-name" 
+                value={machineName} 
+                onChange={(e) => setMachineName(e.target.value)}
+                placeholder="Enter machine name"
+                className={errors.machineName ? "border-red-500" : ""}
+              />
+              {errors.machineName && <p className="text-xs text-red-500 mt-1">{errors.machineName}</p>}
             </div>
           </TabsContent>
 
@@ -190,10 +237,12 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
           </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>{isEditing ? 'Save Changes' : 'Add Agent'}</Button>
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? "Processing..." : isEditing ? "Save Changes" : "Add Agent"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
