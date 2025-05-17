@@ -346,7 +346,8 @@ export default function AgentInterface() {
 
   const handleRowClick = (row: AgentRow) => {
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/agent/${row.id}` : `/[tenant]/agent/${row.id}`
+    const tenant = pathname.split('/')[1]
+    const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
     router.push(route)
   }
 

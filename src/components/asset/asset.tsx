@@ -104,7 +104,7 @@ export default function AssetInterface() {
   const handleRowClick = (row: AssetRow) => {
     const pathname = window.location.pathname
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/asset/${row.id}` : `/[tenant]/asset/${row.id}`
+    const route = isAdmin ? `/admin/asset/${row.id}` : `/${tenant}/asset/${row.id}`
     router.push(route)
   }
 
