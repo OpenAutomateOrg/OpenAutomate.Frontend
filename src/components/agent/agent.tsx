@@ -4,7 +4,7 @@ import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from '@/components/agent/create-edit-modal'
 import { z } from 'zod'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
@@ -23,7 +23,6 @@ import {
   PaginationState,
 } from '@tanstack/react-table'
 import { getBotAgentsWithOData, type ODataQueryOptions } from '@/lib/api/bot-agents'
-import React from 'react'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 
@@ -171,7 +170,7 @@ export default function AgentInterface() {
   }, [pagination, sorting, columnFilters]);
 
   // Calculate page count
-  const pageCount = React.useMemo(() => {
+  const pageCount = useMemo(() => {
     return Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
   }, [pagination.pageSize]);
 

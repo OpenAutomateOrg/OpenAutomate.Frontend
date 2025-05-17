@@ -58,7 +58,7 @@ export const columns: ColumnDef<AgentRow>[] = [
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
+      const status = String(row.getValue('status'));
       
       // Define status badge styling based on the status value
       let statusClass = '';
@@ -91,7 +91,8 @@ export const columns: ColumnDef<AgentRow>[] = [
     cell: ({ row }) => {
       // Get the value and convert it to a string to ensure it's safe for display
       const rawValue = row.getValue('lastConnected');
-      const lastConnected = typeof rawValue === 'string' ? rawValue : String(rawValue || '');
+      const lastConnected = typeof rawValue === 'string' ? rawValue : 
+                           (rawValue === null || rawValue === undefined) ? '' : String(rawValue);
       
       // Format the date if it's a valid date string
       let formattedDate = 'Never';
