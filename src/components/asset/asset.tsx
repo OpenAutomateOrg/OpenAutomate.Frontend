@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { PlusCircle, Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
@@ -20,8 +20,10 @@ import {
   ColumnFiltersState,
   SortingState,
   VisibilityState,
+  PaginationState,
 } from '@tanstack/react-table'
 import { api } from '@/lib/api/client'
+import { Pagination } from '@/components/ui/pagination'
 
 export const assetSchema = z.object({
   id: z.string(),
@@ -37,8 +39,6 @@ export type AssetRow = z.infer<typeof assetSchema>
 
 export default function AssetInterface() {
   const router = useRouter()
-
-
   const params = useParams()
   const tenant = params?.tenant as string
   const [data, setData] = useState<AssetRow[]>([])
@@ -50,6 +50,10 @@ export default function AssetInterface() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  })
 
   useEffect(() => {
     if (!tenant) return
@@ -75,7 +79,9 @@ export default function AssetInterface() {
       columnVisibility,
       rowSelection,
       columnFilters,
+      pagination,
     },
+    onPaginationChange: setPagination,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -88,6 +94,12 @@ export default function AssetInterface() {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  // Calculate total pages based on filtered rows
+  const totalCount = table.getFilteredRowModel().rows.length
+  const pageCount = useMemo(() => 
+    Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
+  [totalCount, pagination.pageSize])
 
   const handleRowClick = (row: AssetRow) => {
     const pathname = window.location.pathname
@@ -163,6 +175,28 @@ export default function AssetInterface() {
         </div>
         <DataTableToolbar table={table} />
         <DataTable data={data} columns={columns} onRowClick={handleRowClick} table={table} />
+        
+        <Pagination
+          currentPage={pagination.pageIndex + 1}
+          pageSize={pagination.pageSize}
+          totalCount={totalCount}
+          totalPages={pageCount}
+          isLoading={loading}
+          rowsLabel="assets"
+          onPageChange={(page) => {
+            setPagination(prev => ({
+              ...prev,
+              pageIndex: page - 1
+            }))
+          }}
+          onPageSizeChange={(size) => {
+            setPagination(prev => ({
+              ...prev,
+              pageSize: size,
+              pageIndex: 0 // Reset to first page when changing page size
+            }))
+          }}
+        />
       </div>
       <CreateEditModal
         isOpen={isModalOpen}
