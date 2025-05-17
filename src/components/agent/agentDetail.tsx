@@ -3,14 +3,20 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Copy } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { AgentRow } from './agent'
 
 interface AgentDetailProps {
   id: string
+}
+
+// Helper function to get badge class based on status
+const getStatusBadgeClass = (status: string) => {
+  if (status === 'Disconnected') return 'bg-red-100 text-red-600 border-none'
+  if (status === 'Offline') return 'bg-yellow-100 text-yellow-600 border-none'
+  return 'bg-green-100 text-green-600 border-none'
 }
 
 export default function AgentDetail({ id }: AgentDetailProps) {
@@ -22,26 +28,15 @@ export default function AgentDetail({ id }: AgentDetailProps) {
     const mockAgent: AgentRow = {
       id,
       name: 'Agent 2',
-      agentGroup: { id: 'group-1', name: 'Group 1' },
       machineName: 'Machine name',
-      agent: 'Agent',
-      type: 'PRODUCTION',
-      createdBy: 'admin',
-      description: '',
-      key: '2c5ce41f-c9a0-8224-cdb7-0a0dbdde0d0f',
-      machineUsername: 'Admin',
       status: 'Disconnected',
-      version: '',
+      lastConnected: '2023-10-15T14:30:00Z'
     }
     setAgent(mockAgent)
   }, [id])
 
   const handleBack = () => {
     router.back()
-  }
-
-  const handleCopy = (value: string) => {
-    navigator.clipboard.writeText(value)
   }
 
   if (!agent) {
@@ -60,47 +55,21 @@ export default function AgentDetail({ id }: AgentDetailProps) {
         <CardContent className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <DetailBlock label="Agent Group">
-                <Link href="#" className="text-blue-600 hover:underline">
-                  {agent.agentGroup?.name}
-                </Link>
-              </DetailBlock>
               <DetailBlock label="Name">{agent.name}</DetailBlock>
               <DetailBlock label="Machine name">{agent.machineName}</DetailBlock>
-              <DetailBlock label="Agent">{agent.agent}</DetailBlock>
-              <DetailBlock label="Type">{agent.type}</DetailBlock>
-              <DetailBlock label="Created By">{agent.createdBy}</DetailBlock>
-              <DetailBlock label="Description">{agent.description}</DetailBlock>
             </div>
             <div className="space-y-4">
-              <DetailBlock label="Key">
-                <div className="flex items-center gap-2">
-                  <span className="truncate">{agent.key}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleCopy(agent.key)}
-                    title="Copy"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </DetailBlock>
-              <DetailBlock label="Machine Username">{agent.machineUsername}</DetailBlock>
-              <DetailBlock label="Admin">{agent.createdBy}</DetailBlock>
               <DetailBlock label="Status">
                 <Badge
                   variant="outline"
-                  className={
-                    agent.status === 'Disconnected'
-                      ? 'bg-red-100 text-red-600 border-none'
-                      : 'bg-green-100 text-green-600 border-none'
-                  }
+                  className={getStatusBadgeClass(agent.status)}
                 >
                   {agent.status}
                 </Badge>
               </DetailBlock>
-              <DetailBlock label="Version">{agent.version}</DetailBlock>
+              <DetailBlock label="Last Connected">
+                {new Date(agent.lastConnected).toLocaleString()}
+              </DetailBlock>
             </div>
           </div>
         </CardContent>

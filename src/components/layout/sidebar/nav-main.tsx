@@ -15,6 +15,7 @@ import {
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 export function NavMain({
   items,
@@ -44,10 +45,10 @@ export function NavMain({
                 className="py-7 hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
                 tooltip={item.title}
               >
-                <a href={item.url}>
+                <Link href={item.url}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
@@ -91,9 +92,9 @@ export function NavMain({
                                 'outline outline-2 outline-orange-600 text-orange-600 bg-orange-600/10',
                             )}
                           >
-                            <a href={subItem.url}>
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       )
