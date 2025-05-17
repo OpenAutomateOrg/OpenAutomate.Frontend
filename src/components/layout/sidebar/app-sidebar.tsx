@@ -65,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: 'Automation',
-      url: createTenantUrl('/automation/executions'),
+      url: createTenantUrl('/automation'),
       icon: Cog,
       items: [
         {
