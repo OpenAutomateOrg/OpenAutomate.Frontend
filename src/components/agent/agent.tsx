@@ -268,15 +268,22 @@ export default function AgentInterface() {
   
   // Calculate page count - handle case when we don't know exact count
   const pageCount = useMemo(() => {
-    // If we have items and no exact count yet, indicate there might be more pages
-    const hasMorePages = agents.length === pagination.pageSize && 
-                        totalCount <= pagination.pageSize * (pagination.pageIndex + 1);
-                        
+    // Always ensure the page count is at least equal to the current page index
+    // This prevents "Page 2 of 1" situations
     const calculatedCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
     
-    // If we have a full page of results and are on first page with no confirmed total,
-    // we should indicate there might be more (at least one more page)
-    return hasMorePages ? Math.max(calculatedCount, pagination.pageIndex + 2) : calculatedCount;
+    // If we have a full page of results and there might be more items
+    const hasMorePages = agents.length === pagination.pageSize && 
+                          totalCount <= pagination.pageSize * (pagination.pageIndex + 1);
+    
+    // Handle three cases:
+    // 1. Make sure current page is valid (avoid "Page 2 of 1")
+    // 2. If we have a full page of results, we might have more
+    // 3. Otherwise, use standard calculation
+    return Math.max(
+      pagination.pageIndex + 1, // Make sure current page is valid
+      hasMorePages ? Math.max(calculatedCount, pagination.pageIndex + 2) : calculatedCount
+    );
   }, [pagination.pageSize, pagination.pageIndex, agents.length, totalCount]);
 
   // When rendering the DataTable, inject real-time status if available
