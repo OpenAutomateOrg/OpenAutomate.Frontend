@@ -22,12 +22,14 @@ import {
   VisibilityState,
   PaginationState,
 } from '@tanstack/react-table'
-import { getBotAgentsWithOData, type ODataQueryOptions } from '@/lib/api/bot-agents'
+import { getBotAgentsWithOData, type ODataQueryOptions, ODataResponse, BotAgentResponseDto } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
+import { useAgentStatus } from '@/hooks/useAgentStatus'
 
 export const agentSchema = z.object({
   id: z.string(),
+  botAgentId: z.string(),
   name: z.string(),
   machineName: z.string(),
   status: z.string(),
@@ -58,6 +60,7 @@ export default function AgentInterface() {
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
+  const [hasExactCount, setHasExactCount] = useState(false)
   
   // Create refs for debouncing
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -106,23 +109,9 @@ export default function AgentInterface() {
   // UI state for search input
   const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') || '')
   
-  // Initialize URL with default params if needed
-  useEffect(() => {
-    if (shouldInitializeUrl.current) {
-      shouldInitializeUrl.current = false;
-      
-      const page = searchParams.get('page');
-      const size = searchParams.get('size');
-      
-      if (!page || !size) {
-        updateUrl(pathname, {
-          page: page || '1',
-          size: size || '10'
-        });
-      }
-    }
-  }, [searchParams, updateUrl, pathname]);
-  
+  // Extract tenant from pathname (e.g., /tenant/agent)
+  const tenant = pathname.split('/')[1];
+
   // Convert table state to OData query parameters
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
@@ -169,14 +158,179 @@ export default function AgentInterface() {
     return params;
   }, [pagination, sorting, columnFilters]);
 
-  // Calculate page count
-  const pageCount = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-  }, [pagination.pageSize]);
+  // Fetch data with proper handling
+  const fetchAgents = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    // Helper function to update counts based on OData response
+    const updateTotalCounts = (response: ODataResponse<BotAgentResponseDto>) => {
+      if (typeof response['@odata.count'] === 'number') {
+        setTotalCount(response['@odata.count']);
+        totalCountRef.current = response['@odata.count'];
+        setHasExactCount(true);
+        return;
+      } 
+      
+      if (!Array.isArray(response.value)) {
+        return;
+      }
+      
+      // When count isn't available, estimate from current page
+      const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
+      
+      // Only update if the new minimum count is higher than current
+      if (minCount > totalCountRef.current) {
+        setTotalCount(minCount);
+        totalCountRef.current = minCount;
+      }
+      
+      // If we got a full page on first page, assume there might be more
+      const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
+      if (isFullFirstPage) {
+        setTotalCount(minCount + 1); // Indicate there might be more
+        totalCountRef.current = minCount + 1;
+      }
+      
+      setHasExactCount(false);
+    };
 
-  // Setup table instance
+    // Helper function to process agent data and handle pagination edge cases
+    const processAgentData = (response: ODataResponse<BotAgentResponseDto>) => {
+      if (!Array.isArray(response.value)) {
+        setAgents([]);
+        return;
+      }
+      
+      const formattedAgents = response.value.map((agent: BotAgentResponseDto) => ({
+        ...agent,
+        botAgentId: agent.id, // Ensure botAgentId is present for real-time merge
+      }));
+      
+      setAgents(formattedAgents);
+      
+      // Handle empty page edge case
+      const isEmptyPageBeyondFirst = response.value.length === 0 && 
+                                    totalCountRef.current > 0 && 
+                                    pagination.pageIndex > 0;
+                                    
+      if (isEmptyPageBeyondFirst) {
+        const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
+        
+        if (pagination.pageIndex >= calculatedPageCount) {
+          setPagination(prev => ({ ...prev, pageIndex: 0 }));
+          updateUrl(pathname, { page: '1' });
+        }
+      }
+    };
+    
+    try {
+      const queryParams = getODataQueryParams();
+      const response = await getBotAgentsWithOData(queryParams);
+      
+      // Update counts and process data using helper functions
+      updateTotalCounts(response);
+      processAgentData(response);
+    } catch (_err) {
+      setError('Failed to load agents. Please try again. - '+_err);
+    } finally {
+      setIsLoading(false);
+      setIsPending(false);
+      setIsChangingPageSize(false);
+    }
+  }, [getODataQueryParams, pagination.pageIndex, pagination.pageSize, updateUrl, pathname]);
+
+  // Use real-time status only, no refetch on status update
+  const agentStatuses = useAgentStatus(tenant);
+  
+  // Intercept console errors for SignalR
+  useEffect(() => {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      // Filter out SignalR-related errors
+      if (args.length > 0 && 
+          typeof args[0] === 'string' && 
+          (args[0].includes('SignalR') || 
+           args[0].includes('connection') || 
+           args[0].includes('Connection') ||
+           args[0].includes('Failed to start'))) {
+        console.debug('[Suppressed]', ...args);
+        return;
+      }
+      originalConsoleError(...args);
+    };
+
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
+
+  // Initialize URL with default params if needed
+  useEffect(() => {
+    if (shouldInitializeUrl.current) {
+      shouldInitializeUrl.current = false;
+      
+      const page = searchParams.get('page');
+      const size = searchParams.get('size');
+      
+      if (!page || !size) {
+        updateUrl(pathname, {
+          page: page || '1',
+          size: size || '10'
+        });
+      }
+    }
+  }, [searchParams, updateUrl, pathname]);
+  
+  // Helper for pageCount calculation
+  const getMinimumValidPageCount = (currentPageIndex: number) => {
+    return currentPageIndex + 1; // Ensure current page is valid
+  };
+  
+  // Calculate the standard page count based on total items and page size
+  const getCalculatedPageCount = (total: number, size: number) => {
+    return Math.max(1, Math.ceil(total / size));
+  };
+  
+  // Calculate page count - handle case when we don't know exact count
+  const pageCount = useMemo(() => {
+    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize);
+    
+    // Check if we have a full page of results that might indicate more pages
+    const hasMorePages = agents.length === pagination.pageSize && 
+                          totalCount <= pagination.pageSize * (pagination.pageIndex + 1);
+    
+    // Calculate the minimum valid page count
+    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex);
+    
+    // Determine final page count
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2);
+    }
+    
+    return Math.max(minValidPageCount, calculatedCount);
+  }, [pagination.pageSize, pagination.pageIndex, agents.length, totalCount]);
+
+  // When rendering the DataTable, inject real-time status if available
+  const agentsWithRealtimeStatus = useMemo(() => {
+    return agents.map(agent => {
+      const realTime = agentStatuses[agent.botAgentId];
+      if (realTime) {
+        // Use debug level logging to avoid console noise
+        console.debug('Merging real-time status for', agent.botAgentId, realTime.status);
+      }
+      return realTime ? { ...agent, status: realTime.status } : agent;
+    });
+  }, [agents, agentStatuses]);
+
+  // Helper to check if the count is a reliable total or just a minimum
+  const isUnknownTotalCount = useMemo(() => {
+    return !hasExactCount && agents.length === pagination.pageSize;
+  }, [hasExactCount, agents.length, pagination.pageSize]);
+
+  // Setup table instance with real-time data and custom row ID
   const table = useReactTable({
-    data: agents,
+    data: agentsWithRealtimeStatus,
     columns,
     state: {
       sorting,
@@ -190,7 +344,6 @@ export default function AgentInterface() {
     onSortingChange: (updater) => {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater
       setSorting(newSorting)
-      
       if (newSorting.length > 0) {
         updateUrl(pathname, {
           sort: newSorting[0].id,
@@ -210,7 +363,6 @@ export default function AgentInterface() {
     onPaginationChange: (updater) => {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
-      
       updateUrl(pathname, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
@@ -226,6 +378,7 @@ export default function AgentInterface() {
     pageCount,
     manualSorting: true,
     manualFiltering: true,
+    getRowId: row => row.botAgentId, // Use botAgentId as the row ID for best real-time UX
   })
 
   // Implement search with debounce
@@ -274,60 +427,6 @@ export default function AgentInterface() {
     }
   }, [])
 
-  // Fetch data with proper handling
-  const fetchAgents = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const queryParams = getODataQueryParams();
-      const response = await getBotAgentsWithOData(queryParams);
-      
-      // Update total count if available
-      if (typeof response['@odata.count'] === 'number') {
-        setTotalCount(response['@odata.count']);
-        totalCountRef.current = response['@odata.count'];
-      } else if (pagination.pageIndex === 0 && Array.isArray(response.value)) {
-        setTotalCount(response.value.length);
-        totalCountRef.current = response.value.length;
-      }
-      
-      // Process agent data
-      if (Array.isArray(response.value)) {
-        const formattedAgents = response.value.map(agent => ({
-          id: agent.id,
-          name: agent.name,
-          machineName: agent.machineName,
-          status: agent.status,
-          lastConnected: agent.lastConnected,
-        }));
-        
-        setAgents(formattedAgents || []);
-        
-        // Handle empty page edge case
-        if (response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0) {
-          const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-          
-          if (pagination.pageIndex >= calculatedPageCount) {
-            setPagination(prev => ({
-              ...prev,
-              pageIndex: 0
-            }));
-            updateUrl(pathname, { page: '1' });
-          }
-        }
-      } else {
-        setAgents([]);
-      }
-    } catch (_err) {
-      setError('Failed to load agents. Please try again. - '+_err);
-    } finally {
-      setIsLoading(false);
-      setIsPending(false);
-      setIsChangingPageSize(false);
-    }
-  }, [getODataQueryParams, pagination.pageIndex, pagination.pageSize, updateUrl, pathname]);
-
   // Fetch data when pagination changes
   useEffect(() => {
     if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
@@ -346,7 +445,6 @@ export default function AgentInterface() {
 
   const handleRowClick = (row: AgentRow) => {
     const isAdmin = pathname.startsWith('/admin')
-    const tenant = pathname.split('/')[1]
     const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
     router.push(route)
   }
@@ -367,17 +465,17 @@ export default function AgentInterface() {
                 <span>Total: {totalCount} agent{totalCount !== 1 ? 's' : ''}</span>
               </div>
             )}
-            <Button
-              onClick={() => {
-                setModalMode('create')
-                setIsModalOpen(true)
-              }}
-              className="flex items-center justify-center"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create
-            </Button>
-          </div>
+          <Button
+            onClick={() => {
+              setModalMode('create')
+              setIsModalOpen(true)
+            }}
+            className="flex items-center justify-center"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create
+          </Button>
+        </div>
         </div>
         
         {error && (
@@ -404,10 +502,10 @@ export default function AgentInterface() {
         />
         
         <DataTable 
-          data={agents || []} 
-          columns={columns} 
-          onRowClick={handleRowClick} 
-          table={table} 
+          data={agentsWithRealtimeStatus}
+          columns={columns}
+          table={table}
+          onRowClick={handleRowClick}
           isLoading={isLoading}
           totalCount={totalCount}
         />
@@ -419,6 +517,7 @@ export default function AgentInterface() {
           totalPages={pageCount}
           isLoading={isLoading}
           isChangingPageSize={isChangingPageSize}
+          isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
             updateUrl(pathname, { page: page.toString() })

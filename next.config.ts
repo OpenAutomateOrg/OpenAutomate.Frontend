@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next'
 
+// Get the API URL from environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
+
 const nextConfig: NextConfig = {
   /* Public Website Configuration */
 
@@ -45,6 +48,29 @@ const nextConfig: NextConfig = {
 
   // Enable React strict mode for better development experience
   reactStrictMode: true,
+
+  // Configure API and SignalR proxy rewrites
+  async rewrites() {
+    return [
+      // Rewrite SignalR hub connections for bot agents
+      {
+        source: '/:tenantSlug/hubs/:path*',
+        destination: `${API_URL}/:tenantSlug/hubs/:path*`,
+      },
+      
+      // Rewrite OData API calls
+      {
+        source: '/:tenantSlug/odata/:path*',
+        destination: `${API_URL}/:tenantSlug/odata/:path*`,
+      },
+      
+      // Rewrite regular API calls
+      {
+        source: '/:tenantSlug/api/:path*',
+        destination: `${API_URL}/:tenantSlug/api/:path*`,
+      }
+    ]
+  },
 }
 
 export default nextConfig
