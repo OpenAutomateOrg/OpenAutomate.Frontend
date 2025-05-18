@@ -10,13 +10,13 @@ interface AdminRouteGuardProps {
    * The content to be protected by the admin route guard
    */
   children: ReactNode
-  
+
   /**
    * The path to redirect non-admin users to
    * @default "/dashboard"
    */
   redirectPath?: string
-  
+
   /**
    * Custom loading component
    * @default A basic skeleton loader
@@ -36,25 +36,27 @@ export function AdminRouteGuard({
 }: AdminRouteGuardProps) {
   const { isSystemAdmin, isLoading } = useAuth()
   const router = useRouter()
-  
+
   useEffect(() => {
     // Only redirect after loading completes and we know user is not an admin
     if (!isLoading && !isSystemAdmin) {
       router.push(redirectPath)
     }
   }, [isSystemAdmin, isLoading, router, redirectPath])
-  
+
   // If still loading, show loading component
   if (isLoading) {
-    return loadingComponent || (
-      <div className="w-full p-8 space-y-4">
-        <Skeleton className="h-12 w-full rounded-lg" />
-        <Skeleton className="h-60 w-full rounded-lg" />
-        <Skeleton className="h-12 w-2/3 rounded-lg" />
-      </div>
+    return (
+      loadingComponent || (
+        <div className="w-full p-8 space-y-4">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-60 w-full rounded-lg" />
+          <Skeleton className="h-12 w-2/3 rounded-lg" />
+        </div>
+      )
     )
   }
-  
+
   // If user is admin, show the protected content
   return isSystemAdmin ? <>{children}</> : null
-} 
+}

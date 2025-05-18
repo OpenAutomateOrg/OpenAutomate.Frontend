@@ -10,10 +10,10 @@ interface MainNavProps extends HTMLAttributes<HTMLDivElement> {
   user?: User | null
 }
 
-export function MainNav({ 
+export function MainNav({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  user, 
-  ...props 
+  user,
+  ...props
 }: MainNavProps) {
   const pathname = usePathname()
 

@@ -8,130 +8,125 @@ import {
   ReactNode,
   useCallback,
   useMemo,
-} from "react";
-import { authApi } from "@/lib/api/auth";
-import { useRouter } from "next/navigation";
-import {
-  User,
-  LoginRequest,
-  RegisterRequest,
-  SystemRole,
-} from "@/types/auth";
+} from 'react'
+import { authApi } from '@/lib/api/auth'
+import { useRouter } from 'next/navigation'
+import { User, LoginRequest, RegisterRequest, SystemRole } from '@/types/auth'
 import {
   getAuthToken,
   setAuthToken,
   getUser,
   setUser as setStoredUser,
   clearAuthData,
-} from "@/lib/auth/token-storage";
-import logger from "@/lib/utils/logger";
-import authLogger from "@/lib/utils/auth-logger";
-import { config } from "@/lib/config";
+} from '@/lib/auth/token-storage'
+import logger from '@/lib/utils/logger'
+import authLogger from '@/lib/utils/auth-logger'
+import { config } from '@/lib/config'
 
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  isSystemAdmin: boolean;
-  login: (data: LoginRequest) => Promise<User | void>;
-  register: (data: RegisterRequest) => Promise<User>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<boolean>;
-  error: string | null;
+  user: User | null
+  isLoading: boolean
+  isAuthenticated: boolean
+  isSystemAdmin: boolean
+  login: (data: LoginRequest) => Promise<User | void>
+  register: (data: RegisterRequest) => Promise<User>
+  logout: () => Promise<void>
+  refreshToken: () => Promise<boolean>
+  error: string | null
 }
 
 // Create the auth context
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Token refresh interval from config
-const TOKEN_REFRESH_INTERVAL = config.auth.tokenRefreshInterval;
+const TOKEN_REFRESH_INTERVAL = config.auth.tokenRefreshInterval
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   // Computed property for system admin status
-  const isSystemAdmin = user?.systemRole === SystemRole.Admin;
+  const isSystemAdmin = user?.systemRole === SystemRole.Admin
 
   // Refresh token implementation
   const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await authApi.refreshToken();
-      
+      const response = await authApi.refreshToken()
+
       // Update token in storage
-      setAuthToken(response.token);
-      
+      setAuthToken(response.token)
+
       // Update user if it exists in the response
       const userToSet = response.user || {
         id: response.id,
         email: response.email,
         firstName: response.firstName,
         lastName: response.lastName,
-        systemRole: response.systemRole || SystemRole.User
-      };
-      
+        systemRole: response.systemRole || SystemRole.User,
+      }
+
       // Update in storage and local state
-      setStoredUser(userToSet);
-      setUser(userToSet);
-      logger.success("Token refreshed successfully");
-      return true;
+      setStoredUser(userToSet)
+      setUser(userToSet)
+      logger.success('Token refreshed successfully')
+      return true
     } catch (err) {
-      logger.error("Token refresh failed:", err);
+      logger.error('Token refresh failed:', err)
       // Clear auth data on refresh failure
-      clearAuthData();
-      setUser(null);
-      return false;
+      clearAuthData()
+      setUser(null)
+      return false
     }
-  }, []);
+  }, [])
 
   // Set up token refresh on interval and tab focus
   useEffect(() => {
-    let refreshInterval: NodeJS.Timeout | null = null;
+    let refreshInterval: NodeJS.Timeout | null = null
 
     // Only set up refresh if user is authenticated
     if (user) {
       // Set up interval for token refresh
       refreshInterval = setInterval(() => {
-        refreshToken();
-      }, TOKEN_REFRESH_INTERVAL);
+        refreshToken()
+      }, TOKEN_REFRESH_INTERVAL)
 
       // Set up focus event for token refresh
       const handleVisibilityChange = () => {
-        if (document.visibilityState === "visible") {
-          refreshToken();
+        if (document.visibilityState === 'visible') {
+          refreshToken()
         }
-      };
+      }
 
-      document.addEventListener("visibilitychange", handleVisibilityChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange)
 
       return () => {
-        if (refreshInterval) clearInterval(refreshInterval);
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-      };
+        if (refreshInterval) clearInterval(refreshInterval)
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
     }
 
     return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
-    };
-  }, [user, refreshToken]);
+      if (refreshInterval) clearInterval(refreshInterval)
+    }
+  }, [user, refreshToken])
 
   // Handle token expired events
   useEffect(() => {
     const handleTokenExpired = () => {
-      logger.warning("Authentication token expired");
-      clearAuthData();
-      setUser(null);
-      router.push("/login");
-    };
+      logger.warning('Authentication token expired')
+      clearAuthData()
+      setUser(null)
+      router.push('/login')
+    }
 
-    window.addEventListener("auth:token-expired", handleTokenExpired);
+    window.addEventListener('auth:token-expired', handleTokenExpired)
 
     return () => {
-      window.removeEventListener("auth:token-expired", handleTokenExpired);
-    };
-  }, [router]);
+      window.removeEventListener('auth:token-expired', handleTokenExpired)
+    }
+  }, [router])
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -140,153 +135,160 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
       try {
         // Check for stored token
-        const token = getAuthToken();
-        const userData = getUser();
+        const token = getAuthToken()
+        const userData = getUser()
 
         if (token && userData) {
           // If token and user exist, set user state
-          setUser(userData);
-          logger.log("User restored from storage", "info", userData);
-          
+          setUser(userData)
+          logger.log('User restored from storage', 'info', userData)
+
           // After setting user from storage, attempt to get fresh user data
           try {
-            const currentUser = await authApi.getCurrentUser();
-            setUser(currentUser);
-            logger.success("User data refreshed from API");
+            const currentUser = await authApi.getCurrentUser()
+            setUser(currentUser)
+            logger.success('User data refreshed from API')
           } catch (err) {
-            logger.warning("Failed to get current user, attempting token refresh", err);
+            logger.warning('Failed to get current user, attempting token refresh', err)
             // If fetching current user fails, try to refresh the token
-            const refreshed = await refreshToken();
+            const refreshed = await refreshToken()
             if (!refreshed) {
-              clearAuthData();
-              setUser(null);
+              clearAuthData()
+              setUser(null)
             }
           }
         }
       } catch (err) {
-        logger.error("Authentication initialization failed:", err);
+        logger.error('Authentication initialization failed:', err)
         // Clear tokens if initialization fails
-        clearAuthData();
+        clearAuthData()
       } finally {
         setIsLoading(false)
       }
     }
 
-    initAuth();
-  }, [refreshToken]);
+    initAuth()
+  }, [refreshToken])
 
   // Login function
-  const login = useCallback(async (data: LoginRequest): Promise<User | void> => {
-    setIsLoading(true);
-    setError(null);
+  const login = useCallback(
+    async (data: LoginRequest): Promise<User | void> => {
+      setIsLoading(true)
+      setError(null)
 
-    try {
-      const response = await authApi.login(data);
-      
-      // Store token and user
-      setAuthToken(response.token);
-      
-      // Use user from response or create from response fields
-      const userData = response.user || {
-        id: response.id,
-        email: response.email,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        systemRole: response.systemRole || SystemRole.User
-      };
-      
-      // Update in storage and local state
-      setStoredUser(userData);
-      setUser(userData);
-      
-      // Log authentication success with standard logger
-      logger.success(`User logged in: ${userData.email}`);
-      
-      // Always redirect to organization selector first
-      // This lets the user choose which tenant to access
-      router.push(config.paths.defaultRedirect);
-      
-      return userData;
-    } catch (err: unknown) {
-      // Handle API error with type safety
-      const errorMessage = 
-        typeof err === 'object' && err !== null
-          ? (err as { response?: { data?: { message?: string } }, message?: string })?.response?.data?.message 
-            || (err as { message?: string })?.message 
-            || "An error occurred during login"
-          : "An error occurred during login";
-      
-      setError(errorMessage);
-      logger.error("Login failed:", err);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
+      try {
+        const response = await authApi.login(data)
+
+        // Store token and user
+        setAuthToken(response.token)
+
+        // Use user from response or create from response fields
+        const userData = response.user || {
+          id: response.id,
+          email: response.email,
+          firstName: response.firstName,
+          lastName: response.lastName,
+          systemRole: response.systemRole || SystemRole.User,
+        }
+
+        // Update in storage and local state
+        setStoredUser(userData)
+        setUser(userData)
+
+        // Log authentication success with standard logger
+        logger.success(`User logged in: ${userData.email}`)
+
+        // Always redirect to organization selector first
+        // This lets the user choose which tenant to access
+        router.push(config.paths.defaultRedirect)
+
+        return userData
+      } catch (err: unknown) {
+        // Handle API error with type safety
+        const errorMessage =
+          typeof err === 'object' && err !== null
+            ? (err as { response?: { data?: { message?: string } }; message?: string })?.response
+                ?.data?.message ||
+              (err as { message?: string })?.message ||
+              'An error occurred during login'
+            : 'An error occurred during login'
+
+        setError(errorMessage)
+        logger.error('Login failed:', err)
+        throw err
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [router],
+  )
 
   // Register function
   const register = useCallback(async (data: RegisterRequest) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
-      const response = await authApi.register(data);
-      
+      const response = await authApi.register(data)
+
       // In email verification flow, we don't automatically log in the user
       // So we don't set tokens or user data here
-      
-      logger.auth("Registration Successful", {
+
+      logger.auth('Registration Successful', {
         email: data.email,
-        message: "Verification email sent"
-      });
-      
-      return response;
+        message: 'Verification email sent',
+      })
+
+      return response
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err.message as string) || "Registration failed";
-        setError(errorMessage);
-        logger.error("Registration failed:", errorMessage);
+        const errorMessage = (err.message as string) || 'Registration failed'
+        setError(errorMessage)
+        logger.error('Registration failed:', errorMessage)
       } else {
-        setError("Registration failed");
-        logger.error("Registration failed: Unknown error");
+        setError('Registration failed')
+        logger.error('Registration failed: Unknown error')
       }
       throw err
     } finally {
       setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   // Logout function
   const logout = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await authApi.logout();
-      authLogger.logout();
+      await authApi.logout()
+      authLogger.logout()
     } catch (err) {
-      logger.error("Logout error:", err);
+      logger.error('Logout error:', err)
     } finally {
       // Clear user and tokens
-      clearAuthData();
-      setUser(null);
-      router.push("/login");
-      setIsLoading(false);
+      clearAuthData()
+      setUser(null)
+      router.push('/login')
+      setIsLoading(false)
     }
-  }, [router]);
+  }, [router])
 
   return (
     <AuthContext.Provider
-      value={useMemo(() => ({
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        isSystemAdmin,
-        login,
-        register,
-        logout,
-        refreshToken,
-        error,
-      }), [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, error])}
+      value={useMemo(
+        () => ({
+          user,
+          isLoading,
+          isAuthenticated: !!user,
+          isSystemAdmin,
+          login,
+          register,
+          logout,
+          refreshToken,
+          error,
+        }),
+        [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, error],
+      )}
     >
       {children}
     </AuthContext.Provider>

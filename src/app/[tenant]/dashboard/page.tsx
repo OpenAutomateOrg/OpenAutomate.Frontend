@@ -4,7 +4,7 @@ import { ChartPieLabel } from '@/components/layout/charts/chart-pie-label'
 import { ChartBarDefault } from '@/components/layout/charts/chart-bar-defaut'
 import { SearchBar } from '@/components/layout/search/search-bar'
 
-export default function Page() {
+export default function DashBoard() {
   return (
     <div className="flex flex-1 flex-col bg-muted/20 min-h-screen">
       <div className="@container/main flex flex-1 flex-col gap-4  lg:p-6">

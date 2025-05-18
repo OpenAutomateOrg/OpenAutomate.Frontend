@@ -30,11 +30,14 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 interface CreateOrganizationUnitFormProps {
-  readonly onSuccess?: (slug: string) => void;
-  readonly onCancel?: () => void;
+  readonly onSuccess?: (slug: string) => void
+  readonly onCancel?: () => void
 }
 
-export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrganizationUnitFormProps) {
+export function CreateOrganizationUnitForm({
+  onSuccess,
+  onCancel,
+}: CreateOrganizationUnitFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -58,7 +61,7 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
         name: data.name,
         description: data.description,
       })
-      
+
       // Call onSuccess callback with the new organization slug
       if (onSuccess) {
         onSuccess(result.slug)
@@ -68,7 +71,9 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
       }
     } catch (err: unknown) {
       console.error('Organization unit creation failed', err)
-      setError(err instanceof Error ? err.message : 'Failed to create organization. Please try again.')
+      setError(
+        err instanceof Error ? err.message : 'Failed to create organization. Please try again.',
+      )
     } finally {
       setIsLoading(false)
     }
@@ -92,20 +97,14 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
               <FormItem>
                 <FormLabel>Organization Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="My Organization"
-                    {...field}
-                    disabled={isLoading}
-                  />
+                  <Input placeholder="My Organization" {...field} disabled={isLoading} />
                 </FormControl>
-                <FormDescription>
-                  This will be the name of your new organization.
-                </FormDescription>
+                <FormDescription>This will be the name of your new organization.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="description"
@@ -115,11 +114,11 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
                 <FormControl>
                   <textarea
                     placeholder="A brief description of your organization"
-                    {...field} 
+                    {...field}
                     disabled={isLoading}
                     className={cn(
-                      "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                      "resize-none"
+                      'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                      'resize-none',
                     )}
                     rows={3}
                   />
@@ -137,7 +136,7 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
             >
               {isLoading ? 'Creating...' : 'Create Organization'}
             </Button>
-            
+
             {onCancel && (
               <Button
                 type="button"
@@ -154,4 +153,4 @@ export function CreateOrganizationUnitForm({ onSuccess, onCancel }: CreateOrgani
       </Form>
     </div>
   )
-} 
+}

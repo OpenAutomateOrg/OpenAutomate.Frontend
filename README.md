@@ -9,6 +9,7 @@ This is the **Cloud Orchestrator** application for OpenAutomate - an open-source
 OpenAutomate uses a split frontend architecture consisting of two separate applications:
 
 1. **Public Website (openautomate.me)**
+
    - Marketing content, documentation, landing pages
    - Public information, pricing, features
    - Simple "Launch Orchestrator" button redirecting to this app
@@ -164,7 +165,7 @@ cd OpenAutomate.PublicSite
 npm run dev -- --port 3000
 
 # Terminal 2 - Cloud Orchestrator
-cd OpenAutomate.Frontend  
+cd OpenAutomate.Frontend
 npm run dev -- --port 3001
 ```
 
@@ -292,10 +293,10 @@ export function MyComponent() {
 
 ## Environment Variables
 
-| Variable                    | Description                          | Default                  |
-| --------------------------- | ------------------------------------ | ------------------------ |
-| `NEXT_PUBLIC_API_URL`       | URL of the backend API               | `https://localhost:7240` |
-| `NEXT_PUBLIC_WEBSITE_URL`   | URL of the public website            | `http://localhost:3000`  |
+| Variable                  | Description               | Default                  |
+| ------------------------- | ------------------------- | ------------------------ |
+| `NEXT_PUBLIC_API_URL`     | URL of the backend API    | `https://localhost:7240` |
+| `NEXT_PUBLIC_WEBSITE_URL` | URL of the public website | `http://localhost:3000`  |
 
 ## Deployment
 

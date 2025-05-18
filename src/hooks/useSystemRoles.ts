@@ -72,9 +72,7 @@ interface UseSystemRolesResult {
  * @param options Configuration options
  * @returns Functions and state for system role management
  */
-export function useSystemRoles(
-  options: UseSystemRolesOptions = {}
-): UseSystemRolesResult {
+export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRolesResult {
   const { isSystemAdmin } = useAuth()
   const [adminUsers, setAdminUsers] = useState<User[]>([])
   const [standardUsers, setStandardUsers] = useState<User[]>([])
@@ -88,10 +86,10 @@ export function useSystemRoles(
   // Fetch admin users
   const fetchAdminUsers = useCallback(async () => {
     if (!isSystemAdmin) return
-    
+
     setLoadingAdmins(true)
     setAdminError(null)
-    
+
     try {
       const users = await systemRolesApi.getUsersByRole(SystemRole.Admin)
       setAdminUsers(users)
@@ -106,10 +104,10 @@ export function useSystemRoles(
   // Fetch standard users
   const fetchStandardUsers = useCallback(async () => {
     if (!isSystemAdmin) return
-    
+
     setLoadingStandardUsers(true)
     setStandardUserError(null)
-    
+
     try {
       const users = await systemRolesApi.getUsersByRole(SystemRole.User)
       setStandardUsers(users)
@@ -126,7 +124,7 @@ export function useSystemRoles(
     if (options.fetchAdmins) {
       await fetchAdminUsers()
     }
-    
+
     if (options.fetchStandardUsers) {
       await fetchStandardUsers()
     }
@@ -136,14 +134,14 @@ export function useSystemRoles(
   const setUserRole = useCallback(
     async (userId: string, role: SystemRole): Promise<boolean> => {
       if (!isSystemAdmin) return false
-      
+
       setChangingRole(true)
       setChangeRoleError(null)
-      
+
       try {
         const dto: SetSystemRoleDto = { role }
         await systemRolesApi.setUserRole(userId, dto)
-        
+
         // Refresh the user lists after a successful role change
         await refreshUsers()
         return true
@@ -155,7 +153,7 @@ export function useSystemRoles(
         setChangingRole(false)
       }
     },
-    [isSystemAdmin, refreshUsers]
+    [isSystemAdmin, refreshUsers],
   )
 
   // Load initial data
@@ -164,12 +162,18 @@ export function useSystemRoles(
       if (options.fetchAdmins) {
         fetchAdminUsers()
       }
-      
+
       if (options.fetchStandardUsers) {
         fetchStandardUsers()
       }
     }
-  }, [isSystemAdmin, fetchAdminUsers, fetchStandardUsers, options.fetchAdmins, options.fetchStandardUsers])
+  }, [
+    isSystemAdmin,
+    fetchAdminUsers,
+    fetchStandardUsers,
+    options.fetchAdmins,
+    options.fetchStandardUsers,
+  ])
 
   return {
     adminUsers,
@@ -181,6 +185,6 @@ export function useSystemRoles(
     setUserRole,
     changingRole,
     changeRoleError,
-    refreshUsers
+    refreshUsers,
   }
-} 
+}

@@ -33,7 +33,7 @@ type FormData = z.infer<typeof formSchema>
 
 // This is a client component that accesses search params
 export function LoginForm() {
-  // The component using useSearchParams must be wrapped in a 
+  // The component using useSearchParams must be wrapped in a
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -76,7 +76,7 @@ export function LoginForm() {
       router.push(returnUrl)
     } catch (err: unknown) {
       console.error('Login failed', err)
-      setError(err instanceof Error ? err.message : authError ?? 'Invalid email or password')
+      setError(err instanceof Error ? err.message : (authError ?? 'Invalid email or password'))
     } finally {
       setIsLoading(false)
     }
@@ -119,12 +119,12 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
                     autoComplete="current-password"
-                    {...field} 
-                    disabled={isLoading} 
+                    {...field}
+                    disabled={isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -145,9 +145,7 @@ export function LoginForm() {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Remember me
-                  </FormLabel>
+                  <FormLabel>Remember me</FormLabel>
                 </div>
               </FormItem>
             )}

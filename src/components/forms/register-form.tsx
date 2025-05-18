@@ -31,7 +31,7 @@ const formSchema = z
       .min(8, 'Password must be at least 8 characters')
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
       ),
     confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
   })
@@ -73,12 +73,13 @@ export function RegisterForm() {
         firstName: data.firstName,
         lastName: data.lastName,
       })
-      
+
       // Redirect to verification pending page in the auth route group
       router.push(`/verification-pending?email=${encodeURIComponent(data.email)}`)
     } catch (error: unknown) {
       console.error('Registration failed', error)
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.'
+      const errorMessage =
+        error instanceof Error ? error.message : 'Registration failed. Please try again.'
       setRegisterError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -94,7 +95,7 @@ export function RegisterForm() {
               <AlertDescription>{registerError || error}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}

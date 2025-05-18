@@ -34,28 +34,28 @@ function VerificationPendingContent() {
   const email = searchParams.get('email')
   const [isResending, setIsResending] = useState(false)
   const [alert, setAlert] = useState<{
-    type: 'success' | 'error';
-    title: string;
-    message: string;
+    type: 'success' | 'error'
+    title: string
+    message: string
   } | null>(null)
 
   const resendVerification = async () => {
     if (!email) return
-    
+
     setIsResending(true)
     try {
       await authApi.resendVerificationEmail(email)
       setAlert({
         type: 'success',
         title: 'Verification email sent',
-        message: 'Please check your inbox for the verification link.'
+        message: 'Please check your inbox for the verification link.',
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.'
       setAlert({
         type: 'error',
         title: 'Failed to resend email',
-        message: errorMessage
+        message: errorMessage,
       })
     } finally {
       setIsResending(false)
@@ -79,25 +79,26 @@ function VerificationPendingContent() {
               <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="text-center text-sm text-muted-foreground">
             <p>Please check your inbox and click the link in the email to verify your account.</p>
             <p className="mt-2">
-              If you don&apos;t see the email, check your spam folder or request a new verification email.
+              If you don&apos;t see the email, check your spam folder or request a new verification
+              email.
             </p>
           </div>
 
           <div className="space-y-4">
-            <Button 
-              onClick={resendVerification} 
-              variant="outline" 
+            <Button
+              onClick={resendVerification}
+              variant="outline"
               className="w-full"
               disabled={isResending}
             >
               {isResending && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
               {isResending ? 'Sending...' : 'Resend verification email'}
             </Button>
-            
+
             <Link href="/login">
               <Button variant="ghost" className="w-full">
                 Return to login
@@ -117,4 +118,4 @@ export default function VerificationPendingPage() {
       <VerificationPendingContent />
     </Suspense>
   )
-} 
+}

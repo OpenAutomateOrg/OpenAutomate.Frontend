@@ -7,7 +7,7 @@ import { Icons } from '@/components/ui/icons'
 import { config } from '@/lib/config'
 
 interface RouteGuardProps {
-  readonly children: React.ReactNode;
+  readonly children: React.ReactNode
 }
 
 // Paths that don't require authentication from the config
@@ -18,7 +18,7 @@ const publicPaths = [
   config.paths.auth.resetPassword,
   config.paths.auth.verificationPending,
   config.paths.auth.emailVerified,
-  config.paths.auth.verifyEmail
+  config.paths.auth.verifyEmail,
 ]
 
 // Paths that require authentication but don't require organization context
@@ -43,7 +43,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
       if (!isAuthenticated && requiresAuth) {
         // Try refreshing the token first (in case it's just expired)
         const refreshed = await refreshToken()
-        
+
         if (!refreshed) {
           // If still not authenticated after refresh attempt, redirect to login
           setAuthorized(false)
@@ -73,4 +73,4 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
   // If on a public path or authenticated, render children
   return authorized ? <>{children}</> : null
-} 
+}

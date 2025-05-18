@@ -23,7 +23,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Fetch all history for accurate blame information
+          fetch-depth: 0 # Fetch all history for accurate blame information
 
       # Step 2: Set up Node.js
       - name: Set up Node.js
@@ -59,4 +59,4 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }} 
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}

@@ -9,12 +9,12 @@ interface RoleBasedContentProps {
    * Content to display for admin users
    */
   adminContent: ReactNode
-  
+
   /**
    * Content to display for standard users
    */
   userContent: ReactNode
-  
+
   /**
    * Optional fallback content for unauthenticated users
    */
@@ -32,10 +32,10 @@ export function RoleBasedContent({
   fallback = null,
 }: RoleBasedContentProps) {
   const { user, isLoading } = useAuth()
-  
+
   // Show fallback while loading or if user isn't authenticated
   if (isLoading || !user) return fallback
-  
+
   // Render content based on user's system role
   return user.systemRole === SystemRole.Admin ? adminContent : userContent
-} 
+}
