@@ -266,24 +266,33 @@ export default function AgentInterface() {
     }
   }, [searchParams, updateUrl, pathname]);
   
+  // Helper for pageCount calculation
+  const getMinimumValidPageCount = (currentPageIndex: number) => {
+    return currentPageIndex + 1; // Ensure current page is valid
+  };
+  
+  // Calculate the standard page count based on total items and page size
+  const getCalculatedPageCount = (total: number, size: number) => {
+    return Math.max(1, Math.ceil(total / size));
+  };
+  
   // Calculate page count - handle case when we don't know exact count
   const pageCount = useMemo(() => {
-    // Always ensure the page count is at least equal to the current page index
-    // This prevents "Page 2 of 1" situations
-    const calculatedCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
+    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize);
     
-    // If we have a full page of results and there might be more items
+    // Check if we have a full page of results that might indicate more pages
     const hasMorePages = agents.length === pagination.pageSize && 
                           totalCount <= pagination.pageSize * (pagination.pageIndex + 1);
     
-    // Handle three cases:
-    // 1. Make sure current page is valid (avoid "Page 2 of 1")
-    // 2. If we have a full page of results, we might have more
-    // 3. Otherwise, use standard calculation
-    return Math.max(
-      pagination.pageIndex + 1, // Make sure current page is valid
-      hasMorePages ? Math.max(calculatedCount, pagination.pageIndex + 2) : calculatedCount
-    );
+    // Calculate the minimum valid page count
+    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex);
+    
+    // Determine final page count
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2);
+    }
+    
+    return Math.max(minValidPageCount, calculatedCount);
   }, [pagination.pageSize, pagination.pageIndex, agents.length, totalCount]);
 
   // When rendering the DataTable, inject real-time status if available
