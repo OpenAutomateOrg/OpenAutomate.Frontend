@@ -38,6 +38,24 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Add WebSocket specific headers
+      {
+        source: '/:tenantSlug/hubs/:path*',
+        headers: [
+          {
+            key: 'Connection',
+            value: 'keep-alive'
+          },
+          {
+            key: 'Keep-Alive', 
+            value: 'timeout=120'
+          },
+          {
+            key: 'Upgrade',
+            value: 'websocket'
+          }
+        ]
+      }
     ]
   },
 
@@ -52,7 +70,13 @@ const nextConfig: NextConfig = {
   // Configure API and SignalR proxy rewrites
   async rewrites() {
     return [
-      // Rewrite SignalR hub connections for bot agents
+      // SignalR negotiation endpoint (this needs to be first)
+      {
+        source: '/:tenantSlug/hubs/:path*/negotiate',
+        destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
+      },
+      
+      // SignalR hub connections - standard HTTP (including query params like ?id=xyz)
       {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
