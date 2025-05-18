@@ -158,6 +158,67 @@ export default function AgentInterface() {
     return params;
   }, [pagination, sorting, columnFilters]);
 
+  // Helper function to update counts based on OData response
+  const updateTotalCounts = (response: { '@odata.count'?: number, value?: any[] }) => {
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count']);
+      totalCountRef.current = response['@odata.count'];
+      setHasExactCount(true);
+      return;
+    } 
+    
+    if (!Array.isArray(response.value)) {
+      return;
+    }
+    
+    // When count isn't available, estimate from current page
+    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
+    
+    // Only update if the new minimum count is higher than current
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount);
+      totalCountRef.current = minCount;
+    }
+    
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1); // Indicate there might be more
+      totalCountRef.current = minCount + 1;
+    }
+    
+    setHasExactCount(false);
+  };
+
+  // Helper function to process agent data and handle pagination edge cases
+  const processAgentData = (response: { value?: any[] }) => {
+    if (!Array.isArray(response.value)) {
+      setAgents([]);
+      return;
+    }
+    
+    const formattedAgents = response.value.map((agent: any) => ({
+      ...agent,
+      botAgentId: agent.id, // Ensure botAgentId is present for real-time merge
+    }));
+    
+    setAgents(formattedAgents);
+    
+    // Handle empty page edge case
+    const isEmptyPageBeyondFirst = response.value.length === 0 && 
+                                   totalCountRef.current > 0 && 
+                                   pagination.pageIndex > 0;
+                                   
+    if (isEmptyPageBeyondFirst) {
+      const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
+      
+      if (pagination.pageIndex >= calculatedPageCount) {
+        setPagination(prev => ({ ...prev, pageIndex: 0 }));
+        updateUrl(pathname, { page: '1' });
+      }
+    }
+  };
+
   // Fetch data with proper handling
   const fetchAgents = useCallback(async () => {
     setIsLoading(true);
@@ -167,54 +228,9 @@ export default function AgentInterface() {
       const queryParams = getODataQueryParams();
       const response = await getBotAgentsWithOData(queryParams);
       
-      // Update total count if available
-      if (typeof response['@odata.count'] === 'number') {
-        setTotalCount(response['@odata.count']);
-        totalCountRef.current = response['@odata.count'];
-        setHasExactCount(true);
-      } else if (Array.isArray(response.value)) {
-        // When count isn't available, we have a minimum count from current page
-        // This is especially important on first page load
-        const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
-        
-        // Only update if the new minimum count is higher than what we currently have
-        if (minCount > totalCountRef.current) {
-          setTotalCount(minCount);
-          totalCountRef.current = minCount;
-        }
-        
-        // If we got a full page and we're on page 1, assume there might be more
-        if (response.value.length === pagination.pageSize && pagination.pageIndex === 0) {
-          setTotalCount(minCount + 1); // Indicate there might be more
-          totalCountRef.current = minCount + 1;
-        }
-        
-        setHasExactCount(false);
-      }
-      
-      // Process agent data
-      if (Array.isArray(response.value)) {
-        const formattedAgents = response.value.map(agent => ({
-          ...agent,
-          botAgentId: agent.id, // Ensure botAgentId is present for real-time merge
-        }));
-        setAgents(formattedAgents || []);
-        
-        // Handle empty page edge case
-        if (response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0) {
-          const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-          
-          if (pagination.pageIndex >= calculatedPageCount) {
-            setPagination(prev => ({
-              ...prev,
-              pageIndex: 0
-            }));
-            updateUrl(pathname, { page: '1' });
-          }
-        }
-      } else {
-        setAgents([]);
-      }
+      // Update counts and process data using helper functions
+      updateTotalCounts(response);
+      processAgentData(response);
     } catch (_err) {
       setError('Failed to load agents. Please try again. - '+_err);
     } finally {
