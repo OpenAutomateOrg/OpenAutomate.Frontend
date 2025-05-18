@@ -1,0 +1,12 @@
+{
+  "Button": {
+    "filter": "Filter",
+    "clear": "Clear"
+  },
+  "SectionCard": {
+    "user": "User",
+    "schedules": "Schedules",
+    "assets": "Assets",
+    "agent": "Agent"
+  }
+}

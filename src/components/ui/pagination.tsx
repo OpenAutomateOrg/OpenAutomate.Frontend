@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
 
 export interface PaginationProps {
@@ -23,42 +29,41 @@ export function Pagination({
   isLoading = false,
   isChangingPageSize = false,
   pageSizeOptions = [10, 20, 30, 40, 50],
-  rowsLabel = "row(s)",
+  rowsLabel = 'row(s)',
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
 }: PaginationProps) {
   // Show transition state when changing page size
-  const displayedTotalPages = isChangingPageSize 
+  const displayedTotalPages = isChangingPageSize
     ? Math.max(totalPages, Math.ceil(totalCount / pageSize))
-    : totalPages;
-  
+    : totalPages
+
   // Navigation state
   const canPreviousPage = currentPage > 1
   const canNextPage = currentPage < displayedTotalPages
-  
+
   // Navigation functions
   const goToPage = (page: number) => {
     // Ensure page is within bounds
     const validPage = Math.max(1, Math.min(page, displayedTotalPages))
     onPageChange(validPage)
   }
-  
+
   const changePage = (delta: number) => {
-    const newPage = currentPage + delta;
+    const newPage = currentPage + delta
     goToPage(newPage)
   }
-  
+
   return (
     <div className="flex items-center justify-between mt-4">
       <div className="flex-1 text-sm text-muted-foreground">
         {totalCount > 0 ? (
           <>
-            {Math.min(((currentPage - 1) * pageSize) + 1, totalCount)}-
-            {Math.min(currentPage * pageSize, totalCount)}{" "}
-            of {totalCount} {rowsLabel}
+            {Math.min((currentPage - 1) * pageSize + 1, totalCount)}-
+            {Math.min(currentPage * pageSize, totalCount)} of {totalCount} {rowsLabel}
           </>
         ) : (
-          "No results"
+          'No results'
         )}
       </div>
       <div className="flex items-center space-x-6">
@@ -82,7 +87,7 @@ export function Pagination({
           </Select>
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {isLoading || isChangingPageSize ? "..." : displayedTotalPages}
+          Page {currentPage} of {isLoading || isChangingPageSize ? '...' : displayedTotalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -125,4 +130,4 @@ export function Pagination({
       </div>
     </div>
   )
-} 
+}

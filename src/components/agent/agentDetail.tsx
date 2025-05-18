@@ -30,7 +30,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
       name: 'Agent 2',
       machineName: 'Machine name',
       status: 'Disconnected',
-      lastConnected: '2023-10-15T14:30:00Z'
+      lastConnected: '2023-10-15T14:30:00Z',
     }
     setAgent(mockAgent)
   }, [id])
@@ -60,10 +60,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
             </div>
             <div className="space-y-4">
               <DetailBlock label="Status">
-                <Badge
-                  variant="outline"
-                  className={getStatusBadgeClass(agent.status)}
-                >
+                <Badge variant="outline" className={getStatusBadgeClass(agent.status)}>
                   {agent.status}
                 </Badge>
               </DetailBlock>
