@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode, useState } from "react"
+import { ReactNode, useState, useMemo } from "react"
 import { ToastContext, type ToastType } from "./use-toast"
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -36,16 +36,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== toastId))
   }
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    toasts,
+    addToast,
+    updateToast,
+    dismissToast,
+    removeToast,
+  }), [toasts]);
+
   return (
-    <ToastContext.Provider
-      value={{
-        toasts,
-        addToast,
-        updateToast,
-        dismissToast,
-        removeToast,
-      }}
-    >
+    <ToastContext.Provider value={contextValue}>
       {children}
     </ToastContext.Provider>
   )

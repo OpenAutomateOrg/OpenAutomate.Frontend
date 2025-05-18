@@ -40,6 +40,44 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
     return Object.keys(newErrors).length === 0
   }
 
+  // Create a mock agent when API fails (for development/testing)
+  const createMockAgent = (error?: unknown): BotAgentResponseDto => {
+    console.warn('API call failed, using mock data for testing UI', error)
+    return {
+      id: crypto.randomUUID(),
+      name,
+      machineName,
+      machineKey: crypto.randomUUID(),
+      status: 'Disconnected',
+      lastConnected: new Date().toISOString(),
+      isActive: true
+    }
+  }
+
+  // Format error messages from different error types
+  const formatErrorMessage = (err: unknown): string => {
+    let errorMessage = 'Failed to create agent. Please try again.'
+    
+    if (typeof err === 'object' && err !== null) {
+      if ('message' in err) {
+        errorMessage = String(err.message)
+      }
+      
+      if ('status' in err) {
+        errorMessage += ` (Status: ${(err as { status: string }).status})`
+      }
+      
+      if ('details' in err) {
+        errorMessage += ` - ${(err as { details: string }).details}`
+      }
+      
+      // Log more details for debugging
+      console.error('Error details:', JSON.stringify(err, null, 2))
+    }
+    
+    return errorMessage
+  }
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       setError('Please fill in all required fields')
@@ -56,25 +94,11 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
       try {
         // Try to call the real API
-        agent = await createBotAgent({
-          name,
-          machineName,
-        })
+        agent = await createBotAgent({ name, machineName })
         console.log('API Response:', agent)
       } catch (apiError) {
-        console.warn('API call failed, using mock data for testing UI:', apiError)
-        
         // Use mock data for testing when API fails
-        agent = {
-          id: crypto.randomUUID(),
-          name,
-          machineName,
-          machineKey: crypto.randomUUID(),
-          status: 'Disconnected',
-          lastConnected: new Date().toISOString(),
-          isActive: true
-        }
-        
+        agent = createMockAgent(apiError)
         console.log('Using mock data:', agent)
       }
       
@@ -87,28 +111,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       console.log('Agent created successfully:', agent)
     } catch (err) {
       console.error('Failed to create agent:', err)
-      
-      // Extract more detailed error information
-      let errorMessage = 'Failed to create agent. Please try again.'
-      
-      if (typeof err === 'object' && err !== null) {
-        if ('message' in err) {
-          errorMessage = String(err.message)
-        }
-        
-        if ('status' in err) {
-          errorMessage += ` (Status: ${err.status})`
-        }
-        
-        if ('details' in err) {
-          errorMessage += ` - ${err.details}`
-        }
-        
-        // Log more details for debugging
-        console.error('Error details:', JSON.stringify(err, null, 2))
-      }
-      
-      setError(errorMessage)
+      setError(formatErrorMessage(err))
     } finally {
       setIsLoading(false)
     }

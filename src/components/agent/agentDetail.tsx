@@ -67,10 +67,15 @@ export default function AgentDetail({ id }: AgentDetailProps) {
   useEffect(() => {
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      // Filter out SignalR timeout errors
+      // Filter out SignalR timeout and connection errors
       if (args.length > 0 && 
           typeof args[0] === 'string' && 
-          (args[0].includes('Server timeout') || args[0].includes('SignalR Connection'))) {
+          (args[0].includes('Server timeout') || 
+           args[0].includes('SignalR') || 
+           args[0].includes('connection') || 
+           args[0].includes('Connection') ||
+           args[0].includes('Failed to start') ||
+           args[0].includes('negotiation'))) {
         console.debug('[Suppressed SignalR Error]', ...args);
         return;
       }

@@ -17,7 +17,7 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(({ id, title, description, action, ...props }) => {
         return (
-          <Toast key={id} {...props}>
+          <Toast key={id || crypto.randomUUID()} {...props}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (

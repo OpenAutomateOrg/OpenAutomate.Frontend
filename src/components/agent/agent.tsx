@@ -60,6 +60,7 @@ export default function AgentInterface() {
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
+  const [hasExactCount, setHasExactCount] = useState(false)
   
   // Create refs for debouncing
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -170,9 +171,25 @@ export default function AgentInterface() {
       if (typeof response['@odata.count'] === 'number') {
         setTotalCount(response['@odata.count']);
         totalCountRef.current = response['@odata.count'];
-      } else if (pagination.pageIndex === 0 && Array.isArray(response.value)) {
-        setTotalCount(response.value.length);
-        totalCountRef.current = response.value.length;
+        setHasExactCount(true);
+      } else if (Array.isArray(response.value)) {
+        // When count isn't available, we have a minimum count from current page
+        // This is especially important on first page load
+        const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
+        
+        // Only update if the new minimum count is higher than what we currently have
+        if (minCount > totalCountRef.current) {
+          setTotalCount(minCount);
+          totalCountRef.current = minCount;
+        }
+        
+        // If we got a full page and we're on page 1, assume there might be more
+        if (response.value.length === pagination.pageSize && pagination.pageIndex === 0) {
+          setTotalCount(minCount + 1); // Indicate there might be more
+          totalCountRef.current = minCount + 1;
+        }
+        
+        setHasExactCount(false);
       }
       
       // Process agent data
@@ -209,6 +226,28 @@ export default function AgentInterface() {
 
   // Use real-time status only, no refetch on status update
   const agentStatuses = useAgentStatus(tenant);
+  
+  // Intercept console errors for SignalR
+  useEffect(() => {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      // Filter out SignalR-related errors
+      if (args.length > 0 && 
+          typeof args[0] === 'string' && 
+          (args[0].includes('SignalR') || 
+           args[0].includes('connection') || 
+           args[0].includes('Connection') ||
+           args[0].includes('Failed to start'))) {
+        console.debug('[Suppressed]', ...args);
+        return;
+      }
+      originalConsoleError(...args);
+    };
+
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
 
   // Initialize URL with default params if needed
   useEffect(() => {
@@ -227,10 +266,18 @@ export default function AgentInterface() {
     }
   }, [searchParams, updateUrl, pathname]);
   
-  // Calculate page count
+  // Calculate page count - handle case when we don't know exact count
   const pageCount = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-  }, [pagination.pageSize]);
+    // If we have items and no exact count yet, indicate there might be more pages
+    const hasMorePages = agents.length === pagination.pageSize && 
+                        totalCount <= pagination.pageSize * (pagination.pageIndex + 1);
+                        
+    const calculatedCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
+    
+    // If we have a full page of results and are on first page with no confirmed total,
+    // we should indicate there might be more (at least one more page)
+    return hasMorePages ? Math.max(calculatedCount, pagination.pageIndex + 2) : calculatedCount;
+  }, [pagination.pageSize, pagination.pageIndex, agents.length, totalCount]);
 
   // When rendering the DataTable, inject real-time status if available
   const agentsWithRealtimeStatus = useMemo(() => {
@@ -243,6 +290,11 @@ export default function AgentInterface() {
       return realTime ? { ...agent, status: realTime.status } : agent;
     });
   }, [agents, agentStatuses]);
+
+  // Helper to check if the count is a reliable total or just a minimum
+  const isUnknownTotalCount = useMemo(() => {
+    return !hasExactCount && agents.length === pagination.pageSize;
+  }, [hasExactCount, agents.length, pagination.pageSize]);
 
   // Setup table instance with real-time data and custom row ID
   const table = useReactTable({
@@ -433,6 +485,7 @@ export default function AgentInterface() {
           totalPages={pageCount}
           isLoading={isLoading}
           isChangingPageSize={isChangingPageSize}
+          isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
             updateUrl(pathname, { page: page.toString() })
