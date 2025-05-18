@@ -142,7 +142,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
           // Create form
           <div className="space-y-4">
             {error && <div className="text-destructive text-sm">{error}</div>}
-            
+
             <div className="space-y-1">
               <label htmlFor="name" className="block text-sm">
                 Name<span className="text-red-500">*</span>
@@ -154,7 +154,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-1">
               <label htmlFor="machine-name" className="block text-sm">
                 Machine name<span className="text-red-500">*</span>
@@ -178,7 +178,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 Please copy the machine key below. It will only be shown once.
               </p>
             </div>
-            
+
             <div className="space-y-1">
               <label htmlFor="machine-key" className="block text-sm font-medium">
                 Machine Key
@@ -200,7 +200,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 </Button>
               </div>
             </div>
-          </div>
+            </div>
         )}
         
         <DialogFooter>
