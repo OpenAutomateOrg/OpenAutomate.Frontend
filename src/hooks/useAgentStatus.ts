@@ -34,6 +34,77 @@ const isExpectedSignalRError = (message: string): boolean => {
   return expectedErrors.some(errorText => message.includes(errorText));
 };
 
+// Helper function to retry connection after timeout
+const retryConnectionAfterDelay = (connection: HubConnection) => {
+  console.debug('[SignalR] Attempting to reconnect after delay...');
+  connection.start().catch((reconnectError: Error | unknown) => {
+    const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error';
+    console.debug('[SignalR] Reconnection attempt also failed:', errorMessage);
+  });
+};
+
+// Helper to start a SignalR connection with error handling
+const startSignalRConnection = async (connection: HubConnection) => {
+  try {
+    await connection.start();
+    console.debug('[SignalR] Connected successfully');
+  } catch (err: Error | unknown) {
+    if (err instanceof Error && err.message && isExpectedSignalRError(err.message)) {
+      console.debug('[SignalR] Expected connection issue (suppressed):', err.message);
+      
+      // For Vercel deployments, we might need to retry with different transport
+      setTimeout(() => retryConnectionAfterDelay(connection), 3000);
+    } else {
+      console.error('[SignalR] Connection Error:', err);
+    }
+  }
+};
+
+// Helper to create a SignalR hub connection
+const createSignalRConnection = (tenant: string): HubConnection => {
+  const hubUrl = `/${tenant}/hubs/botagent`;
+  
+  // Get the machine key if needed (for bot agent clients)
+  const machineKey = getMachineKey();
+  
+  // Configure options for the connection
+  const connectionOptions = {
+    accessTokenFactory: () => getAuthToken() || '',
+    // Support both WebSockets and Long Polling for maximum compatibility
+    transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+    // Use specific query params for bot agents if available
+    ...(machineKey ? { 
+      queryString: `machineKey=${encodeURIComponent(machineKey)}` 
+    } : {})
+  };
+  
+  const connection = new HubConnectionBuilder()
+    .withUrl(hubUrl, connectionOptions)
+    .configureLogging(LogLevel.Warning)
+    .withAutomaticReconnect({
+      nextRetryDelayInMilliseconds: retryContext => {
+        // Custom retry policy with exponential backoff
+        const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 60000);
+        return delayMs;
+      }
+    })
+    .withServerTimeout(120000) // 2 minute server timeout
+    .withKeepAliveInterval(30000) // 30 second keep-alive
+    .build();
+  
+  return connection;
+};
+
+// Helper to get machine key from storage
+const getMachineKey = (): string | null => {
+  try {
+    return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
+  } catch {
+    // Silent fail if localStorage/sessionStorage is unavailable
+    return null;
+  }
+};
+
 export function useAgentStatus(
   tenant: string,
   onStatusUpdate?: (update: AgentStatusUpdate) => void
@@ -44,49 +115,7 @@ export function useAgentStatus(
   useEffect(() => {
     if (!tenant) return;
     
-    // Create the connection with the appropriate configuration
-    const createConnection = (): HubConnection => {
-      const hubUrl = `/${tenant}/hubs/botagent`;
-      
-      // Get the machine key if needed (for bot agent clients)
-      const getMachineKey = (): string | null => {
-        try {
-          return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
-        } catch {
-          // Silent fail if localStorage/sessionStorage is unavailable
-          return null;
-        }
-      };
-      
-      // Configure options for the connection
-      const connectionOptions = {
-        accessTokenFactory: () => getAuthToken() || '',
-        // Support both WebSockets and Long Polling for maximum compatibility
-        transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-        // Use specific query params for bot agents if available
-        ...(getMachineKey() ? { 
-          queryString: `machineKey=${encodeURIComponent(getMachineKey() || '')}` 
-        } : {})
-      };
-      
-      const connection = new HubConnectionBuilder()
-        .withUrl(hubUrl, connectionOptions)
-        .configureLogging(LogLevel.Warning)
-        .withAutomaticReconnect({
-          nextRetryDelayInMilliseconds: retryContext => {
-            // Custom retry policy with exponential backoff
-            const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 60000);
-            return delayMs;
-          }
-        })
-        .withServerTimeout(120000) // 2 minute server timeout
-        .withKeepAliveInterval(30000) // 30 second keep-alive
-        .build();
-      
-      return connection;
-    };
-    
-    const connection = createConnection();
+    const connection = createSignalRConnection(tenant);
     
     // Register handler for connection closed events
     connection.onclose((error) => {
@@ -139,30 +168,8 @@ export function useAgentStatus(
       console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
     });
 
-    // Add error handling with fallback mechanisms
-    const startConnection = async () => {
-      try {
-        await connection.start();
-        console.debug('[SignalR] Connected successfully');
-      } catch (err: Error | unknown) {
-        if (err instanceof Error && err.message && isExpectedSignalRError(err.message)) {
-          console.debug('[SignalR] Expected connection issue (suppressed):', err.message);
-          
-          // For Vercel deployments, we might need to retry with different transport
-          setTimeout(() => {
-            console.debug('[SignalR] Attempting to reconnect after delay...');
-            connection.start().catch((reconnectError: Error | unknown) => {
-              const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error';
-              console.debug('[SignalR] Reconnection attempt also failed:', errorMessage);
-            });
-          }, 3000);
-        } else {
-          console.error('[SignalR] Connection Error:', err);
-        }
-      }
-    };
-
-    startConnection();
+    // Start the connection
+    startSignalRConnection(connection);
     connectionRef.current = connection;
     
     return () => {
