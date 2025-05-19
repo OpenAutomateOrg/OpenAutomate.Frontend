@@ -17,8 +17,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import { useTranslations } from 'next-intl'
-
 const chartData = [
   { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
   { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
@@ -54,13 +52,11 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ChartPieLabel() {
-  const t = useTranslations('SectionCard')
-
   return (
     <div className="  grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card">
       <Card className="flex flex-col">
         <CardHeader className="items-center pb-0">
-          <CardTitle>{t('agent')}</CardTitle>
+          <CardTitle>Agent</CardTitle>
           <CardDescription>January - June 2024</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">

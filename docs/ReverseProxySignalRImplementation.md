@@ -27,18 +27,18 @@ const nextConfig: NextConfig = {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
-
+      
       // Rewrite OData API calls
       {
         source: '/:tenantSlug/odata/:path*',
         destination: `${API_URL}/:tenantSlug/odata/:path*`,
       },
-
+      
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
         destination: `${API_URL}/:tenantSlug/api/:path*`,
-      },
+      }
     ]
   },
 }
@@ -50,18 +50,18 @@ In the agent detail page, we provide the frontend URL for the agent to connect t
 
 ```typescript
 // Frontend URL for agent connection
-const frontendUrl = typeof window !== 'undefined'
+const frontendUrl = typeof window !== 'undefined' 
   ? `${window.location.protocol}//${window.location.host}`
   : config.app.url
 
-// ...
+// ... 
 
 // Connection URL section
 <div className="bg-muted p-4 rounded-md">
   <div className="flex justify-between items-center mb-2">
     <span className="text-sm font-medium">Connection URL</span>
-    <Button
-      variant="outline"
+    <Button 
+      variant="outline" 
       size="sm"
       onClick={() => handleCopy(`${frontendUrl}/${tenant}/hubs/botagent`, 'Connection URL')}
     >
@@ -113,4 +113,4 @@ The agent detail page also includes a configuration example for the bot agent:
 - **Simplified Architecture**: Clients only need to connect to a single URL
 - **CORS Elimination**: No cross-origin issues since all traffic flows through the Next.js app
 - **Flexible Backend**: Can change the backend API URL without affecting clients
-- **Enhanced Security**: API server doesn't need to be directly exposed to the internet
+- **Enhanced Security**: API server doesn't need to be directly exposed to the internet 
