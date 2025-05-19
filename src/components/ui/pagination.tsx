@@ -30,7 +30,7 @@ export function Pagination({
   isLoading = false,
   isChangingPageSize = false,
   pageSizeOptions = [10, 20, 30, 40, 50],
-  rowsLabel = "row(s)",
+  rowsLabel = 'row(s)',
   isUnknownTotalCount = false,
   onPageChange,
   onPageSizeChange,
@@ -43,20 +43,20 @@ export function Pagination({
   // Navigation state
   const canPreviousPage = currentPage > 1
   const canNextPage = currentPage < displayedTotalPages
-  
+
   // Get the display text for total pages
   const getPageDisplayText = () => {
     if (isLoading || isChangingPageSize) {
-      return "...";
+      return '...'
     }
-    
+
     if (isUnknownTotalCount && canNextPage) {
-      return `${displayedTotalPages}+`;
+      return `${displayedTotalPages}+`
     }
-    
-    return displayedTotalPages;
-  };
-  
+
+    return displayedTotalPages
+  }
+
   // Navigation functions
   const goToPage = (page: number) => {
     // Ensure page is within bounds

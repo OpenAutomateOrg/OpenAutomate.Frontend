@@ -50,31 +50,31 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       machineKey: crypto.randomUUID(),
       status: 'Disconnected',
       lastConnected: new Date().toISOString(),
-      isActive: true
+      isActive: true,
     }
   }
 
   // Format error messages from different error types
   const formatErrorMessage = (err: unknown): string => {
     let errorMessage = 'Failed to create agent. Please try again.'
-    
+
     if (typeof err === 'object' && err !== null) {
       if ('message' in err) {
         errorMessage = String(err.message)
       }
-      
+
       if ('status' in err) {
         errorMessage += ` (Status: ${(err as { status: string }).status})`
       }
-      
+
       if ('details' in err) {
         errorMessage += ` - ${(err as { details: string }).details}`
       }
-      
+
       // Log more details for debugging
       console.error('Error details:', JSON.stringify(err, null, 2))
     }
-    
+
     return errorMessage
   }
 
@@ -203,7 +203,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 </Button>
               </div>
             </div>
-            </div>
+          </div>
         )}
 
         <DialogFooter>

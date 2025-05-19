@@ -47,18 +47,18 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Connection',
-            value: 'keep-alive'
+            value: 'keep-alive',
           },
           {
-            key: 'Keep-Alive', 
-            value: 'timeout=120'
+            key: 'Keep-Alive',
+            value: 'timeout=120',
           },
           {
             key: 'Upgrade',
-            value: 'websocket'
-          }
-        ]
-      }
+            value: 'websocket',
+          },
+        ],
+      },
     ]
   },
 
@@ -78,24 +78,24 @@ const nextConfig: NextConfig = {
         source: '/:tenantSlug/hubs/:path*/negotiate',
         destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
       },
-      
+
       // SignalR hub connections - standard HTTP (including query params like ?id=xyz)
       {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
-      
+
       // Rewrite OData API calls
       {
         source: '/:tenantSlug/odata/:path*',
         destination: `${API_URL}/:tenantSlug/odata/:path*`,
       },
-      
+
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
         destination: `${API_URL}/:tenantSlug/api/:path*`,
-      }
+      },
     ]
   },
 }

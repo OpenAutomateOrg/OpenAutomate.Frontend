@@ -83,8 +83,8 @@ export function DataTableToolbar<TData>({
       <div className="flex flex-1 items-center space-x-2">
         <div className="relative w-full md:w-auto md:flex-1 max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          
-        <Input
+
+          <Input
             ref={searchInputRef}
             placeholder="Search by Name or Machine Name..."
             value={searchValue}
@@ -108,13 +108,13 @@ export function DataTableToolbar<TData>({
               className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
               onClick={() => handleFilterChange('')}
             />
-        )}
+          )}
         </div>
 
         {/* Status Filter */}
         {table.getColumn('status') && (
           <div className="flex items-center space-x-1">
-          <Select
+            <Select
               onValueChange={(value) => {
                 if (onStatusChange) {
                   // Use the external handler if provided
@@ -130,7 +130,7 @@ export function DataTableToolbar<TData>({
               }}
               value={(table.getColumn('status')?.getFilterValue() as string) || 'all'}
               disabled={isFiltering || isPending}
-          >
+            >
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
@@ -141,16 +141,16 @@ export function DataTableToolbar<TData>({
                     </Badge>
                   )}
                 </div>
-            </SelectTrigger>
-            <SelectContent>
+              </SelectTrigger>
+              <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-              {statuses.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
