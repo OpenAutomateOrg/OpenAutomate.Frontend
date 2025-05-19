@@ -17,9 +17,7 @@ export const columns: ColumnDef<AssetRow>[] = [
         checked={
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
-        onCheckedChange={(value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value)
-        }
+        onCheckedChange={(value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
       />
@@ -37,9 +35,7 @@ export const columns: ColumnDef<AssetRow>[] = [
   },
   {
     accessorKey: 'key',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Key" />
-    ),
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
       return (
         <div className="flex space-x-2">
@@ -55,11 +51,9 @@ export const columns: ColumnDef<AssetRow>[] = [
   },
   {
     accessorKey: 'type',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Type" />
-    ),
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const typeValue = row.getValue('type')
+      const typeValue = row.getValue('type');
       return (
         <div className="flex w-[100px] items-center">
           <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
@@ -73,11 +67,9 @@ export const columns: ColumnDef<AssetRow>[] = [
   },
   {
     accessorKey: 'description',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const desc = row.getValue('description')
+      const desc = row.getValue('description');
       return (
         <div className="flex items-center">
           <span>{typeof desc === 'string' && desc.trim() ? desc : 'N/a'}</span>

@@ -1,8 +1,7 @@
 'use client'
 
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Globe } from 'lucide-react'
 
+// Define available languages
 const languages = [
   { code: 'en', name: 'English' },
   { code: 'vi', name: 'VietNam' },
@@ -20,43 +20,18 @@ const languages = [
 export function LanguageSwitcher() {
   const params = useParams()
   const pathname = usePathname()
-  const router = useRouter()
 
-  // Lấy ngôn ngữ hiện tại từ route params hoặc localStorage
-  let currentLang = (params?.lang as string) || 'en'
-  if (typeof window !== 'undefined') {
-    const savedLang = localStorage.getItem('lang')
-    if (savedLang && languages.some((l) => l.code === savedLang)) {
-      currentLang = savedLang
-    }
-  }
+  // Get current language from route params
+  const currentLang = (params?.lang as string) || 'en'
 
-  // Khi mount, nếu có ngôn ngữ đã lưu mà khác với route thì chuyển route
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('lang')
-      if (savedLang && savedLang !== currentLang) {
-        router.replace(getPathWithNewLocale(savedLang))
-      }
-    }
-    // eslint-disable-next-line
-  }, [])
-
+  // Function to get the new path with changed language
   const getPathWithNewLocale = (locale: string) => {
-    const segments = pathname.split('/')
-    const idx = 1
-    while (languages.some((lang) => lang.code === segments[idx])) {
-      segments.splice(idx, 1)
+    // If the current path already has a locale, replace it
+    if (params?.lang) {
+      return pathname.replace(`/${currentLang}`, `/${locale}`)
     }
-    segments.splice(1, 0, locale)
-    return segments.join('/')
-  }
-
-  // Khi chọn ngôn ngữ, lưu vào localStorage
-  const handleSelectLanguage = (lang: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lang', lang)
-    }
+    // Otherwise, add the locale to the beginning of the path
+    return `/${locale}${pathname}`
   }
 
   return (
@@ -75,7 +50,6 @@ export function LanguageSwitcher() {
             <Link
               href={getPathWithNewLocale(language.code)}
               className={language.code === currentLang ? 'font-bold' : ''}
-              onClick={() => handleSelectLanguage(language.code)}
             >
               {language.name}
             </Link>

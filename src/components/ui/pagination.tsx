@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
 
 export interface PaginationProps {
@@ -30,55 +24,56 @@ export function Pagination({
   isLoading = false,
   isChangingPageSize = false,
   pageSizeOptions = [10, 20, 30, 40, 50],
-  rowsLabel = 'row(s)',
+  rowsLabel = "row(s)",
   isUnknownTotalCount = false,
   onPageChange,
-  onPageSizeChange,
+  onPageSizeChange
 }: PaginationProps) {
   // Show transition state when changing page size
-  const displayedTotalPages = isChangingPageSize
+  const displayedTotalPages = isChangingPageSize 
     ? Math.max(totalPages, Math.ceil(totalCount / pageSize))
-    : totalPages
-
+    : totalPages;
+  
   // Navigation state
   const canPreviousPage = currentPage > 1
   const canNextPage = currentPage < displayedTotalPages
-
+  
   // Get the display text for total pages
   const getPageDisplayText = () => {
     if (isLoading || isChangingPageSize) {
-      return '...'
+      return "...";
     }
-
+    
     if (isUnknownTotalCount && canNextPage) {
-      return `${displayedTotalPages}+`
+      return `${displayedTotalPages}+`;
     }
-
-    return displayedTotalPages
-  }
-
+    
+    return displayedTotalPages;
+  };
+  
   // Navigation functions
   const goToPage = (page: number) => {
     // Ensure page is within bounds
     const validPage = Math.max(1, Math.min(page, displayedTotalPages))
     onPageChange(validPage)
   }
-
+  
   const changePage = (delta: number) => {
-    const newPage = currentPage + delta
+    const newPage = currentPage + delta;
     goToPage(newPage)
   }
-
+  
   return (
     <div className="flex items-center justify-between mt-4">
       <div className="flex-1 text-sm text-muted-foreground">
         {totalCount > 0 ? (
           <>
-            {Math.min((currentPage - 1) * pageSize + 1, totalCount)}-
-            {Math.min(currentPage * pageSize, totalCount)} of {totalCount} {rowsLabel}
+            {Math.min(((currentPage - 1) * pageSize) + 1, totalCount)}-
+            {Math.min(currentPage * pageSize, totalCount)}{" "}
+            of {totalCount} {rowsLabel}
           </>
         ) : (
-          'No results'
+          "No results"
         )}
       </div>
       <div className="flex items-center space-x-6">
@@ -145,4 +140,4 @@ export function Pagination({
       </div>
     </div>
   )
-}
+} 
