@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnection, LogLevel, HttpTransportType } from '@microsoft/signalr';
 import { getAuthToken } from '@/lib/auth/token-storage';
 
 export interface AgentStatusUpdate {
@@ -25,10 +25,85 @@ const isExpectedSignalRError = (message: string): boolean => {
     'WebSocket closed',
     'network error',
     'transport timed out',
-    'Transport disconnected'
+
+    'Transport disconnected',
+    'Response status code does not indicate success: 401',
+    'Unauthorized',
+    'Cannot start a HubConnection'
   ];
   
   return expectedErrors.some(errorText => message.includes(errorText));
+};
+
+// Helper function to retry connection after timeout
+const retryConnectionAfterDelay = (connection: HubConnection) => {
+  console.debug('[SignalR] Attempting to reconnect after delay...');
+  connection.start().catch((reconnectError: Error | unknown) => {
+    const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error';
+    console.debug('[SignalR] Reconnection attempt also failed:', errorMessage);
+  });
+};
+
+// Helper to start a SignalR connection with error handling
+const startSignalRConnection = async (connection: HubConnection) => {
+  try {
+    await connection.start();
+    console.debug('[SignalR] Connected successfully');
+  } catch (err: Error | unknown) {
+    if (err instanceof Error && err.message && isExpectedSignalRError(err.message)) {
+      console.debug('[SignalR] Expected connection issue (suppressed):', err.message);
+      
+      // For Vercel deployments, we might need to retry with different transport
+      setTimeout(() => retryConnectionAfterDelay(connection), 3000);
+    } else {
+      console.error('[SignalR] Connection Error:', err);
+    }
+  }
+};
+
+// Helper to create a SignalR hub connection
+const createSignalRConnection = (tenant: string): HubConnection => {
+  const hubUrl = `/${tenant}/hubs/botagent`;
+  
+  // Get the machine key if needed (for bot agent clients)
+  const machineKey = getMachineKey();
+  
+  // Configure options for the connection
+  const connectionOptions = {
+    accessTokenFactory: () => getAuthToken() || '',
+    // Support both WebSockets and Long Polling for maximum compatibility
+    transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+    // Use specific query params for bot agents if available
+    ...(machineKey ? { 
+      queryString: `machineKey=${encodeURIComponent(machineKey)}` 
+    } : {})
+  };
+  
+  const connection = new HubConnectionBuilder()
+    .withUrl(hubUrl, connectionOptions)
+    .configureLogging(LogLevel.Warning)
+    .withAutomaticReconnect({
+      nextRetryDelayInMilliseconds: retryContext => {
+        // Custom retry policy with exponential backoff
+        const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 60000);
+        return delayMs;
+      }
+    })
+    .withServerTimeout(120000) // 2 minute server timeout
+    .withKeepAliveInterval(30000) // 30 second keep-alive
+    .build();
+  
+  return connection;
+};
+
+// Helper to get machine key from storage
+const getMachineKey = (): string | null => {
+  try {
+    return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
+  } catch {
+    // Silent fail if localStorage/sessionStorage is unavailable
+    return null;
+  }
 };
 
 export function useAgentStatus(
@@ -40,22 +115,9 @@ export function useAgentStatus(
 
   useEffect(() => {
     if (!tenant) return;
-    const hubUrl = `/${tenant}/hubs/botagent`;
-    const connection = new HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => getAuthToken() || ''
-      })
-      .configureLogging(LogLevel.Warning)
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: retryContext => {
-          // Custom retry policy with exponential backoff
-          const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000);
-          return delayMs;
-        }
-      })
-      .withServerTimeout(120000) // Increase server timeout to 2 minutes
-      .build();
-
+    
+    const connection = createSignalRConnection(tenant);
+    
     // Register handler for connection closed events
     connection.onclose((error) => {
       if (error) {
@@ -106,19 +168,10 @@ export function useAgentStatus(
     connection.onreconnected(connectionId => {
       console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
     });
-
-    // Add error handling for connection start
-    connection.start()
-      .catch(err => {
-        // Filter out known errors to prevent console noise
-        if (err && err.message && !isExpectedSignalRError(err.message)) {
-          console.error('[SignalR] Connection Error:', err);
-        } else {
-          console.debug('[SignalR] Expected connection issue (suppressed):', err?.message);
-        }
-      });
-
+    // Start the connection
+    startSignalRConnection(connection);
     connectionRef.current = connection;
+    
     return () => {
       connection.stop().catch(err => {
         // Silently handle stop errors
