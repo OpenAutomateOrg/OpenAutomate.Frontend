@@ -7,13 +7,19 @@ import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import { config } from '@/lib/config'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
+import { Toaster } from '@/components/ui/toaster'
+import { ToastProvider } from '@/components/ui/toast-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: config.app.name,
   description: 'Automate your business processes with OpenAutomate',
-  authors: [{ name: 'OpenAutomate Team' }],
+  authors: [
+    {
+      name: 'OpenAutomate Team',
+    },
+  ],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
 }
 
@@ -36,9 +42,14 @@ export default async function RootLayout({
       <body className={inter.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <AuthProvider>
-              <div className="min-h-screen flex flex-col antialiased bg-background">{children}</div>
-            </AuthProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <div className="min-h-screen flex flex-col antialiased bg-background">
+                  {children}
+                </div>
+                <Toaster />
+              </AuthProvider>
+            </ToastProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
