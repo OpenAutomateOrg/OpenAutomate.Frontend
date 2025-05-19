@@ -7,14 +7,14 @@ import { useCallback } from 'react'
 export function useUrlParams() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
+  
   /**
    * Create a query string from parameters
    */
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
       const newSearchParams = new URLSearchParams(searchParams.toString())
-
+      
       Object.entries(params).forEach(([key, value]) => {
         if (value === null) {
           newSearchParams.delete(key)
@@ -22,12 +22,12 @@ export function useUrlParams() {
           newSearchParams.set(key, value)
         }
       })
-
+      
       return newSearchParams.toString()
     },
-    [searchParams],
+    [searchParams]
   )
-
+  
   /**
    * Update URL with new query parameters without triggering navigation
    */
@@ -36,11 +36,11 @@ export function useUrlParams() {
       const queryString = createQueryString(params)
       router.push(`${pathname}?${queryString}`, { scroll: false })
     },
-    [createQueryString, router],
+    [createQueryString, router]
   )
-
+  
   return {
     createQueryString,
     updateUrl,
   }
-}
+} 

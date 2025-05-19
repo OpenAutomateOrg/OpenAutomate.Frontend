@@ -27,11 +27,11 @@ export function DataTableColumnHeader<TData, TValue>({
 
   // Extract the sort icon logic into a separate function
   const getSortIcon = () => {
-    const sortDirection = column.getIsSorted()
-    if (sortDirection === 'desc') return <ArrowDown />
-    if (sortDirection === 'asc') return <ArrowUp />
-    return <ChevronsUpDown />
-  }
+    const sortDirection = column.getIsSorted();
+    if (sortDirection === 'desc') return <ArrowDown />;
+    if (sortDirection === 'asc') return <ArrowUp />;
+    return <ChevronsUpDown />;
+  };
 
   return (
     <div className={cn('flex items-center space-x-2', className)}>

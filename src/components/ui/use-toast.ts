@@ -1,13 +1,13 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext } from "react"
 
-import type { ToastActionElement, ToastProps } from '@/components/ui/toast'
+import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 type ToastType = ToastProps & {
   id?: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
-  variant?: 'default' | 'destructive'
+  variant?: "default" | "destructive"
 }
 
 type ToastContextType = {
@@ -20,7 +20,7 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType>({
   toasts: [],
-  addToast: () => '',
+  addToast: () => "",
   updateToast: () => {},
   dismissToast: () => {},
   removeToast: () => {},
@@ -30,7 +30,7 @@ export function useToast() {
   const context = useContext(ToastContext)
 
   if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider')
+    throw new Error("useToast must be used within a ToastProvider")
   }
 
   return {
@@ -41,4 +41,4 @@ export function useToast() {
 }
 
 export { ToastContext }
-export type { ToastContextType, ToastType }
+export type { ToastContextType, ToastType } 
