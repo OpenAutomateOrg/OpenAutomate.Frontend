@@ -25,19 +25,21 @@ export function DataTableColumnHeader<TData, TValue>({
     return <div className={cn(className)}>{title}</div>
   }
 
+  // Extract the sort icon logic into a separate function
+  const getSortIcon = () => {
+    const sortDirection = column.getIsSorted();
+    if (sortDirection === 'desc') return <ArrowDown />;
+    if (sortDirection === 'asc') return <ArrowUp />;
+    return <ChevronsUpDown />;
+  };
+
   return (
     <div className={cn('flex items-center space-x-2', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
             <span>{title}</span>
-            {column.getIsSorted() === 'desc' ? (
-              <ArrowDown />
-            ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUp />
-            ) : (
-              <ChevronsUpDown />
-            )}
+            {getSortIcon()}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">

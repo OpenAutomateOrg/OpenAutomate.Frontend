@@ -64,11 +64,13 @@ export const columns: ColumnDef<AgentRow>[] = [
       let statusClass = ''
       switch (status) {
         case 'Connected':
-          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-          break
+        case 'Available':
+          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+          break;
+        case 'Busy':
+          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+          break;
         case 'Disconnected':
-          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-          break
         case 'Offline':
           statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
           break
