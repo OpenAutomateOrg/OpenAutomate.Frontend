@@ -31,20 +31,13 @@ export interface ODataResponse<T> {
   '@odata.nextLink'?: string
 }
 
-// Get the current tenant from the URL path, skipping the 'en' locale if present
+// Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
   if (typeof window !== 'undefined') {
     const path = window.location.pathname.split('/')
-    // URL format: /[locale]/[tenant]/...
-    // Example: ['', 'en', 'tenant1', ...]
-    // If the first segment is a locale ('en'), skip it
-    if (path.length > 2) {
-      // Check if path[1] is a locale (e.g., 'en')
-      const localePattern = /^[a-z]{2}$/i
-      const tenantIndex = localePattern.test(path[1]) ? 2 : 1
-      if (path[tenantIndex]) {
-        return path[tenantIndex]
-      }
+    // URL format: /[tenant]/...
+    if (path.length > 1 && path[1]) {
+      return path[1]
     }
   }
   return 'default' // Fallback to a default tenant
