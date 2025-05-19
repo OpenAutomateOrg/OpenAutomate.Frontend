@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 import type { AssetRow } from './asset'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
 export const columns: ColumnDef<AssetRow>[] = [
   {
@@ -47,6 +47,11 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
+    filterFn: (row, id, value) => {
+      const key = row.getValue(id);
+      if (typeof key !== 'string' || typeof value !== 'string') return false;
+      return key.toLowerCase().includes(value.toLowerCase());
+    },
   },
   {
     accessorKey: 'type',
@@ -61,8 +66,9 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
-      return value.includes(row.getValue(id))
+    filterFn: (row, id, value) => {
+      const rowValue = String(row.getValue(id))
+      return rowValue === String(value)
     },
   },
   {
@@ -78,8 +84,11 @@ export const columns: ColumnDef<AssetRow>[] = [
         </div>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
-      return value.includes(row.getValue(id))
+  },
+  {
+    id: "actions",
+    cell: () => {
+      return <DataTableRowAction />
     },
   },
 ]
