@@ -72,7 +72,7 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    
+
     // Always enable manual pagination when totalCount is provided
     ...(totalCount !== undefined && {
       manualPagination: true,
@@ -84,21 +84,22 @@ export function DataTable<TData, TValue>({
 
   // Debug totalCount prop
   React.useEffect(() => {
-    console.log('DataTable component received totalCount:', totalCount);
+    console.log('DataTable component received totalCount:', totalCount)
     if (table) {
-      const pageSize = table.getState().pagination.pageSize;
-      const calculatedPageCount = totalCount !== undefined ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1;
-      
+      const pageSize = table.getState().pagination.pageSize
+      const calculatedPageCount =
+        totalCount !== undefined ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1
+
       console.log('DataTable pagination state:', {
         totalCount,
         pageSize,
         calculatedPageCount,
         tablePageCount: table.getPageCount(),
         currentPage: table.getState().pagination.pageIndex + 1,
-        pageIndex: table.getState().pagination.pageIndex
-      });
+        pageIndex: table.getState().pagination.pageIndex,
+      })
     }
-  }, [totalCount, table]);
+  }, [totalCount, table])
 
   return (
     <div className="space-y-4">

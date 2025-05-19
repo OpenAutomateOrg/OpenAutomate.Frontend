@@ -50,31 +50,31 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       machineKey: crypto.randomUUID(),
       status: 'Disconnected',
       lastConnected: new Date().toISOString(),
-      isActive: true
+      isActive: true,
     }
   }
 
   // Format error messages from different error types
   const formatErrorMessage = (err: unknown): string => {
     let errorMessage = 'Failed to create agent. Please try again.'
-    
+
     if (typeof err === 'object' && err !== null) {
       if ('message' in err) {
         errorMessage = String(err.message)
       }
-      
+
       if ('status' in err) {
         errorMessage += ` (Status: ${(err as { status: string }).status})`
       }
-      
+
       if ('details' in err) {
         errorMessage += ` - ${(err as { details: string }).details}`
       }
-      
+
       // Log more details for debugging
       console.error('Error details:', JSON.stringify(err, null, 2))
     }
-    
+
     return errorMessage
   }
 
@@ -89,7 +89,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
     try {
       console.log('Submitting agent creation with data:', { name, machineName })
-      
+
       let agent: BotAgentResponseDto
 
       try {
@@ -101,13 +101,13 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
         agent = createMockAgent(apiError)
         console.log('Using mock data:', agent)
       }
-      
+
       setCreatedAgent(agent)
-      
+
       if (onSuccess) {
         onSuccess(agent)
       }
-      
+
       console.log('Agent created successfully:', agent)
     } catch (err) {
       console.error('Failed to create agent:', err)
@@ -140,7 +140,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
         </DialogHeader>
-        
+
         {!createdAgent ? (
           // Create form
           <div className="space-y-4">
@@ -150,10 +150,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               <label htmlFor="name" className="block text-sm">
                 Name<span className="text-red-500">*</span>
               </label>
-              <Input 
-                id="name" 
-                value={name} 
-                onChange={e => setName(e.target.value)} 
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -162,10 +162,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               <label htmlFor="machine-name" className="block text-sm">
                 Machine name<span className="text-red-500">*</span>
               </label>
-              <Input 
-                id="machine-name" 
-                value={machineName} 
-                onChange={e => setMachineName(e.target.value)} 
+              <Input
+                id="machine-name"
+                value={machineName}
+                onChange={(e) => setMachineName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -187,30 +187,30 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 Machine Key
               </label>
               <div className="flex">
-                <Input 
-                  id="machine-key" 
-                  value={createdAgent.machineKey} 
-                  readOnly 
+                <Input
+                  id="machine-key"
+                  value={createdAgent.machineKey}
+                  readOnly
                   className="flex-1 bg-muted font-mono text-xs"
                 />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => copyToClipboard(createdAgent.machineKey)} 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyToClipboard(createdAgent.machineKey)}
                   className="ml-2"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            </div>
+          </div>
         )}
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
             {createdAgent ? 'Close' : 'Cancel'}
           </Button>
-          
+
           {!createdAgent && (
             <Button onClick={handleSubmit} disabled={isLoading}>
               {isLoading ? 'Creating...' : 'Add Agent'}

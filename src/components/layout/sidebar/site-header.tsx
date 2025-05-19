@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { LanguageSwitcher } from '@/components/layout/Language-switcher'
+import { LanguageSwitcher } from '@/components/layout/language-switcher'
 
 import { useSidebar } from '@/components/ui/sidebar'
 

@@ -59,7 +59,8 @@ export default function AssetInterface() {
     if (!tenant) return
     setLoading(true)
     setError(null)
-    api.get<AssetRow[]>(`${tenant}/api/assets`)
+    api
+      .get<AssetRow[]>(`${tenant}/api/assets`)
       .then(setData)
       .catch((err: unknown) => {
         setError(
@@ -97,9 +98,10 @@ export default function AssetInterface() {
 
   // Calculate total pages based on filtered rows
   const totalCount = table.getFilteredRowModel().rows.length
-  const pageCount = useMemo(() => 
-    Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
-  [totalCount, pagination.pageSize])
+  const pageCount = useMemo(
+    () => Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
+    [totalCount, pagination.pageSize],
+  )
 
   const handleRowClick = (row: AssetRow) => {
     const pathname = window.location.pathname
@@ -126,7 +128,8 @@ export default function AssetInterface() {
   const handleAssetCreated = () => {
     setLoading(true)
     setError(null)
-    api.get<AssetRow[]>(`${tenant}/api/assets`)
+    api
+      .get<AssetRow[]>(`${tenant}/api/assets`)
       .then(setData)
       .catch((err: unknown) => {
         setError(
@@ -149,10 +152,7 @@ export default function AssetInterface() {
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-end gap-2">
-          <Button
-            onClick={handleCreateAsset}
-            className="flex items-center justify-center"
-          >
+          <Button onClick={handleCreateAsset} className="flex items-center justify-center">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create
           </Button>
@@ -175,7 +175,7 @@ export default function AssetInterface() {
         </div>
         <DataTableToolbar table={table} />
         <DataTable data={data} columns={columns} onRowClick={handleRowClick} table={table} />
-        
+
         <Pagination
           currentPage={pagination.pageIndex + 1}
           pageSize={pagination.pageSize}
@@ -184,16 +184,16 @@ export default function AssetInterface() {
           isLoading={loading}
           rowsLabel="assets"
           onPageChange={(page) => {
-            setPagination(prev => ({
+            setPagination((prev) => ({
               ...prev,
-              pageIndex: page - 1
+              pageIndex: page - 1,
             }))
           }}
           onPageSizeChange={(size) => {
-            setPagination(prev => ({
+            setPagination((prev) => ({
               ...prev,
               pageSize: size,
-              pageIndex: 0 // Reset to first page when changing page size
+              pageIndex: 0, // Reset to first page when changing page size
             }))
           }}
         />
