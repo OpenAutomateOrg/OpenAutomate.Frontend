@@ -19,13 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useParams } from 'next/navigation'
+import { createAsset } from '@/lib/api/assets'
 
 interface ItemModalProps {
-  isOpen: boolean
-  onClose: () => void
-  mode: 'create' | 'edit'
-  onCreated?: () => void
-  existingKeys?: string[]
+  readonly isOpen: boolean
+  readonly onClose: () => void
+  readonly mode: 'create' | 'edit'
+  readonly onCreated?: () => void
+  readonly existingKeys?: string[]
 }
 
 type Agent = { id: string; name: string }
@@ -59,7 +60,15 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   }, [tenant, isOpen]);
 
   const validateForm = () => {
-    if (!key.trim() || !type.trim() || !value.trim() || addedAgents.length === 0) return false
+    const vietnameseRegex = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/;
+    if (!key.trim() || !type.trim() || !value.trim() || addedAgents.length === 0) {
+      setError('Please fill in all required fields and add at least one agent.')
+      return false
+    }
+    if (vietnameseRegex.test(key)) {
+      setError('Key must not contain Vietnamese characters or accents.')
+      return false
+    }
     if (existingKeys.includes(key.trim())) {
       setError('Key already exists. Please choose a unique key.')
       return false
@@ -79,17 +88,15 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
         botAgentIds: addedAgents.map((a: Agent) => a.id),
         type: Number(type)
       }
-      const { api } = await import('@/lib/api/client')
-      await api.post(`${tenant}/api/assets`, payload)
+      await createAsset(payload)
       resetForm()
       onClose()
       if (onCreated) onCreated()
     } catch (err: unknown) {
-      setError(
-        typeof err === 'object' && err !== null && 'message' in err
-          ? (err as { message: string }).message
-          : 'Failed to create asset'
-      )
+      const errorMessage = typeof err === 'object' && err !== null && 'message' in err
+        ? (err as { message: string }).message
+        : 'Failed to create asset'
+      setError(errorMessage)
     } finally {
       setSubmitting(false)
     }
@@ -120,6 +127,13 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
 
   const handleRemoveAgent = (id: string) => {
     setAddedAgents(addedAgents.filter((a: Agent) => a.id !== id))
+  }
+
+  let buttonText = 'Add Item'
+  if (submitting) {
+    buttonText = 'Submitting...'
+  } else if (isEditing) {
+    buttonText = 'Save Changes'
   }
 
   return (
@@ -223,7 +237,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {isEditing ? 'Save Changes' : 'Add Item'}
+            {buttonText}
           </Button>
         </DialogFooter>
       </DialogContent>
