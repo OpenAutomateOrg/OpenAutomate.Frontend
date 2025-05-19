@@ -6,10 +6,12 @@ import { useState } from 'react'
 import { ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSearchContext } from './search-context'
+import { useTranslations } from 'next-intl'
 
 export function SearchBar() {
   const { setSearchTerm } = useSearchContext()
   const [selectedValue, setSelectedValue] = useState('')
+  const t = useTranslations('Button')
 
   const handleFilter = () => {
     setSearchTerm(selectedValue)
@@ -36,11 +38,11 @@ export function SearchBar() {
         </select>
       </div>
       <Button onClick={handleFilter} size="sm">
-        Filter
+        {t('filter')}
       </Button>
       {selectedValue && (
         <Button onClick={handleClear} variant="outline" size="sm">
-          Clear
+          {t('clear')}
         </Button>
       )}
     </div>

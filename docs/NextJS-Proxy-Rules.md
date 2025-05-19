@@ -6,9 +6,9 @@ This document outlines how proxy rules and environment variables are configured 
 
 The application uses the following environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | URL of the backend API server | `http://localhost:5252` |
+| Variable              | Description                     | Default                 |
+| --------------------- | ------------------------------- | ----------------------- |
+| `NEXT_PUBLIC_API_URL` | URL of the backend API server   | `http://localhost:5252` |
 | `NEXT_PUBLIC_APP_URL` | URL of the frontend application | `http://localhost:3000` |
 
 ## Proxy Rules in Next.js
@@ -21,7 +21,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
 
 const nextConfig: NextConfig = {
   // ...
-  
+
   async rewrites() {
     return [
       // Rewrite SignalR hub connections for bot agents
@@ -29,18 +29,18 @@ const nextConfig: NextConfig = {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
-      
+
       // Rewrite OData API calls
       {
         source: '/:tenantSlug/odata/:path*',
         destination: `${API_URL}/:tenantSlug/odata/:path*`,
       },
-      
+
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
         destination: `${API_URL}/:tenantSlug/api/:path*`,
-      }
+      },
     ]
   },
 }
@@ -95,4 +95,4 @@ Example for adding a new proxy rule for file uploads:
 
 - **404 Not Found**: Verify that the rewrite rule pattern matches your request path
 - **Connection Issues**: Ensure the API server is running and accessible
-- **WebSocket Errors**: Ensure your hosting provider supports WebSockets for SignalR connections 
+- **WebSocket Errors**: Ensure your hosting provider supports WebSockets for SignalR connections

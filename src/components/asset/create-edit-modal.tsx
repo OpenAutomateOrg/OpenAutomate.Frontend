@@ -31,7 +31,13 @@ interface ItemModalProps {
 
 type Agent = { id: string; name: string }
 
-export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys = [] }: ItemModalProps) {
+export function CreateEditModal({
+  isOpen,
+  onClose,
+  mode,
+  onCreated,
+  existingKeys = [],
+}: ItemModalProps) {
   const [value, setValue] = useState('')
   const [key, setKey] = useState('')
   const [type, setType] = useState('0')
@@ -46,18 +52,18 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   const isEditing = mode === 'edit'
 
   useEffect(() => {
-    if (!tenant || !isOpen) return;
+    if (!tenant || !isOpen) return
     const fetchAgents = async () => {
       try {
-        const { api } = await import('@/lib/api/client');
-        const res = await api.get<Agent[]>(`${tenant}/api/agents`);
-        setAgents(res.map((a: Agent) => ({ id: a.id, name: a.name })));
+        const { api } = await import('@/lib/api/client')
+        const res = await api.get<Agent[]>(`${tenant}/api/agents`)
+        setAgents(res.map((a: Agent) => ({ id: a.id, name: a.name })))
       } catch (err) {
-        console.error('Error fetching agents:', err);
+        console.error('Error fetching agents:', err)
       }
-    };
-    fetchAgents();
-  }, [tenant, isOpen]);
+    }
+    fetchAgents()
+  }, [tenant, isOpen])
 
   const validateForm = () => {
     const vietnameseRegex = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/;
@@ -86,7 +92,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
         description,
         value,
         botAgentIds: addedAgents.map((a: Agent) => a.id),
-        type: Number(type)
+        type: Number(type),
       }
       await createAsset(payload)
       resetForm()
@@ -147,7 +153,11 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
             <Label htmlFor="key" className="text-sm">
               Key<span className="text-red-500">*</span>
             </Label>
-            <Input id="key" value={key} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKey(e.target.value)} />
+            <Input
+              id="key"
+              value={key}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKey(e.target.value)}
+            />
             {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
           </div>
 
@@ -155,7 +165,12 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
             <Label htmlFor="description" className="text-sm">
               Description
             </Label>
-            <Input id="description" value={description} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)} placeholder="Enter description (optional)" />
+            <Input
+              id="description"
+              value={description}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+              placeholder="Enter description (optional)"
+            />
           </div>
 
           <div className="grid gap-2">
@@ -197,7 +212,9 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
                 </SelectTrigger>
                 <SelectContent>
                   {agents.map((agent: Agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -220,7 +237,12 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
                   {addedAgents.map((agent: Agent) => (
                     <tr key={agent.id}>
                       <td className="border px-2 py-1 text-center">
-                        <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveAgent(agent.id)}>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveAgent(agent.id)}
+                        >
                           🗑️
                         </Button>
                       </td>

@@ -1,0 +1,12 @@
+{
+  "Button": {
+    "filter": "Lọc",
+    "clear": "Làm mới"
+  },
+  "SectionCard": {
+    "user": "Người dùng",
+    "schedules": "Lịch trình",
+    "assets": " Tài sản",
+    "agent": "Máy"
+  }
+}
