@@ -16,22 +16,25 @@ interface DataTablePaginationProps<TData> {
   totalCount?: number
 }
 
-export function DataTablePagination<TData>({ table, totalCount }: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({
+  table,
+  totalCount,
+}: DataTablePaginationProps<TData>) {
   // Get current pagination state from table
-  const pagination = table.getState().pagination
-  const pageSize = pagination.pageSize
-
+  const pagination = table.getState().pagination;
+  const pageSize = pagination.pageSize;
+  
   // Calculate total items and pages
-  const totalItems = totalCount !== undefined ? totalCount : 0
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-
+  const totalItems = totalCount !== undefined ? totalCount : 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  
   // Current page (1-based for display)
-  const currentPage = pagination.pageIndex + 1
-
+  const currentPage = pagination.pageIndex + 1;
+  
   // Navigation state
-  const canPreviousPage = currentPage > 1
-  const canNextPage = currentPage < totalPages
-
+  const canPreviousPage = currentPage > 1;
+  const canNextPage = currentPage < totalPages;
+  
   // Logging to debug pagination
   useEffect(() => {
     console.log('DataTablePagination - Raw state:', {
@@ -44,42 +47,33 @@ export function DataTablePagination<TData>({ table, totalCount }: DataTablePagin
       canNextPage,
       tablePageIndex: pagination.pageIndex,
       tablePageSize: pagination.pageSize,
-      tablePageCount: table.getPageCount(),
-    })
-  }, [
-    totalCount,
-    totalItems,
-    pageSize,
-    currentPage,
-    totalPages,
-    canPreviousPage,
-    canNextPage,
-    pagination,
-    table,
-  ])
+      tablePageCount: table.getPageCount()
+    });
+  }, [totalCount, totalItems, pageSize, currentPage, totalPages, canPreviousPage, canNextPage, pagination, table]);
 
   // Navigation functions
   const goToPage = (newPage: number) => {
     // Ensure page is within bounds
-    const page = Math.max(1, Math.min(newPage, totalPages))
-
+    const page = Math.max(1, Math.min(newPage, totalPages));
+    
     // Convert to 0-based index for table
-    const pageIndex = page - 1
-
-    console.log(`Navigating to page ${page} (index: ${pageIndex})`)
-    table.setPageIndex(pageIndex)
-  }
+    const pageIndex = page - 1;
+    
+    console.log(`Navigating to page ${page} (index: ${pageIndex})`);
+    table.setPageIndex(pageIndex);
+  };
 
   return (
     <div className="flex items-center justify-between px-2">
       <div className="flex-1 text-sm text-muted-foreground">
         {totalItems > 0 ? (
           <>
-            {Math.min((currentPage - 1) * pageSize + 1, totalItems)}-
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems} row(s)
+            {Math.min(((currentPage - 1) * pageSize) + 1, totalItems)}-
+            {Math.min(currentPage * pageSize, totalItems)}{" "}
+            of {totalItems} row(s)
           </>
         ) : (
-          'No results'
+          "No results"
         )}
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
@@ -88,15 +82,15 @@ export function DataTablePagination<TData>({ table, totalCount }: DataTablePagin
           <Select
             value={`${pageSize}`}
             onValueChange={(value) => {
-              const newSize = Number(value)
-
+              const newSize = Number(value);
+              
               // When changing page size, try to keep the first item visible
-              const firstItemIndex = (currentPage - 1) * pageSize
-              const newPageIndex = Math.floor(firstItemIndex / newSize)
-
-              console.log(`Changing page size to ${newSize}, new page index: ${newPageIndex}`)
-              table.setPageSize(newSize)
-              table.setPageIndex(newPageIndex)
+              const firstItemIndex = (currentPage - 1) * pageSize;
+              const newPageIndex = Math.floor(firstItemIndex / newSize);
+              
+              console.log(`Changing page size to ${newSize}, new page index: ${newPageIndex}`);
+              table.setPageSize(newSize);
+              table.setPageIndex(newPageIndex);
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">

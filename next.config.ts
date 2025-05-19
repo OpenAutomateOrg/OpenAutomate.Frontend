@@ -1,7 +1,4 @@
 import type { NextConfig } from 'next'
-import createNextIntlPlugin from 'next-intl/plugin'
-
-const withNextIntl = createNextIntlPlugin()
 
 // Get the API URL from environment variable
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
@@ -41,24 +38,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Add WebSocket specific headers
-      {
-        source: '/:tenantSlug/hubs/:path*',
-        headers: [
-          {
-            key: 'Connection',
-            value: 'keep-alive',
-          },
-          {
-            key: 'Keep-Alive',
-            value: 'timeout=120',
-          },
-          {
-            key: 'Upgrade',
-            value: 'websocket',
-          },
-        ],
-      },
     ]
   },
 
@@ -73,31 +52,25 @@ const nextConfig: NextConfig = {
   // Configure API and SignalR proxy rewrites
   async rewrites() {
     return [
-      // SignalR negotiation endpoint (this needs to be first)
-      {
-        source: '/:tenantSlug/hubs/:path*/negotiate',
-        destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
-      },
-
-      // SignalR hub connections - standard HTTP (including query params like ?id=xyz)
+      // Rewrite SignalR hub connections for bot agents
       {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
-
+      
       // Rewrite OData API calls
       {
         source: '/:tenantSlug/odata/:path*',
         destination: `${API_URL}/:tenantSlug/odata/:path*`,
       },
-
+      
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
         destination: `${API_URL}/:tenantSlug/api/:path*`,
-      },
+      }
     ]
   },
 }
 
-export default withNextIntl(nextConfig)
+export default nextConfig
