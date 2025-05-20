@@ -75,6 +75,19 @@ const nextConfig: NextConfig = {
       {
         source: '/:tenantSlug/hubs/:path*/negotiate',
         destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
+        has: [
+          {
+            type: 'query',
+            key: 'machineKey',
+            // value is not checked - just ensuring the param is preserved
+          }
+        ]
+      },
+      
+      // Add specific handler for machineKey-authenticated negotiate requests
+      {
+        source: '/:tenantSlug/hubs/:path*/negotiate',
+        destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
       },
       
       // SignalR hub connections - standard HTTP (including query params like ?id=xyz)
