@@ -25,6 +25,7 @@ const isExpectedSignalRError = (message: string): boolean => {
     'WebSocket closed',
     'network error',
     'transport timed out',
+
     'Transport disconnected',
     'Response status code does not indicate success: 401',
     'Unauthorized',
@@ -60,18 +61,44 @@ const startSignalRConnection = async (connection: HubConnection) => {
   }
 };
 
+// Helper to get machine key from storage
+const getMachineKey = (): string | null => {
+  try {
+    return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
+  } catch {
+    // Silent fail if localStorage/sessionStorage is unavailable
+    return null;
+  }
+};
+
 // Helper to create a SignalR hub connection
 const createSignalRConnection = (tenant: string): HubConnection => {
   const hubUrl = `/${tenant}/hubs/botagent`;
   
   // Get the machine key if needed (for bot agent clients)
   const machineKey = getMachineKey();
+  const authToken = getAuthToken();
+  
+  console.debug('[SignalR] Creating connection with', 
+    machineKey ? 'machineKey authentication' : 'token authentication');
   
   // Configure options for the connection
   const connectionOptions = {
-    accessTokenFactory: () => getAuthToken() || '',
+    // If we have a machine key, don't use token authentication as it will conflict
+    accessTokenFactory: machineKey ? undefined : () => authToken || '',
+    
     // Support both WebSockets and Long Polling for maximum compatibility
     transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+    
+    // Always add headers for compatibility with different auth methods
+    headers: {
+      // If we have a machine key, pass it as a header for secondary authentication
+      ...(machineKey ? { 'X-Machine-Key': machineKey } : {}),
+      
+      // Always include the authorization header if we have a token
+      ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+    },
+    
     // Use specific query params for bot agents if available
     ...(machineKey ? { 
       queryString: `machineKey=${encodeURIComponent(machineKey)}` 
@@ -93,16 +120,6 @@ const createSignalRConnection = (tenant: string): HubConnection => {
     .build();
   
   return connection;
-};
-
-// Helper to get machine key from storage
-const getMachineKey = (): string | null => {
-  try {
-    return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
-  } catch {
-    // Silent fail if localStorage/sessionStorage is unavailable
-    return null;
-  }
 };
 
 export function useAgentStatus(
@@ -168,6 +185,9 @@ export function useAgentStatus(
       console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
     });
 
+    connection.onreconnected(connectionId => {
+      console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
+    });
     // Start the connection
     startSignalRConnection(connection);
     connectionRef.current = connection;
