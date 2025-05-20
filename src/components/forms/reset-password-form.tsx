@@ -59,8 +59,8 @@ export function ResetPasswordForm() {
   const [password, setPassword] = React.useState('')
 
   // Extract token and email from URL
-  const rawToken = searchParams?.get('token') || ''
-  const email = searchParams?.get('email') || ''
+  const rawToken = searchParams.get('token') || ''
+  const email = searchParams.get('email') || ''
   
   // Process token for proper format
   const [token, setToken] = React.useState('')
