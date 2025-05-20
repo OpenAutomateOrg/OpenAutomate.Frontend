@@ -71,18 +71,18 @@ export default function AgentInterface() {
   const initColumnFilters = (): ColumnFiltersState => {
     const filters: ColumnFiltersState = []
     
-    const nameFilter = searchParams.get('name')
+    const nameFilter = searchParams?.get('name')
     if (nameFilter) filters.push({ id: 'name', value: nameFilter })
     
-    const statusFilter = searchParams.get('status')
+    const statusFilter = searchParams?.get('status')
     if (statusFilter) filters.push({ id: 'status', value: statusFilter })
     
     return filters
   }
   
   const initSorting = (): SortingState => {
-    const sort = searchParams.get('sort')
-    const order = searchParams.get('order')
+    const sort = searchParams?.get('sort')
+    const order = searchParams?.get('order')
     
     if (sort && (order === 'asc' || order === 'desc')) {
       return [{ id: sort, desc: order === 'desc' }]
@@ -92,8 +92,8 @@ export default function AgentInterface() {
   }
   
   const initPagination = (): PaginationState => {
-    const page = searchParams.get('page')
-    const size = searchParams.get('size')
+    const page = searchParams?.get('page')
+    const size = searchParams?.get('size')
     
     return {
       pageIndex: page ? Math.max(0, parseInt(page) - 1) : 0,
@@ -107,10 +107,10 @@ export default function AgentInterface() {
   const [pagination, setPagination] = useState<PaginationState>(initPagination)
   
   // UI state for search input
-  const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') || '')
+  const [searchValue, setSearchValue] = useState<string>(searchParams?.get('name') || '')
   
   // Extract tenant from pathname (e.g., /tenant/agent)
-  const tenant = pathname.split('/')[1];
+  const tenant = pathname?.split('/')[1] || '';
 
   // Convert table state to OData query parameters
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
@@ -219,7 +219,7 @@ export default function AgentInterface() {
         
         if (pagination.pageIndex >= calculatedPageCount) {
           setPagination(prev => ({ ...prev, pageIndex: 0 }));
-          updateUrl(pathname, { page: '1' });
+          updateUrl(pathname as string, { page: '1' });
         }
       }
     };
@@ -270,11 +270,11 @@ export default function AgentInterface() {
     if (shouldInitializeUrl.current) {
       shouldInitializeUrl.current = false;
       
-      const page = searchParams.get('page');
-      const size = searchParams.get('size');
+      const page = searchParams?.get('page');
+      const size = searchParams?.get('size');
       
       if (!page || !size) {
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           page: page || '1',
           size: size || '10'
         });
@@ -345,13 +345,13 @@ export default function AgentInterface() {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater
       setSorting(newSorting)
       if (newSorting.length > 0) {
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           sort: newSorting[0].id,
           order: newSorting[0].desc ? 'desc' : 'asc',
           page: '1', // Reset to first page when sorting changes
         })
       } else {
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           sort: null,
           order: null,
           page: '1',
@@ -363,7 +363,7 @@ export default function AgentInterface() {
     onPaginationChange: (updater) => {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
-      updateUrl(pathname, {
+      updateUrl(pathname as string, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
@@ -394,7 +394,7 @@ export default function AgentInterface() {
       if (nameFilter) {
         nameFilter.setFilterValue(value)
         
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           name: value || null,
           page: '1', // Reset to first page when filter changes
         })
@@ -412,7 +412,7 @@ export default function AgentInterface() {
       const filterValue = value === 'all' ? '' : value
       statusColumn.setFilterValue(filterValue)
       
-      updateUrl(pathname, {
+      updateUrl(pathname as string, {
         status: filterValue || null,
         page: '1', // Reset to page 1 when filter changes
       })
@@ -444,7 +444,7 @@ export default function AgentInterface() {
   const handleAgentCreated = () => fetchAgents()
 
   const handleRowClick = (row: AgentRow) => {
-    const isAdmin = pathname.startsWith('/admin')
+    const isAdmin = pathname?.startsWith('/admin')
     const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
     router.push(route)
   }
@@ -520,7 +520,7 @@ export default function AgentInterface() {
           isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
-            updateUrl(pathname, { page: page.toString() })
+            updateUrl(pathname as string, { page: page.toString() })
           }}
           onPageSizeChange={(size: number) => {
             setIsChangingPageSize(true)
@@ -532,7 +532,7 @@ export default function AgentInterface() {
               pageIndex: newPageIndex
             })
             
-            updateUrl(pathname, {
+            updateUrl(pathname as string, {
               size: size.toString(),
               page: (newPageIndex + 1).toString()
             })
