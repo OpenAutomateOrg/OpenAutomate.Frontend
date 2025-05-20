@@ -219,7 +219,7 @@ export default function AgentInterface() {
         
         if (pagination.pageIndex >= calculatedPageCount) {
           setPagination(prev => ({ ...prev, pageIndex: 0 }));
-          updateUrl(pathname || "" || "" || "" as string, { page: '1' });
+          updateUrl(pathname as string, { page: '1' });
         }
       }
     };
@@ -274,7 +274,7 @@ export default function AgentInterface() {
       const size = searchParams?.get('size');
       
       if (!page || !size) {
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname as string, {
           page: page || '1',
           size: size || '10'
         });
@@ -345,13 +345,13 @@ export default function AgentInterface() {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater
       setSorting(newSorting)
       if (newSorting.length > 0) {
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname as string, {
           sort: newSorting[0].id,
           order: newSorting[0].desc ? 'desc' : 'asc',
           page: '1', // Reset to first page when sorting changes
         })
       } else {
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname as string, {
           sort: null,
           order: null,
           page: '1',
@@ -363,7 +363,7 @@ export default function AgentInterface() {
     onPaginationChange: (updater) => {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
-      updateUrl(pathname || "" || "" || "" as string, {
+      updateUrl(pathname as string, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
@@ -394,7 +394,7 @@ export default function AgentInterface() {
       if (nameFilter) {
         nameFilter.setFilterValue(value)
         
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname as string, {
           name: value || null,
           page: '1', // Reset to first page when filter changes
         })
@@ -412,7 +412,7 @@ export default function AgentInterface() {
       const filterValue = value === 'all' ? '' : value
       statusColumn.setFilterValue(filterValue)
       
-      updateUrl(pathname || "" || "" || "" as string, {
+      updateUrl(pathname as string, {
         status: filterValue || null,
         page: '1', // Reset to page 1 when filter changes
       })
@@ -520,7 +520,7 @@ export default function AgentInterface() {
           isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
-            updateUrl(pathname || "" || "" || "" as string, { page: page.toString() })
+            updateUrl(pathname as string, { page: page.toString() })
           }}
           onPageSizeChange={(size: number) => {
             setIsChangingPageSize(true)
@@ -532,7 +532,7 @@ export default function AgentInterface() {
               pageIndex: newPageIndex
             })
             
-            updateUrl(pathname || "" || "" || "" as string, {
+            updateUrl(pathname as string, {
               size: size.toString(),
               page: (newPageIndex + 1).toString()
             })
