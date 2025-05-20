@@ -31,6 +31,64 @@ interface ApiError {
 }
 
 /**
+ * Sanitizes and formats a token string
+ */
+function sanitizeToken(token: string): string {
+  let sanitizedToken = token.trim();
+  
+  // Remove spaces
+  if (sanitizedToken.includes(' ')) {
+    console.warn('Token contains spaces - cleaning up');
+    sanitizedToken = sanitizedToken.replace(/\s/g, '');
+  }
+  
+  // Try URL decoding if needed
+  try {
+    if (sanitizedToken.includes('%')) {
+      console.log('Token appears to be URL encoded - decoding');
+      return decodeURIComponent(sanitizedToken);
+    }
+  } catch (e) {
+    console.warn('Error trying to decode token:', e);
+  }
+  
+  return sanitizedToken;
+}
+
+/**
+ * Logs API error details and throws appropriate error
+ */
+function handleResetPasswordError(error: unknown): never {
+  console.error('Reset password request failed with error:', error);
+  
+  const apiError = error as ApiError;
+  
+  // Log error details
+  if (apiError?.status) console.error('Status code:', apiError.status);
+  if (apiError?.message) console.error('Error message:', apiError.message);
+  if (apiError?.details) console.error('Error details:', apiError.details);
+  if (apiError?.errors) console.error('Validation errors:', apiError.errors);
+  
+  // Handle validation errors
+  if (apiError?.errors) {
+    const validationErrors = formatValidationErrors(apiError.errors);
+    throw new Error(`Password reset failed with validation errors: ${validationErrors}`);
+  } 
+  
+  if (apiError?.message) throw apiError;
+  throw new Error('Password reset failed. Please try again.');
+}
+
+/**
+ * Formats validation errors into a readable string
+ */
+function formatValidationErrors(errors: Record<string, string | string[]>): string {
+  return Object.entries(errors)
+    .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+    .join('; ');
+}
+
+/**
  * Authentication API service
  * Handles all authentication-related API calls
  */
@@ -120,91 +178,38 @@ export const authApi = {
    */
   resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
     try {
-      // Sanitize the request data
+      // Prepare sanitized data
       const sanitizedData = {
         email: data.email.trim(),
-        token: data.token.trim(),
+        token: sanitizeToken(data.token.trim()),
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
       };
       
-      // Ensure token is in correct format
-      if (sanitizedData.token.includes(' ')) {
-        console.warn('Token contains spaces - cleaning up');
-        sanitizedData.token = sanitizedData.token.replace(/\s/g, '');
-      }
-      
-      // URL decode token if it's URL encoded
-      try {
-        if (sanitizedData.token.includes('%')) {
-          const decodedToken = decodeURIComponent(sanitizedData.token);
-          console.log('Token appears to be URL encoded - decoding');
-          sanitizedData.token = decodedToken;
-        }
-      } catch (e) {
-        console.warn('Error trying to decode token:', e);
-        // Continue with original token if decoding fails
-      }
-      
-      // Log the actual data being sent to API
+      // Log request data (masked for security)
       console.log('Sending reset password request with data:', {
         email: sanitizedData.email,
         tokenLength: sanitizedData.token.length,
         tokenPrefix: sanitizedData.token.substring(0, 10) + '...',
-        newPassword: sanitizedData.newPassword ? '******' : 'MISSING', // Just log if it exists 
-        confirmPassword: sanitizedData.confirmPassword ? '******' : 'MISSING', // Just log if it exists
+        newPassword: sanitizedData.newPassword ? '******' : 'MISSING',
+        confirmPassword: sanitizedData.confirmPassword ? '******' : 'MISSING',
       });
       
-      // Debug log the full object structure
+      // Debug log the full structure (with passwords masked)
       console.log('Request payload structure:', JSON.stringify({
         ...sanitizedData,
         newPassword: '*****',
         confirmPassword: '*****',
       }, null, 2));
       
+      // Send the request
       const response = await api.post(endpoints.resetPassword, sanitizedData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
       
       console.log('Password reset request successful', response);
     } catch (error: unknown) {
-      console.error('Reset password request failed with error:', error);
-      
-      const apiError = error as ApiError;
-      
-      // Enhanced error logging to diagnose the issue
-      if (apiError?.status) {
-        console.error('Status code:', apiError.status);
-      }
-      
-      if (apiError?.message) {
-        console.error('Error message:', apiError.message);
-      }
-      
-      if (apiError?.details) {
-        console.error('Error details:', apiError.details);
-      }
-      
-      // Handle validation errors specially
-      if (apiError?.errors) {
-        console.error('Validation errors:', apiError.errors);
-      }
-      
-      // Throw a more descriptive error
-      if (apiError?.errors) {
-        // Format validation errors
-        const validationErrors = Object.entries(apiError.errors)
-          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-          .join('; ');
-          
-        throw new Error(`Password reset failed with validation errors: ${validationErrors}`);
-      } else if (apiError?.message) {
-        throw apiError;
-      } else {
-        throw new Error('Password reset failed. Please try again.');
-      }
+      handleResetPasswordError(error);
     }
   },
 
