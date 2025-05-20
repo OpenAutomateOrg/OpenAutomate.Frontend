@@ -23,6 +23,13 @@ const endpoints = {
   verifyEmail: 'api/email/verify',
 }
 
+interface ApiError {
+  status?: number;
+  message?: string;
+  details?: string;
+  errors?: Record<string, string | string[]>;
+}
+
 /**
  * Authentication API service
  * Handles all authentication-related API calls
@@ -162,37 +169,39 @@ export const authApi = {
       });
       
       console.log('Password reset request successful', response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Reset password request failed with error:', error);
       
+      const apiError = error as ApiError;
+      
       // Enhanced error logging to diagnose the issue
-      if (error?.status) {
-        console.error('Status code:', error.status);
+      if (apiError?.status) {
+        console.error('Status code:', apiError.status);
       }
       
-      if (error?.message) {
-        console.error('Error message:', error.message);
+      if (apiError?.message) {
+        console.error('Error message:', apiError.message);
       }
       
-      if (error?.details) {
-        console.error('Error details:', error.details);
+      if (apiError?.details) {
+        console.error('Error details:', apiError.details);
       }
       
       // Handle validation errors specially
-      if (error?.errors) {
-        console.error('Validation errors:', error.errors);
+      if (apiError?.errors) {
+        console.error('Validation errors:', apiError.errors);
       }
       
       // Throw a more descriptive error
-      if (error?.errors) {
+      if (apiError?.errors) {
         // Format validation errors
-        const validationErrors = Object.entries(error.errors)
+        const validationErrors = Object.entries(apiError.errors)
           .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
           .join('; ');
           
         throw new Error(`Password reset failed with validation errors: ${validationErrors}`);
-      } else if (error?.message) {
-        throw error;
+      } else if (apiError?.message) {
+        throw apiError;
       } else {
         throw new Error('Password reset failed. Please try again.');
       }

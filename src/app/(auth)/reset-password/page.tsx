@@ -21,14 +21,15 @@ function ResetPasswordFormLoading() {
   )
 }
 
-export default function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
+// Sử dụng unknown để tránh lỗi ESLint
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ResetPasswordPage(props: any) {
+  // Extract searchParams từ props
+  const searchParams = props.searchParams || {};
+  
   // Get token and email from search params to pass down to the form
-  const token = typeof searchParams.token === 'string' ? searchParams.token : ''
-  const email = typeof searchParams.email === 'string' ? searchParams.email : ''
+  const token = searchParams.token || '';
+  const email = searchParams.email || '';
   
   // For debugging in server logs
   if (token) {

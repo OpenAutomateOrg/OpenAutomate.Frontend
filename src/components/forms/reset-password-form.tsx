@@ -44,6 +44,12 @@ const formSchema = z
 
 type FormData = z.infer<typeof formSchema>
 
+interface ErrorWithMessage {
+  message?: string;
+  details?: string;
+  errors?: Record<string, string | string[]>;
+}
+
 export function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -178,7 +184,7 @@ export function ResetPasswordForm() {
       } else if (typeof err === 'object' && err !== null) {
         console.error('Error object:', JSON.stringify(err, null, 2));
         
-        const errObj = err as any;
+        const errObj = err as ErrorWithMessage;
         if (errObj.message) {
           errorMessage = errObj.message;
           console.error('Error message from object:', errObj.message);

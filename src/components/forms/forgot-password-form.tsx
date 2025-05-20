@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -27,8 +26,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
+interface ErrorWithMessage {
+  message?: string;
+  details?: string;
+}
+
 export function ForgotPasswordForm() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<boolean>(false)
@@ -67,7 +70,7 @@ export function ForgotPasswordForm() {
         errorMessage = err.message;
       } else if (typeof err === 'object' && err !== null) {
         // Try to get message from error object
-        const errObj = err as any;
+        const errObj = err as ErrorWithMessage;
         if (errObj.message) {
           errorMessage = errObj.message;
         } else if (errObj.details) {
