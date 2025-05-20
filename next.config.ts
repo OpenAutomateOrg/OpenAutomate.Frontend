@@ -133,12 +133,6 @@ const nextConfig: NextConfig = {
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
       
-      // Rewrite OData API calls
-      {
-        source: '/:tenantSlug/odata/:path*',
-        destination: `${API_URL}/:tenantSlug/odata/:path*`,
-      },
-      
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
