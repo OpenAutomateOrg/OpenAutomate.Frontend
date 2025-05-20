@@ -184,6 +184,10 @@ export function useAgentStatus(
     connection.onreconnected(connectionId => {
       console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
     });
+
+    connection.onreconnected(connectionId => {
+      console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
+    });
     // Start the connection
     startSignalRConnection(connection);
     connectionRef.current = connection;
