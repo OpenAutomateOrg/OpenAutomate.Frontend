@@ -26,12 +26,9 @@ export function LanguageSwitcher() {
 
   // Function to get the new path with changed language
   const getPathWithNewLocale = (locale: string) => {
-    // Handle null pathname case
-    if (!pathname) return `/${locale}`
-    
     // If the current path already has a locale, replace it
     if (params?.lang) {
-      return pathname?.replace(`/${currentLang}`, `/${locale}`)
+      return pathname.replace(`/${currentLang}`, `/${locale}`)
     }
     // Otherwise, add the locale to the beginning of the path
     return `/${locale}${pathname}`

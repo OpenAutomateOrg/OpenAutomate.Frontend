@@ -31,7 +31,7 @@ function VerificationPendingLoading() {
 // Client component that uses search params
 function VerificationPendingContent() {
   const searchParams = useSearchParams()
-  const email = searchParams?.get('email')
+  const email = searchParams.get('email')
   const [isResending, setIsResending] = useState(false)
   const [alert, setAlert] = useState<{
     type: 'success' | 'error'
