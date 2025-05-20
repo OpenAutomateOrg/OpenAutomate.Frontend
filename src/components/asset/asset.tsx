@@ -65,39 +65,39 @@ export default function AssetInterface() {
   const getMinimumValidPageCount = (currentPageIndex: number) => currentPageIndex + 1
   const initColumnFilters = (): ColumnFiltersState => {
     const filters: ColumnFiltersState = []
-
-    const keyFilter = searchParams.get('key')
+    
+    const keyFilter = searchParams?.get('key')
     if (keyFilter) filters.push({ id: 'key', value: keyFilter })
-
-    const typeFilter = searchParams.get('type')
+    
+    const typeFilter = searchParams?.get('type')
     if (typeFilter) filters.push({ id: 'type', value: typeFilter })
-
+    
     return filters
   }
 
   const initSorting = (): SortingState => {
-    const sort = searchParams.get('sort')
-    const order = searchParams.get('order')
-
+    const sort = searchParams?.get('sort')
+    const order = searchParams?.get('order')
+    
     if (sort && (order === 'asc' || order === 'desc')) {
       return [{ id: sort, desc: order === 'desc' }]
     }
-
+    
     return []
   }
 
   const initPagination = (): PaginationState => {
-    const pageParam = searchParams.get('page')
-    const sizeParam = searchParams.get('size')
-
-    const pageIndex = pageParam ? Math.max(0, parseInt(pageParam, 10) - 1) : 0
-    const pageSize = sizeParam ? parseInt(sizeParam, 10) : 10
-
-    return { pageIndex, pageSize }
+    const pageParam = searchParams?.get('page')
+    const sizeParam = searchParams?.get('size')
+    
+    return {
+      pageIndex: pageParam ? Math.max(0, parseInt(pageParam) - 1) : 0,
+      pageSize: sizeParam ? parseInt(sizeParam) : 10,
+    }
   }
 
   // State for search, filters, sorting, and pagination
-  const [searchValue, setSearchValue] = useState<string>(searchParams.get('key') ?? '')
+  const [searchValue, setSearchValue] = useState<string>(searchParams?.get('key') ?? '')
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initColumnFilters)
   const [sorting, setSorting] = useState<SortingState>(initSorting)
   const [pagination, setPagination] = useState<PaginationState>(initPagination)
@@ -177,13 +177,13 @@ export default function AssetInterface() {
       setSorting(newSorting)
 
       if (newSorting.length > 0) {
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           sort: newSorting[0].id,
           order: newSorting[0].desc ? 'desc' : 'asc',
           page: '1', // Reset to first page when sorting changes
         })
       } else {
-        updateUrl(pathname, {
+        updateUrl(pathname as string, {
           sort: null,
           order: null,
           page: '1',
@@ -196,7 +196,7 @@ export default function AssetInterface() {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
 
-      updateUrl(pathname, {
+      updateUrl(pathname as string, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
@@ -229,7 +229,7 @@ export default function AssetInterface() {
     searchDebounceTimeout.current = setTimeout(() => {
       setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
       // Always reset page to 1 when filter changes
-      updateUrl(pathname, { key: value ?? null, page: '1' })
+      updateUrl(pathname as string, { key: value ?? null, page: '1' })
       setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
       setIsPending(false)
     }, 500)
@@ -247,7 +247,7 @@ export default function AssetInterface() {
       })
     }
     // Always reset page to 1 when filter changes
-    updateUrl(pathname, {
+    updateUrl(pathname as string, {
       type: value === 'all' ? null : value,
       page: '1'
     })
@@ -294,7 +294,7 @@ export default function AssetInterface() {
       const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
       if (pagination.pageIndex >= calculatedPageCount) {
         setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
-        updateUrl(pathname, { page: '1' });
+        updateUrl(pathname as string, { page: '1' });
       }
     }
   }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
@@ -332,8 +332,8 @@ export default function AssetInterface() {
   const handleAssetCreated = () => fetchAssets()
 
   const handleRowClick = (row: AssetRow) => {
-    const isAdmin = pathname.startsWith('/admin')
-    const tenant = pathname.split('/')[1]
+    const isAdmin = pathname?.startsWith('/admin')
+    const tenant = pathname?.split('/')[1]
     const route = isAdmin ? `/admin/asset/${row.id}` : `/${tenant}/asset/${row.id}`
     router.push(route)
   }
@@ -409,7 +409,7 @@ export default function AssetInterface() {
           rowsLabel="assets"
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
-            updateUrl(pathname, { page: page.toString() })
+            updateUrl(pathname as string, { page: page.toString() })
           }}
           onPageSizeChange={(size: number) => {
             setIsChangingPageSize(true)
@@ -419,7 +419,7 @@ export default function AssetInterface() {
               pageSize: size,
               pageIndex: newPageIndex
             })
-            updateUrl(pathname, {
+            updateUrl(pathname as string, {
               size: size.toString(),
               page: (newPageIndex + 1).toString()
             })

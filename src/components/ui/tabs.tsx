@@ -35,7 +35,7 @@ function TabsWithParams({
 
       if (useUrlParams) {
         // Create new URLSearchParams with current params
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() || "")
 
         // Update the tab parameter
         params.set(paramName, newValue)
@@ -48,7 +48,7 @@ function TabsWithParams({
   )
 
   // Get value from URL if enabled
-  const urlValue = useUrlParams ? searchParams.get(paramName) || undefined : undefined
+  const urlValue = useUrlParams ? searchParams?.get(paramName) || undefined : undefined
   const value = urlValue || controlledValue
 
   return (

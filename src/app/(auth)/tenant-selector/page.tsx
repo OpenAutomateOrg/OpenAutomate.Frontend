@@ -29,7 +29,7 @@ function TenantSelectorContent() {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Get the force parameter from URL, default to true to prevent auto-redirect
-  const forceStay = searchParams.get('force') !== 'false'
+  const forceStay = searchParams?.get('force') !== 'false'
 
   // Also store a state of the force parameter to prevent flickers
   const [shouldStayOnPage, setShouldStayOnPage] = useState(true)

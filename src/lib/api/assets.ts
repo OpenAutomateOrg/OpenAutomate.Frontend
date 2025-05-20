@@ -54,7 +54,7 @@ export interface AssetDetailDto {
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
     if (typeof window !== 'undefined') {
-        const path = window.location.pathname.split('/')
+        const path = window.location.pathname?.split('/')
         // URL format: /[tenant]/...
         if (path.length > 1 && path[1]) {
             return path[1]

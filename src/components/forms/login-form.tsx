@@ -43,8 +43,8 @@ export function LoginForm() {
   const [error, setError] = React.useState<string | null>(null)
 
   // Check for return URL or expired token
-  const returnUrl = searchParams.get('returnUrl') ?? config.paths.auth.organizationSelector
-  const isExpired = searchParams.get('expired') === 'true'
+  const returnUrl = searchParams?.get('returnUrl') ?? config.paths.auth.organizationSelector
+  const isExpired = searchParams?.get('expired') === 'true'
 
   // Show expired token message if needed
   React.useEffect(() => {
