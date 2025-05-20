@@ -71,7 +71,7 @@ export interface ForgotPasswordRequest {
 export interface ResetPasswordRequest {
   email: string
   token: string
-  password: string
+  newPassword: string
   confirmPassword: string
 }
 

@@ -13,7 +13,7 @@ export function useQueryParams() {
    */
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString())
+      const newSearchParams = new URLSearchParams(searchParams?.toString() || "")
       
       Object.entries(params).forEach(([key, value]) => {
         if (value === null) {
@@ -32,7 +32,7 @@ export function useQueryParams() {
    * Update URL with new query parameters without triggering navigation
    */
   const updateUrl = useCallback(
-    (pathname: string, params: Record<string, string | null>) => {
+    (pathname: string | null, params: Record<string, string | null>) => {
       const queryString = createQueryString(params)
       router.push(`${pathname}?${queryString}`, { scroll: false })
     },
