@@ -39,7 +39,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const params = useParams()
-  const tenant = params?.tenant || ''
+  const tenant = params.tenant || ''
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [addedAgents, setAddedAgents] = useState<Agent[]>([])

@@ -34,9 +34,9 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
   useEffect(() => {
     // Check if the route is protected
-    const requiresAuth = pathname ? !publicPaths.includes(pathname || "") : true
+    const requiresAuth = !publicPaths.includes(pathname)
     // Check if the route requires organization context
-    // const requiresAuthOnly = authOnlyPaths.includes(pathname || "")
+    // const requiresAuthOnly = authOnlyPaths.includes(pathname)
 
     // Authentication check
     const checkAuth = async () => {
@@ -47,7 +47,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
         if (!refreshed) {
           // If still not authenticated after refresh attempt, redirect to login
           setAuthorized(false)
-          router.push(`${config.paths.auth.login}?returnUrl=${encodeURIComponent(pathname || '')}`)
+          router.push(`${config.paths.auth.login}?returnUrl=${encodeURIComponent(pathname)}`)
         } else {
           setAuthorized(true)
         }
