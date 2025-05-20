@@ -38,7 +38,35 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Add WebSocket specific headers
+      // Add headers for machine key preservation
+      {
+        source: '/:tenantSlug/hubs/:path*',
+        has: [
+          {
+            type: 'query',
+            key: 'machineKey'
+          }
+        ],
+        headers: [
+          {
+            key: 'X-Machine-Key-Auth',
+            value: 'true'
+          },
+          {
+            key: 'Connection',
+            value: 'keep-alive'
+          },
+          {
+            key: 'Keep-Alive', 
+            value: 'timeout=120'
+          },
+          {
+            key: 'Upgrade',
+            value: 'websocket'
+          }
+        ]
+      },
+      // Standard WebSocket headers for other connections
       {
         source: '/:tenantSlug/hubs/:path*',
         headers: [
@@ -70,8 +98,6 @@ const nextConfig: NextConfig = {
   // Configure API and SignalR proxy rewrites
   async rewrites() {
     return [
-
-      // SignalR negotiation endpoint (this needs to be first)
       {
         source: '/:tenantSlug/hubs/:path*/negotiate',
         destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
@@ -79,18 +105,29 @@ const nextConfig: NextConfig = {
           {
             type: 'query',
             key: 'machineKey',
-            // value is not checked - just ensuring the param is preserved
           }
         ]
       },
       
-      // Add specific handler for machineKey-authenticated negotiate requests
+      // Second rule - machine key negotiation with param forwarded for SignalR
       {
         source: '/:tenantSlug/hubs/:path*/negotiate',
         destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
       },
       
-      // SignalR hub connections - standard HTTP (including query params like ?id=xyz)
+      // Third rule - direct agent connections (all hub connections with machineKey parameter)
+      {
+        source: '/:tenantSlug/hubs/:path*',
+        destination: `${API_URL}/:tenantSlug/hubs/:path*`,
+        has: [
+          {
+            type: 'query',
+            key: 'machineKey',
+          }
+        ]
+      },
+      
+      // Fourth rule - standard hub connections (without machineKey)
       {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
