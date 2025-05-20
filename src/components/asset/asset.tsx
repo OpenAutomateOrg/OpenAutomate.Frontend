@@ -177,13 +177,13 @@ export default function AssetInterface() {
       setSorting(newSorting)
 
       if (newSorting.length > 0) {
-        updateUrl(pathname as string, {
+        updateUrl(pathname || "" || "" || "" as string, {
           sort: newSorting[0].id,
           order: newSorting[0].desc ? 'desc' : 'asc',
           page: '1', // Reset to first page when sorting changes
         })
       } else {
-        updateUrl(pathname as string, {
+        updateUrl(pathname || "" || "" || "" as string, {
           sort: null,
           order: null,
           page: '1',
@@ -196,7 +196,7 @@ export default function AssetInterface() {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
 
-      updateUrl(pathname as string, {
+      updateUrl(pathname || "" || "" || "" as string, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
@@ -229,7 +229,7 @@ export default function AssetInterface() {
     searchDebounceTimeout.current = setTimeout(() => {
       setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
       // Always reset page to 1 when filter changes
-      updateUrl(pathname as string, { key: value ?? null, page: '1' })
+      updateUrl(pathname || "" || "" || "" as string, { key: value ?? null, page: '1' })
       setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
       setIsPending(false)
     }, 500)
@@ -247,7 +247,7 @@ export default function AssetInterface() {
       })
     }
     // Always reset page to 1 when filter changes
-    updateUrl(pathname as string, {
+    updateUrl(pathname || "" || "" || "" as string, {
       type: value === 'all' ? null : value,
       page: '1'
     })
@@ -294,7 +294,7 @@ export default function AssetInterface() {
       const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
       if (pagination.pageIndex >= calculatedPageCount) {
         setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
-        updateUrl(pathname as string, { page: '1' });
+        updateUrl(pathname || "" || "" || "" as string, { page: '1' });
       }
     }
   }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
@@ -409,7 +409,7 @@ export default function AssetInterface() {
           rowsLabel="assets"
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
-            updateUrl(pathname as string, { page: page.toString() })
+            updateUrl(pathname || "" || "" || "" as string, { page: page.toString() })
           }}
           onPageSizeChange={(size: number) => {
             setIsChangingPageSize(true)
@@ -419,7 +419,7 @@ export default function AssetInterface() {
               pageSize: size,
               pageIndex: newPageIndex
             })
-            updateUrl(pathname as string, {
+            updateUrl(pathname || "" || "" || "" as string, {
               size: size.toString(),
               page: (newPageIndex + 1).toString()
             })
