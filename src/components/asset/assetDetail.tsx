@@ -99,11 +99,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Type
                 </div>
-                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
-                  ${asset.type === 0
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                  }`}>
+                <span>
                   {asset.type === 0 ? 'String' : 'Secret'}
                 </span>
               </div>
