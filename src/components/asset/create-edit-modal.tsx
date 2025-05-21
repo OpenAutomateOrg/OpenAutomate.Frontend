@@ -21,6 +21,7 @@ import {
 import { useParams } from 'next/navigation'
 import { createAsset, updateAsset, getAllAgents } from '@/lib/api/assets'
 import type { AssetEditRow } from './asset'
+import { PlusCircle, Edit, Key, FileText, User, X, Check, Plus, AlertCircle, Trash } from 'lucide-react'
 
 interface ItemModalProps {
   readonly isOpen: boolean
@@ -39,12 +40,15 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   const [type, setType] = useState<number>(0)
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const params = useParams()
   const tenant = params.tenant || ''
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [addedAgents, setAddedAgents] = useState<Agent[]>([])
+  const [agentError, setAgentError] = useState<string | null>(null)
+  const [keyError, setKeyError] = useState<string | null>(null)
+  const [typeError, setTypeError] = useState<string | null>(null)
+  const [valueError, setValueError] = useState<string | null>(null)
   const isEditing = mode === 'edit'
 
   const keyInputRef = useRef<HTMLInputElement>(null);
@@ -95,39 +99,46 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
   }, [isEditing, asset, isOpen])
 
   const validateForm = () => {
+    let valid = true
+    setKeyError(null)
+    setTypeError(null)
+    setValueError(null)
+    setAgentError(null)
+
     const vietnameseRegex = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/;
 
-    if (isEditing) {
-      if (!key.trim() || !value.trim() || addedAgents.length === 0) {
-        setError('Please fill in all required fields and add at least one agent.')
-        return false
-      }
-    } else if (!key.trim() || !type.toString().trim() || !value.trim() || addedAgents.length === 0) {
-      setError('Please fill in all required fields and add at least one agent.')
-      return false
+    if (!key.trim()) {
+      setKeyError('Key is required.')
+      valid = false
+    } else if (vietnameseRegex.test(key)) {
+      setKeyError('Key must not contain Vietnamese characters or accents.')
+      valid = false
+    } else if (!isEditing && existingKeys.includes(key.trim())) {
+      setKeyError('Key already exists. Please choose a unique key.')
+      valid = false
     }
 
-    if (vietnameseRegex.test(key)) {
-      setError('Key must not contain Vietnamese characters or accents.')
-      return false
+    if (!isEditing && !type.toString().trim()) {
+      setTypeError('Type is required.')
+      valid = false
     }
 
-    const trimmedKey = key.trim();
-    if (isEditing && asset && trimmedKey === asset.key) {
-      return true;
+    if (!value.trim()) {
+      setValueError('Value is required.')
+      valid = false
     }
 
-    if (existingKeys.includes(trimmedKey)) {
-      setError('Key already exists. Please choose a unique key.')
-      return false
+    if (addedAgents.length === 0) {
+      setAgentError('Please add at least one agent.')
+      valid = false
     }
-    return true
+
+    return valid
   }
 
   const handleSubmit = async () => {
     if (!validateForm()) return
     setSubmitting(true)
-    setError(null)
     try {
       const agentIds = addedAgents.map((a: Agent) => a.id)
       if (isEditing && asset?.id) {
@@ -138,11 +149,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
       resetForm()
       onClose()
       if (onCreated) onCreated()
-    } catch (err: unknown) {
-      const errorMessage = typeof err === 'object' && err !== null && 'message' in err
-        ? (err as { message: string }).message
-        : 'Failed to save asset'
-      setError(errorMessage)
+    } catch (err) {
       console.error('Error saving asset:', err)
     } finally {
       setSubmitting(false)
@@ -154,9 +161,12 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
     setKey('')
     setType(0)
     setDescription('')
-    setError(null)
     setSelectedAgentId('')
     setAddedAgents([])
+    setKeyError(null)
+    setTypeError(null)
+    setValueError(null)
+    setAgentError(null)
   }
 
   const handleClose = () => {
@@ -170,12 +180,14 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
     if (!agent) return
 
     if (addedAgents.some((a: Agent) => a.id === agent.id)) {
+      setAgentError('Agent already added.')
       return;
     }
 
     const updatedAgents = [...addedAgents, agent];
     setAddedAgents(updatedAgents);
     setSelectedAgentId('');
+    setAgentError(null);
   }
 
   const handleRemoveAgent = (id: string) => {
@@ -199,30 +211,36 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] p-0 max-h-[85vh] flex flex-col">
-        <DialogHeader className="p-6 pb-2 border-b">
-          <DialogTitle>{isEditing ? 'Edit Asset' : 'Create a new Asset'}</DialogTitle>
+      <DialogContent
+        className="sm:max-w-[800px] p-0 max-h-[85vh] flex flex-col"
+        onInteractOutside={e => e.preventDefault()}
+      >
+        <DialogHeader className="flex items-center gap-2 p-6 pb-2 border-b">
+          {isEditing ? <Edit className="w-5 h-5 text-primary" /> : <PlusCircle className="w-5 h-5 text-primary" />}
+          <DialogTitle className="text-xl font-bold">
+            {isEditing ? 'Edit Asset' : 'Create a new Asset'}
+          </DialogTitle>
         </DialogHeader>
         <div className="px-6 py-4 flex-1 overflow-y-auto">
-          <div className="grid gap-5">
-            <div className="grid gap-2">
-              <Label htmlFor="key" className="text-sm">
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <Label htmlFor="key" className="text-sm font-medium flex items-center gap-1">
+                <Key className="w-4 h-4 text-muted-foreground" />
                 Key<span className="text-red-500">*</span>
               </Label>
               <Input
                 id="key"
                 ref={keyInputRef}
                 value={key}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKey(e.target.value)}
-                className="bg-white text-black"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setKey(e.target.value); setKeyError(null); }}
+                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 onFocus={handleInputFocus}
                 spellCheck="false"
               />
-              {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-sm">
+              {keyError && <div className="flex items-center gap-1 text-red-500 text-sm mb-2"><AlertCircle className="w-4 h-4" />{keyError}</div>}
+              <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1">
+                <FileText className="w-4 h-4 text-muted-foreground" />
                 Description
               </Label>
               <Input
@@ -231,105 +249,115 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
                 value={description}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
                 placeholder="Enter description (optional)"
-                className="bg-white text-black"
+                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 onFocus={handleInputFocus}
                 spellCheck="false"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="type" className="text-sm">
+            <div className="space-y-4">
+              <Label htmlFor="type" className="text-sm font-medium flex items-center gap-1">
+                <FileText className="w-4 h-4 text-muted-foreground" />
                 Type<span className="text-red-500">*</span>
               </Label>
               {isEditing ? (
-                <div className="flex items-center border rounded-md px-3 py-2 text-sm bg-muted">
+                <div className="flex items-center border rounded-xl px-3 py-2 text-sm bg-muted">
                   {type === 0 ? 'String' : 'Secret'} <span className="text-muted-foreground ml-2 text-xs">(Cannot be changed)</span>
                 </div>
               ) : (
-                <Select value={type.toString()} onValueChange={(v: string) => setType(Number(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">String</SelectItem>
-                    <SelectItem value="1">Secret</SelectItem>
-                  </SelectContent>
-                </Select>
+                <>
+                  <Select value={type.toString()} onValueChange={(v: string) => { setType(Number(v)); setTypeError(null); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">String</SelectItem>
+                      <SelectItem value="1">Secret</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {typeError && <div className="flex items-center gap-1 text-red-500 text-sm mb-2"><AlertCircle className="w-4 h-4" />{typeError}</div>}
+                </>
               )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="value" className="text-sm">
+              <Label htmlFor="value" className="text-sm font-medium flex items-center gap-1">
+                <FileText className="w-4 h-4 text-muted-foreground" />
                 Value<span className="text-red-500">*</span>
               </Label>
               <Input
                 id="value"
                 ref={valueInputRef}
                 value={value}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setValue(e.target.value); setValueError(null); }}
                 placeholder="Type a string value"
                 type={inputType}
-                className="bg-white text-black"
+                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 onFocus={handleInputFocus}
                 spellCheck="false"
               />
+              {valueError && <div className="flex items-center gap-1 text-red-500 text-sm mb-2"><AlertCircle className="w-4 h-4" />{valueError}</div>}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="agent" className="text-sm">
-                Agent<span className="text-red-500">*</span>
-              </Label>
-              <div className="flex gap-2">
-                <Select value={selectedAgentId} onValueChange={(v: string) => setSelectedAgentId(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Agent..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((agent: Agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" onClick={handleAddAgent} disabled={!selectedAgentId}>
-                  Add
-                </Button>
-              </div>
+          </form>
+          <div className="mt-6">
+            <Label htmlFor="agent" className="text-sm font-medium flex items-center gap-1">
+              <User className="w-4 h-4 text-muted-foreground" />
+              Agent<span className="text-red-500">*</span>
+            </Label>
+            <div className="flex gap-2 mt-2">
+              <Select value={selectedAgentId} onValueChange={(v: string) => { setSelectedAgentId(v); setAgentError(null); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Agent..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents.map((agent: Agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                onClick={handleAddAgent}
+                disabled={!selectedAgentId}
+                variant={selectedAgentId ? 'default' : 'secondary'}
+                className="flex items-center gap-1 rounded-md px-4 py-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" /> Add
+              </Button>
             </div>
+            {agentError && <div className="flex items-center gap-1 text-red-500 text-sm mt-1"><AlertCircle className="w-4 h-4" />{agentError}</div>}
             {addedAgents.length > 0 && (
-              <div className="mt-4">
-                <div
-                  className={addedAgents.length > 3 ? 'max-h-[200px] overflow-y-auto custom-scrollbar border' : ''}
-                  style={addedAgents.length > 3 ? { border: '1px solid var(--border)' } : {}}
-                >
-                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 bg-background z-10">
-                      <tr>
-                        <th className="px-2 py-1 border-b">Action</th>
-                        <th className="px-2 py-1 border-b">Agent</th>
+              <div className="overflow-x-auto mt-4">
+                <table className="min-w-[300px] w-full text-sm rounded-xl overflow-hidden border bg-white dark:bg-neutral-900">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="border px-3 py-2 text-left font-semibold text-black dark:text-white">#</th>
+                      <th className="border px-3 py-2 text-left font-semibold text-black dark:text-white">Agent Name</th>
+                      <th className="border px-3 py-2 text-left font-semibold text-black dark:text-white">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {addedAgents.map((agent, idx) => (
+                      <tr key={agent.id} className="hover:bg-accent/30 transition">
+                        <td className="border px-3 py-2 text-black dark:text-neutral-100">{idx + 1}</td>
+                        <td className="border px-3 py-2 text-black dark:text-neutral-100">{agent.name}</td>
+                        <td className="border px-3 py-2">
+                          <Button size="icon" variant="ghost" onClick={() => handleRemoveAgent(agent.id)} className="text-red-400 hover:text-red-600">
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {addedAgents.map((agent: Agent) => (
-                        <tr key={agent.id}>
-                          <td className="px-2 py-1 text-center border-b">
-                            <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveAgent(agent.id)}>
-                              🗑️
-                            </Button>
-                          </td>
-                          <td className="px-2 py-1 border-b">{agent.name}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         </div>
-        <DialogFooter className="p-6 pt-4 border-t bg-background z-10">
-          <Button variant="outline" onClick={handleClose} disabled={submitting}>
-            Cancel
+        <DialogFooter className="p-6 pt-4 border-t bg-background z-10 flex justify-end gap-2">
+          <Button variant="outline" onClick={handleClose} disabled={submitting} className="flex items-center gap-1">
+            <X className="w-4 h-4" /> Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button onClick={handleSubmit} disabled={submitting} className="flex items-center gap-1">
+            {isEditing ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {buttonText}
           </Button>
         </DialogFooter>
