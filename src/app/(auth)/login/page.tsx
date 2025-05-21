@@ -36,15 +36,17 @@ export default function LoginPage() {
           <Suspense fallback={<LoginFormLoading />}>
             <LoginForm />
           </Suspense>
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/register"
-              className="text-orange-600 underline underline-offset-4 hover:text-orange-700 font-medium transition-all duration-300 hover:underline-offset-8"
-            >
-              Sign up
-            </Link>
-          </p>
+          <div className="px-8 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/register"
+                className="text-orange-600 underline underline-offset-4 hover:text-orange-700 font-medium transition-all duration-300 hover:underline-offset-8"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </>

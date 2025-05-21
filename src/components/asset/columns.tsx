@@ -2,14 +2,14 @@
 
 import { ColumnDef, Table, Column, Row } from '@tanstack/react-table'
 import React from 'react'
-
 import { Checkbox } from '@/components/ui/checkbox'
-
 import type { AssetRow } from './asset'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<AssetRow>[] = [
+type EditFunctionType = (asset: AssetRow) => void;
+
+export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -34,44 +34,61 @@ export const columns: ColumnDef<AssetRow>[] = [
     enableHiding: false,
   },
   {
+    id: "actions",
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      return <DataTableRowAction asset={row.original} onEdit={onEdit} />
+    },
+  },
+  {
     accessorKey: 'key',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" className="font-bold text-base" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
       return (
-        <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">{row.getValue('key')}</span>
-        </div>
+        <span className="font-medium truncate">{row.getValue('key')}</span>
       )
+    },
+    filterFn: (row, id, value) => {
+      const key = row.getValue(id);
+      if (typeof key !== 'string' || typeof value !== 'string') return false;
+      return key.toLowerCase().includes(value.toLowerCase());
     },
   },
   {
     accessorKey: 'type',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" className="font-bold text-base" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type');
       return (
-        <div className="flex w-[100px] items-center">
-          <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
-        </div>
+        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium
+          ${typeValue === 0 || typeValue === '0'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+          }`}>
+          {typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}
+        </span>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
-      return value.includes(row.getValue(id))
+    filterFn: (row, id, value) => {
+      const rowValue = String(row.getValue(id))
+      return rowValue === String(value)
     },
   },
   {
     accessorKey: 'description',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" className="font-bold text-base" />,
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const desc = row.getValue('description');
       return (
-        <div className="flex items-center">
-          <span>{typeof desc === 'string' && desc.trim() ? desc : 'N/a'}</span>
-        </div>
+        <span className={typeof desc === 'string' && desc.trim() ? '' : 'text-muted-foreground italic'}>
+          {typeof desc === 'string' && desc.trim() ? desc : 'N/a'}
+        </span>
       )
     },
-    filterFn: (row: Row<AssetRow>, id: string, value: string[]) => {
-      return value.includes(row.getValue(id))
-    },
   },
-]
+];
+
+// Maintain backward compatibility
+export const columns = createColumns();

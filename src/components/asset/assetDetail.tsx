@@ -2,109 +2,157 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Key, FileText, User, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { AssetRow } from './asset'
+import { getAssetDetail, getAssetAgents, AssetDetailDto, BotAgentSummaryDto } from '@/lib/api/assets'
 
 interface AssetDetailProps {
-  id: string
+  readonly id: string
 }
 
 export default function AssetDetail({ id }: AssetDetailProps) {
   const router = useRouter()
-  const [asset, setAsset] = useState<AssetRow | null>(null)
+  const [asset, setAsset] = useState<AssetDetailDto | null>(null)
+  const [agents, setAgents] = useState<BotAgentSummaryDto[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showSecret, setShowSecret] = useState(false)
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    const mockAsset: AssetRow = {
-      id,
-      key: 'laptop-dell-xps-13',
-      type: 'Hardware',
-      description: 'Laptop Dell XPS 13',
-      createdBy: 'John Doe',
-      label: 'Laptop Dell XPS 13',
-      status: 'Active',
-    }
-    setAsset(mockAsset)
+    setLoading(true)
+    setError(null)
+    Promise.all([
+      getAssetDetail(id),
+      getAssetAgents(id)
+    ])
+      .then(([assetRes, agentsRes]) => {
+        setAsset(assetRes)
+        setAgents(agentsRes)
+      })
+      .catch(() => setError('Failed to load asset detail'))
+      .finally(() => setLoading(false))
   }, [id])
 
   const handleBack = () => {
     router.back()
   }
 
-  if (!asset) {
-    return <div>Loading...</div>
-  }
+  if (loading) return <div>Loading...</div>
+  if (error) return <div className="text-red-500">{error}</div>
+  if (!asset) return <div>Asset not found</div>
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <Card className="border rounded-md shadow-sm">
-        <CardHeader className="flex items-center justify-between border-b p-4">
+      <Card className="border rounded-xl shadow-lg">
+        <CardHeader className="flex items-center justify-between border-b p-6 rounded-t-xl">
+          <div className="flex items-center gap-2">
+            <Shield className="w-6 h-6 text-primary" />
+            <span className="text-xl font-bold">Asset Detail</span>
+          </div>
           <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
         </CardHeader>
-
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-8 space-y-8">
           {/* Asset Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Name</p>
-                <p className="text-base font-medium border-b pb-1">{asset.label}</p>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <Key className="w-4 h-4" /> Key
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.key}</div>
               </div>
-
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Created By</p>
-                <p className="text-base font-medium border-b pb-1">{asset.createdBy}</p>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Description
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.description}</div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Value
+                </div>
+                {asset.type === 0 ? (
+                  <div className="text-base font-semibold border-b pb-1">{asset.value ?? '-'}</div>
+                ) : (
+                  <div className="flex items-center gap-2 border-b pb-1">
+                    <span className="text-base font-semibold">
+                      {showSecret ? (asset.value ?? '-') : '••••••••'}
+                    </span>
+                    <button
+                      type="button"
+                      className="ml-2 text-gray-500 hover:text-primary"
+                      onClick={() => setShowSecret(v => !v)}
+                      aria-label={showSecret ? 'Hide secret' : 'Show secret'}
+                    >
+                      {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted-foreground mb-1">Type</p>
-              <Badge
-                variant="outline"
-                className="bg-gray-100 text-gray-700 font-normal rounded-sm px-2 py-0.5 text-xs w-fit"
-              >
-                {asset.type}
-              </Badge>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Type
+                </div>
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
+                  ${asset.type === 0
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                  }`}>
+                  {asset.type === 0 ? 'String' : 'Secret'}
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
+                  <FileText className="w-4 h-4" /> Created At
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}</div>
+              </div>
             </div>
           </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="common" className="w-full">
-            <TabsList className="w-full grid grid-cols-2 bg-transparent p-0 border-b">
-              <TabsTrigger
-                value="common"
-                className="text-sm data-[state=active]:text-red-500 data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none bg-transparent"
-              >
-                Common Value
-              </TabsTrigger>
-              <TabsTrigger
-                value="agent"
-                className="text-sm data-[state=active]:text-red-500 data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none bg-transparent"
-              >
-                Value Per Agent
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="common" className="mt-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Value</p>
-                <p className="text-base font-medium">{asset.label}</p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="agent" className="mt-4">
+          {/* Agent Table */}
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Authorized Agents</h3>
+            </div>
+            {agents.length === 0 ? (
               <div className="h-[100px] flex items-center justify-center text-muted-foreground">
-                Value Per Agent content
+                No authorized agents.
               </div>
-            </TabsContent>
-          </Tabs>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="border px-3 py-2 text-left">Name</th>
+                      <th className="border px-3 py-2 text-left">Machine Name</th>
+                      <th className="border px-3 py-2 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agents.map(agent => (
+                      <tr key={agent.id} className="hover:bg-accent/30 transition">
+                        <td className="border px-3 py-2">{agent.name}</td>
+                        <td className="border px-3 py-2">{agent.machineName}</td>
+                        <td className="border px-3 py-2">
+                          <span className={`inline-flex items-center gap-1 ${agent.status === 'Connected' ? 'text-green-600' : 'text-gray-400'}`}>
+                            <span className={`w-2 h-2 rounded-full ${agent.status === 'Connected' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                            {agent.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

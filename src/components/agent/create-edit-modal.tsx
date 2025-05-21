@@ -40,6 +40,44 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
     return Object.keys(newErrors).length === 0
   }
 
+  // Create a mock agent when API fails (for development/testing)
+  const createMockAgent = (error?: unknown): BotAgentResponseDto => {
+    console.warn('API call failed, using mock data for testing UI', error)
+    return {
+      id: crypto.randomUUID(),
+      name,
+      machineName,
+      machineKey: crypto.randomUUID(),
+      status: 'Disconnected',
+      lastConnected: new Date().toISOString(),
+      isActive: true
+    }
+  }
+
+  // Format error messages from different error types
+  const formatErrorMessage = (err: unknown): string => {
+    let errorMessage = 'Failed to create agent. Please try again.'
+
+    if (typeof err === 'object' && err !== null) {
+      if ('message' in err) {
+        errorMessage = String(err.message)
+      }
+
+      if ('status' in err) {
+        errorMessage += ` (Status: ${(err as { status: string }).status})`
+      }
+
+      if ('details' in err) {
+        errorMessage += ` - ${(err as { details: string }).details}`
+      }
+
+      // Log more details for debugging
+      console.error('Error details:', JSON.stringify(err, null, 2))
+    }
+
+    return errorMessage
+  }
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       setError('Please fill in all required fields')
@@ -51,64 +89,29 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
     try {
       console.log('Submitting agent creation with data:', { name, machineName })
-      
+
       let agent: BotAgentResponseDto
 
       try {
         // Try to call the real API
-        agent = await createBotAgent({
-          name,
-          machineName,
-        })
+        agent = await createBotAgent({ name, machineName })
         console.log('API Response:', agent)
       } catch (apiError) {
-        console.warn('API call failed, using mock data for testing UI:', apiError)
-        
         // Use mock data for testing when API fails
-        agent = {
-          id: crypto.randomUUID(),
-          name,
-          machineName,
-          machineKey: crypto.randomUUID(),
-          status: 'Disconnected',
-          lastConnected: new Date().toISOString(),
-          isActive: true
-        }
-        
+        agent = createMockAgent(apiError)
         console.log('Using mock data:', agent)
       }
-      
+
       setCreatedAgent(agent)
-      
+
       if (onSuccess) {
         onSuccess(agent)
       }
-      
+
       console.log('Agent created successfully:', agent)
     } catch (err) {
       console.error('Failed to create agent:', err)
-      
-      // Extract more detailed error information
-      let errorMessage = 'Failed to create agent. Please try again.'
-      
-      if (typeof err === 'object' && err !== null) {
-        if ('message' in err) {
-          errorMessage = String(err.message)
-        }
-        
-        if ('status' in err) {
-          errorMessage += ` (Status: ${err.status})`
-        }
-        
-        if ('details' in err) {
-          errorMessage += ` - ${err.details}`
-        }
-        
-        // Log more details for debugging
-        console.error('Error details:', JSON.stringify(err, null, 2))
-      }
-      
-      setError(errorMessage)
+      setError(formatErrorMessage(err))
     } finally {
       setIsLoading(false)
     }
@@ -137,32 +140,32 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
         </DialogHeader>
-        
+
         {!createdAgent ? (
           // Create form
           <div className="space-y-4">
             {error && <div className="text-destructive text-sm">{error}</div>}
-            
+
             <div className="space-y-1">
               <label htmlFor="name" className="block text-sm">
                 Name<span className="text-red-500">*</span>
               </label>
-              <Input 
-                id="name" 
-                value={name} 
-                onChange={e => setName(e.target.value)} 
+              <Input
+                id="name"
+                value={name}
+                onChange={e => setName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-1">
               <label htmlFor="machine-name" className="block text-sm">
                 Machine name<span className="text-red-500">*</span>
               </label>
-              <Input 
-                id="machine-name" 
-                value={machineName} 
-                onChange={e => setMachineName(e.target.value)} 
+              <Input
+                id="machine-name"
+                value={machineName}
+                onChange={e => setMachineName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -178,22 +181,22 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 Please copy the machine key below. It will only be shown once.
               </p>
             </div>
-            
+
             <div className="space-y-1">
               <label htmlFor="machine-key" className="block text-sm font-medium">
                 Machine Key
               </label>
               <div className="flex">
-                <Input 
-                  id="machine-key" 
-                  value={createdAgent.machineKey} 
-                  readOnly 
+                <Input
+                  id="machine-key"
+                  value={createdAgent.machineKey}
+                  readOnly
                   className="flex-1 bg-muted font-mono text-xs"
                 />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => copyToClipboard(createdAgent.machineKey)} 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyToClipboard(createdAgent.machineKey)}
                   className="ml-2"
                 >
                   <Copy className="h-4 w-4" />
@@ -202,12 +205,12 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
             </div>
           </div>
         )}
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
             {createdAgent ? 'Close' : 'Cancel'}
           </Button>
-          
+
           {!createdAgent && (
             <Button onClick={handleSubmit} disabled={isLoading}>
               {isLoading ? 'Creating...' : 'Add Agent'}
