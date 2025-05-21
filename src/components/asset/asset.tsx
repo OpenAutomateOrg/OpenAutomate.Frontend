@@ -188,7 +188,69 @@ export default function AssetInterface() {
     }
   }, [setIsLoading, setSelectedAsset, setModalMode, setIsModalOpen, setError]);
 
-  const tableColumns = useMemo(() => createColumns(handleEditAsset), [handleEditAsset])
+  const updateTotalCounts = useCallback((response: ODataResponse<AssetRow>) => {
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count']);
+      totalCountRef.current = response['@odata.count'];
+      setHasExactCount(true);
+      return;
+    }
+    if (!Array.isArray(response.value)) return;
+    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount);
+      totalCountRef.current = minCount;
+    }
+    const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1);
+      totalCountRef.current = minCount + 1;
+    }
+    setHasExactCount(false);
+  }, [pagination.pageIndex, pagination.pageSize]);
+
+  const processAssetData = useCallback((response: ODataResponse<AssetRow>) => {
+    if (!Array.isArray(response.value)) {
+      setAssets([]);
+      return;
+    }
+    const formattedAssets = response.value.map((asset: AssetRow) => ({
+      id: asset.id,
+      key: asset.key,
+      type: asset.type,
+      description: asset.description,
+      createdBy: asset.createdBy,
+    }));
+    setAssets(formattedAssets || []);
+    // Handle empty page edge case
+    const isEmptyPageBeyondFirst = response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0;
+    if (isEmptyPageBeyondFirst) {
+      const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
+      if (pagination.pageIndex >= calculatedPageCount) {
+        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
+        updateUrl(pathname, { page: '1' });
+      }
+    }
+  }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
+
+  const fetchAssets = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const queryParams = getODataQueryParams();
+      const response = await getAssetsWithOData(queryParams) as ODataResponse<AssetRow>;
+      updateTotalCounts(response);
+      processAssetData(response);
+    } catch {
+      setError('Failed to load assets. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setIsPending(false);
+      setIsChangingPageSize(false);
+    }
+  }, [getODataQueryParams, updateTotalCounts, processAssetData]);
+
+  const tableColumns = useMemo(() => createColumns(handleEditAsset, fetchAssets), [handleEditAsset, fetchAssets]);
 
   // Setup table instance
   const table = useReactTable({
@@ -284,69 +346,6 @@ export default function AssetInterface() {
     })
     setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
   }, [updateUrl, pathname])
-
-  const updateTotalCounts = useCallback((response: ODataResponse<AssetRow>) => {
-    if (typeof response['@odata.count'] === 'number') {
-      setTotalCount(response['@odata.count']);
-      totalCountRef.current = response['@odata.count'];
-      setHasExactCount(true);
-      return;
-    }
-    if (!Array.isArray(response.value)) return;
-    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
-    if (minCount > totalCountRef.current) {
-      setTotalCount(minCount);
-      totalCountRef.current = minCount;
-    }
-    const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
-    if (isFullFirstPage) {
-      setTotalCount(minCount + 1);
-      totalCountRef.current = minCount + 1;
-    }
-    setHasExactCount(false);
-  }, [pagination.pageIndex, pagination.pageSize]);
-
-  const processAssetData = useCallback((response: ODataResponse<AssetRow>) => {
-    if (!Array.isArray(response.value)) {
-      setAssets([]);
-      return;
-    }
-    const formattedAssets = response.value.map((asset: AssetRow) => ({
-      id: asset.id,
-      key: asset.key,
-      type: asset.type,
-      description: asset.description,
-      createdBy: asset.createdBy,
-    }));
-    setAssets(formattedAssets || []);
-    // Handle empty page edge case
-    const isEmptyPageBeyondFirst = response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0;
-    if (isEmptyPageBeyondFirst) {
-      const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-      if (pagination.pageIndex >= calculatedPageCount) {
-        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
-        updateUrl(pathname, { page: '1' });
-      }
-    }
-  }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
-
-  // Fetch data with proper handling
-  const fetchAssets = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const queryParams = getODataQueryParams();
-      const response = await getAssetsWithOData(queryParams) as ODataResponse<AssetRow>;
-      updateTotalCounts(response);
-      processAssetData(response);
-    } catch {
-      setError('Failed to load assets. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setIsPending(false);
-      setIsChangingPageSize(false);
-    }
-  }, [getODataQueryParams, updateTotalCounts, processAssetData]);
 
   // Fetch data when filters, sorting, or pagination change
   useEffect(() => {
