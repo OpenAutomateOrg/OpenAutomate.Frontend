@@ -95,7 +95,6 @@ export function DataTableToolbar<TData>({
             className="h-10 pl-8 w-full pr-8"
             disabled={isFiltering}
             onFocus={() => {
-              // Save cursor position when input is focused
               if (searchInputRef.current) {
                 lastCursorPositionRef.current = searchInputRef.current.selectionStart
               }

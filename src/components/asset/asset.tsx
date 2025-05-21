@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns } from './columns'
+import { createColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
@@ -23,7 +23,7 @@ import {
   PaginationState,
   ColumnFilter,
 } from '@tanstack/react-table'
-import { getAssetsWithOData, type ODataQueryOptions } from '@/lib/api/assets'
+import { getAssetsWithOData, type ODataQueryOptions, getAssetDetail, getAssetAgents } from '@/lib/api/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 
@@ -36,6 +36,7 @@ export const assetSchema = z.object({
 })
 
 export type AssetRow = z.infer<typeof assetSchema>
+export type AssetEditRow = AssetRow & { value?: string; agents?: { id: string; name: string }[] }
 
 interface ODataResponse<T> {
   '@odata.count'?: number;
@@ -159,10 +160,40 @@ export default function AssetInterface() {
     return params
   }, [pagination, sorting, columnFilters])
 
+  const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
+
+  const handleEditAsset = useCallback(async (asset: AssetRow) => {
+    try {
+      setIsLoading(true);
+      const assetDetail = await getAssetDetail(asset.id);
+      const assetAgents = await getAssetAgents(asset.id);
+      const formattedAgents = assetAgents.map(agent => ({
+        id: agent.id,
+        name: agent.name
+      }));
+      const updatedAsset = {
+        ...asset,
+        type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
+        value: assetDetail.value ?? '',
+        agents: formattedAgents.length > 0 ? formattedAgents : []
+      };
+      setSelectedAsset(updatedAsset);
+      setModalMode('edit');
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error preparing asset for edit:', error);
+      setError('Failed to load asset details for editing.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setIsLoading, setSelectedAsset, setModalMode, setIsModalOpen, setError]);
+
+  const tableColumns = useMemo(() => createColumns(handleEditAsset), [handleEditAsset])
+
   // Setup table instance
   const table = useReactTable({
     data: assets,
-    columns,
+    columns: tableColumns,
     state: {
       sorting,
       columnVisibility,
@@ -391,8 +422,11 @@ export default function AssetInterface() {
 
         <DataTable
           data={assets || []}
-          columns={columns}
-          onRowClick={handleRowClick}
+          columns={tableColumns}
+          onRowClick={(row) => {
+            if (isModalOpen) return;
+            handleRowClick(row);
+          }}
           table={table}
           isLoading={isLoading}
           totalCount={totalCount}
@@ -435,10 +469,11 @@ export default function AssetInterface() {
 
       <CreateEditModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setSelectedAsset(null); }}
         mode={modalMode}
         onCreated={handleAssetCreated}
         existingKeys={assets.map((item: AssetRow) => item.key)}
+        asset={selectedAsset}
       />
     </>
   )

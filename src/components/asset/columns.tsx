@@ -9,7 +9,9 @@ import type { AssetRow } from './asset'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<AssetRow>[] = [
+type EditFunctionType = (asset: AssetRow) => void;
+
+export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -32,6 +34,15 @@ export const columns: ColumnDef<AssetRow>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    id: "actions",
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      return <DataTableRowAction asset={row.original} onEdit={onEdit} />
+    },
   },
   {
     accessorKey: 'key',
@@ -77,10 +88,7 @@ export const columns: ColumnDef<AssetRow>[] = [
       )
     },
   },
-  {
-    id: "actions",
-    cell: () => {
-      return <DataTableRowAction />
-    },
-  },
-]
+];
+
+// Maintain backward compatibility
+export const columns = createColumns();

@@ -8,6 +8,12 @@ export interface CreateAssetDto {
     botAgentIds: string[]
 }
 
+export interface UpdateAssetDto {
+    key: string
+    description: string
+    value: string
+}
+
 export interface AssetResponseDto {
     id: string
     key: string
@@ -51,6 +57,11 @@ export interface AssetDetailDto {
     authorizedBotAgents?: BotAgentSummaryDto[]
 }
 
+export interface Agent {
+    id: string
+    name: string
+}
+
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
     if (typeof window !== 'undefined') {
@@ -85,8 +96,21 @@ function buildODataQueryString(options?: ODataQueryOptions): string {
  */
 export const createAsset = async (data: CreateAssetDto): Promise<AssetResponseDto> => {
     const tenant = getCurrentTenant()
-    const response = await api.post<AssetResponseDto, CreateAssetDto>(`${tenant}/api/assets`, data)
-    return response
+    return api.post<AssetResponseDto, CreateAssetDto>(`${tenant}/api/assets`, data)
+}
+
+/**
+ * Update an asset
+ */
+export const updateAsset = async (
+    id: string,
+    data: UpdateAssetDto,
+    botAgentIds: string[]
+): Promise<AssetResponseDto> => {
+    const tenant = getCurrentTenant()
+    const assetRes = await api.put<AssetResponseDto>(`${tenant}/api/assets/${id}`, data)
+    await api.put(`${tenant}/api/assets/${id}/bot-agents`, { botAgentIds })
+    return assetRes
 }
 
 /**
@@ -94,8 +118,7 @@ export const createAsset = async (data: CreateAssetDto): Promise<AssetResponseDt
  */
 export const getAssetById = async (id: string): Promise<AssetResponseDto> => {
     const tenant = getCurrentTenant()
-    const response = await api.get<AssetResponseDto>(`${tenant}/api/assets/${id}`)
-    return response
+    return api.get<AssetResponseDto>(`${tenant}/api/assets/${id}`)
 }
 
 /**
@@ -130,7 +153,7 @@ function processODataResponse(response: unknown): ODataResponse<AssetResponseDto
             console.log(`Received ${response.value.length} items from OData. Total count: ${response['@odata.count']}`)
             return {
                 value: response.value,
-                '@odata.count': response['@odata.count'] !== undefined ? response['@odata.count'] : response.value.length
+                '@odata.count': response['@odata.count'] ?? response.value.length
             }
         }
     }
@@ -156,7 +179,7 @@ function processODataResponse(response: unknown): ODataResponse<AssetResponseDto
             const count = (response as Record<string, unknown>)['@odata.count']
             return {
                 value: arr,
-                '@odata.count': typeof count === 'number' ? count : arr.length
+                '@odata.count': (typeof count === 'number' ? count : undefined) ?? arr.length
             }
         }
     }
@@ -207,7 +230,10 @@ export const getAssetByIdWithOData = async (id: string, options?: ODataQueryOpti
     }
 
     const queryString = queryParams.toString()
-    const endpoint = `${tenant}/odata/Assets(${id})${queryString ? `?${queryString}` : ''}`
+    let endpoint = `${tenant}/odata/Assets(${id})`
+    if (queryString) {
+        endpoint += '?' + queryString
+    }
 
     const response = await api.get<AssetResponseDto>(endpoint)
     return response
@@ -226,8 +252,7 @@ export const deleteAsset = async (id: string): Promise<void> => {
  */
 export const getAssetDetail = async (id: string): Promise<AssetDetailDto> => {
     const tenant = getCurrentTenant()
-    const response = await api.get<AssetDetailDto>(`${tenant}/api/assets/${id}`)
-    return response
+    return api.get<AssetDetailDto>(`${tenant}/api/assets/${id}`)
 }
 
 /**
@@ -235,6 +260,10 @@ export const getAssetDetail = async (id: string): Promise<AssetDetailDto> => {
  */
 export const getAssetAgents = async (id: string): Promise<BotAgentSummaryDto[]> => {
     const tenant = getCurrentTenant()
-    const response = await api.get<BotAgentSummaryDto[]>(`${tenant}/api/assets/${id}/bot-agents`)
-    return response
+    return api.get<BotAgentSummaryDto[]>(`${tenant}/api/assets/${id}/bot-agents`)
+}
+
+export const getAllAgents = async (): Promise<Agent[]> => {
+    const tenant = getCurrentTenant()
+    return api.get<Agent[]>(`${tenant}/api/agents`)
 } 
