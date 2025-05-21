@@ -111,135 +111,135 @@ export function DataTableToolbar<TData>({
           )}
         </div>
 
-		{/* Agent Filter */}
-		{table.getColumn('agent') && (
-		  <div className="flex items-center space-x-1">
-			<Select
-			  onValueChange={(value) => {
-			if (onStatusChange) {
-			  onStatusChange(value)
-			} else {
-			  if (value === 'all') {
-				table.getColumn('agent')?.setFilterValue('')
-			  } else {
-				table.getColumn('agent')?.setFilterValue(value)
-			  }
-			}
-			  }}
-			  value={(table.getColumn('agent')?.getFilterValue() as string) || 'all'}
-			  disabled={isFiltering || isPending}
-			>
-			  <SelectTrigger className="h-10 sm:w-[180px]">
-			<div className="flex items-center">
-			  <Filter className="mr-2 h-4 w-4" />
-			  <SelectValue placeholder="Filter agent" />
-			  {(table.getColumn('agent')?.getFilterValue() as string | undefined) && (
-				<Badge variant="secondary" className="ml-2 rounded-sm px-1">
-				  1
-				</Badge>
-			  )}
-			</div>
-			  </SelectTrigger>
-			  <SelectContent>
-			<SelectItem value="all">All Agents</SelectItem>
-			{statuses.map((status) => (
-			  <SelectItem key={status.value} value={status.value}>
-				{status.label}
-			  </SelectItem>
-			))}
-			  </SelectContent>
-			</Select>
-		  </div>
-		)}
+        {/* Agent Filter */}
+        {table.getColumn('agent') && (
+          <div className="flex items-center space-x-1">
+            <Select
+              onValueChange={(value) => {
+                if (onStatusChange) {
+                  onStatusChange(value)
+                } else {
+                  if (value === 'all') {
+                    table.getColumn('agent')?.setFilterValue('')
+                  } else {
+                    table.getColumn('agent')?.setFilterValue(value)
+                  }
+                }
+              }}
+              value={(table.getColumn('agent')?.getFilterValue() as string) || 'all'}
+              disabled={isFiltering || isPending}
+            >
+              <SelectTrigger className="h-10 sm:w-[180px]">
+                <div className="flex items-center">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter agent" />
+                  {(table.getColumn('agent')?.getFilterValue() as string | undefined) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                      1
+                    </Badge>
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Agents</SelectItem>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
-		{/* Workflow Filter */}
-		{table.getColumn('workflow') && (
-		  <div className="flex items-center space-x-1">
-			<Select
-			  onValueChange={(value) => {
-			if (onStatusChange) {
-			  onStatusChange(value)
-			} else {
-			  if (value === 'all') {
-				table.getColumn('workflow')?.setFilterValue('')
-			  } else {
-				table.getColumn('workflow')?.setFilterValue(value)
-			  }
-			}
-			  }}
-			  value={(table.getColumn('workflow')?.getFilterValue() as string) || 'all'}
-			  disabled={isFiltering || isPending}
-			>
-			  <SelectTrigger className="h-10 sm:w-[180px]">
-			<div className="flex items-center">
-			  <Filter className="mr-2 h-4 w-4" />
-			  <SelectValue placeholder="Filter workflow" />
-			  {(table.getColumn('workflow')?.getFilterValue() as string | undefined) && (
-				<Badge variant="secondary" className="ml-2 rounded-sm px-1">
-				  1
-				</Badge>
-			  )}
-			</div>
-			  </SelectTrigger>
-			  <SelectContent>
-			<SelectItem value="all">All Workflows</SelectItem>
-			{statuses.map((status) => (
-			  <SelectItem key={status.value} value={status.value}>
-				{status.label}
-			  </SelectItem>
-			))}
-			  </SelectContent>
-			</Select>
-		  </div>
-		)}
+        {/* Workflow Filter */}
+        {table.getColumn('workflow') && (
+          <div className="flex items-center space-x-1">
+            <Select
+              onValueChange={(value) => {
+                if (onStatusChange) {
+                  onStatusChange(value)
+                } else {
+                  if (value === 'all') {
+                    table.getColumn('workflow')?.setFilterValue('')
+                  } else {
+                    table.getColumn('workflow')?.setFilterValue(value)
+                  }
+                }
+              }}
+              value={(table.getColumn('workflow')?.getFilterValue() as string) || 'all'}
+              disabled={isFiltering || isPending}
+            >
+              <SelectTrigger className="h-10 sm:w-[180px]">
+                <div className="flex items-center">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter workflow" />
+                  {(table.getColumn('workflow')?.getFilterValue() as string | undefined) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                      1
+                    </Badge>
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Workflows</SelectItem>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
-		{/* State Filter */}
-		{table.getColumn('state') && (
-		  <div className="flex items-center space-x-1">
-			<Select
-			  onValueChange={(value) => {
-			if (onStatusChange) {
-			  onStatusChange(value)
-			} else {
-			  if (value === 'all') {
-				table.getColumn('state')?.setFilterValue('')
-			  } else {
-				table.getColumn('state')?.setFilterValue(value)
-			  }
-			}
-			  }}
-			  value={(table.getColumn('state')?.getFilterValue() as string) || 'all'}
-			  disabled={isFiltering || isPending}
-			>
-			  <SelectTrigger className="h-10 sm:w-[180px]">
-			<div className="flex items-center">
-			  <Filter className="mr-2 h-4 w-4" />
-			  <SelectValue placeholder="Filter state" />
-			  {(table.getColumn('state')?.getFilterValue() as string | undefined) && (
-				<Badge variant="secondary" className="ml-2 rounded-sm px-1">
-				  1
-				</Badge>
-			  )}
-			</div>
-			  </SelectTrigger>
-			  <SelectContent>
-			<SelectItem value="all">All States</SelectItem>
-			{statuses.map((status) => (
-			  <SelectItem key={status.value} value={status.value}>
-				{status.label}
-			  </SelectItem>
-			))}
-			  </SelectContent>
-			</Select>
-		  </div>
-		)}
+        {/* State Filter */}
+        {table.getColumn('state') && (
+          <div className="flex items-center space-x-1">
+            <Select
+              onValueChange={(value) => {
+                if (onStatusChange) {
+                  onStatusChange(value)
+                } else {
+                  if (value === 'all') {
+                    table.getColumn('state')?.setFilterValue('')
+                  } else {
+                    table.getColumn('state')?.setFilterValue(value)
+                  }
+                }
+              }}
+              value={(table.getColumn('state')?.getFilterValue() as string) || 'all'}
+              disabled={isFiltering || isPending}
+            >
+              <SelectTrigger className="h-10 sm:w-[180px]">
+                <div className="flex items-center">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter state" />
+                  {(table.getColumn('state')?.getFilterValue() as string | undefined) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                      1
+                    </Badge>
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
-		{/* Active Filter Count Badge */}
-		{activeFilterCount > 0 && (
-		  <Badge variant="secondary" className="rounded-sm px-1">
-			{activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
-		  </Badge>
-		)}
+        {/* Active Filter Count Badge */}
+        {activeFilterCount > 0 && (
+          <Badge variant="secondary" className="rounded-sm px-1">
+            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+          </Badge>
+        )}
 
         {/* Reset Filters Button */}
         {isFiltered && (

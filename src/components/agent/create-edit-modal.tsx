@@ -50,7 +50,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       machineKey: crypto.randomUUID(),
       status: 'Disconnected',
       lastConnected: new Date().toISOString(),
-      isActive: true
+      isActive: true,
     }
   }
 
@@ -153,7 +153,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               <Input
                 id="name"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -165,7 +165,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               <Input
                 id="machine-name"
                 value={machineName}
-                onChange={e => setMachineName(e.target.value)}
+                onChange={(e) => setMachineName(e.target.value)}
                 disabled={isLoading}
               />
             </div>

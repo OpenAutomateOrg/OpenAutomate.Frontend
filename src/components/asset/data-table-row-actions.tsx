@@ -1,19 +1,19 @@
-"use client"
+'use client'
 
-import { MoreHorizontal, Trash, Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { MoreHorizontal, Trash, Pencil } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import React from "react"
+} from '@/components/ui/dropdown-menu'
+import React from 'react'
 import type { AssetRow } from './asset'
 
 interface DataTableRowActionProps {
-  readonly asset: AssetRow;
-  readonly onEdit?: (asset: AssetRow) => void;
+  readonly asset: AssetRow
+  readonly onEdit?: (asset: AssetRow) => void
 }
 
 export default function DataTableRowAction({ asset, onEdit }: DataTableRowActionProps) {
@@ -30,11 +30,17 @@ export default function DataTableRowAction({ asset, onEdit }: DataTableRowAction
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-[160px]" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-        <DropdownMenuItem onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          if (onEdit) onEdit(asset);
-        }}>
+      <DropdownMenuContent
+        align="start"
+        className="w-[160px]"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
+        <DropdownMenuItem
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            if (onEdit) onEdit(asset)
+          }}
+        >
           <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <span>Edit</span>
         </DropdownMenuItem>

@@ -5,7 +5,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ArrowLeft, Eye, EyeOff, Key, FileText, User, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { getAssetDetail, getAssetAgents, AssetDetailDto, BotAgentSummaryDto } from '@/lib/api/assets'
+import {
+  getAssetDetail,
+  getAssetAgents,
+  AssetDetailDto,
+  BotAgentSummaryDto,
+} from '@/lib/api/assets'
 
 interface AssetDetailProps {
   readonly id: string
@@ -22,10 +27,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    Promise.all([
-      getAssetDetail(id),
-      getAssetAgents(id)
-    ])
+    Promise.all([getAssetDetail(id), getAssetAgents(id)])
       .then(([assetRes, agentsRes]) => {
         setAsset(assetRes)
         setAgents(agentsRes)
@@ -85,7 +87,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                     <button
                       type="button"
                       className="ml-2 text-gray-500 hover:text-primary"
-                      onClick={() => setShowSecret(v => !v)}
+                      onClick={() => setShowSecret((v) => !v)}
                       aria-label={showSecret ? 'Hide secret' : 'Show secret'}
                     >
                       {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -99,11 +101,14 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Type
                 </div>
-                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
-                  ${asset.type === 0
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                  }`}>
+                <span
+                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
+                  ${
+                    asset.type === 0
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                  }`}
+                >
                   {asset.type === 0 ? 'String' : 'Secret'}
                 </span>
               </div>
@@ -111,7 +116,9 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
                   <FileText className="w-4 h-4" /> Created At
                 </div>
-                <div className="text-base font-semibold border-b pb-1">{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}</div>
+                <div className="text-base font-semibold border-b pb-1">
+                  {asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}
+                </div>
               </div>
             </div>
           </div>
@@ -136,13 +143,17 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {agents.map(agent => (
+                    {agents.map((agent) => (
                       <tr key={agent.id} className="hover:bg-accent/30 transition">
                         <td className="border px-3 py-2">{agent.name}</td>
                         <td className="border px-3 py-2">{agent.machineName}</td>
                         <td className="border px-3 py-2">
-                          <span className={`inline-flex items-center gap-1 ${agent.status === 'Connected' ? 'text-green-600' : 'text-gray-400'}`}>
-                            <span className={`w-2 h-2 rounded-full ${agent.status === 'Connected' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                          <span
+                            className={`inline-flex items-center gap-1 ${agent.status === 'Connected' ? 'text-green-600' : 'text-gray-400'}`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${agent.status === 'Connected' ? 'bg-green-500' : 'bg-gray-400'}`}
+                            ></span>
                             {agent.status}
                           </span>
                         </td>

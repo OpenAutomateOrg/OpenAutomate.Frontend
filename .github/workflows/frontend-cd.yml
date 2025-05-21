@@ -2,55 +2,55 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Build
-      run: |
-        npm ci
-        npm run build
-
-    - name: Deploy
-      uses: appleboy/ssh-action@v0.1.6
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          DEPLOY_DIR="/var/www/openautomate/frontend/releases/$TIMESTAMP"
-          CURRENT_LINK="/var/www/openautomate/frontend/current"
-          
-          # Create release directory
-          mkdir -p $DEPLOY_DIR
-          
-          # Clone repository to new release directory
-          git clone --depth 1 https://github.com/OpenAutomateOrg/OpenAutomate.Frontend.git $DEPLOY_DIR
-          
-          # Install dependencies and build
-          cd $DEPLOY_DIR
+      - name: Build
+        run: |
           npm ci
-          
-          # Copy environment file
-          cp /var/www/openautomate/frontend/env/.env.production $DEPLOY_DIR/
-          
-          # Build
           npm run build
-          
-          # Update symlink
-          ln -sfn $DEPLOY_DIR $CURRENT_LINK
-          
-          # Restart service
-          pm2 restart openautomate-frontend || pm2 start /var/www/openautomate/ecosystem.config.js --only openautomate-frontend
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+            DEPLOY_DIR="/var/www/openautomate/frontend/releases/$TIMESTAMP"
+            CURRENT_LINK="/var/www/openautomate/frontend/current"
+
+            # Create release directory
+            mkdir -p $DEPLOY_DIR
+
+            # Clone repository to new release directory
+            git clone --depth 1 https://github.com/OpenAutomateOrg/OpenAutomate.Frontend.git $DEPLOY_DIR
+
+            # Install dependencies and build
+            cd $DEPLOY_DIR
+            npm ci
+
+            # Copy environment file
+            cp /var/www/openautomate/frontend/env/.env.production $DEPLOY_DIR/
+
+            # Build
+            npm run build
+
+            # Update symlink
+            ln -sfn $DEPLOY_DIR $CURRENT_LINK
+
+            # Restart service
+            pm2 restart openautomate-frontend || pm2 start /var/www/openautomate/ecosystem.config.js --only openautomate-frontend

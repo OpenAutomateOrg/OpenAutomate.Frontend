@@ -4,15 +4,19 @@ import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns as HistoricalColumns } from './historical/columns'
 import { columns as ProgressColumns } from './inProgress/columns'
-
 import { columns as ScheduledColumns } from './scheduled/columns'
-
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState } from 'react'
-import { CreateEditModal } from './historical/create-edit-modal'
+import { CreateEditModal as HistoricalModal } from './historical/create-edit-modal'
+import { CreateEditModal as ProgressModal } from './inProgress/create-edit-modal'
+import { CreateEditModal as ScheduledModal } from './scheduled/create-edit-modal'
+
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { DataTableToolbar } from './historical/data-table-toolbar'
+import { DataTableToolbar as HistoricalToolbar } from './historical/data-table-toolbar'
+import { DataTableToolbar as ProgressToolbar } from './inProgress/data-table-toolbar'
+import { DataTableToolbar as ScheduledToolbar } from './scheduled/data-table-toolbar'
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -321,7 +325,7 @@ export default function ExcutionsInterface() {
                 Create
               </Button>
             </div>
-            <DataTableToolbar
+            <ProgressToolbar
               table={table}
               statuses={[
                 { value: 'Running', label: 'Running' },
@@ -350,7 +354,7 @@ export default function ExcutionsInterface() {
                 Create
               </Button>
             </div>
-            <DataTableToolbar
+            <ScheduledToolbar
               table={table}
               statuses={[{ value: 'Scheduled', label: 'Scheduled' }]}
             />
@@ -376,7 +380,7 @@ export default function ExcutionsInterface() {
                 Create
               </Button>
             </div>
-            <DataTableToolbar
+            <HistoricalToolbar
               table={table}
               statuses={[
                 { value: 'Completed', label: 'Completed' },
@@ -392,13 +396,33 @@ export default function ExcutionsInterface() {
           </>
         )}
       </div>
-      <CreateEditModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-        }}
-        mode={modalMode}
-      />
+      {tab === 'historical' && (
+        <HistoricalModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+          }}
+          mode={modalMode}
+        />
+      )}
+      {tab === 'inprogress' && (
+        <ProgressModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+          }}
+          mode={modalMode}
+        />
+      )}
+      {tab === 'sheduled' && (
+        <ScheduledModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+          }}
+          mode={modalMode}
+        />
+      )}
     </>
   )
 }

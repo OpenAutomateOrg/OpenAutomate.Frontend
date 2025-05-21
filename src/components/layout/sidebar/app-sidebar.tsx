@@ -65,12 +65,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: 'Automation',
-      url: createTenantUrl('/automation'),
       icon: Cog,
       items: [
         {
-          title: 'Executions',
-          url: createTenantUrl('/automation/executions'),
+          title: 'Excutions',
+          url: createTenantUrl('/automation/excutions'),
         },
         {
           title: 'Schedule',
@@ -81,8 +80,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: createTenantUrl('/automation/triggers'),
         },
         {
-          title: 'Packages',
-          url: createTenantUrl('/automation/packages'),
+          title: 'Package',
+          url: createTenantUrl('/automation/package'),
+        },
+        {
+          title: 'Logs',
+          url: createTenantUrl('/automation/logs'),
         },
       ],
     },
