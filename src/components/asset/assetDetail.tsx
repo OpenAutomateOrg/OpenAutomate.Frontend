@@ -2,8 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Key, FileText, User, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { getAssetDetail, getAssetAgents, AssetDetailDto, BotAgentSummaryDto } from '@/lib/api/assets'
@@ -45,38 +44,47 @@ export default function AssetDetail({ id }: AssetDetailProps) {
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <Card className="border rounded-md shadow-sm">
-        <CardHeader className="flex items-center justify-between border-b p-4">
+      <Card className="border rounded-xl shadow-lg">
+        <CardHeader className="flex items-center justify-between border-b p-6 rounded-t-xl">
+          <div className="flex items-center gap-2">
+            <Shield className="w-6 h-6 text-primary" />
+            <span className="text-xl font-bold">Asset Detail</span>
+          </div>
           <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
         </CardHeader>
-
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-8 space-y-8">
           {/* Asset Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Key</p>
-                <p className="text-base font-medium border-b pb-1">{asset.key}</p>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <Key className="w-4 h-4" /> Key
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.key}</div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Description</p>
-                <p className="text-base font-medium border-b pb-1">{asset.description}</p>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Description
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.description}</div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Value</p>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Value
+                </div>
                 {asset.type === 0 ? (
-                  <p className="text-base font-medium border-b pb-1">{asset.value ?? '-'}</p>
+                  <div className="text-base font-semibold border-b pb-1">{asset.value ?? '-'}</div>
                 ) : (
                   <div className="flex items-center gap-2 border-b pb-1">
-                    <span className="text-base font-medium">
+                    <span className="text-base font-semibold">
                       {showSecret ? (asset.value ?? '-') : '••••••••'}
                     </span>
                     <button
                       type="button"
-                      className="ml-2 text-gray-500 hover:text-gray-800"
+                      className="ml-2 text-gray-500 hover:text-primary"
                       onClick={() => setShowSecret(v => !v)}
                       aria-label={showSecret ? 'Hide secret' : 'Show secret'}
                     >
@@ -86,42 +94,58 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted-foreground mb-1">Type</p>
-              <Badge
-                variant="outline"
-                className="bg-gray-100 text-gray-700 font-normal rounded-sm px-2 py-0.5 text-xs w-fit"
-              >
-                {asset.type === 0 ? 'String' : 'Secret'}
-              </Badge>
-              <p className="text-sm text-muted-foreground mb-1 mt-4">Created At</p>
-              <p className="text-base font-medium border-b pb-1">{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}</p>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                  <FileText className="w-4 h-4" /> Type
+                </div>
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
+                  ${asset.type === 0
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                  }`}>
+                  {asset.type === 0 ? 'String' : 'Secret'}
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
+                  <FileText className="w-4 h-4" /> Created At
+                </div>
+                <div className="text-base font-semibold border-b pb-1">{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}</div>
+              </div>
             </div>
           </div>
-
           {/* Agent Table */}
           <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-2">Authorized Agents</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Authorized Agents</h3>
+            </div>
             {agents.length === 0 ? (
               <div className="h-[100px] flex items-center justify-center text-muted-foreground">
                 No authorized agents.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full border text-sm">
-                  <thead>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-muted">
                     <tr>
-                      <th className="border px-2 py-1">Name</th>
-                      <th className="border px-2 py-1">Machine Name</th>
-                      <th className="border px-2 py-1">Status</th>
+                      <th className="border px-3 py-2 text-left">Name</th>
+                      <th className="border px-3 py-2 text-left">Machine Name</th>
+                      <th className="border px-3 py-2 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {agents.map(agent => (
-                      <tr key={agent.id}>
-                        <td className="border px-2 py-1">{agent.name}</td>
-                        <td className="border px-2 py-1">{agent.machineName}</td>
-                        <td className="border px-2 py-1">{agent.status}</td>
+                      <tr key={agent.id} className="hover:bg-accent/30 transition">
+                        <td className="border px-3 py-2">{agent.name}</td>
+                        <td className="border px-3 py-2">{agent.machineName}</td>
+                        <td className="border px-3 py-2">
+                          <span className={`inline-flex items-center gap-1 ${agent.status === 'Connected' ? 'text-green-600' : 'text-gray-400'}`}>
+                            <span className={`w-2 h-2 rounded-full ${agent.status === 'Connected' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                            {agent.status}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
