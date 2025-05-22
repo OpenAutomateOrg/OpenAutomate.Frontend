@@ -128,11 +128,6 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
       valid = false
     }
 
-    if (addedAgents.length === 0) {
-      setAgentError('Please add at least one agent.')
-      valid = false
-    }
-
     return valid
   }
 
@@ -300,7 +295,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onCreated, existingKeys
           <div className="mt-6">
             <Label htmlFor="agent" className="text-sm font-medium flex items-center gap-1">
               <User className="w-4 h-4 text-muted-foreground" />
-              Agent<span className="text-red-500">*</span>
+              Agent
             </Label>
             <div className="flex gap-2 mt-2">
               <Select value={selectedAgentId} onValueChange={(v: string) => { setSelectedAgentId(v); setAgentError(null); }}>
