@@ -22,14 +22,23 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }: { row: Row<AssetRow> }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      const stopPropagation = (e: React.MouseEvent) => {
+        e.stopPropagation();
+      };
+
+      return (
+        <span onClick={stopPropagation} onMouseDown={stopPropagation} onPointerDown={stopPropagation}>
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+            onClick={stopPropagation}
+          />
+        </span>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
