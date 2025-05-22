@@ -31,7 +31,9 @@ export const config = {
     /**
      * Base URL for API requests
      */
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252',
+    baseUrl: process.env.NODE_ENV === 'production' 
+      ? 'https://api.openautomate.me' 
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'),
 
     /**
      * Default headers for API requests
