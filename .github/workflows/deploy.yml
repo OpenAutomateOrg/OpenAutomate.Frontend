@@ -13,27 +13,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22.x'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build app
-      run: npm run build
-      
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
-        source: ".next/**, public/**, package.json, package-lock.json"
+        source: "src/**, public/**, package.json, package-lock.json, next.config.ts, tsconfig.json, postcss.config.mjs, .env.production, components.json"
         target: "/var/www/openautomate/frontend"
         
-    - name: Setup server and restart frontend
+    - name: Build and restart frontend
       uses: appleboy/ssh-action@v0.1.6
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -41,5 +30,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           cd /var/www/openautomate/frontend
-          npm ci --production
-          pm2 restart openautomate-frontend 
+          npm ci
+          rm -f .env
+          NODE_ENV=production npm run build
+          pm2 restart openautomate-frontend --update-env || NODE_ENV=production pm2 start npm --name openautomate-frontend -- start 
