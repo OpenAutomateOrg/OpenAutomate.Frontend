@@ -20,11 +20,9 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
-      working-directory: OpenAutomate.Frontend
       
     - name: Build app
       run: npm run build
-      working-directory: OpenAutomate.Frontend
       
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.4
@@ -32,9 +30,8 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
-        source: "OpenAutomate.Frontend/.next/**, OpenAutomate.Frontend/public/**, OpenAutomate.Frontend/package.json, OpenAutomate.Frontend/package-lock.json"
+        source: ".next/**, public/**, package.json, package-lock.json"
         target: "/var/www/openautomate/frontend"
-        strip_components: 1
         
     - name: Setup server and restart frontend
       uses: appleboy/ssh-action@v0.1.6
