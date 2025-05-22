@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreHorizontal, Trash, Pencil, Loader2 } from "lucide-react"
+import { MoreHorizontal, Trash, Pencil, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import React, { useState } from "react"
 import type { AssetRow } from './asset'
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogClose } from "@/components/ui/dialog"
 
 interface DataTableRowActionProps {
   readonly asset: AssetRow;
@@ -29,28 +29,33 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
       await deleteAsset(asset.id);
       setOpen(false);
       if (onDeleted) onDeleted();
-    } catch (err) {
+    } catch {
       alert('Delete failed!');
     } finally {
       setDeleting(false);
     }
   };
 
+  // Create a handler that stops propagation for all events
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+        <DropdownMenuTrigger asChild onClick={stopPropagation}>
           <Button
             variant="ghost"
             className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
             aria-label="Open menu"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onClick={stopPropagation}
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-[160px]" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <DropdownMenuContent align="start" className="w-[160px]" onClick={stopPropagation} onPointerDown={stopPropagation} onMouseDown={stopPropagation}>
           <DropdownMenuItem onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             if (onEdit) onEdit(asset);
@@ -71,15 +76,33 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-[350px]" onClick={e => e.stopPropagation()}>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <DialogContent
+          className="max-w-[350px]"
+          onInteractOutside={(e: Event) => e.preventDefault()}
+        >
+          <DialogClose
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <div>Are you sure you want to delete this asset?</div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={e => { e.stopPropagation(); setOpen(false); }} disabled={deleting}>Cancel</Button>
-            <Button variant="destructive" onClick={e => { e.stopPropagation(); handleDelete(); }} disabled={deleting}>
+            <Button variant="outline" onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }} disabled={deleting}>Cancel</Button>
+            <Button variant="destructive" className="text-white dark:text-neutral-900" onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }} disabled={deleting}>
               {deleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
               {deleting ? "Deleting..." : "Delete"}
             </Button>
