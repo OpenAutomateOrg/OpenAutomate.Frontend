@@ -468,7 +468,7 @@ export default function AgentInterface() {
             <Button
               variant="outline"
               onClick={() => {
-                window.open('https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi', '_blank')
+                window.location.href = 'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
               }}
               className="flex items-center justify-center"
             >

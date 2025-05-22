@@ -129,7 +129,9 @@ export default function AgentDetail({ id }: AgentDetailProps) {
             variant="outline" 
             size="sm" 
             className="gap-1"
-            onClick={() => window.open('https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi', '_blank')}
+            onClick={() => {
+              window.location.href = 'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+            }}
           >
             <Download className="h-4 w-4" />
             Download Agent
