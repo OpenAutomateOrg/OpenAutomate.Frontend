@@ -31,12 +31,12 @@ import {
 } from '@/components/ui/table'
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  table?: ReactTable<TData>
-  onRowClick?: (row: TData) => void
-  isLoading?: boolean
-  totalCount?: number
+  readonly columns: ColumnDef<TData, TValue>[]
+  readonly data: TData[]
+  readonly table?: ReactTable<TData>
+  readonly onRowClick?: (row: TData) => void
+  readonly isLoading?: boolean
+  readonly totalCount?: number
 }
 
 export function DataTable<TData, TValue>({
@@ -86,9 +86,8 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     console.log('DataTable component received totalCount:', totalCount)
     if (table) {
-      const pageSize = table.getState().pagination.pageSize
-      const calculatedPageCount =
-        totalCount !== undefined ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1
+      const pageSize = table.getState().pagination.pageSize;
+      const calculatedPageCount = totalCount !== undefined ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1;
 
       console.log('DataTable pagination state:', {
         totalCount,
@@ -100,6 +99,37 @@ export function DataTable<TData, TValue>({
       })
     }
   }, [totalCount, table])
+
+  // Handler for row clicks that checks if we should navigate
+  const handleRowClick = (e: React.MouseEvent, row: TData) => {
+    // If the click target is inside a cell with id 'select' or 'actions', don't trigger row click
+    const target = e.target as HTMLElement;
+
+    // Check if the click is inside a dialog or dropdown menu
+    if (
+      target.closest('[role="dialog"]') ||
+      target.closest('[data-state="open"]') ||
+      target.closest('.dialog') ||
+      target.closest('.dropdown-menu')
+    ) {
+      return;
+    }
+
+    // Check if the click is inside a select or actions cell
+    const cellElement = target.closest('td');
+    if (cellElement) {
+      // Get the column id from the cell's data attribute if possible
+      const columnId = cellElement.getAttribute('data-column-id');
+
+      // If the cell is part of the select checkbox column or actions column, don't navigate
+      if (columnId === 'select' || columnId === 'actions') {
+        return;
+      }
+    }
+
+    // Otherwise proceed with the row click handler
+    onRowClick?.(row);
+  };
 
   return (
     <div className="space-y-4">
@@ -132,13 +162,25 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                   className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
-                  onClick={() => onRowClick?.(row.original)}
+                  onClick={(e) => onRowClick && handleRowClick(e, row.original)}
                 >
-                  {row.getVisibleCells().map((cell: Cell<TData, unknown>) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {
+                    let cellClass = '';
+                    if (cell.column.id === 'select') {
+                      cellClass = 'w-12 min-w-[48px] max-w-[48px] px-2';
+                    } else if (cell.column.id === 'actions') {
+                      cellClass = 'w-16 min-w-[60px] max-w-[60px] px-2';
+                    }
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        data-column-id={cell.column.id}
+                        className={cellClass}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

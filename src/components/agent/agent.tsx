@@ -1,6 +1,6 @@
 'use client'
 
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
@@ -481,16 +481,25 @@ export default function AgentInterface() {
               </div>
             )}
             <Button
+              variant="outline"
               onClick={() => {
-                setModalMode('create')
-                setIsModalOpen(true)
+                window.location.href = 'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
               }}
               className="flex items-center justify-center"
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create
+              <Download className="mr-2 h-4 w-4" />
+              Download Agent
             </Button>
-          </div>
+          <Button
+            onClick={() => {
+              setModalMode('create')
+              setIsModalOpen(true)
+            }}
+            className="flex items-center justify-center"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create
+          </Button>
         </div>
 
         {error && (
@@ -505,9 +514,9 @@ export default function AgentInterface() {
         <DataTableToolbar
           table={table}
           statuses={[
-            { value: 'Connected', label: 'Connected' },
+            { value: 'Available', label: 'Available' },
+            { value: 'Busy', label: 'Busy' },
             { value: 'Disconnected', label: 'Disconnected' },
-            { value: 'Offline', label: 'Offline' },
           ]}
           onSearch={handleSearch}
           onStatusChange={handleStatusFilterChange}
@@ -567,6 +576,6 @@ export default function AgentInterface() {
         mode={modalMode}
         onSuccess={handleAgentCreated}
       />
-    </>
+      </>
   )
 }

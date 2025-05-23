@@ -101,14 +101,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Type
                 </div>
-                <span
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium border
-                  ${
-                    asset.type === 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                  }`}
-                >
+                <span>
                   {asset.type === 0 ? 'String' : 'Secret'}
                 </span>
               </div>
@@ -139,7 +132,6 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                     <tr>
                       <th className="border px-3 py-2 text-left">Name</th>
                       <th className="border px-3 py-2 text-left">Machine Name</th>
-                      <th className="border px-3 py-2 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -147,16 +139,6 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                       <tr key={agent.id} className="hover:bg-accent/30 transition">
                         <td className="border px-3 py-2">{agent.name}</td>
                         <td className="border px-3 py-2">{agent.machineName}</td>
-                        <td className="border px-3 py-2">
-                          <span
-                            className={`inline-flex items-center gap-1 ${agent.status === 'Connected' ? 'text-green-600' : 'text-gray-400'}`}
-                          >
-                            <span
-                              className={`w-2 h-2 rounded-full ${agent.status === 'Connected' ? 'bg-green-500' : 'bg-gray-400'}`}
-                            ></span>
-                            {agent.status}
-                          </span>
-                        </td>
                       </tr>
                     ))}
                   </tbody>

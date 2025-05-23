@@ -9,7 +9,7 @@ import DataTableRowAction from './data-table-row-actions'
 
 type EditFunctionType = (asset: AssetRow) => void
 
-export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] => [
+export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -24,14 +24,23 @@ export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] 
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }: { row: Row<AssetRow> }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      const stopPropagation = (e: React.MouseEvent) => {
+        e.stopPropagation();
+      };
+
+      return (
+        <span onClick={stopPropagation} onMouseDown={stopPropagation} onPointerDown={stopPropagation}>
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+            onClick={stopPropagation}
+          />
+        </span>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -41,7 +50,7 @@ export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] 
       <DataTableColumnHeader column={column} title="Actions" />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      return <DataTableRowAction asset={row.original} onEdit={onEdit} />
+      return <DataTableRowAction asset={row.original} onEdit={onEdit} onDeleted={onDeleted} />
     },
   },
   {
@@ -66,14 +75,7 @@ export const createColumns = (onEdit?: EditFunctionType): ColumnDef<AssetRow>[] 
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type')
       return (
-        <span
-          className={`inline-block px-2 py-0.5 rounded text-xs font-medium
-          ${
-            typeValue === 0 || typeValue === '0'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-          }`}
-        >
+        <span>
           {typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}
         </span>
       )
