@@ -26,12 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ToastProvider>
-          <AuthProvider>
-              <div className="min-h-screen flex flex-col antialiased bg-background">
-                {children}
-              </div>
+            <AuthProvider>
+              <div className="min-h-screen flex flex-col antialiased bg-background">{children}</div>
               <Toaster />
-          </AuthProvider>
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>

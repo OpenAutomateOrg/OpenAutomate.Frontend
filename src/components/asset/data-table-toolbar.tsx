@@ -44,16 +44,19 @@ export function DataTableToolbar<TData>({
   const searchInputRef = useRef<HTMLInputElement>(null)
   const lastCursorPositionRef = useRef<number | null>(null)
 
-  // Preserve the cursor position when the component re-renders 
+  // Preserve the cursor position when the component re-renders
   useEffect(() => {
     // Only restore focus if we were previously focused
-    if (document.activeElement !== searchInputRef.current && lastCursorPositionRef.current !== null) {
+    if (
+      document.activeElement !== searchInputRef.current &&
+      lastCursorPositionRef.current !== null
+    ) {
       if (searchInputRef.current) {
         searchInputRef.current.focus()
         if (lastCursorPositionRef.current !== null) {
           searchInputRef.current.setSelectionRange(
             lastCursorPositionRef.current,
-            lastCursorPositionRef.current
+            lastCursorPositionRef.current,
           )
         }
       }
@@ -77,8 +80,8 @@ export function DataTableToolbar<TData>({
 
   // Type filter value handling
   const typeFilterValue = useMemo(() => {
-    const typeFilter = table.getState().columnFilters.find(filter => filter.id === 'type')
-    return typeFilter ? typeFilter.value as string : 'all'
+    const typeFilter = table.getState().columnFilters.find((filter) => filter.id === 'type')
+    return typeFilter ? (typeFilter.value as string) : 'all'
   }, [table])
 
   return (
@@ -132,9 +135,11 @@ export function DataTableToolbar<TData>({
               <div className="flex items-center">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter type" />
-                {typeFilterValue !== 'all' &&
-                  <Badge variant="secondary" className="ml-2 rounded-sm px-1">1</Badge>
-                }
+                {typeFilterValue !== 'all' && (
+                  <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                    1
+                  </Badge>
+                )}
               </div>
             </SelectTrigger>
             <SelectContent>

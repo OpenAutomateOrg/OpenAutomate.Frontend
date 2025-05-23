@@ -27,8 +27,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 interface ErrorWithMessage {
-  message?: string;
-  details?: string;
+  message?: string
+  details?: string
 }
 
 export function ForgotPasswordForm() {
@@ -54,31 +54,31 @@ export function ForgotPasswordForm() {
       await authApi.forgotPassword({
         email: data.email,
       })
-      
+
       // Show success message
       setSuccess(true)
-      
+
       // Clear form
       form.reset()
     } catch (err: unknown) {
       console.error('Forgot password request failed', err)
-      
+
       // Extract error message from different types of errors
-      let errorMessage = 'Failed to send password reset email. Please try again later.';
-      
+      let errorMessage = 'Failed to send password reset email. Please try again later.'
+
       if (err instanceof Error) {
-        errorMessage = err.message;
+        errorMessage = err.message
       } else if (typeof err === 'object' && err !== null) {
         // Try to get message from error object
-        const errObj = err as ErrorWithMessage;
+        const errObj = err as ErrorWithMessage
         if (errObj.message) {
-          errorMessage = errObj.message;
+          errorMessage = errObj.message
         } else if (errObj.details) {
-          errorMessage = errObj.details;
+          errorMessage = errObj.details
         }
       }
-      
-      setError(errorMessage);
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -136,4 +136,4 @@ export function ForgotPasswordForm() {
       </Form>
     </div>
   )
-} 
+}

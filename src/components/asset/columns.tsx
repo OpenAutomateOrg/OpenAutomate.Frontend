@@ -7,9 +7,12 @@ import type { AssetRow } from './asset'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-type EditFunctionType = (asset: AssetRow) => void;
+type EditFunctionType = (asset: AssetRow) => void
 
-export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void): ColumnDef<AssetRow>[] => [
+export const createColumns = (
+  onEdit?: EditFunctionType,
+  onDeleted?: () => void,
+): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -17,18 +20,24 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
         checked={
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
-        onCheckedChange={(value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value)}
+        onCheckedChange={(value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(!!value)
+        }
         aria-label="Select all"
         className="translate-y-[2px]"
       />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const stopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-      };
+        e.stopPropagation()
+      }
 
       return (
-        <span onClick={stopPropagation} onMouseDown={stopPropagation} onPointerDown={stopPropagation}>
+        <span
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
+        >
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
@@ -37,13 +46,13 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
             onClick={stopPropagation}
           />
         </span>
-      );
+      )
     },
     enableSorting: false,
     enableHiding: false,
   },
   {
-    id: "actions",
+    id: 'actions',
     header: ({ column }: { column: Column<AssetRow, unknown> }) => (
       <DataTableColumnHeader column={column} title="Actions" />
     ),
@@ -53,28 +62,26 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
   },
   {
     accessorKey: 'key',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" className="font-bold text-base" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Key" className="font-bold text-base" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      return (
-        <span className="font-medium truncate">{row.getValue('key')}</span>
-      )
+      return <span className="font-medium truncate">{row.getValue('key')}</span>
     },
     filterFn: (row, id, value) => {
-      const key = row.getValue(id);
-      if (typeof key !== 'string' || typeof value !== 'string') return false;
-      return key.toLowerCase().includes(value.toLowerCase());
+      const key = row.getValue(id)
+      if (typeof key !== 'string' || typeof value !== 'string') return false
+      return key.toLowerCase().includes(value.toLowerCase())
     },
   },
   {
     accessorKey: 'type',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" className="font-bold text-base" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Type" className="font-bold text-base" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const typeValue = row.getValue('type');
-      return (
-        <span>
-          {typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}
-        </span>
-      )
+      const typeValue = row.getValue('type')
+      return <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
     },
     filterFn: (row, id, value) => {
       const rowValue = String(row.getValue(id))
@@ -83,17 +90,21 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
   },
   {
     accessorKey: 'description',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" className="font-bold text-base" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Description" className="font-bold text-base" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const desc = row.getValue('description');
+      const desc = row.getValue('description')
       return (
-        <span className={typeof desc === 'string' && desc.trim() ? '' : 'text-muted-foreground italic'}>
+        <span
+          className={typeof desc === 'string' && desc.trim() ? '' : 'text-muted-foreground italic'}
+        >
           {typeof desc === 'string' && desc.trim() ? desc : 'N/a'}
         </span>
       )
     },
   },
-];
+]
 
 // Maintain backward compatibility
-export const columns = createColumns();
+export const columns = createColumns()

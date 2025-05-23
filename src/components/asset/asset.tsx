@@ -23,7 +23,12 @@ import {
   PaginationState,
   ColumnFilter,
 } from '@tanstack/react-table'
-import { getAssetsWithOData, type ODataQueryOptions, getAssetDetail, getAssetAgents } from '@/lib/api/assets'
+import {
+  getAssetsWithOData,
+  type ODataQueryOptions,
+  getAssetDetail,
+  getAssetAgents,
+} from '@/lib/api/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 
@@ -39,8 +44,8 @@ export type AssetRow = z.infer<typeof assetSchema>
 export type AssetEditRow = AssetRow & { value?: string; agents?: { id: string; name: string }[] }
 
 interface ODataResponse<T> {
-  '@odata.count'?: number;
-  value: T[];
+  '@odata.count'?: number
+  value: T[]
 }
 
 export default function AssetInterface() {
@@ -62,7 +67,8 @@ export default function AssetInterface() {
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
   const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   const [hasExactCount, setHasExactCount] = useState(false)
-  const getCalculatedPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
+  const getCalculatedPageCount = (total: number, size: number) =>
+    Math.max(1, Math.ceil(total / size))
   const getMinimumValidPageCount = (currentPageIndex: number) => currentPageIndex + 1
   const initColumnFilters = (): ColumnFiltersState => {
     const filters: ColumnFiltersState = []
@@ -106,7 +112,9 @@ export default function AssetInterface() {
   // Calculate page count based on total count
   const pageCount = useMemo(() => {
     const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize)
-    const hasMorePages = assets.length === pagination.pageSize && totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
+    const hasMorePages =
+      assets.length === pagination.pageSize &&
+      totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
     const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex)
     if (hasMorePages) {
       return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2)
@@ -135,13 +143,13 @@ export default function AssetInterface() {
     const filters: string[] = []
 
     // Key filter
-    const keyFilter = columnFilters.find(filter => filter.id === 'key')
+    const keyFilter = columnFilters.find((filter) => filter.id === 'key')
     if (keyFilter?.value) {
       filters.push(`contains(tolower(key), '${(keyFilter.value as string).toLowerCase()}')`)
     }
 
     // Type filter
-    const typeFilter = columnFilters.find(filter => filter.id === 'type')
+    const typeFilter = columnFilters.find((filter) => filter.id === 'type')
     const enumMap: Record<string, string> = {
       '0': 'String',
       '1': 'Secret',
@@ -162,95 +170,112 @@ export default function AssetInterface() {
 
   const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
 
-  const handleEditAsset = useCallback(async (asset: AssetRow) => {
-    try {
-      setIsLoading(true);
-      const assetDetail = await getAssetDetail(asset.id);
-      const assetAgents = await getAssetAgents(asset.id);
-      const formattedAgents = assetAgents.map(agent => ({
-        id: agent.id,
-        name: agent.name
-      }));
-      const updatedAsset = {
-        ...asset,
-        type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
-        value: assetDetail.value ?? '',
-        agents: formattedAgents.length > 0 ? formattedAgents : []
-      };
-      setSelectedAsset(updatedAsset);
-      setModalMode('edit');
-      setIsModalOpen(true);
-    } catch (error) {
-      console.error('Error preparing asset for edit:', error);
-      setError('Failed to load asset details for editing.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setIsLoading, setSelectedAsset, setModalMode, setIsModalOpen, setError]);
-
-  const updateTotalCounts = useCallback((response: ODataResponse<AssetRow>) => {
-    if (typeof response['@odata.count'] === 'number') {
-      setTotalCount(response['@odata.count']);
-      totalCountRef.current = response['@odata.count'];
-      setHasExactCount(true);
-      return;
-    }
-    if (!Array.isArray(response.value)) return;
-    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
-    if (minCount > totalCountRef.current) {
-      setTotalCount(minCount);
-      totalCountRef.current = minCount;
-    }
-    const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
-    if (isFullFirstPage) {
-      setTotalCount(minCount + 1);
-      totalCountRef.current = minCount + 1;
-    }
-    setHasExactCount(false);
-  }, [pagination.pageIndex, pagination.pageSize]);
-
-  const processAssetData = useCallback((response: ODataResponse<AssetRow>) => {
-    if (!Array.isArray(response.value)) {
-      setAssets([]);
-      return;
-    }
-    const formattedAssets = response.value.map((asset: AssetRow) => ({
-      id: asset.id,
-      key: asset.key,
-      type: asset.type,
-      description: asset.description,
-      createdBy: asset.createdBy,
-    }));
-    setAssets(formattedAssets || []);
-    // Handle empty page edge case
-    const isEmptyPageBeyondFirst = response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0;
-    if (isEmptyPageBeyondFirst) {
-      const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-      if (pagination.pageIndex >= calculatedPageCount) {
-        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
-        updateUrl(pathname, { page: '1' });
+  const handleEditAsset = useCallback(
+    async (asset: AssetRow) => {
+      try {
+        setIsLoading(true)
+        const assetDetail = await getAssetDetail(asset.id)
+        const assetAgents = await getAssetAgents(asset.id)
+        const formattedAgents = assetAgents.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+        }))
+        const updatedAsset = {
+          ...asset,
+          type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
+          value: assetDetail.value ?? '',
+          agents: formattedAgents.length > 0 ? formattedAgents : [],
+        }
+        setSelectedAsset(updatedAsset)
+        setModalMode('edit')
+        setIsModalOpen(true)
+      } catch (error) {
+        console.error('Error preparing asset for edit:', error)
+        setError('Failed to load asset details for editing.')
+      } finally {
+        setIsLoading(false)
       }
-    }
-  }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
+    },
+    [setIsLoading, setSelectedAsset, setModalMode, setIsModalOpen, setError],
+  )
+
+  const updateTotalCounts = useCallback(
+    (response: ODataResponse<AssetRow>) => {
+      if (typeof response['@odata.count'] === 'number') {
+        setTotalCount(response['@odata.count'])
+        totalCountRef.current = response['@odata.count']
+        setHasExactCount(true)
+        return
+      }
+      if (!Array.isArray(response.value)) return
+      const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
+      if (minCount > totalCountRef.current) {
+        setTotalCount(minCount)
+        totalCountRef.current = minCount
+      }
+      const isFullFirstPage =
+        response.value.length === pagination.pageSize && pagination.pageIndex === 0
+      if (isFullFirstPage) {
+        setTotalCount(minCount + 1)
+        totalCountRef.current = minCount + 1
+      }
+      setHasExactCount(false)
+    },
+    [pagination.pageIndex, pagination.pageSize],
+  )
+
+  const processAssetData = useCallback(
+    (response: ODataResponse<AssetRow>) => {
+      if (!Array.isArray(response.value)) {
+        setAssets([])
+        return
+      }
+      const formattedAssets = response.value.map((asset: AssetRow) => ({
+        id: asset.id,
+        key: asset.key,
+        type: asset.type,
+        description: asset.description,
+        createdBy: asset.createdBy,
+      }))
+      setAssets(formattedAssets || [])
+      // Handle empty page edge case
+      const isEmptyPageBeyondFirst =
+        response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+      if (isEmptyPageBeyondFirst) {
+        const calculatedPageCount = Math.max(
+          1,
+          Math.ceil(totalCountRef.current / pagination.pageSize),
+        )
+        if (pagination.pageIndex >= calculatedPageCount) {
+          setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+          updateUrl(pathname, { page: '1' })
+        }
+      }
+    },
+    [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname],
+  )
 
   const fetchAssets = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const queryParams = getODataQueryParams();
-      const response = await getAssetsWithOData(queryParams) as ODataResponse<AssetRow>;
-      updateTotalCounts(response);
-      processAssetData(response);
+      const queryParams = getODataQueryParams()
+      const response = (await getAssetsWithOData(queryParams)) as ODataResponse<AssetRow>
+      updateTotalCounts(response)
+      processAssetData(response)
     } catch {
-      setError('Failed to load assets. Please try again.');
+      setError('Failed to load assets. Please try again.')
     } finally {
-      setIsLoading(false);
-      setIsPending(false);
-      setIsChangingPageSize(false);
+      setIsLoading(false)
+      setIsPending(false)
+      setIsChangingPageSize(false)
     }
-  }, [getODataQueryParams, updateTotalCounts, processAssetData]);
+  }, [getODataQueryParams, updateTotalCounts, processAssetData])
 
-  const tableColumns = useMemo(() => createColumns(handleEditAsset, fetchAssets), [handleEditAsset, fetchAssets]);
+  const tableColumns = useMemo(
+    () => createColumns(handleEditAsset, fetchAssets),
+    [handleEditAsset, fetchAssets],
+  )
 
   // Setup table instance
   const table = useReactTable({
@@ -315,37 +340,45 @@ export default function AssetInterface() {
   }
 
   // Handle search input changes
-  const handleSearch = useCallback((value: string) => {
-    setSearchValue(value)
-    setIsPending(true)
-    if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
-    searchDebounceTimeout.current = setTimeout(() => {
-      setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
-      // Always reset page to 1 when filter changes
-      updateUrl(pathname, { key: value ?? null, page: '1' })
-      setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
-      setIsPending(false)
-    }, 500)
-  }, [updateUrl, pathname])
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      setIsPending(true)
+      if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
+      searchDebounceTimeout.current = setTimeout(() => {
+        setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
+        // Always reset page to 1 when filter changes
+        updateUrl(pathname, { key: value ?? null, page: '1' })
+        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+        setIsPending(false)
+      }, 500)
+    },
+    [updateUrl, pathname],
+  )
 
   // Handle type filter changes
-  const handleTypeFilterChange = useCallback((value: string) => {
-    if (value === 'all') {
-      setColumnFilters((prev: ColumnFiltersState) => prev.filter((filter: ColumnFilter) => filter.id !== 'type'))
-    } else {
-      setColumnFilters((prev: ColumnFiltersState) => {
-        const newFilters = prev.filter((filter: ColumnFilter) => filter.id !== 'type')
-        newFilters.push({ id: 'type', value })
-        return newFilters
+  const handleTypeFilterChange = useCallback(
+    (value: string) => {
+      if (value === 'all') {
+        setColumnFilters((prev: ColumnFiltersState) =>
+          prev.filter((filter: ColumnFilter) => filter.id !== 'type'),
+        )
+      } else {
+        setColumnFilters((prev: ColumnFiltersState) => {
+          const newFilters = prev.filter((filter: ColumnFilter) => filter.id !== 'type')
+          newFilters.push({ id: 'type', value })
+          return newFilters
+        })
+      }
+      // Always reset page to 1 when filter changes
+      updateUrl(pathname, {
+        type: value === 'all' ? null : value,
+        page: '1',
       })
-    }
-    // Always reset page to 1 when filter changes
-    updateUrl(pathname, {
-      type: value === 'all' ? null : value,
-      page: '1'
-    })
-    setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
-  }, [updateUrl, pathname])
+      setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+    },
+    [updateUrl, pathname],
+  )
 
   // Fetch data when filters, sorting, or pagination change
   useEffect(() => {
@@ -370,8 +403,8 @@ export default function AssetInterface() {
 
   // Initial data fetch
   useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
+    fetchAssets()
+  }, [fetchAssets])
 
   return (
     <>
@@ -381,7 +414,9 @@ export default function AssetInterface() {
           <div className="flex items-center space-x-2">
             {totalCount > 0 && (
               <div className="text-sm text-muted-foreground">
-                <span>Total: {totalCount} asset{totalCount !== 1 ? 's' : ''}</span>
+                <span>
+                  Total: {totalCount} asset{totalCount !== 1 ? 's' : ''}
+                </span>
               </div>
             )}
             <Button
@@ -423,8 +458,8 @@ export default function AssetInterface() {
           data={assets || []}
           columns={tableColumns}
           onRowClick={(row) => {
-            if (isModalOpen) return;
-            handleRowClick(row);
+            if (isModalOpen) return
+            handleRowClick(row)
           }}
           table={table}
           isLoading={isLoading}
@@ -450,11 +485,11 @@ export default function AssetInterface() {
             const newPageIndex = Math.floor(currentStartRow / size)
             setPagination({
               pageSize: size,
-              pageIndex: newPageIndex
+              pageIndex: newPageIndex,
             })
             updateUrl(pathname, {
               size: size.toString(),
-              page: (newPageIndex + 1).toString()
+              page: (newPageIndex + 1).toString(),
             })
           }}
         />
@@ -468,7 +503,10 @@ export default function AssetInterface() {
 
       <CreateEditModal
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setSelectedAsset(null); }}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedAsset(null)
+        }}
         mode={modalMode}
         onCreated={handleAssetCreated}
         existingKeys={assets.map((item: AssetRow) => item.key)}

@@ -21,7 +21,7 @@ const getStatusBadgeClass = (status: string) => {
   if (status === 'Disconnected') return 'bg-red-100 text-red-600 border-none'
   if (status === 'Busy') return 'bg-yellow-100 text-yellow-600 border-none'
   if (status === 'Available') return 'bg-green-100 text-green-600 border-none'
-  return 'bg-gray-100 text-gray-600 border-none'  // fallback for any other status
+  return 'bg-gray-100 text-gray-600 border-none' // fallback for any other status
 }
 
 export default function AgentDetail({ id }: AgentDetailProps) {
@@ -34,9 +34,10 @@ export default function AgentDetail({ id }: AgentDetailProps) {
   const [error, setError] = useState<string | null>(null)
 
   // Frontend URL for agent connection
-  const frontendUrl = typeof window !== 'undefined' 
-    ? `${window.location.protocol}//${window.location.host}`
-    : config.app.url
+  const frontendUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.protocol}//${window.location.host}`
+      : config.app.url
 
   const fetchAgentDetails = useCallback(async () => {
     setLoading(true)
@@ -46,7 +47,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
       // Map the response to match our expected type with botAgentId
       setAgent({
         ...agentData,
-        botAgentId: agentData.id // Ensure botAgentId is present
+        botAgentId: agentData.id, // Ensure botAgentId is present
       })
     } catch (err) {
       console.error('Error fetching agent details:', err)
@@ -62,27 +63,29 @@ export default function AgentDetail({ id }: AgentDetailProps) {
 
   // Custom error handler to filter out SignalR connection errors
   useEffect(() => {
-    const originalConsoleError = console.error;
+    const originalConsoleError = console.error
     console.error = (...args) => {
       // Filter out SignalR timeout and connection errors
-      if (args.length > 0 && 
-          typeof args[0] === 'string' && 
-          (args[0].includes('Server timeout') || 
-           args[0].includes('SignalR') || 
-           args[0].includes('connection') || 
-           args[0].includes('Connection') ||
-           args[0].includes('Failed to start') ||
-           args[0].includes('negotiation'))) {
-        console.debug('[Suppressed SignalR Error]', ...args);
-        return;
+      if (
+        args.length > 0 &&
+        typeof args[0] === 'string' &&
+        (args[0].includes('Server timeout') ||
+          args[0].includes('SignalR') ||
+          args[0].includes('connection') ||
+          args[0].includes('Connection') ||
+          args[0].includes('Failed to start') ||
+          args[0].includes('negotiation'))
+      ) {
+        console.debug('[Suppressed SignalR Error]', ...args)
+        return
       }
-      originalConsoleError(...args);
-    };
+      originalConsoleError(...args)
+    }
 
     return () => {
-      console.error = originalConsoleError;
-    };
-  }, []);
+      console.error = originalConsoleError
+    }
+  }, [])
 
   const handleBack = () => {
     router.back()
@@ -125,12 +128,13 @@ export default function AgentDetail({ id }: AgentDetailProps) {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="gap-1"
             onClick={() => {
-              window.location.href = 'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+              window.location.href =
+                'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
             }}
           >
             <Download className="h-4 w-4" />
@@ -145,20 +149,17 @@ export default function AgentDetail({ id }: AgentDetailProps) {
             </div>
             <div className="space-y-4">
               <DetailBlock label="Status">
-                <Badge
-                  variant="outline"
-                  className={getStatusBadgeClass(statusToDisplay)}
-                >
+                <Badge variant="outline" className={getStatusBadgeClass(statusToDisplay)}>
                   {statusToDisplay}
                 </Badge>
               </DetailBlock>
             </div>
           </div>
-          
+
           {/* Connection Information Section */}
           <div className="mt-8 pt-6 border-t">
             <h3 className="text-lg font-semibold mb-4">Connection Information</h3>
-            
+
             <div className="grid grid-cols-1 gap-4">
               {/* Connection URL */}
               <div className="bg-muted p-4 rounded-md">

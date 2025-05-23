@@ -44,27 +44,27 @@ const nextConfig: NextConfig = {
         has: [
           {
             type: 'query',
-            key: 'machineKey'
-          }
+            key: 'machineKey',
+          },
         ],
         headers: [
           {
             key: 'X-Machine-Key-Auth',
-            value: 'true'
+            value: 'true',
           },
           {
             key: 'Connection',
-            value: 'keep-alive'
+            value: 'keep-alive',
           },
           {
-            key: 'Keep-Alive', 
-            value: 'timeout=120'
+            key: 'Keep-Alive',
+            value: 'timeout=120',
           },
           {
             key: 'Upgrade',
-            value: 'websocket'
-          }
-        ]
+            value: 'websocket',
+          },
+        ],
       },
       // Standard WebSocket headers for other connections
       {
@@ -72,18 +72,18 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Connection',
-            value: 'keep-alive'
+            value: 'keep-alive',
           },
           {
-            key: 'Keep-Alive', 
-            value: 'timeout=120'
+            key: 'Keep-Alive',
+            value: 'timeout=120',
           },
           {
             key: 'Upgrade',
-            value: 'websocket'
-          }
-        ]
-      }
+            value: 'websocket',
+          },
+        ],
+      },
     ]
   },
 
@@ -105,16 +105,16 @@ const nextConfig: NextConfig = {
           {
             type: 'query',
             key: 'machineKey',
-          }
-        ]
+          },
+        ],
       },
-      
+
       // Second rule - machine key negotiation with param forwarded for SignalR
       {
         source: '/:tenantSlug/hubs/:path*/negotiate',
         destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
       },
-      
+
       // Third rule - direct agent connections (all hub connections with machineKey parameter)
       {
         source: '/:tenantSlug/hubs/:path*',
@@ -123,21 +123,21 @@ const nextConfig: NextConfig = {
           {
             type: 'query',
             key: 'machineKey',
-          }
-        ]
+          },
+        ],
       },
-      
+
       // Fourth rule - standard hub connections (without machineKey)
       {
         source: '/:tenantSlug/hubs/:path*',
         destination: `${API_URL}/:tenantSlug/hubs/:path*`,
       },
-      
+
       // Rewrite regular API calls
       {
         source: '/:tenantSlug/api/:path*',
         destination: `${API_URL}/:tenantSlug/api/:path*`,
-      }
+      },
     ]
   },
 }
