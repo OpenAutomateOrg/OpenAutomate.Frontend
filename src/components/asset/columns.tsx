@@ -9,7 +9,10 @@ import DataTableRowAction from './data-table-row-actions'
 
 type EditFunctionType = (asset: AssetRow) => void
 
-export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void): ColumnDef<AssetRow>[] => [
+export const createColumns = (
+  onEdit?: EditFunctionType,
+  onDeleted?: () => void,
+): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -26,11 +29,15 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const stopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-      };
+        e.stopPropagation()
+      }
 
       return (
-        <span onClick={stopPropagation} onMouseDown={stopPropagation} onPointerDown={stopPropagation}>
+        <span
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
+        >
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
@@ -39,7 +46,7 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
             onClick={stopPropagation}
           />
         </span>
-      );
+      )
     },
     enableSorting: false,
     enableHiding: false,
@@ -74,11 +81,7 @@ export const createColumns = (onEdit?: EditFunctionType, onDeleted?: () => void)
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type')
-      return (
-        <span>
-          {typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}
-        </span>
-      )
+      return <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
     },
     filterFn: (row, id, value) => {
       const rowValue = String(row.getValue(id))

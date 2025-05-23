@@ -483,23 +483,25 @@ export default function AgentInterface() {
             <Button
               variant="outline"
               onClick={() => {
-                window.location.href = 'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+                window.location.href =
+                  'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
               }}
               className="flex items-center justify-center"
             >
               <Download className="mr-2 h-4 w-4" />
               Download Agent
             </Button>
-          <Button
-            onClick={() => {
-              setModalMode('create')
-              setIsModalOpen(true)
-            }}
-            className="flex items-center justify-center"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create
-          </Button>
+            <Button
+              onClick={() => {
+                setModalMode('create')
+                setIsModalOpen(true)
+              }}
+              className="flex items-center justify-center"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -576,6 +578,6 @@ export default function AgentInterface() {
         mode={modalMode}
         onSuccess={handleAgentCreated}
       />
-      </>
+    </>
   )
 }

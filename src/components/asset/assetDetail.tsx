@@ -101,9 +101,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Type
                 </div>
-                <span>
-                  {asset.type === 0 ? 'String' : 'Secret'}
-                </span>
+                <span>{asset.type === 0 ? 'String' : 'Secret'}</span>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
