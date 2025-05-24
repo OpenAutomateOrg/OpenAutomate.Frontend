@@ -281,8 +281,8 @@ export default function AgentInterface() {
 
       if (!page || !size) {
         updateUrl(pathname, {
-          page: page || '1',
-          size: size || '10',
+          page: page ?? '1',
+          size: size ?? '10',
         })
       }
     }

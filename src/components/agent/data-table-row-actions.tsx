@@ -29,7 +29,6 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
 
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    // TODO: Implement edit modal logic (open modal, pass row.original)
     console.log('Edit agent:', row.original)
   }
 
