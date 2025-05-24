@@ -2,7 +2,7 @@
 
 import { PlusCircle, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns } from './columns'
+import { createAgentColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from '@/components/agent/create-edit-modal'
@@ -112,7 +112,7 @@ export default function AgentInterface() {
   const [pagination, setPagination] = useState<PaginationState>(initPagination)
 
   // UI state for search input
-  const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') || '')
+  const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') ?? '')
 
   // Extract tenant from pathname (e.g., /tenant/agent)
   const tenant = pathname.split('/')[1]
@@ -338,7 +338,7 @@ export default function AgentInterface() {
   // Setup table instance with real-time data and custom row ID
   const table = useReactTable({
     data: agentsWithRealtimeStatus,
-    columns,
+    columns: createAgentColumns(fetchAgents),
     state: {
       sorting,
       columnVisibility,
@@ -529,7 +529,7 @@ export default function AgentInterface() {
 
         <DataTable
           data={agentsWithRealtimeStatus}
-          columns={columns}
+          columns={createAgentColumns(fetchAgents)}
           table={table}
           onRowClick={handleRowClick}
           isLoading={isLoading}

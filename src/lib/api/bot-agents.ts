@@ -228,3 +228,11 @@ export const deactivateBotAgent = async (id: string): Promise<void> => {
   const tenant = getCurrentTenant()
   await api.post<void>(`${tenant}/api/agents/${id}/deactivate`)
 }
+
+/**
+ * Delete a bot agent by ID
+ */
+export const deleteBotAgent = async (id: string): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.delete<void>(`${tenant}/api/agents/${id}`)
+} 

@@ -93,7 +93,6 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
       </DropdownMenu>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="max-w-[350px]"
           onInteractOutside={(e: Event) => e.preventDefault()}
         >
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
@@ -103,7 +102,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <div>Are you sure you want to delete this asset?</div>
+          <div>Are you sure you want to delete this asset <b>{asset.key}</b>?</div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"
