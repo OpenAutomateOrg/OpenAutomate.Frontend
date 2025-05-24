@@ -14,10 +14,10 @@ import { Input } from '@/components/ui/input'
 import { createBotAgent, type BotAgentResponseDto } from '@/lib/api/bot-agents'
 
 interface ItemModalProps {
-  isOpen: boolean
-  onClose: () => void
-  mode: 'create' | 'edit'
-  onSuccess?: (agent: BotAgentResponseDto) => void
+  readonly isOpen: boolean
+  readonly onClose: () => void
+  readonly mode: 'create' | 'edit'
+  readonly onSuccess?: (agent: BotAgentResponseDto) => void
 }
 
 export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalProps) {
