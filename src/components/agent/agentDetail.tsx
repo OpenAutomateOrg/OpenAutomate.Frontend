@@ -4,16 +4,21 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Download, RefreshCw } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { AgentRow } from './agent'
 import { getBotAgentById } from '@/lib/api/bot-agents'
 import { config } from '@/lib/config'
-import { useParams } from 'next/navigation'
 import { useAgentStatus } from '@/hooks/useAgentStatus'
+import type { ReactNode } from 'react'
 
 interface AgentDetailProps {
-  id: string
+  readonly id: string
+}
+
+interface DetailBlockProps {
+  readonly label: string
+  readonly children?: ReactNode
 }
 
 // Helper function to get badge class based on status
@@ -182,7 +187,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
 }
 
 // Block hiển thị label trên, value dưới, có border-b
-function DetailBlock({ label, children }: { label: string; children?: React.ReactNode }) {
+function DetailBlock({ label, children }: DetailBlockProps) {
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-1">{label}</p>
