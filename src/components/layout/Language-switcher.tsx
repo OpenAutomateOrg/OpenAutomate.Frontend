@@ -1,7 +1,5 @@
 'use client'
 
-import { useParams, usePathname } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,29 +8,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Globe } from 'lucide-react'
+import { useLocale, Locale } from '@/providers/locale-provider'
 
 // Define available languages
 const languages = [
   { code: 'en', name: 'English' },
-  { code: 'vi', name: 'VietNam' },
+  { code: 'vi', name: 'Tiếng Việt' },
 ]
 
 export function LanguageSwitcher() {
-  const params = useParams()
-  const pathname = usePathname()
-
-  // Get current language from route params
-  const currentLang = (params?.lang as string) || 'en'
-
-  // Function to get the new path with changed language
-  const getPathWithNewLocale = (locale: string) => {
-    // If the current path already has a locale, replace it
-    if (params?.lang) {
-      return pathname.replace(`/${currentLang}`, `/${locale}`)
-    }
-    // Otherwise, add the locale to the beginning of the path
-    return `/${locale}${pathname}`
-  }
+  const { locale, setLocale } = useLocale()
 
   return (
     <DropdownMenu>
@@ -40,19 +25,18 @@ export function LanguageSwitcher() {
         <Button variant="outline" size="sm" className="hover:border-orange-600 gap-2">
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline-block">
-            {languages.find((lang) => lang.code === currentLang)?.name || 'Language'}
+            {languages.find((lang) => lang.code === locale)?.name || 'Language'}{' '}
           </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages.map((language) => (
-          <DropdownMenuItem key={language.code} asChild>
-            <Link
-              href={getPathWithNewLocale(language.code)}
-              className={language.code === currentLang ? 'font-bold' : ''}
-            >
-              {language.name}
-            </Link>
+          <DropdownMenuItem
+            key={language.code}
+            onClick={() => setLocale(language.code as Locale)}
+            className={language.code === locale ? 'font-bold' : ''}
+          >
+            {language.name}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
