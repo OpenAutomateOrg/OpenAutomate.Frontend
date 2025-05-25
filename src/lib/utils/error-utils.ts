@@ -90,13 +90,24 @@ export function extractErrorMessage(error: unknown): string {
 export function getErrorVariant(error: unknown): 'destructive' | 'default' {
   if (typeof error === 'object' && error && 'status' in error) {
     const apiError = error as ApiError
+    // Use default for informational responses (1xx, 2xx, 3xx)
+    if (apiError.status < 400) {
+      return 'default'
+    }
     // Use destructive for client errors (4xx) and server errors (5xx)
-    if (apiError.status >= 400) {
-      return 'destructive'
+    return 'destructive'
+  }
+  
+  // For non-API errors, check if it's a simple string warning vs actual error
+  if (typeof error === 'string') {
+    const lowercaseError = error.toLowerCase()
+    if (lowercaseError.includes('warning') || lowercaseError.includes('info')) {
+      return 'default'
     }
   }
   
-  return 'destructive' // Default to destructive for errors
+  // Default to destructive for unknown errors
+  return 'destructive'
 }
 
 /**
