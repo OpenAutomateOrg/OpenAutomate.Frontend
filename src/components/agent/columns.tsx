@@ -1,14 +1,13 @@
 'use client'
 
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Column, Row } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
-
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-export const createAgentColumns = (onDeleted?: () => void): ColumnDef<AgentRow>[] => [
+export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -35,7 +34,7 @@ export const createAgentColumns = (onDeleted?: () => void): ColumnDef<AgentRow>[
   {
     id: 'actions',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-    cell: ({ row }) => <DataTableRowAction row={row} onDeleted={onDeleted} />,
+    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
   },
   {
     accessorKey: 'name',
@@ -90,16 +89,16 @@ export const createAgentColumns = (onDeleted?: () => void): ColumnDef<AgentRow>[
   },
   {
     accessorKey: 'lastConnected',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Connected" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AgentRow> }) => <DataTableColumnHeader column={column} title="Last Connected" />,
+    cell: ({ row }: { row: Row<AgentRow> }) => {
       // Get the value and convert it to a string to ensure it's safe for display
-      const rawValue = row.getValue('lastConnected')
-      const lastConnected =
-        typeof rawValue === 'string'
-          ? rawValue
-          : rawValue === null || rawValue === undefined
-            ? ''
-            : String(rawValue)
+      const rawValue = row.getValue('lastConnected');
+      let lastConnected = '';
+      if (typeof rawValue === 'string') {
+        lastConnected = rawValue;
+      } else if (rawValue !== null && rawValue !== undefined) {
+        lastConnected = String(rawValue);
+      }
 
       // Format the date if it's a valid date string
       let formattedDate = 'Never';

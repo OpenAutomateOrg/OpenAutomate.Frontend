@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Row } from '@tanstack/react-table'
 import { MoreHorizontal, Pencil, Trash } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { deleteBotAgent } from '@/lib/api/bot-agents'
+import { deleteBotAgent, getBotAgentById } from '@/lib/api/bot-agents'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -15,21 +15,38 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AgentRow } from './agent'
+import { CreateEditModal } from './create-edit-modal'
+import type { BotAgentResponseDto } from '@/lib/api/bot-agents'
 
 interface DataTableRowActionsProps {
   readonly row: Row<AgentRow>
-  readonly onDeleted?: () => void
+  readonly onRefresh?: () => void
 }
 
-export default function DataTableRowAction({ row, onDeleted }: DataTableRowActionsProps) {
+export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [showError, setShowError] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editAgent, setEditAgent] = useState<BotAgentResponseDto | null>(null)
 
-  const handleEdit = (e?: React.MouseEvent) => {
+  const handleEdit = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    console.log('Edit agent:', row.original)
+    if (row.original.status !== 'Disconnected') {
+      setErrorMsg('You can only edit an agent when its status is "Disconnected".')
+      setShowError(true)
+      return
+    }
+    // Fetch agent chi tiết từ API
+    try {
+      const agentDetail = await getBotAgentById(row.original.id)
+      setEditAgent(agentDetail)
+      setShowEdit(true)
+    } catch {
+      setErrorMsg('Failed to fetch agent details.')
+      setShowError(true)
+    }
   }
 
   const handleDelete = (e?: React.MouseEvent) => {
@@ -43,7 +60,7 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
       if (row.original.status === 'Disconnected') {
         await deleteBotAgent(row.original.id)
         setShowConfirm(false)
-        if (onDeleted) onDeleted()
+        if (onRefresh) onRefresh()
       } else {
         setShowConfirm(false)
         setErrorMsg('You can only delete an agent when its status is "Disconnected".')
@@ -83,6 +100,19 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Edit Modal */}
+      <CreateEditModal
+        isOpen={showEdit}
+        onClose={() => { setShowEdit(false); setEditAgent(null); }}
+        mode="edit"
+        agent={editAgent}
+        onSuccess={() => {
+          setShowEdit(false);
+          setEditAgent(null);
+          if (onRefresh) onRefresh();
+        }}
+      />
 
       {/* Confirm Delete Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
