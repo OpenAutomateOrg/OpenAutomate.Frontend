@@ -1,7 +1,7 @@
 'use client'
 
 import { Row } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Download, Edit, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,19 +11,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { PackageRow } from './package'
+import { AutomationPackageResponseDto } from '@/lib/api/automation-packages'
 
 interface DataTableRowActionsProps {
-  row: Row<PackageRow>
+  row: Row<AutomationPackageResponseDto>
 }
 
-export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
+export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const handleEdit = () => {
-    console.log('Edit asset:', row.original)
+    console.log('Edit package:', row.original)
   }
 
   const handleDelete = () => {
-    console.log('Delete asset:', row.original)
+    console.log('Delete package:', row.original)
+  }
+
+  const handleDownload = () => {
+    // Get the latest version for download
+    const versions = row.original.versions
+    if (versions && versions.length > 0) {
+      const latestVersion = versions.sort(
+        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+      )[0]
+      console.log('Download package:', row.original.id, 'version:', latestVersion.versionNumber)
+    }
   }
 
   return (
@@ -35,9 +46,19 @@ export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDownload}>
+          <Download className="mr-2 h-4 w-4" />
+          Download
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

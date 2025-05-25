@@ -130,6 +130,7 @@ const handle401Response = async <T>(
   url: string,
   options: RequestInit,
   headers: Record<string, string>,
+  data?: unknown,
 ): Promise<T | null> => {
   // Skip token refresh for login and refresh-token endpoints
   if (endpoint.includes('refresh-token') || endpoint.includes('login')) {
@@ -141,11 +142,17 @@ const handle401Response = async <T>(
     const newToken = await refreshToken()
     if (!newToken) return null
 
-    // Retry the original request with the new token
-    headers.Authorization = `Bearer ${newToken}`
+    // Prepare the retry request properly with the new token
+    const retryHeaders = prepareHeaders(options, data)
+    retryHeaders.Authorization = `Bearer ${newToken}`
+    
+    // Use the same body preparation logic to avoid ArrayBuffer issues
+    const { body } = prepareRequestBody(data)
+    
     const retriedResponse = await fetch(url, {
       ...options,
-      headers,
+      body, // Use properly prepared body
+      headers: retryHeaders,
       credentials: 'include',
     })
 
@@ -173,10 +180,41 @@ const getFullUrl = (endpoint: string): string => {
 }
 
 /**
+ * Prepare request body and headers for different data types
+ */
+const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: Record<string, string> } => {
+  if (!data) {
+    return { body: undefined, headers: {} }
+  }
+
+  // Handle FormData - don't stringify and don't set any headers (browser will handle)
+  if (data instanceof FormData) {
+    return { 
+      body: data as BodyInit, 
+      headers: {} // No headers needed, browser will set multipart/form-data with boundary
+    }
+  }
+
+  // Handle regular objects - stringify as JSON and set Content-Type
+  return { 
+    body: JSON.stringify(data), 
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+}
+
+/**
  * Prepare request headers
  */
-const prepareHeaders = (options: RequestInit): Record<string, string> => {
-  const headers = { ...defaultHeaders, ...options.headers } as Record<string, string>
+const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, string> => {
+  // Start with default headers, but exclude Content-Type if we're sending FormData
+  const shouldExcludeContentType = data instanceof FormData
+  const baseHeaders = shouldExcludeContentType 
+    ? { Accept: defaultHeaders.Accept } // Only include Accept header for FormData
+    : { ...defaultHeaders }
+  
+  const headers = { ...baseHeaders, ...options.headers } as Record<string, string>
 
   if (!headers.Authorization) {
     const token = getAuthToken()
@@ -191,9 +229,9 @@ const prepareHeaders = (options: RequestInit): Record<string, string> => {
 /**
  * Generic function to make API requests
  */
-export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, data?: unknown): Promise<T> {
   const url = getFullUrl(endpoint)
-  const headers = prepareHeaders(options)
+  const headers = prepareHeaders(options, data)
 
   try {
     const response = await fetch(url, {
@@ -209,7 +247,7 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
 
     // Handle 401 Unauthorized responses
     if (response.status === 401) {
-      const refreshResult = await handle401Response<T>(endpoint, url, options, headers)
+      const refreshResult = await handle401Response<T>(endpoint, url, options, headers, data)
       if (refreshResult) {
         return refreshResult
       }
@@ -230,26 +268,47 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
-    fetchApi<T>(endpoint, {
+  post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
+    const { body, headers: bodyHeaders } = prepareRequestBody(data)
+    
+    return fetchApi<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    }),
+      body,
+      headers: {
+        ...bodyHeaders,
+        ...options?.headers, // Allow options to override
+      },
+    }, data)
+  },
 
-  put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
-    fetchApi<T>(endpoint, {
+  put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
+    const { body, headers: bodyHeaders } = prepareRequestBody(data)
+    
+    return fetchApi<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    }),
+      body,
+      headers: {
+        ...bodyHeaders,
+        ...options?.headers, // Allow options to override
+      },
+    }, data)
+  },
 
-  patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) =>
-    fetchApi<T>(endpoint, {
+  patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
+    const { body, headers: bodyHeaders } = prepareRequestBody(data)
+    
+    return fetchApi<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-    }),
+      body,
+      headers: {
+        ...bodyHeaders,
+        ...options?.headers, // Allow options to override
+      },
+    }, data)
+  },
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),

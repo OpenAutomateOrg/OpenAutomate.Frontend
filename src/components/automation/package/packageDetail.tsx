@@ -1,90 +1,340 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { PackageRow } from './package'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useToast } from '@/components/ui/use-toast'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { 
+  Download, 
+  Upload, 
+  Trash2, 
+  Calendar, 
+  Package, 
+  FileText, 
+  HardDrive,
+  Loader2,
+  ArrowLeft 
+} from 'lucide-react'
+import {
+  AutomationPackageResponseDto,
+  PackageVersionResponseDto,
+  getAutomationPackageById,
+  getPackageDownloadUrl,
+  deleteAutomationPackage,
+  deletePackageVersion,
+} from '@/lib/api/automation-packages'
+import { createErrorToast, extractErrorMessage } from '@/lib/utils/error-utils'
 
-interface ExcutionDetailProps {
-  id: string
-}
-
-// Helper function to get badge class based on status
-const getStatusBadgeClass = (status: string) => {
-  if (status === 'Disconnected') return 'bg-red-100 text-red-600 border-none'
-  if (status === 'Offline') return 'bg-yellow-100 text-yellow-600 border-none'
-  return 'bg-green-100 text-green-600 border-none'
-}
-
-export default function ExcutionDetail({ id }: ExcutionDetailProps) {
+export default function PackageDetail() {
+  const params = useParams()
   const router = useRouter()
-  const [agent, setExcution] = useState<PackageRow | null>(null)
+  const { toast } = useToast()
+  const packageId = params.id as string
+  
+  const [packageData, setPackageData] = useState<AutomationPackageResponseDto | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)  // Fetch package details
+  const fetchPackageDetails = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getAutomationPackageById(packageId)
+      setPackageData(data)
+    } catch (err) {
+      console.error('Error fetching package details:', err)
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      toast(createErrorToast(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [packageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    const mockExcution: PackageRow = {
-      id,
-      name: 'Excution 2',
-      label: 'Excution Label',
-      value: 'Some Value',
-      type: 'Type A',
-      createdBy: 'Admin',
-      //   machineName: 'Machine name',
-      status: 'Disconnected',
-      //   lastConnected: '2023-10-15T14:30:00Z',
+    if (packageId) {
+      fetchPackageDetails()
     }
-    setExcution(mockExcution)
-  }, [id])
+  }, [packageId, fetchPackageDetails])
 
-  const handleBack = () => {
+  const handleDownloadVersion = async (version: PackageVersionResponseDto) => {
+    try {
+      setDownloadingVersion(version.versionNumber)
+      const response = await getPackageDownloadUrl(packageId, version.versionNumber)
+      
+      // Open download URL in new tab
+      window.open(response.downloadUrl, '_blank')
+      
+      // Success toast
+      toast({
+        title: 'Download Started',
+        description: `Downloading ${version.fileName}`,
+        variant: 'default',
+      })
+    } catch (err) {
+      console.error('Error downloading package:', err)
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      toast(createErrorToast(err))
+    } finally {
+      setDownloadingVersion(null)
+    }
+  }
+
+  const handleDeleteVersion = async (version: PackageVersionResponseDto) => {
+    if (!confirm(`Are you sure you want to delete version ${version.versionNumber}?`)) {
+      return
+    }
+
+    try {
+      await deletePackageVersion(packageId, version.versionNumber)
+      await fetchPackageDetails() // Refresh data
+      
+      // Success toast
+      toast({
+        title: 'Version Deleted',
+        description: `Version ${version.versionNumber} has been deleted successfully`,
+        variant: 'default',
+      })
+    } catch (err) {
+      console.error('Error deleting version:', err)
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      toast(createErrorToast(err))
+    }
+  }
+
+  const handleDeletePackage = async () => {
+    if (!confirm(`Are you sure you want to delete this package and all its versions?`)) {
+      return
+    }
+
+    try {
+      await deleteAutomationPackage(packageId)
+      
+      // Success toast
+      toast({
+        title: 'Package Deleted',
+        description: `Package "${packageData?.name}" has been deleted successfully`,
+        variant: 'default',
+      })
+      
     router.back()
+    } catch (err) {
+      console.error('Error deleting package:', err)
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      toast(createErrorToast(err))
+    }
   }
 
-  if (!agent) {
-    return <div>Loading...</div>
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleString()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading package details...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !packageData) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Alert className="max-w-md">
+          <AlertDescription>
+            {error || 'Package not found'}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2" 
+              onClick={() => fetchPackageDetails()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  const sortedVersions = [...packageData.versions].sort(
+    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+  )
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <Card className="border rounded-md shadow-sm">
-        <CardHeader className="flex items-center justify-between border-b p-4">
-          <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{packageData.name}</h1>
+            <p className="text-muted-foreground">{packageData.description}</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Badge variant={packageData.isActive ? 'default' : 'secondary'}>
+            {packageData.isActive ? 'Active' : 'Inactive'}
+          </Badge>
+          <Button variant="destructive" onClick={handleDeletePackage}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Package
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Package Info */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Package Information
+              </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <DetailBlock label="Name">{agent.name}</DetailBlock>
-              <DetailBlock label="Machine name"></DetailBlock>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <p className="text-sm text-muted-foreground">{packageData.name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <p className="text-sm text-muted-foreground">{packageData.description}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Created</label>
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {formatDate(packageData.createdAt)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Total Versions</label>
+                <p className="text-sm text-muted-foreground">{packageData.versions.length}</p>
             </div>
-            <div className="space-y-4">
-              <DetailBlock label="Status">
-                <Badge variant="outline" className={getStatusBadgeClass(agent.status)}>
-                  {agent.status}
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Badge variant={packageData.isActive ? 'default' : 'secondary'}>
+                  {packageData.isActive ? 'Active' : 'Inactive'}
                 </Badge>
-              </DetailBlock>
-              <DetailBlock label="Last Connected">
-                {/* {new Date(agent.lastConnected).toLocaleString()} */}
-              </DetailBlock>
-            </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
 
-// Block hiển thị label trên, value dưới, có border-b
-function DetailBlock({ label, children }: { label: string; children?: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
-      <div className="text-base font-medium pb-1 border-b">{children}</div>
+        {/* Versions List */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Package Versions
+                </div>
+                <Button size="sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload New Version
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sortedVersions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No versions uploaded yet
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sortedVersions.map((version, index) => (
+                    <div key={version.id}>
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={index === 0 ? 'default' : 'secondary'}>
+                                v{version.versionNumber}
+                              </Badge>
+                              {index === 0 && (
+                                <Badge variant="outline">Latest</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {version.fileName}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right text-sm">
+                            <div className="flex items-center text-muted-foreground">
+                              <HardDrive className="h-4 w-4 mr-1" />
+                              {formatFileSize(version.fileSize)}
+                            </div>
+                            <div className="flex items-center text-muted-foreground">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {formatDate(version.uploadedAt)}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDownloadVersion(version)}
+                              disabled={downloadingVersion === version.versionNumber}
+                            >
+                              {downloadingVersion === version.versionNumber ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteVersion(version)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      {index < sortedVersions.length - 1 && <Separator className="my-2" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
