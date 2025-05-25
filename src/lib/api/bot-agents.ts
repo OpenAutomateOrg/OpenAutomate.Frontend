@@ -31,6 +31,11 @@ export interface ODataResponse<T> {
   '@odata.nextLink'?: string
 }
 
+export interface UpdateBotAgentDto {
+  name?: string
+  machineName?: string
+}
+
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
   if (typeof window !== 'undefined') {
@@ -235,4 +240,16 @@ export const deactivateBotAgent = async (id: string): Promise<void> => {
 export const deleteBotAgent = async (id: string): Promise<void> => {
   const tenant = getCurrentTenant()
   await api.delete<void>(`${tenant}/api/agents/${id}`)
+}
+
+/**
+ * Update a bot agent
+ */
+export const updateBotAgent = async (
+  id: string,
+  data: UpdateBotAgentDto
+): Promise<BotAgentResponseDto> => {
+  const tenant = getCurrentTenant()
+  const response = await api.put<BotAgentResponseDto, UpdateBotAgentDto>(`${tenant}/api/agents/${id}`, data)
+  return response
 } 
