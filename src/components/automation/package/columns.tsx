@@ -1,14 +1,13 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-
+import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-
-import type { PackageRow } from './package'
+import { AutomationPackageResponseDto, PackageVersionResponseDto } from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import { DataTableRowActions } from './data-table-row-actions'
 
-export const columns: ColumnDef<PackageRow>[] = [
+export const columns: ColumnDef<AutomationPackageResponseDto>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -36,51 +35,15 @@ export const columns: ColumnDef<PackageRow>[] = [
   },
   {
     id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
-    header: 'Action',
+    cell: ({ row }) => <DataTableRowActions row={row} />,
+    header: 'Actions',
   },
   {
     accessorKey: 'name',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
       <div className="flex items-center">
-        <span>{row.getValue('name')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'version',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('version')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'toolVersion',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Tool version" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('toolVersion')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'createdDate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created date" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('createdDate')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('status')}</span>
+        <span className="font-medium">{row.getValue('name')}</span>
       </div>
     ),
   },
@@ -88,27 +51,73 @@ export const columns: ColumnDef<PackageRow>[] = [
     accessorKey: 'description',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
     cell: ({ row }) => (
-      <div className="flex items-center whitespace-pre-wrap max-w-sm">
-        <span>{row.getValue('description')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'releaseNote',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Release Note" />,
-    cell: ({ row }) => (
-      <div className="flex items-center whitespace-pre-wrap max-w-sm">
-        <span>{row.getValue('releaseNote')}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'createdBy',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created By" />,
-    cell: ({ row }) => (
       <div className="flex items-center">
-        <span>{row.getValue('createdBy')}</span>
+        <span className="max-w-md truncate" title={row.getValue('description') as string}>
+          {row.getValue('description')}
+        </span>
       </div>
     ),
+  },
+  {
+    accessorKey: 'versions',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Version" />,
+    cell: ({ row }) => {
+      const versions = row.getValue('versions') as PackageVersionResponseDto[]
+      const latestVersion = versions && versions.length > 0 
+        ? [...versions].sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0]
+        : null
+      
+      return (
+      <div className="flex items-center">
+          <Badge variant="secondary">
+            {latestVersion ? latestVersion.versionNumber : 'No versions'}
+          </Badge>
+      </div>
+      )
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'versions',
+    id: 'versionCount',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Version Count" />,
+    cell: ({ row }) => {
+      const versions = row.getValue('versions') as PackageVersionResponseDto[]
+      const count = versions ? versions.length : 0
+      
+      return (
+      <div className="flex items-center">
+          <span>{count}</span>
+      </div>
+      )
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'isActive',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell: ({ row }) => {
+      const isActive = row.getValue('isActive') as boolean
+      
+      return (
+      <div className="flex items-center">
+          <Badge variant={isActive ? 'default' : 'secondary'}>
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+      </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'createdAt',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
+    cell: ({ row }) => {
+      const date = new Date(row.getValue('createdAt') as string)
+      return (
+        <div className="flex items-center">
+          <span>{date.toLocaleDateString()}</span>
+      </div>
+      )
+  },
   },
 ]
