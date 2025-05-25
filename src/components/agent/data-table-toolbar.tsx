@@ -17,13 +17,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
-  statuses: { value: string; label: string }[] // Options for Status filter
-  onSearch?: (value: string) => void
-  onStatusChange?: (value: string) => void
-  searchValue?: string
-  isFiltering?: boolean
-  isPending?: boolean
+  readonly table: Table<TData>
+  readonly statuses: { value: string; label: string }[] // Options for Status filter
+  readonly onSearch?: (value: string) => void
+  readonly onStatusChange?: (value: string) => void
+  readonly searchValue?: string
+  readonly isFiltering?: boolean
+  readonly isPending?: boolean
 }
 
 export function DataTableToolbar<TData>({
@@ -121,11 +121,7 @@ export function DataTableToolbar<TData>({
                   onStatusChange(value)
                 } else {
                   // Fall back to direct table manipulation
-                  if (value === 'all') {
-                    table.getColumn('status')?.setFilterValue('')
-                  } else {
-                    table.getColumn('status')?.setFilterValue(value)
-                  }
+                  table.getColumn('status')?.setFilterValue(value === 'all' ? '' : value)
                 }
               }}
               value={(table.getColumn('status')?.getFilterValue() as string) || 'all'}
