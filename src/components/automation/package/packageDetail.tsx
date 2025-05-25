@@ -38,9 +38,7 @@ export default function PackageDetail() {
   const [packageData, setPackageData] = useState<AutomationPackageResponseDto | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)
-
-  // Fetch package details
+  const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)  // Fetch package details
   const fetchPackageDetails = useCallback(async () => {
     try {
       setLoading(true)
@@ -55,7 +53,7 @@ export default function PackageDetail() {
     } finally {
       setLoading(false)
     }
-  }, [packageId])
+  }, [packageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (packageId) {

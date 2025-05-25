@@ -9,61 +9,78 @@ interface ApiError {
 }
 
 /**
+ * Tries to parse JSON details from API error
+ */
+function parseApiErrorDetails(details: string): string | null {
+  try {
+    const parsedDetails = JSON.parse(details)
+    return parsedDetails.error || parsedDetails.message || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Extracts message from API error object
+ */
+function extractApiErrorMessage(apiError: ApiError): string {
+  if (apiError.details) {
+    const parsedMessage = parseApiErrorDetails(apiError.details)
+    if (parsedMessage) {
+      return parsedMessage
+    }
+    return apiError.details
+  }
+  return apiError.message || 'An error occurred'
+}
+
+/**
+ * Extracts message from generic object with error/message properties
+ */
+function extractObjectErrorMessage(errorObj: Record<string, unknown>): string | null {
+  if (errorObj.error && typeof errorObj.error === 'string') {
+    return errorObj.error
+  }
+  if (errorObj.message && typeof errorObj.message === 'string') {
+    return errorObj.message
+  }
+  return null
+}
+
+/**
+ * Checks if error is an API error object
+ */
+function isApiError(error: unknown): error is ApiError {
+  return typeof error === 'object' && error !== null && 'details' in error && 'status' in error
+}
+
+/**
  * Extracts a user-friendly error message from various error formats
  */
 export function extractErrorMessage(error: unknown): string {
-  // Handle null/undefined
   if (!error) {
     return 'An unexpected error occurred'
   }
 
-  // Handle string errors
   if (typeof error === 'string') {
     return error
   }
 
-  // Handle API errors from our client
-  if (typeof error === 'object' && 'details' in error && 'status' in error) {
-    const apiError = error as ApiError
-    
-    try {
-      // Try to parse the details as JSON (backend error response)
-      const parsedDetails = JSON.parse(apiError.details || '{}')
-      if (parsedDetails.error) {
-        return parsedDetails.error
-      }
-      if (parsedDetails.message) {
-        return parsedDetails.message
-      }
-    } catch {
-      // If parsing fails, use details as-is
-      if (apiError.details) {
-        return apiError.details
-      }
-    }
-    
-    return apiError.message || 'An error occurred'
+  if (isApiError(error)) {
+    return extractApiErrorMessage(error)
   }
 
-  // Handle standard Error objects
   if (error instanceof Error) {
     return error.message
   }
 
-  // Handle objects with error or message properties
   if (typeof error === 'object') {
-    const errorObj = error as Record<string, unknown>
-    
-    if (errorObj.error && typeof errorObj.error === 'string') {
-      return errorObj.error
-    }
-    
-    if (errorObj.message && typeof errorObj.message === 'string') {
-      return errorObj.message
+    const message = extractObjectErrorMessage(error as Record<string, unknown>)
+    if (message) {
+      return message
     }
   }
 
-  // Fallback
   return 'An unexpected error occurred'
 }
 
