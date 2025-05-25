@@ -4,6 +4,10 @@ import type { NextConfig } from 'next'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
 
 const nextConfig: NextConfig = {
+  i18n: {
+    locales: ['en', 'vi'],
+    defaultLocale: 'en',
+  },
   /* Public Website Configuration */
 
   // Disable dev indicators in development
