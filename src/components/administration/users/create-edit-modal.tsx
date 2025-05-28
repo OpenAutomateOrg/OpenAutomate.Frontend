@@ -37,13 +37,9 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
   const [linkCopied, setLinkCopied] = useState(false)
   const { toast } = useToast()
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
-
   const addEmail = () => {
     const trimmedValue = inputValue.trim().replace(/,$/, '')
-    if (trimmedValue && validateEmail(trimmedValue) && !emails.includes(trimmedValue)) {
+    if (trimmedValue && !emails.includes(trimmedValue)) {
       setEmails([...emails, trimmedValue])
       setInputValue('')
     }
@@ -139,14 +135,6 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                   }}
                   onPaste={(e) => {
                     e.preventDefault()
-                    const pastedText = e.clipboardData.getData('text')
-                    const pastedEmails = pastedText.split(/[,;\s]+/).filter(Boolean)
-
-                    pastedEmails.forEach((email) => {
-                      if (validateEmail(email) && !emails.includes(email)) {
-                        setEmails((prev) => [...prev, email])
-                      }
-                    })
                   }}
                   placeholder={
                     emails.length === 0 ? 'Type or paste email addresses and press Enter' : ''
