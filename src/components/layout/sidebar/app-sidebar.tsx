@@ -109,30 +109,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: createTenantUrl('/asset'),
       icon: FileKey2,
     },
+    {
+      title: 'Administration',
+      icon: Settings2,
+      items: [
+        {
+          title: 'Users',
+          url: createTenantUrl('/administration/users'),
+        },
+        {
+          title: 'Roles',
+          url: createTenantUrl('/administration/roles'),
+        },
+        {
+          title: 'Organization Unit',
+          url: createTenantUrl('/administration/organizationUnit'),
+        },
+        {
+          title: 'Licenses',
+          url: createTenantUrl('/administration/licenses'),
+        },
+      ],
+    },
   ]
 
   // Admin-only navigation items (system-level, not tenant-specific)
   const adminNavItems = [
     {
       title: 'Administration',
-      url: '/adminitration/users',
+      url: '/administration/users',
       icon: Settings2,
       items: [
         {
           title: 'Users',
-          url: '/adminitration/users',
+          url: '/administration/users',
         },
         {
           title: 'Roles',
-          url: '/adminitration/roles',
+          url: '/administration/roles',
         },
         {
           title: 'Organizations',
-          url: '/adminitration/Organizations',
+          url: '/administration/Organizations',
         },
         {
           title: 'Licenses',
-          url: '/adminitration/licenses',
+          url: '/administration/licenses',
         },
       ],
     },
