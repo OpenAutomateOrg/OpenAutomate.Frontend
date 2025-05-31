@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import { organizationInvitationsApi } from '@/lib/api/organization-invitations'
 import { useAuth } from '@/hooks/use-auth'
 
+type InvitationStatus = 'idle' | 'loading' | 'accepting' | 'success' | 'error' | 'wrong_email' | 'already_accepted'
+
 function getAcceptErrorMessage(err: unknown): { status: string, msg: string } | null {
     if (typeof err === 'object' && err !== null) {
         const errorObj = err as { message?: string; response?: { data?: { message?: string } }; status?: string };
@@ -33,10 +35,10 @@ interface AcceptPreconditionsContext {
     tenant: string;
     isAuthenticated: boolean;
     invitedEmail: string | null;
-    user: any;
-    setStatus: (s: any) => void;
-    setErrorMsg: (m: string) => void;
-    router: any;
+    user: { email?: string } | null;
+    setStatus: React.Dispatch<React.SetStateAction<InvitationStatus>>;
+    setErrorMsg: React.Dispatch<React.SetStateAction<string>>;
+    router: ReturnType<typeof useRouter>;
 }
 
 function validateAcceptPreconditions(ctx: AcceptPreconditionsContext): boolean {
@@ -58,7 +60,13 @@ function validateAcceptPreconditions(ctx: AcceptPreconditionsContext): boolean {
     return true;
 }
 
-function handleAcceptApiResult(res: any, user: any, setStatus: (s: any) => void, setInvitedEmail: (e: string) => void, setErrorMsg: (m: string) => void): boolean {
+function handleAcceptApiResult(
+    res: import('@/lib/api/organization-invitations').AcceptInvitationResponse,
+    user: { email?: string } | null,
+    setStatus: React.Dispatch<React.SetStateAction<InvitationStatus>>,
+    setInvitedEmail: React.Dispatch<React.SetStateAction<string | null>>,
+    setErrorMsg: React.Dispatch<React.SetStateAction<string>>
+): boolean {
     if (res?.success === true) {
         if (!res.invitedEmail || user?.email?.toLowerCase() === res.invitedEmail.toLowerCase()) {
             setStatus('success');
@@ -72,7 +80,12 @@ function handleAcceptApiResult(res: any, user: any, setStatus: (s: any) => void,
     return false;
 }
 
-function handleAcceptError(err: unknown, setStatus: (s: any) => void, setErrorMsg: (m: string) => void, setRetryCount: (cb: (prev: number) => number) => void) {
+function handleAcceptError(
+    err: unknown,
+    setStatus: React.Dispatch<React.SetStateAction<InvitationStatus>>,
+    setErrorMsg: React.Dispatch<React.SetStateAction<string>>,
+    setRetryCount: React.Dispatch<React.SetStateAction<number>>
+) {
     if (err instanceof Response) {
         err.json().then((data) => {
             if (data?.message) setErrorMsg(data.message);
@@ -83,7 +96,7 @@ function handleAcceptError(err: unknown, setStatus: (s: any) => void, setErrorMs
     }
     const errorResult = getAcceptErrorMessage(err);
     if (errorResult) {
-        setStatus(errorResult.status as 'idle' | 'loading' | 'accepting' | 'success' | 'error' | 'wrong_email' | 'already_accepted');
+        setStatus(errorResult.status as InvitationStatus);
         setErrorMsg(errorResult.msg);
         if (errorResult.status === 'wrong_email') return;
     } else {
@@ -100,7 +113,7 @@ export default function AcceptInvitationPage() {
     const tenant = params.tenant as string
     const token = searchParams.get('token')
     const { isAuthenticated, user, logout } = useAuth()
-    const [status, setStatus] = useState<'idle' | 'loading' | 'accepting' | 'success' | 'error' | 'wrong_email' | 'already_accepted'>('loading')
+    const [status, setStatus] = useState<InvitationStatus>('loading')
     const [errorMsg, setErrorMsg] = useState('')
     const [retryCount, setRetryCount] = useState(0)
     const [invitedEmail, setInvitedEmail] = useState<string | null>(null)
