@@ -28,6 +28,71 @@ function getAcceptErrorMessage(err: unknown): { status: string, msg: string } | 
     return null
 }
 
+interface AcceptPreconditionsContext {
+    token: string | null;
+    tenant: string;
+    isAuthenticated: boolean;
+    invitedEmail: string | null;
+    user: any;
+    setStatus: (s: any) => void;
+    setErrorMsg: (m: string) => void;
+    router: any;
+}
+
+function validateAcceptPreconditions(ctx: AcceptPreconditionsContext): boolean {
+    const { token, tenant, isAuthenticated, invitedEmail, user, setStatus, setErrorMsg, router } = ctx;
+    if (!token || !tenant) {
+        setStatus('error');
+        setErrorMsg('Invalid invitation link.');
+        return false;
+    }
+    if (!isAuthenticated) {
+        router.replace(`/login?returnUrl=/${tenant}/invitation/accept?token=${token}`);
+        return false;
+    }
+    if (invitedEmail && user?.email?.toLowerCase() !== invitedEmail.toLowerCase()) {
+        setStatus('wrong_email');
+        setErrorMsg(`You are currently logged in as ${user?.email}, but this invitation was sent to ${invitedEmail}.`);
+        return false;
+    }
+    return true;
+}
+
+function handleAcceptApiResult(res: any, user: any, setStatus: (s: any) => void, setInvitedEmail: (e: string) => void, setErrorMsg: (m: string) => void): boolean {
+    if (res?.success === true) {
+        if (!res.invitedEmail || user?.email?.toLowerCase() === res.invitedEmail.toLowerCase()) {
+            setStatus('success');
+        } else {
+            setStatus('wrong_email');
+            setInvitedEmail(res.invitedEmail);
+            setErrorMsg(`You are currently logged in as ${user?.email}, but this invitation was sent to ${res.invitedEmail}.`);
+        }
+        return true;
+    }
+    return false;
+}
+
+function handleAcceptError(err: unknown, setStatus: (s: any) => void, setErrorMsg: (m: string) => void, setRetryCount: (cb: (prev: number) => number) => void) {
+    if (err instanceof Response) {
+        err.json().then((data) => {
+            if (data?.message) setErrorMsg(data.message);
+        }).catch(() => { });
+        setRetryCount(prev => prev + 1);
+        setStatus('error');
+        return;
+    }
+    const errorResult = getAcceptErrorMessage(err);
+    if (errorResult) {
+        setStatus(errorResult.status as 'idle' | 'loading' | 'accepting' | 'success' | 'error' | 'wrong_email' | 'already_accepted');
+        setErrorMsg(errorResult.msg);
+        if (errorResult.status === 'wrong_email') return;
+    } else {
+        setStatus('error');
+        setErrorMsg('Failed to accept invitation.');
+    }
+    setRetryCount(prev => prev + 1);
+}
+
 export default function AcceptInvitationPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -98,63 +163,16 @@ export default function AcceptInvitationPage() {
     }, [token, tenant, isAuthenticated, user, retryCount]);
 
     const handleAccept = async () => {
-        if (!token || !tenant) {
-            setStatus('error');
-            setErrorMsg('Invalid invitation link.');
-            return;
-        }
-        if (!isAuthenticated) {
-            // Redirect to login with properly formatted returnUrl
-            router.replace(`/login?returnUrl=/${tenant}/invitation/accept?token=${token}`);
-            return;
-        }
-
-        // Double check if the current user's email matches the invited email
-        if (invitedEmail && user?.email?.toLowerCase() !== invitedEmail.toLowerCase()) {
-            setStatus('wrong_email');
-            setErrorMsg(`You are currently logged in as ${user?.email}, but this invitation was sent to ${invitedEmail}.`);
-            return;
-        }
-
+        if (!validateAcceptPreconditions({ token, tenant, isAuthenticated, invitedEmail, user, setStatus, setErrorMsg, router })) return;
         setStatus('accepting');
         try {
-            const res = await organizationInvitationsApi.acceptInvitation(tenant, token);
-            if (res?.success === true) {
-                if (!res.invitedEmail || user?.email?.toLowerCase() === res.invitedEmail.toLowerCase()) {
-                    setStatus('success');
-                } else {
-                    setStatus('wrong_email');
-                    setInvitedEmail(res.invitedEmail);
-                    setErrorMsg(`You are currently logged in as ${user?.email}, but this invitation was sent to ${res.invitedEmail}.`);
-                }
-            } else {
-                setRetryCount(prev => prev + 1);
-                setStatus('error');
-                setErrorMsg('Failed to accept invitation. Please try again.');
-            }
-        } catch (err: unknown) {
-            console.error('Accept invitation error:', err);
-            if (err instanceof Response) {
-                try {
-                    const data = await err.json();
-                    if (data?.message) {
-                        setErrorMsg(data.message);
-                    }
-                } catch { }
-                setRetryCount(prev => prev + 1);
-                setStatus('error');
-                return;
-            }
-            const errorResult = getAcceptErrorMessage(err);
-            if (errorResult) {
-                setStatus(errorResult.status as typeof status);
-                setErrorMsg(errorResult.msg);
-                if (errorResult.status === 'wrong_email') return;
-            } else {
-                setStatus('error');
-                setErrorMsg('Failed to accept invitation.');
-            }
+            const res = await organizationInvitationsApi.acceptInvitation(tenant, token as string);
+            if (handleAcceptApiResult(res, user, setStatus, setInvitedEmail, setErrorMsg)) return;
             setRetryCount(prev => prev + 1);
+            setStatus('error');
+            setErrorMsg('Failed to accept invitation. Please try again.');
+        } catch (err) {
+            handleAcceptError(err, setStatus, setErrorMsg, setRetryCount);
         }
     };
 

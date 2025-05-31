@@ -36,6 +36,14 @@ export interface CheckTokenResponse {
     organizationUnitId: string
 }
 
+function parseAcceptInvitationError(err: unknown): { success: true } | never {
+    const errorObj = err as { status?: number; message?: string; response?: { data?: { message?: string } } };
+    if (errorObj?.status === 409) return { success: true };
+    if (errorObj?.response?.data?.message) throw new Error(errorObj.response.data.message);
+    if (errorObj?.message) throw new Error(errorObj.message);
+    throw new Error('Failed to accept invitation.');
+}
+
 /**
  * Organization invitations API
  */
@@ -67,34 +75,11 @@ export const organizationInvitationsApi = {
                 `${tenant}/api/organization-invitations/accept`,
                 { token }
             );
-            if (!response) {
-                throw new Error('Empty response received');
-            }
-            if (typeof response.success === 'undefined') {
-                return { success: true };
-            }
+            if (!response) throw new Error('Empty response received');
+            if (typeof response.success === 'undefined') return { success: true };
             return response;
-        } catch (err: unknown) {
-            console.error('Invitation accept error:', err);
-            const errorObj = err as { status?: number; message?: string; response?: { data?: { message?: string } } };
-            if (errorObj?.status === 409) {
-                return { success: true };
-            }
-            if (errorObj && typeof errorObj === 'object' && errorObj.message) {
-                if (typeof errorObj.message === 'string') {
-                    throw new Error(errorObj.message);
-                }
-            }
-            if (errorObj?.response?.data?.message) {
-                throw new Error(errorObj.response.data.message);
-            }
-            if (err instanceof Response) {
-                try {
-                    const data = await err.json();
-                    if (data?.message) throw new Error(data.message);
-                } catch { }
-            }
-            throw new Error(errorObj?.message ?? 'Failed to accept invitation.');
+        } catch (err) {
+            return parseAcceptInvitationError(err);
         }
     },
 
