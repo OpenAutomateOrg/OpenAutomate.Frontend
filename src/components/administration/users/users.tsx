@@ -6,7 +6,7 @@ import { columns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState } from 'react'
-import { CreateEditModal } from './create-edit-modal'
+import { InviteModal } from './invite-modal'
 
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
@@ -268,34 +268,32 @@ export default function UsersInterface() {
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
-        <>
-          <div className="flex justify-end gap-2">
-            <Button
-              onClick={() => {
-                setIsModalOpen(true)
-              }}
-              className="flex items-center justify-center"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create
-            </Button>
-          </div>
-          <DataTableToolbar
-            table={table}
-            statuses={[
-              { value: 'Completed', label: 'Completed' },
-              { value: 'Failed', label: 'Failed' },
-            ]}
-          />
-          <DataTable
-            data={data.filter((d) => d.state === 'Completed' || d.state === 'Failed')}
-            columns={columns}
-            onRowClick={handleRowClick}
-            table={table}
-          />
-        </>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => {
+              setIsModalOpen(true)
+            }}
+            className="flex items-center justify-center"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Invite User
+          </Button>
+        </div>
+        <DataTableToolbar
+          table={table}
+          statuses={[
+            { value: 'Completed', label: 'Completed' },
+            { value: 'Failed', label: 'Failed' },
+          ]}
+        />
+        <DataTable
+          data={data.filter((d) => d.state === 'Completed' || d.state === 'Failed')}
+          columns={columns}
+          onRowClick={handleRowClick}
+          table={table}
+        />
       </div>
-      <CreateEditModal
+      <InviteModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false)

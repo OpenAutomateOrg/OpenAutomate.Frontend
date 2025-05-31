@@ -45,7 +45,13 @@ const createApiError = async (response: Response): Promise<ApiError> => {
   try {
     // Try to parse error details from response
     const errorBody = await response.json()
-    errorData.details = errorBody.message || JSON.stringify(errorBody)
+
+    if (errorBody.message) {
+      errorData.message = errorBody.message
+      errorData.details = errorBody.message
+    } else {
+      errorData.details = JSON.stringify(errorBody)
+    }
   } catch {
     // If parsing fails, use status text
     errorData.details = response.statusText
@@ -67,6 +73,11 @@ const notifyTokenExpired = (): void => {
  * Handle network errors
  */
 const handleNetworkError = (error: unknown): never => {
+  // If it's already an ApiError (from our code), just rethrow it
+  if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+    throw error;
+  }
+
   if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
     const apiError: ApiError = {
       message: 'Network error. Please check your connection.',
@@ -75,6 +86,17 @@ const handleNetworkError = (error: unknown): never => {
     }
     throw apiError
   }
+
+  // For Error objects, preserve the message
+  if (error instanceof Error) {
+    const apiError: ApiError = {
+      message: error.message,
+      status: 0,
+      details: error.stack,
+    }
+    throw apiError
+  }
+
   throw error
 }
 
@@ -145,10 +167,10 @@ const handle401Response = async <T>(
     // Prepare the retry request properly with the new token
     const retryHeaders = prepareHeaders(options, data)
     retryHeaders.Authorization = `Bearer ${newToken}`
-    
+
     // Use the same body preparation logic to avoid ArrayBuffer issues
     const { body } = prepareRequestBody(data)
-    
+
     const retriedResponse = await fetch(url, {
       ...options,
       body, // Use properly prepared body
@@ -189,15 +211,15 @@ const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: 
 
   // Handle FormData - don't stringify and don't set any headers (browser will handle)
   if (data instanceof FormData) {
-    return { 
-      body: data as BodyInit, 
+    return {
+      body: data as BodyInit,
       headers: {} // No headers needed, browser will set multipart/form-data with boundary
     }
   }
 
   // Handle regular objects - stringify as JSON and set Content-Type
-  return { 
-    body: JSON.stringify(data), 
+  return {
+    body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json'
     }
@@ -210,10 +232,10 @@ const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: 
 const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, string> => {
   // Start with default headers, but exclude Content-Type if we're sending FormData
   const shouldExcludeContentType = data instanceof FormData
-  const baseHeaders = shouldExcludeContentType 
+  const baseHeaders = shouldExcludeContentType
     ? { Accept: defaultHeaders.Accept } // Only include Accept header for FormData
     : { ...defaultHeaders }
-  
+
   const headers = { ...baseHeaders, ...options.headers } as Record<string, string>
 
   if (!headers.Authorization) {
@@ -255,8 +277,16 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, d
 
     // For all other error responses, create and throw an API error
     const errorData = await createApiError(response)
+
+    // Log error for debugging
+    console.error(`API Error [${response.status}]:`, errorData.message);
+
     throw errorData
   } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+      // Nếu đã là ApiError, trả về ngay
+      throw error;
+    }
     return handleNetworkError(error)
   }
 }
@@ -270,7 +300,7 @@ export const api = {
 
   post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
-    
+
     return fetchApi<T>(endpoint, {
       ...options,
       method: 'POST',
@@ -284,7 +314,7 @@ export const api = {
 
   put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
-    
+
     return fetchApi<T>(endpoint, {
       ...options,
       method: 'PUT',
@@ -298,7 +328,7 @@ export const api = {
 
   patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
-    
+
     return fetchApi<T>(endpoint, {
       ...options,
       method: 'PATCH',

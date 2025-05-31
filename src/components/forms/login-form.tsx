@@ -38,13 +38,16 @@ export function LoginForm() {
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, error: authError } = useAuth()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
 
   // Check for return URL or expired token
   const returnUrl = searchParams.get('returnUrl') ?? config.paths.auth.organizationSelector
   const isExpired = searchParams.get('expired') === 'true'
+
+  // Check if this is coming from an invitation
+  const isInvitation = returnUrl?.includes('/invitation/accept')
 
   // Show expired token message if needed
   React.useEffect(() => {
@@ -72,12 +75,25 @@ export function LoginForm() {
       await login({
         email: data.email,
         password: data.password,
-        rememberMe: data.rememberMe,
       })
-      router.push(returnUrl)
-    } catch (err: unknown) {
-      console.error('Login failed', err)
-      setError(err instanceof Error ? err.message : (authError ?? 'Invalid email or password'))
+
+      // If this login is from an invitation, redirect to the invitation page
+      if (isInvitation) {
+        router.push(returnUrl)
+        return
+      }
+
+      // Normal redirect if not from invitation
+      if (returnUrl && !isInvitation) {
+        router.push(returnUrl)
+      } else {
+        router.push('/tenant-selector') // Default redirect to tenant selector
+      }
+    } catch (error: unknown) {
+      console.error('Login failed', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Login failed. Please try again.'
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
