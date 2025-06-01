@@ -10,7 +10,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { useParams } from 'next/navigation'
-import { organizationInvitationsApi } from '@/lib/api/organization-invitations'
+import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
 
 interface InviteModalProps {
     readonly isOpen: boolean
@@ -62,7 +62,9 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
             }
             toast({
                 title: 'Failed to send invitation',
-                description: errorMsg || 'An unknown error occurred',
+                description: errorMsg?.includes('already a member of this organization')
+                    ? 'This user is already a member of this organization.'
+                    : (errorMsg || 'An unknown error occurred'),
                 variant: 'destructive',
             })
         } finally {

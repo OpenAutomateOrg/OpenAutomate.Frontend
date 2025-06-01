@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { organizationInvitationsApi } from '@/lib/api/organization-invitations'
+import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
 import { useAuth } from '@/hooks/use-auth'
 
 type InvitationStatus = 'idle' | 'loading' | 'accepting' | 'success' | 'error' | 'wrong_email' | 'already_accepted'
@@ -61,7 +61,7 @@ function validateAcceptPreconditions(ctx: AcceptPreconditionsContext): boolean {
 }
 
 function handleAcceptApiResult(
-    res: import('@/lib/api/organization-invitations').AcceptInvitationResponse,
+    res: import('@/lib/api/organization-unit-invitations').AcceptInvitationResponse,
     user: { email?: string } | null,
     setStatus: React.Dispatch<React.SetStateAction<InvitationStatus>>,
     setInvitedEmail: React.Dispatch<React.SetStateAction<string | null>>,

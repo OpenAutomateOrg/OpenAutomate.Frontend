@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { organizationInvitationsApi } from '@/lib/api/organization-invitations'
+import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
 
 // Form validation schema
 const formSchema = z

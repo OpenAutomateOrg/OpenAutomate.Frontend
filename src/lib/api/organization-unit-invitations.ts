@@ -57,7 +57,7 @@ export const organizationInvitationsApi = {
      */
     inviteUser: async (tenant: string, email: string): Promise<OrganizationInvitationResponse> => {
         return api.post<OrganizationInvitationResponse>(
-            `${tenant}/api/organization-invitations`,
+            `${tenant}/api/organization-unit-invitation`,
             { email }
         )
     },
@@ -72,7 +72,7 @@ export const organizationInvitationsApi = {
     acceptInvitation: async (tenant: string, token: string): Promise<AcceptInvitationResponse> => {
         try {
             const response = await api.post<AcceptInvitationResponse>(
-                `${tenant}/api/organization-invitations/accept`,
+                `${tenant}/api/organization-unit-invitation/accept`,
                 { token }
             );
             if (!response) throw new Error('Empty response received');
@@ -91,7 +91,7 @@ export const organizationInvitationsApi = {
      */
     checkInvitation: async (tenant: string, email: string): Promise<{ invited: boolean, status?: string }> => {
         return api.get<{ invited: boolean, status?: string }>(
-            `${tenant}/api/organization-invitations/check?email=${encodeURIComponent(email)}`
+            `${tenant}/api/organization-unit-invitation/check?email=${encodeURIComponent(email)}`
         )
     },
 
@@ -105,7 +105,7 @@ export const organizationInvitationsApi = {
     checkInvitationToken: async (tenant: string, token: string): Promise<CheckTokenResponse> => {
         try {
             return await api.get<CheckTokenResponse>(
-                `${tenant}/api/organization-invitations/check-token?token=${encodeURIComponent(token)}`
+                `${tenant}/api/organization-unit-invitation/check-token?token=${encodeURIComponent(token)}`
             );
         } catch (err: unknown) {
             console.error('Error checking invitation token:', err);
