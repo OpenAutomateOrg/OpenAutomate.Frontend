@@ -123,7 +123,7 @@ export default function ExecutionsInterface() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Load executions data on component mount
   useEffect(() => {

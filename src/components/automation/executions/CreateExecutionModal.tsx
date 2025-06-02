@@ -90,7 +90,7 @@ export default function CreateExecutionModal({
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Load packages and agents when modal opens
   useEffect(() => {
@@ -106,59 +106,111 @@ export default function CreateExecutionModal({
     }
   }, [selectedPackageId, form])
 
+  // Helper function to validate agent
+  const validateAgent = (agentId: string): BotAgentResponseDto | null => {
+    const selectedAgent = agents.find(a => a.id === agentId)
+
+    if (!selectedAgent) {
+      toast({
+        variant: 'destructive',
+        title: 'Agent Not Found',
+        description: 'Selected agent not found',
+      })
+      return null
+    }
+
+    if (selectedAgent.status === 'Disconnected') {
+      toast({
+        variant: 'destructive',
+        title: 'Agent Disconnected',
+        description: 'Selected agent is disconnected and cannot execute packages',
+      })
+      return null
+    }
+
+    // Warn if agent is busy but still allow execution
+    if (selectedAgent.status === 'Busy') {
+      toast({
+        title: 'Agent Busy',
+        description: 'Selected agent is currently busy. The execution will be queued.',
+      })
+    }
+
+    return selectedAgent
+  }
+
+  // Helper function to validate package and version
+  const validatePackageAndVersion = (packageId: string, version: string) => {
+    const selectedPackage = packages.find(p => p.id === packageId)
+    const selectedVersion = selectedPackage?.versions.find(v => v.versionNumber === version)
+
+    if (!selectedPackage || !selectedVersion) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Selection',
+        description: 'Invalid package or version selected',
+      })
+      return null
+    }
+
+    if (!selectedVersion.isActive) {
+      toast({
+        variant: 'destructive',
+        title: 'Version Inactive',
+        description: 'Selected package version is not active',
+      })
+      return null
+    }
+
+    return { selectedPackage, selectedVersion }
+  }
+
+  // Helper function to handle execution errors
+  const handleExecutionError = (error: unknown) => {
+    console.error('Error triggering execution:', error)
+
+    if (error && typeof error === 'object' && 'response' in error) {
+      const httpError = error as { response?: { status?: number } }
+      const status = httpError.response?.status
+
+      if (status === 403) {
+        toast({
+          variant: 'destructive',
+          title: 'Permission Denied',
+          description: 'You do not have permission to create executions',
+        })
+      } else if (status === 404) {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: 'Selected package or agent not found',
+        })
+      } else if (status === 400) {
+        toast({
+          variant: 'destructive',
+          title: 'Agent Busy',
+          description: 'Agent is currently busy with another execution',
+        })
+      } else {
+        toast(createErrorToast(error))
+      }
+    } else {
+      toast(createErrorToast(error))
+    }
+  }
+
   const onSubmit = async (data: CreateExecutionFormData) => {
     setIsSubmitting(true)
     try {
-      // Validate agent status
-      const selectedAgent = agents.find(a => a.id === data.botAgentId)
-      if (!selectedAgent) {
-        toast({
-          variant: 'destructive',
-          title: 'Agent Not Found',
-          description: 'Selected agent not found',
-        })
-        return
-      }
+      // Validate agent
+      const validatedAgent = validateAgent(data.botAgentId)
+      if (!validatedAgent) return
 
-      if (selectedAgent.status === 'Disconnected') {
-        toast({
-          variant: 'destructive',
-          title: 'Agent Disconnected',
-          description: 'Selected agent is disconnected and cannot execute packages',
-        })
-        return
-      }
+      // Validate package and version
+      const validation = validatePackageAndVersion(data.packageId, data.version)
+      if (!validation) return
 
-      // Warn if agent is busy but still allow execution
-      if (selectedAgent.status === 'Busy') {
-        toast({
-          title: 'Agent Busy',
-          description: 'Selected agent is currently busy. The execution will be queued.',
-        })
-      }
-
-      // Validate package and version exist
-      const selectedPackage = packages.find(p => p.id === data.packageId)
-      const selectedVersion = selectedPackage?.versions.find(v => v.versionNumber === data.version)
-      
-      if (!selectedPackage || !selectedVersion) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid Selection',
-          description: 'Invalid package or version selected',
-        })
-        return
-      }
-
-      // Check if package version is active
-      if (!selectedVersion.isActive) {
-        toast({
-          variant: 'destructive',
-          title: 'Version Inactive',
-          description: 'Selected package version is not active',
-        })
-        return
-      }
+      const { selectedPackage } = validation
 
       const executionData: TriggerExecutionDto = {
         botAgentId: data.botAgentId,
@@ -168,7 +220,7 @@ export default function CreateExecutionModal({
       }
 
       const result = await triggerExecution(executionData)
-      
+
       toast({
         title: 'Execution Started',
         description: `Execution started successfully (ID: ${result.id.substring(0, 8)}...)`,
@@ -177,35 +229,7 @@ export default function CreateExecutionModal({
       onClose()
       onSuccess?.()
     } catch (error: unknown) {
-      console.error('Error triggering execution:', error)
-
-      // Handle specific error types
-      if (error && typeof error === 'object' && 'response' in error) {
-        const httpError = error as { response?: { status?: number } }
-        if (httpError.response?.status === 403) {
-          toast({
-            variant: 'destructive',
-            title: 'Permission Denied',
-            description: 'You do not have permission to create executions',
-          })
-        } else if (httpError.response?.status === 404) {
-          toast({
-            variant: 'destructive',
-            title: 'Not Found',
-            description: 'Selected package or agent not found',
-          })
-        } else if (httpError.response?.status === 400) {
-          toast({
-            variant: 'destructive',
-            title: 'Agent Busy',
-            description: 'Agent is currently busy with another execution',
-          })
-        } else {
-          toast(createErrorToast(error))
-        }
-      } else {
-        toast(createErrorToast(error))
-      }
+      handleExecutionError(error)
     } finally {
       setIsSubmitting(false)
     }
