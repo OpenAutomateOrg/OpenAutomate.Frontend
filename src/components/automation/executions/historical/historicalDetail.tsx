@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ExcutionsRow } from '../excutions'
+import { ExecutionsRow } from '../executions'
 
-interface ExcutionDetailProps {
+interface ExecutionDetailProps {
   id: string
 }
 
@@ -19,13 +19,13 @@ const getStatusBadgeClass = (status: string) => {
   return 'bg-green-100 text-green-600 border-none'
 }
 
-export default function ExcutionDetail({ id }: ExcutionDetailProps) {
+export default function HistoricalDetail({ id }: ExecutionDetailProps) {
   const router = useRouter()
-  const [agent, setExcution] = useState<ExcutionsRow | null>(null)
+  const [execution, setExecution] = useState<ExecutionsRow | null>(null)
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    const mockExcution: ExcutionsRow = {
+    // Mock data - replace with actual API call
+    const mockExecution: ExecutionsRow = {
       id,
       name: 'Excution 2',
       label: 'Excution Label',
@@ -36,14 +36,14 @@ export default function ExcutionDetail({ id }: ExcutionDetailProps) {
       status: 'Disconnected',
       //   lastConnected: '2023-10-15T14:30:00Z',
     }
-    setExcution(mockExcution)
+    setExecution(mockExecution)
   }, [id])
 
   const handleBack = () => {
     router.back()
   }
 
-  if (!agent) {
+  if (!execution) {
     return <div>Loading...</div>
   }
 
@@ -59,17 +59,17 @@ export default function ExcutionDetail({ id }: ExcutionDetailProps) {
         <CardContent className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <DetailBlock label="Name">{agent.name}</DetailBlock>
+              <DetailBlock label="Name">{execution.name}</DetailBlock>
               <DetailBlock label="Machine name"></DetailBlock>
             </div>
             <div className="space-y-4">
               <DetailBlock label="Status">
-                <Badge variant="outline" className={getStatusBadgeClass(agent.status)}>
-                  {agent.status}
+                <Badge variant="outline" className={getStatusBadgeClass(execution.status)}>
+                  {execution.status}
                 </Badge>
               </DetailBlock>
               <DetailBlock label="Last Connected">
-                {/* {new Date(agent.lastConnected).toLocaleString()} */}
+                {/* {new Date(execution.lastConnected).toLocaleString()} */}
               </DetailBlock>
             </div>
           </div>
