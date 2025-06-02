@@ -266,7 +266,7 @@ export default function ScheduleInterface() {
   const handleRowClick = (row: ScheduleRow) => {
     const pathname = window.location.pathname
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/excutions/${row.id}` : `/[tenant]/excutions/${row.id}`
+    const route = isAdmin ? `/admin/executions/${row.id}` : `/[tenant]/executions/${row.id}`
     router.push(route)
   }
 

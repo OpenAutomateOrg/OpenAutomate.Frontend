@@ -68,8 +68,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Cog,
       items: [
         {
-          title: 'Excutions',
-          url: createTenantUrl('/automation/excutions'),
+          title: 'Executions',
+          url: createTenantUrl('/automation/executions'),
         },
         {
           title: 'Schedule',
