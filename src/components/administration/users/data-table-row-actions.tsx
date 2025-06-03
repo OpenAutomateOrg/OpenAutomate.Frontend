@@ -14,7 +14,7 @@ import {
 import type { UsersRow } from './users'
 
 interface DataTableRowActionsProps {
-  row: Row<UsersRow>
+  readonly row: Row<UsersRow>
 }
 
 export default function DataTableRowAction({ row }: DataTableRowActionsProps) {

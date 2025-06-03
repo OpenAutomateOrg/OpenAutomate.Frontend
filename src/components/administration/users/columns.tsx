@@ -37,7 +37,7 @@ export const columns: ColumnDef<UsersRow>[] = [
   {
     id: 'actions',
     header: 'Action',
-    cell: () => <span>{/* TODO: Action buttons here */}</span>,
+    cell: () => <span></span>,
   },
   {
     accessorKey: 'email',
