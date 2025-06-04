@@ -12,6 +12,9 @@ import { z } from 'zod'
 import { useParams } from 'next/navigation'
 import { OrganizationUnitUser, getOrganizationUnitUsersWithOData } from '@/lib/api/organization-unit-user'
 import { UsersDataTableToolbar } from './data-table-toolbar'
+import DataTableRowAction from './data-table-row-actions'
+import { Pagination } from '@/components/ui/pagination'
+import type { Row } from '@tanstack/react-table'
 
 export const usersSchema = z.object({
   email: z.string(),
@@ -22,6 +25,7 @@ export const usersSchema = z.object({
 })
 
 export type UsersRow = {
+  userId: string
   email: string
   firstName: string
   lastName: string
@@ -57,6 +61,10 @@ export default function UsersInterface() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tab, setTab] = useState<'user' | 'invitation'>('user')
 
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
   // Debounced filter values
   const debouncedEmail = useDebounce(searchEmail, 400)
   const debouncedFirstName = useDebounce(searchFirstName, 400)
@@ -66,16 +74,17 @@ export default function UsersInterface() {
   // Map API user to table row
   function mapOrganizationUnitUserToUsersRow(user: OrganizationUnitUser) {
     return {
+      userId: user.userId,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       roles: user.role,
-      joinedAt: new Date(user.joinedAt).toISOString().replace('T', ' ').slice(0, 16),
+      joinedAt: new Date(user.joinedAt).toISOString().replace('T', ' ').slice(0, 10),
     }
   }
 
   // Fetch users with OData filter (debounced)
-  useEffect(() => {
+  const fetchUsers = () => {
     setLoading(true)
     const filters: string[] = []
     if (debouncedEmail) filters.push(`contains(tolower(email),'${debouncedEmail.toLowerCase()}')`)
@@ -84,12 +93,34 @@ export default function UsersInterface() {
     if (debouncedRole && debouncedRole !== ALL_ROLES) filters.push(`tolower(role) eq '${debouncedRole.toLowerCase()}'`)
     const odataOptions = {
       $filter: filters.length > 0 ? filters.join(' and ') : undefined,
+      $top: pageSize,
+      $skip: pageIndex * pageSize,
+      $count: true,
     }
     getOrganizationUnitUsersWithOData(odataOptions)
-      .then(res => setUsers(res.value))
+      .then(res => {
+        setUsers(res.value)
+        setTotalCount(res['@odata.count'] ?? res.value.length)
+      })
       .catch(() => setError('Failed to load users'))
       .finally(() => setLoading(false))
-  }, [tenant, debouncedEmail, debouncedFirstName, debouncedLastName, debouncedRole])
+  }
+
+  useEffect(() => {
+    fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant, debouncedEmail, debouncedFirstName, debouncedLastName, debouncedRole, pageIndex, pageSize])
+
+  const columnsWithAction = columns.map(col =>
+    col.id === 'actions'
+      ? {
+        ...col,
+        cell: ({ row }: { row: Row<UsersRow> }) => (
+          <DataTableRowAction row={row} onDeleted={fetchUsers} />
+        ),
+      }
+      : col
+  )
 
   return (
     <>
@@ -141,7 +172,20 @@ export default function UsersInterface() {
               <PlusCircle className="mr-2 h-4 w-4" /> Invite User
             </Button>
           </div>
-          <DataTable columns={columns} data={users.map(mapOrganizationUnitUserToUsersRow)} isLoading={loading} />
+          <DataTable
+            columns={columnsWithAction}
+            data={users.map(mapOrganizationUnitUserToUsersRow)}
+            isLoading={loading}
+            totalCount={totalCount}
+          />
+          <Pagination
+            currentPage={pageIndex + 1}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
+            onPageChange={page => setPageIndex(page - 1)}
+            onPageSizeChange={setPageSize}
+          />
           {error && <div className="text-red-500">{error}</div>}
           <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
         </div>

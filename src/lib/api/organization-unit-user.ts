@@ -78,4 +78,8 @@ export const organizationUnitUserApi = {
         const res = await api.get<OrganizationUnitUserResponse>(`/api/ou/${tenant}/users`)
         return res.users
     },
+}
+export const deleteOrganizationUnitUser = async (userId: string): Promise<void> => {
+    const tenant = getCurrentTenant()
+    await api.delete<void>(`/api/ou/${tenant}/users/${userId}`)
 } 

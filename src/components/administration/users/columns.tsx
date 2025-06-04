@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 import type { UsersRow } from './users'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
 export const columns: ColumnDef<UsersRow>[] = [
   {
@@ -37,7 +37,7 @@ export const columns: ColumnDef<UsersRow>[] = [
   {
     id: 'actions',
     header: 'Action',
-    cell: () => <span></span>,
+    cell: ({ row }) => <DataTableRowAction row={row} />,
   },
   {
     accessorKey: 'email',
