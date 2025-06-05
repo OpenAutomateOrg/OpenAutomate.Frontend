@@ -72,6 +72,7 @@ export default function CreateExecutionModal({
   const selectedPackageId = form.watch('packageId')
   const selectedPackage = packages.find(p => p.id === selectedPackageId)
   const availableVersions = selectedPackage?.versions || []
+
   const loadData = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -89,7 +90,7 @@ export default function CreateExecutionModal({
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Load packages and agents when modal opens
   useEffect(() => {
