@@ -109,7 +109,6 @@ export default function ExecutionsInterface() {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
-
   const loadExecutions = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -123,7 +122,7 @@ export default function ExecutionsInterface() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [toast])
 
   // Load executions data on component mount
   useEffect(() => {
