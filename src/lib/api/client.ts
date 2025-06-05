@@ -253,11 +253,18 @@ const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, st
  */
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, data?: unknown): Promise<T> {
   const url = getFullUrl(endpoint)
-  const headers = prepareHeaders(options, data)
+  
+  // Prepare body and headers based on data
+  const { body, headers: bodyHeaders } = prepareRequestBody(data)
+  const headers = {
+    ...prepareHeaders(options, data),
+    ...bodyHeaders, // bodyHeaders will override if there's a Content-Type conflict
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
+      body, // Use the prepared body
       headers,
       credentials: 'include', // Include cookies for authentication
     })

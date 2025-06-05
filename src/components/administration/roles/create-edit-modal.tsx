@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,100 +11,418 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Textarea } from '@/components/ui/textarea'
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Trash2 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+import { 
+  rolesApi, 
+  PermissionLevels, 
+  getPermissionDescription,
+  isValidPermissionLevel,
+  type AvailableResourceDto,
+  type CreateRoleDto,
+  type UpdateRoleDto 
+} from '@/lib/api/roles'
+import type { RolesRow } from './roles'
 
-interface ItemModalProps {
+interface CreateEditModalProps {
   isOpen: boolean
-  onClose: () => void
+  onClose: (shouldReload?: boolean) => void
+  editingRole?: RolesRow | null
 }
 
-const resources = [
-  'ADMIN RESOURCE',
-  'ENVIRONMENT RESOURCE',
-  'ROBOT RESOURCE',
-  'PACKAGE RESOURCE',
-  'WORKFLOW RESOURCE',
-  'JOB RESOURCE',
-  'SCHEDULE RESOURCE',
-]
+interface ResourcePermission {
+  resourceName: string
+  permission: number
+  displayName: string
+}
 
-const permissions = ['none', 'read', 'write', 'admin'] as const
-
-export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
+export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModalProps) {
+  const { toast } = useToast()
+  
+  // Form state
   const [roleName, setRoleName] = useState('')
+  const [roleDescription, setRoleDescription] = useState('')
+  const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Available resources from API
+  const [availableResources, setAvailableResources] = useState<AvailableResourceDto[]>([])
+  const [loadingResources, setLoadingResources] = useState(false)
+  
+  // Resource selection state
+  const [selectedResource, setSelectedResource] = useState('')
+  const [selectedPermission, setSelectedPermission] = useState('')
 
-  const [resourcePermissions, setResourcePermissions] = useState<
-    Record<string, (typeof permissions)[number]>
-  >(resources.reduce((acc, r) => ({ ...acc, [r]: 'none' }), {}))
+  // Load available resources when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadAvailableResources()
+    }
+  }, [isOpen])
 
-  const handlePermissionChange = (resource: string, value: string) => {
-    setResourcePermissions((prev) => ({
-      ...prev,
-      [resource]: value as (typeof permissions)[number],
-    }))
+  // Populate form when editing a role
+  useEffect(() => {
+    if (editingRole) {
+      setRoleName(editingRole.name)
+      setRoleDescription(editingRole.description)
+      
+      // Convert existing permissions to our format
+      const existingPermissions: ResourcePermission[] = editingRole.permissions?.map(p => ({
+        resourceName: p.resourceName,
+        permission: p.permission,
+        displayName: p.resourceName // We'll update this when we load resources
+      })) || []
+      
+      setResourcePermissions(existingPermissions)
+    } else {
+      // Reset form for new role
+      setRoleName('')
+      setRoleDescription('')
+      setResourcePermissions([])
+    }
+  }, [editingRole])
+
+  const loadAvailableResources = async () => {
+    try {
+      setLoadingResources(true)
+      const resources = await rolesApi.getAvailableResources()
+      setAvailableResources(resources)
+      
+      // Update display names for existing permissions
+      if (editingRole?.permissions) {
+        const updatedPermissions = editingRole.permissions.map(p => {
+          const resource = resources.find(r => r.resourceName === p.resourceName)
+          return {
+            resourceName: p.resourceName,
+            permission: p.permission,
+            displayName: resource?.displayName || p.resourceName
+          }
+        })
+        setResourcePermissions(updatedPermissions)
+      }
+    } catch (error) {
+      console.error('Failed to load resources:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load available resources.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingResources(false)
+    }
+  }
+
+  const handleAddResourcePermission = () => {
+    if (!selectedResource || !selectedPermission) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select both a resource and permission level.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const permission = parseInt(selectedPermission)
+    if (!isValidPermissionLevel(permission)) {
+      toast({
+        title: 'Validation Error',
+        description: 'Invalid permission level selected.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Check if resource already has permission
+    const existingIndex = resourcePermissions.findIndex(p => p.resourceName === selectedResource)
+    const resource = availableResources.find(r => r.resourceName === selectedResource)
+    
+    const newPermission: ResourcePermission = {
+      resourceName: selectedResource,
+      permission,
+      displayName: resource?.displayName || selectedResource
+    }
+
+    if (existingIndex >= 0) {
+      // Update existing permission
+      const updated = [...resourcePermissions]
+      updated[existingIndex] = newPermission
+      setResourcePermissions(updated)
+    } else {
+      // Add new permission
+      setResourcePermissions([...resourcePermissions, newPermission])
+    }
+
+    // Reset selection
+    setSelectedResource('')
+    setSelectedPermission('')
+  }
+
+  const handleRemoveResourcePermission = (resourceName: string) => {
+    setResourcePermissions(prev => prev.filter(p => p.resourceName !== resourceName))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!roleName.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Role name is required.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (roleName.length < 2 || roleName.length > 50) {
+      toast({
+        title: 'Validation Error',
+        description: 'Role name must be between 2 and 50 characters.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (roleDescription.length > 200) {
+      toast({
+        title: 'Validation Error',
+        description: 'Description cannot exceed 200 characters.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsLoading(true)
+    
     try {
-      // You’ll probably call your API here:
-      console.log({ roleName, resourcePermissions })
+      if (editingRole) {
+        // Update existing role
+        const updateData: UpdateRoleDto = {
+          name: roleName.trim(),
+          description: roleDescription.trim(),
+          resourcePermissions: resourcePermissions.map(p => ({
+            resourceName: p.resourceName,
+            permission: p.permission
+          }))
+        }
+        
+        console.log('Updating role with data:', updateData)
+        await rolesApi.updateRole(editingRole.id, updateData)
+        
+        toast({
+          title: 'Success',
+          description: 'Role updated successfully.',
+        })
+      } else {
+        // Create new role
+        const createData: CreateRoleDto = {
+          name: roleName.trim(),
+          description: roleDescription.trim(),
+          resourcePermissions: resourcePermissions.map(p => ({
+            resourceName: p.resourceName,
+            permission: p.permission
+          }))
+        }
+        
+        console.log('Creating role with data:', createData)
+        await rolesApi.createRole(createData)
+        
+        toast({
+          title: 'Success',
+          description: 'Role created successfully.',
+        })
+      }
+      
+      onClose(true) // Reload data
+    } catch (error: any) {
+      console.error('Failed to save role:', error)
+      
+      let errorMessage = 'Failed to save role. Please try again.'
+      
+      // Handle specific error types
+      if (error?.message) {
+        if (error.message.includes('already exists')) {
+          errorMessage = `A role with the name "${roleName}" already exists. Please choose a different name.`
+        } else if (error.message.includes('validation')) {
+          errorMessage = 'Please check your input and try again.'
+        } else if (error.message.includes('permission')) {
+          errorMessage = 'You do not have permission to perform this action.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      toast({
+        title: editingRole ? 'Update Failed' : 'Creation Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
-      onClose()
     }
   }
 
+  const availableResourcesForSelection = availableResources.filter(
+    resource => !resourcePermissions.some(p => p.resourceName === resource.resourceName)
+  )
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] p-6">
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create new roles</DialogTitle>
+            <DialogTitle>
+              {editingRole ? 'Edit Role' : 'Create New Role'}
+            </DialogTitle>
           </DialogHeader>
 
-          {/* Role name */}
-          <div className="space-y-2 py-4">
-            <Label htmlFor="roleName">Name*</Label>
-            <Input
-              id="roleName"
-              value={roleName}
-              onChange={(e) => setRoleName(e.target.value)}
-              placeholder="Enter role name"
-            />
-          </div>
+          <div className="grid gap-4 py-4">
+            {/* Role Name */}
+            <div className="grid gap-2">
+              <Label htmlFor="roleName">Name *</Label>
+              <Input
+                id="roleName"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+                placeholder="Enter role name"
+                maxLength={50}
+                required
+              />
+              <div className="text-xs text-muted-foreground">
+                {roleName.length}/50 characters
+              </div>
+            </div>
 
-          {/* Resource permissions */}
-          <div className="space-y-4">
-            {resources.map((resource) => (
-              <div key={resource} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{resource}</span>
-                  <RadioGroup
-                    value={resourcePermissions[resource]}
-                    onValueChange={(val) => handlePermissionChange(resource, val)}
-                    className="flex space-x-6"
-                  >
-                    {permissions.map((p) => (
-                      <div key={p} className="flex items-center space-x-1">
-                        <RadioGroupItem value={p} id={`${resource}-${p}`} />
-                        <Label htmlFor={`${resource}-${p}`}>{p}</Label>
+            {/* Role Description */}
+            <div className="grid gap-2">
+              <Label htmlFor="roleDescription">Description</Label>
+              <Textarea
+                id="roleDescription"
+                value={roleDescription}
+                onChange={(e) => setRoleDescription(e.target.value)}
+                placeholder="Enter role description (optional)"
+                maxLength={200}
+                rows={3}
+              />
+              <div className="text-xs text-muted-foreground">
+                {roleDescription.length}/200 characters
+              </div>
+            </div>
+
+            {/* Resource Permissions */}
+            <div className="grid gap-4">
+              <Label>Resource Permissions</Label>
+              
+              {/* Add Resource Permission */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Select value={selectedResource} onValueChange={setSelectedResource}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select resource" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loadingResources ? (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      ) : (
+                        availableResourcesForSelection.map((resource) => (
+                          <SelectItem key={resource.resourceName} value={resource.resourceName}>
+                            {resource.displayName}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Select value={selectedPermission} onValueChange={setSelectedPermission}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Permission level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PermissionLevels.NO_ACCESS.toString()}>
+                        {getPermissionDescription(PermissionLevels.NO_ACCESS)}
+                      </SelectItem>
+                      <SelectItem value={PermissionLevels.VIEW.toString()}>
+                        {getPermissionDescription(PermissionLevels.VIEW)}
+                      </SelectItem>
+                      <SelectItem value={PermissionLevels.CREATE.toString()}>
+                        {getPermissionDescription(PermissionLevels.CREATE)}
+                      </SelectItem>
+                      <SelectItem value={PermissionLevels.EXECUTE.toString()}>
+                        {getPermissionDescription(PermissionLevels.EXECUTE)}
+                      </SelectItem>
+                      <SelectItem value={PermissionLevels.UPDATE.toString()}>
+                        {getPermissionDescription(PermissionLevels.UPDATE)}
+                      </SelectItem>
+                      <SelectItem value={PermissionLevels.DELETE.toString()}>
+                        {getPermissionDescription(PermissionLevels.DELETE)}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button
+                  type="button"
+                  onClick={handleAddResourcePermission}
+                  disabled={!selectedResource || !selectedPermission}
+                  variant="outline"
+                >
+                  Add Permission
+                </Button>
+              </div>
+
+              {/* Current Resource Permissions */}
+              <div className="space-y-2">
+                {resourcePermissions.length > 0 ? (
+                  <div className="grid gap-2">
+                    <div className="text-sm font-medium">Current Permissions:</div>
+                    {resourcePermissions.map((perm) => (
+                      <div
+                        key={perm.resourceName}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="font-medium">{perm.displayName}</span>
+                          <Badge variant="outline">
+                            {getPermissionDescription(perm.permission)}
+                          </Badge>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveResourcePermission(perm.resourceName)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
-                  </RadioGroup>
-                </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg border-dashed">
+                    No permissions assigned. Add permissions above to define what this role can access.
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
           </div>
 
-          <DialogFooter className="pt-6">
-            <Button variant="outline" type="button" onClick={onClose}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onClose()}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving…' : 'Save'}
+            <Button type="submit" disabled={isLoading || loadingResources}>
+              {isLoading ? 'Saving...' : editingRole ? 'Update Role' : 'Create Role'}
             </Button>
           </DialogFooter>
         </form>
