@@ -4,11 +4,11 @@ import { ColumnDef } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
 
-import type { ExecutionsRow } from '../executions'
+import type { ExcutionsRow } from '../excutions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
-export const columns: ColumnDef<ExecutionsRow>[] = [
+export const columns: ColumnDef<ExcutionsRow>[] = [
   {
     id: 'select',
     header: ({ table }) => (

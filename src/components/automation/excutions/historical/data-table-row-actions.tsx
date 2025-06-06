@@ -11,10 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { ExecutionsRow } from '../executions'
+import type { ExcutionsRow } from '../excutions'
 
 interface DataTableRowActionsProps {
-  row: Row<ExecutionsRow>
+  row: Row<ExcutionsRow>
 }
 
 export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
