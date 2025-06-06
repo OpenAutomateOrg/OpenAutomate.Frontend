@@ -154,32 +154,74 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   const handleRemoveResourcePermission = (resourceName: string) => {
     setResourcePermissions(prev => prev.filter(p => p.resourceName !== resourceName))
   }
+  // Helper function to validate form data
+  const validateForm = (): string | null => {
+    if (!roleName.trim()) {
+      return 'Role name is required.'
+    }
+    if (roleName.length < 2 || roleName.length > 50) {
+      return 'Role name must be between 2 and 50 characters.'
+    }
+    if (roleDescription.length > 200) {
+      return 'Description cannot exceed 200 characters.'
+    }
+    return null
+  }
+
+  // Helper function to get error message from API error
+  const getErrorMessage = (error: unknown): string => {
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorWithMessage = error as { message: string }
+      if (errorWithMessage.message.includes('already exists')) {
+        return `A role with the name "${roleName}" already exists. Please choose a different name.`
+      }
+      if (errorWithMessage.message.includes('validation')) {
+        return 'Please check your input and try again.'
+      }
+      if (errorWithMessage.message.includes('permission')) {
+        return 'You do not have permission to perform this action.'
+      }
+      return errorWithMessage.message
+    }
+    return 'Failed to save role. Please try again.'
+  }
+
+  // Helper function to save role (create or update)
+  const saveRole = async (): Promise<void> => {
+    const roleData = {
+      name: roleName.trim(),
+      description: roleDescription.trim(),
+      resourcePermissions: resourcePermissions.map(p => ({
+        resourceName: p.resourceName,
+        permission: p.permission
+      }))
+    }
+
+    if (editingRole) {
+      console.log('Updating role with data:', roleData)
+      await rolesApi.updateRole(editingRole.id, roleData as UpdateRoleDto)
+      toast({
+        title: 'Success',
+        description: 'Role updated successfully.',
+      })
+    } else {
+      console.log('Creating role with data:', roleData)
+      await rolesApi.createRole(roleData as CreateRoleDto)
+      toast({
+        title: 'Success',
+        description: 'Role created successfully.',
+      })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!roleName.trim()) {
+    const validationError = validateForm()
+    if (validationError) {
       toast({
         title: 'Validation Error',
-        description: 'Role name is required.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (roleName.length < 2 || roleName.length > 50) {
-      toast({
-        title: 'Validation Error',
-        description: 'Role name must be between 2 and 50 characters.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (roleDescription.length > 200) {
-      toast({
-        title: 'Validation Error',
-        description: 'Description cannot exceed 200 characters.',
+        description: validationError,
         variant: 'destructive',
       })
       return
@@ -188,66 +230,14 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     setIsLoading(true)
     
     try {
-      if (editingRole) {
-        // Update existing role
-        const updateData: UpdateRoleDto = {
-          name: roleName.trim(),
-          description: roleDescription.trim(),
-          resourcePermissions: resourcePermissions.map(p => ({
-            resourceName: p.resourceName,
-            permission: p.permission
-          }))
-        }
-        
-        console.log('Updating role with data:', updateData)
-        await rolesApi.updateRole(editingRole.id, updateData)
-        
-        toast({
-          title: 'Success',
-          description: 'Role updated successfully.',
-        })
-      } else {
-        // Create new role
-        const createData: CreateRoleDto = {
-          name: roleName.trim(),
-          description: roleDescription.trim(),
-          resourcePermissions: resourcePermissions.map(p => ({
-            resourceName: p.resourceName,
-            permission: p.permission
-          }))
-        }
-        
-        console.log('Creating role with data:', createData)
-        await rolesApi.createRole(createData)
-        
-        toast({
-          title: 'Success',
-          description: 'Role created successfully.',
-        })
-      }
-        onClose(true) // Reload data
+      await saveRole()
+      onClose(true) // Reload data
     } catch (error: unknown) {
       console.error('Failed to save role:', error)
       
-      let errorMessage = 'Failed to save role. Please try again.'
-      
-      // Handle specific error types
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorWithMessage = error as { message: string }
-        if (errorWithMessage.message.includes('already exists')) {
-          errorMessage = `A role with the name "${roleName}" already exists. Please choose a different name.`
-        } else if (errorWithMessage.message.includes('validation')) {
-          errorMessage = 'Please check your input and try again.'
-        } else if (errorWithMessage.message.includes('permission')) {
-          errorMessage = 'You do not have permission to perform this action.'
-        } else {
-          errorMessage = errorWithMessage.message
-        }
-      }
-      
       toast({
         title: editingRole ? 'Update Failed' : 'Creation Failed',
-        description: errorMessage,
+        description: getErrorMessage(error),
         variant: 'destructive',
       })
     } finally {
