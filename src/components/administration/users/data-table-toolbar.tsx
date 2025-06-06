@@ -1,185 +1,132 @@
 'use client'
 
-import { X, Search, Filter } from 'lucide-react'
-import React, { useRef, useEffect } from 'react'
-import { Input } from '@/components/ui/input'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
+import { Table } from '@tanstack/react-table'
+import { X, Search, Loader2 } from 'lucide-react'
+import { useRef, useEffect } from 'react'
+
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
+
 import { Badge } from '@/components/ui/badge'
 
-interface UsersDataTableToolbarProps {
-  readonly searchEmail: string
-  readonly setSearchEmail: (v: string) => void
-  readonly searchFirstName: string
-  readonly setSearchFirstName: (v: string) => void
-  readonly searchLastName: string
-  readonly setSearchLastName: (v: string) => void
-  readonly searchRole: string
-  readonly setSearchRole: (v: string) => void
-  readonly roleOptions: string[]
-  readonly ALL_ROLES: string
-  readonly loading?: boolean
-  readonly onReset: () => void
+interface DataTableToolbarProps<TData> {
+  table: Table<TData>
+  statuses: { value: string; label: string }[] // Options for Status filter
+  onSearch?: (value: string) => void
+  onStatusChange?: (value: string) => void
+  searchValue?: string
+  isFiltering?: boolean
+  isPending?: boolean
 }
 
-export function UsersDataTableToolbar({
-  searchEmail,
-  setSearchEmail,
-  searchFirstName,
-  setSearchFirstName,
-  searchLastName,
-  setSearchLastName,
-  searchRole,
-  setSearchRole,
-  roleOptions,
-  ALL_ROLES,
-  loading = false,
-  onReset,
-}: UsersDataTableToolbarProps) {
-  const activeFilterCount = [
-    searchEmail,
-    searchFirstName,
-    searchLastName,
-    searchRole !== ALL_ROLES ? searchRole : '',
-  ].filter(Boolean).length
+export function DataTableToolbar<TData>({
+  table,
+  onSearch,
+  searchValue = '',
+  isFiltering = false,
+  isPending = false,
+}: DataTableToolbarProps<TData>) {
+  const isFiltered = table.getState().columnFilters.length > 0
 
-  const isFiltered = activeFilterCount > 0
-  const emailInputRef = useRef<HTMLInputElement>(null)
-  const firstNameInputRef = useRef<HTMLInputElement>(null)
-  const lastNameInputRef = useRef<HTMLInputElement>(null)
-  const emailCursorRef = useRef<number | null>(null)
-  const firstNameCursorRef = useRef<number | null>(null)
-  const lastNameCursorRef = useRef<number | null>(null)
+  // Get active filter count
+  const activeFilterCount = table.getState().columnFilters.length
 
+  // Create a ref for the search input to preserve focus
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const lastCursorPositionRef = useRef<number | null>(null)
+
+  // Preserve the cursor position when the component re-renders
   useEffect(() => {
+    // Only restore focus if we were previously focused
     if (
-      document.activeElement !== emailInputRef.current &&
-      emailCursorRef.current !== null &&
-      emailInputRef.current
+      document.activeElement !== searchInputRef.current &&
+      lastCursorPositionRef.current !== null
     ) {
-      emailInputRef.current.focus()
-      emailInputRef.current.setSelectionRange(emailCursorRef.current, emailCursorRef.current)
+      if (searchInputRef.current) {
+        searchInputRef.current.focus()
+        if (lastCursorPositionRef.current !== null) {
+          searchInputRef.current.setSelectionRange(
+            lastCursorPositionRef.current,
+            lastCursorPositionRef.current,
+          )
+        }
+      }
     }
-    if (
-      document.activeElement !== firstNameInputRef.current &&
-      firstNameCursorRef.current !== null &&
-      firstNameInputRef.current
-    ) {
-      firstNameInputRef.current.focus()
-      firstNameInputRef.current.setSelectionRange(firstNameCursorRef.current, firstNameCursorRef.current)
+  }, [isPending, isFiltering])
+
+  const handleFilterChange = (value: string) => {
+    // Save cursor position before potential re-render
+    if (searchInputRef.current) {
+      lastCursorPositionRef.current = searchInputRef.current.selectionStart
     }
-    if (
-      document.activeElement !== lastNameInputRef.current &&
-      lastNameCursorRef.current !== null &&
-      lastNameInputRef.current
-    ) {
-      lastNameInputRef.current.focus()
-      lastNameInputRef.current.setSelectionRange(lastNameCursorRef.current, lastNameCursorRef.current)
+
+    // If external search handler is provided, call it
+    if (onSearch) {
+      onSearch(value)
+    } else {
+      // Fallback to direct filter setting if no external handler
+      table.getColumn('name')?.setFilterValue(value)
     }
-  }, [loading])
+  }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-2">
-      {/* Email filter */}
-      <div className="relative w-48">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          ref={emailInputRef}
-          placeholder="Search by Email"
-          value={searchEmail}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            emailCursorRef.current = e.target.selectionStart
-            setSearchEmail(e.target.value)
-          }}
-          className="pl-8 pr-8"
-          disabled={loading}
-          onFocus={e => {
-            emailCursorRef.current = e.target.selectionStart
-          }}
-        />
-        {searchEmail && (
-          <X
-            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-            onClick={() => setSearchEmail('')}
+    <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+      <div className="flex flex-1 items-center space-x-2">
+        <div className="relative w-full md:w-auto md:flex-1 max-w-md">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+
+          <Input
+            ref={searchInputRef}
+            placeholder="Search "
+            value={searchValue}
+            onChange={(event) => handleFilterChange(event.target.value)}
+            className="h-10 pl-8 w-full pr-8"
+            disabled={isFiltering}
+            onFocus={() => {
+              // Save cursor position when input is focused
+              if (searchInputRef.current) {
+                lastCursorPositionRef.current = searchInputRef.current.selectionStart
+              }
+            }}
           />
+
+          {isFiltering && (
+            <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
+          )}
+
+          {!isFiltering && searchValue !== '' && (
+            <X
+              className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+              onClick={() => handleFilterChange('')}
+            />
+          )}
+        </div>
+
+        {/* Active Filter Count Badge */}
+        {activeFilterCount > 0 && (
+          <Badge variant="secondary" className="rounded-sm px-1">
+            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+          </Badge>
+        )}
+
+        {/* Reset Filters Button */}
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              table.resetColumnFilters()
+              if (onSearch) onSearch('')
+            }}
+            className="h-8 px-2 lg:px-3"
+            disabled={isFiltering}
+          >
+            Reset
+            <X className="ml-2 h-4 w-4" />
+          </Button>
         )}
       </div>
-      {/* First Name filter */}
-      <div className="relative w-48">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          ref={firstNameInputRef}
-          placeholder="Search by First Name"
-          value={searchFirstName}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            firstNameCursorRef.current = e.target.selectionStart
-            setSearchFirstName(e.target.value)
-          }}
-          className="pl-8 pr-8"
-          disabled={loading}
-          onFocus={e => {
-            firstNameCursorRef.current = e.target.selectionStart
-          }}
-        />
-        {searchFirstName && (
-          <X
-            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-            onClick={() => setSearchFirstName('')}
-          />
-        )}
-      </div>
-      {/* Last Name filter */}
-      <div className="relative w-48">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          ref={lastNameInputRef}
-          placeholder="Search by Last Name"
-          value={searchLastName}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            lastNameCursorRef.current = e.target.selectionStart
-            setSearchLastName(e.target.value)
-          }}
-          className="pl-8 pr-8"
-          disabled={loading}
-          onFocus={e => {
-            lastNameCursorRef.current = e.target.selectionStart
-          }}
-        />
-        {searchLastName && (
-          <X
-            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-            onClick={() => setSearchLastName('')}
-          />
-        )}
-      </div>
-      {/* Role filter */}
-      <div className="relative w-48">
-        <Select value={searchRole} onValueChange={setSearchRole} disabled={loading}>
-          <SelectTrigger className="pl-8">
-            <div className="flex items-center">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter Role" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_ROLES}>All Roles</SelectItem>
-            {roleOptions.map(role => (
-              <SelectItem key={role} value={role}>{role}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {activeFilterCount > 0 && (
-        <Badge variant="secondary" className="rounded-sm px-1">
-          {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
-        </Badge>
-      )}
-      {isFiltered && (
-        <Button variant="ghost" onClick={onReset} className="h-8 px-2 lg:px-3" disabled={loading}>
-          Reset
-          <X className="ml-2 h-4 w-4" />
-        </Button>
-      )}
+      <DataTableViewOptions table={table} />
     </div>
   )
 }
