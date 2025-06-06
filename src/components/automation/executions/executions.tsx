@@ -6,7 +6,7 @@ import { columns as HistoricalColumns } from './historical/columns'
 import { columns as ProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import CreateExecutionModal from './CreateExecutionModal'
 
 import { z } from 'zod'
@@ -17,6 +17,8 @@ import { DataTableToolbar as ScheduledToolbar } from './scheduled/data-table-too
 import { useToast } from '@/components/ui/use-toast'
 import { createErrorToast } from '@/lib/utils/error-utils'
 import { getAllExecutions, ExecutionResponseDto } from '@/lib/api/executions'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
 
 import {
   useReactTable,
@@ -69,15 +71,25 @@ export type ExecutionsRow = z.infer<typeof executionsSchema>
 export default function ExecutionsInterface() {
   const router = useRouter()
   const { toast } = useToast()
-  
-  const [data, setData] = useState<ExecutionsRow[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+
+  // SWR for data fetching - replaces manual state management
+  const { data: executions, error, isLoading, mutate } = useSWR(
+    swrKeys.executions(),
+    getAllExecutions
+  )
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [tab, setTab] = useState<'inprogress' | 'sheduled' | 'historical'>('inprogress')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+
+  // Transform data during render (following guideline #1: prefer deriving data during render)
+  const data = useMemo(() => {
+    if (!executions) return []
+    return executions.map(execution => transformExecutionToRow(execution))
+  }, [executions])
 
   // Use the columns from the historical columns as default
   // Dynamically select columns based on tab
@@ -110,25 +122,14 @@ export default function ExecutionsInterface() {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
-  const loadExecutions = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const executions = await getAllExecutions()
-      // Transform ExecutionResponseDto to ExecutionsRow format
-      const transformedData = executions.map(execution => transformExecutionToRow(execution))
-      setData(transformedData)
-    } catch (error) {
+  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
+  // Client-only: Requires toast notifications
+  useEffect(() => {
+    if (error) {
       console.error('Error loading executions:', error)
       toast(createErrorToast(error))
-    } finally {
-      setIsLoading(false)
     }
-  }, [])
-
-  // Load executions data on component mount
-  useEffect(() => {
-    loadExecutions()
-  }, [loadExecutions])
+  }, [error, toast])
 
   const transformExecutionToRow = (execution: ExecutionResponseDto): ExecutionsRow => {
     return {
@@ -168,7 +169,8 @@ export default function ExecutionsInterface() {
   }
 
   const handleCreateSuccess = () => {
-    loadExecutions() // Refresh the data after successful execution creation
+    // Refresh the data after successful execution creation using SWR's mutate
+    mutate()
   }
 
   const handleCreateClick = () => {

@@ -7,6 +7,7 @@ import { config } from '@/lib/config'
 import { Toaster } from '@/components/ui/toaster'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { LocaleProvider } from '@/providers/locale-provider'
+import { SWRProvider } from '@/providers/swr-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
       name: 'OpenAutomate Team',
     },
   ],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,12 +29,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LocaleProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <ToastProvider>
-              <AuthProvider>
-                <div className="min-h-screen flex flex-col antialiased bg-background">
-                  {children}
-                </div>
-                <Toaster />
-              </AuthProvider>
+              <SWRProvider>
+                <AuthProvider>
+                  <div className="min-h-screen flex flex-col antialiased bg-background">
+                    {children}
+                  </div>
+                  <Toaster />
+                </AuthProvider>
+              </SWRProvider>
             </ToastProvider>
           </ThemeProvider>
         </LocaleProvider>

@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
+import useSWR from 'swr'
+import { swrKeys, createSWRErrorMessage } from '@/lib/swr-config'
 import { systemRolesApi } from '@/lib/api/system-roles'
 import { User, SystemRole, SetSystemRoleDto } from '@/types/auth'
 import { useAuth } from '@/providers/auth-provider'
+import { useToast } from '@/components/ui/use-toast'
 
 interface UseSystemRolesOptions {
   /**
@@ -64,71 +67,77 @@ interface UseSystemRolesResult {
   /**
    * Function to refresh the lists of users
    */
-  refreshUsers: () => Promise<void>
+  refreshUsers: () => void
 }
 
 /**
- * Custom hook for working with system roles
+ * Custom hook for working with system roles using SWR
  * @param options Configuration options
  * @returns Functions and state for system role management
  */
 export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRolesResult {
   const { isSystemAdmin } = useAuth()
-  const [adminUsers, setAdminUsers] = useState<User[]>([])
-  const [standardUsers, setStandardUsers] = useState<User[]>([])
-  const [loadingAdmins, setLoadingAdmins] = useState(false)
-  const [loadingStandardUsers, setLoadingStandardUsers] = useState(false)
-  const [adminError, setAdminError] = useState<string | null>(null)
-  const [standardUserError, setStandardUserError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  // ✅ SWR for admin users - following guideline #8: use framework-level loaders
+  const {
+    data: adminUsers,
+    error: adminError,
+    isLoading: loadingAdmins,
+    mutate: mutateAdmins
+  } = useSWR(
+    isSystemAdmin && options.fetchAdmins ? swrKeys.usersByRole(SystemRole.Admin) : null,
+    () => systemRolesApi.getUsersByRole(SystemRole.Admin)
+  )
+
+  // ✅ SWR for standard users
+  const {
+    data: standardUsers,
+    error: standardUserError,
+    isLoading: loadingStandardUsers,
+    mutate: mutateStandardUsers
+  } = useSWR(
+    isSystemAdmin && options.fetchStandardUsers ? swrKeys.usersByRole(SystemRole.User) : null,
+    () => systemRolesApi.getUsersByRole(SystemRole.User)
+  )
+
+  // UI state for role changes
   const [changingRole, setChangingRole] = useState(false)
   const [changeRoleError, setChangeRoleError] = useState<string | null>(null)
 
-  // Fetch admin users
-  const fetchAdminUsers = useCallback(async () => {
-    if (!isSystemAdmin) return
-
-    setLoadingAdmins(true)
-    setAdminError(null)
-
-    try {
-      const users = await systemRolesApi.getUsersByRole(SystemRole.Admin)
-      setAdminUsers(users)
-    } catch (error) {
-      console.error('Error fetching admin users:', error)
-      setAdminError('Failed to load admin users')
-    } finally {
-      setLoadingAdmins(false)
+  // ✅ Error handling in dedicated effects (guideline #3)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (adminError) {
+      console.error('Failed to load admin users:', adminError)
+      toast({
+        title: 'Error',
+        description: createSWRErrorMessage(adminError),
+        variant: 'destructive',
+      })
     }
-  }, [isSystemAdmin])
+  }, [adminError, toast])
 
-  // Fetch standard users
-  const fetchStandardUsers = useCallback(async () => {
-    if (!isSystemAdmin) return
-
-    setLoadingStandardUsers(true)
-    setStandardUserError(null)
-
-    try {
-      const users = await systemRolesApi.getUsersByRole(SystemRole.User)
-      setStandardUsers(users)
-    } catch (error) {
-      console.error('Error fetching standard users:', error)
-      setStandardUserError('Failed to load standard users')
-    } finally {
-      setLoadingStandardUsers(false)
+  useEffect(() => {
+    if (standardUserError) {
+      console.error('Failed to load standard users:', standardUserError)
+      toast({
+        title: 'Error',
+        description: createSWRErrorMessage(standardUserError),
+        variant: 'destructive',
+      })
     }
-  }, [isSystemAdmin])
+  }, [standardUserError, toast])
 
   // Function to refresh both user lists
-  const refreshUsers = useCallback(async () => {
+  const refreshUsers = useCallback(() => {
     if (options.fetchAdmins) {
-      await fetchAdminUsers()
+      mutateAdmins()
     }
-
     if (options.fetchStandardUsers) {
-      await fetchStandardUsers()
+      mutateStandardUsers()
     }
-  }, [fetchAdminUsers, fetchStandardUsers, options.fetchAdmins, options.fetchStandardUsers])
+  }, [mutateAdmins, mutateStandardUsers, options.fetchAdmins, options.fetchStandardUsers])
 
   // Set a user's system role
   const setUserRole = useCallback(
@@ -142,8 +151,8 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
         const dto: SetSystemRoleDto = { role }
         await systemRolesApi.setUserRole(userId, dto)
 
-        // Refresh the user lists after a successful role change
-        await refreshUsers()
+        // ✅ Use SWR's mutate for cache invalidation
+        refreshUsers()
         return true
       } catch (error) {
         console.error('Error setting user role:', error)
@@ -156,32 +165,13 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
     [isSystemAdmin, refreshUsers],
   )
 
-  // Load initial data
-  useEffect(() => {
-    if (isSystemAdmin) {
-      if (options.fetchAdmins) {
-        fetchAdminUsers()
-      }
-
-      if (options.fetchStandardUsers) {
-        fetchStandardUsers()
-      }
-    }
-  }, [
-    isSystemAdmin,
-    fetchAdminUsers,
-    fetchStandardUsers,
-    options.fetchAdmins,
-    options.fetchStandardUsers,
-  ])
-
   return {
-    adminUsers,
-    standardUsers,
+    adminUsers: adminUsers ?? [],
+    standardUsers: standardUsers ?? [],
     loadingAdmins,
     loadingStandardUsers,
-    adminError,
-    standardUserError,
+    adminError: adminError ? createSWRErrorMessage(adminError) : null,
+    standardUserError: standardUserError ? createSWRErrorMessage(standardUserError) : null,
     setUserRole,
     changingRole,
     changeRoleError,

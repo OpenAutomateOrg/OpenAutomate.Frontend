@@ -24,15 +24,28 @@ import {
 import {
   AutomationPackageResponseDto,
   getAutomationPackagesWithOData,
-  ODataQueryOptions,
 } from '@/lib/api/automation-packages'
+import useSWR from 'swr'
+import { swrKeys, createSWRErrorMessage } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function PackageInterface() {
   const router = useRouter()
-  
-  const [data, setData] = useState<AutomationPackageResponseDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  // ✅ SWR for data fetching - following guideline #8: use framework-level loaders
+  const { data: packages, error, isLoading, mutate } = useSWR(
+    swrKeys.packagesWithOData({
+      $expand: 'Versions',
+      $orderby: 'createdAt desc',
+    }),
+    () => getAutomationPackagesWithOData({
+      $expand: 'Versions',
+      $orderby: 'createdAt desc',
+    })
+  )
+
+  // UI state
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
@@ -40,35 +53,25 @@ export default function PackageInterface() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
-  // Fetch packages data
-  const fetchPackages = async (options?: ODataQueryOptions) => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await getAutomationPackagesWithOData({
-        $expand: 'Versions',
-        $orderby: 'createdAt desc',
-        ...options,
-      })
-      
-      setData(response.value)
-    } catch (err) {
-      console.error('Error fetching packages:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch packages')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // ✅ Transform data during render (guideline #1) - derive data during render
+  const data = packages?.value ?? []
 
-  // Initial data fetch
+  // ✅ Error handling in dedicated effect (guideline #3)
+  // Client-only: Requires toast notifications for user feedback
   useEffect(() => {
-    fetchPackages()
-  }, [])
+    if (error) {
+      console.error('Failed to load packages:', error)
+      toast({
+        title: 'Error',
+        description: createSWRErrorMessage(error),
+        variant: 'destructive',
+      })
+    }
+  }, [error, toast])
 
   // Handle refresh after create/edit
   const handleRefresh = () => {
-    fetchPackages()
+    mutate() // ✅ Use SWR's mutate for cache invalidation
   }
 
   const table = useReactTable({
@@ -106,7 +109,8 @@ export default function PackageInterface() {
     { value: 'false', label: 'Inactive' },
   ]
 
-  if (loading) {
+  // ✅ Loading state handling
+  if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -117,17 +121,18 @@ export default function PackageInterface() {
     )
   }
 
-  if (error) {
+  // ✅ Error state handling - note: errors are also handled via toast in useEffect
+  if (error && !data.length) {
     return (
       <div className="flex h-full items-center justify-center">
         <Alert className="max-w-md">
           <AlertDescription>
-            Error loading packages: {error}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2" 
-              onClick={() => fetchPackages()}
+            Error loading packages: {createSWRErrorMessage(error)}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => mutate()}
             >
               Retry
             </Button>
@@ -144,9 +149,9 @@ export default function PackageInterface() {
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={loading}
+            disabled={isLoading}
           >
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Refresh
           </Button>
           <Button

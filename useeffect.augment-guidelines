@@ -1,0 +1,10 @@
+  - Prefer deriving data during render over storing it in state + useEffect.
+  - Flag any effect whose only job is setState; suggest inline computation or useMemo.
+  - Remind: user feedback, analytics, and API calls belong in event handlers, not effects.
+  - Suggest giving components a dynamic `key` to reset local state when parent props change.
+  - Highlight effects that sync with DOM nodes; ensure cleanup is returned.
+  - Warn if dependency array is suppressed; propose refactor or dependency inclusion.
+  - Encourage lifting state or using onChange callbacks instead of parent-notifying effects.
+  - If an effect fetches data, consider framework-level loaders or React Cache APIs.
+  - For performance, advise measuring expensive calcs before introducing useMemo.
+  - Any remaining effect should clearly document *why* it cannot run during server render.
