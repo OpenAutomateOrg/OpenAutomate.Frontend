@@ -2,17 +2,20 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns as ScheduleColumns } from './schedule/columns'
-import { columns as HolidayColumns } from './holiday/columns'
-
+import { columns as HistoricalColumns } from './historical/columns'
+import { columns as ProgressColumns } from './inProgress/columns'
+import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState } from 'react'
-import { CreateEditModal as HolidayModal } from './holiday/create-edit-modal'
-import { CreateEditModal as ScheduleModal } from './schedule/create-edit-modal'
+import { CreateEditModal as HistoricalModal } from './historical/create-edit-modal'
+import { CreateEditModal as ProgressModal } from './inProgress/create-edit-modal'
+import { CreateEditModal as ScheduledModal } from './scheduled/create-edit-modal'
+
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { DataTableToolbar as HistoricalToolbar } from './holiday/data-table-toolbar'
-import { DataTableToolbar as ProgressToolbar } from './schedule/data-table-toolbar'
+import { DataTableToolbar as HistoricalToolbar } from './historical/data-table-toolbar'
+import { DataTableToolbar as ProgressToolbar } from './inProgress/data-table-toolbar'
+import { DataTableToolbar as ScheduledToolbar } from './scheduled/data-table-toolbar'
 
 import {
   useReactTable,
@@ -27,7 +30,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 
-export const scheduleSchema = z.object({
+export const excutionsSchema = z.object({
   id: z.string(),
   name: z.string(),
   type: z.string(),
@@ -60,11 +63,11 @@ export const scheduleSchema = z.object({
   createdDate: z.string().optional(),
 })
 
-export type ScheduleRow = z.infer<typeof scheduleSchema>
+export type ExcutionsRow = z.infer<typeof excutionsSchema>
 
-export default function ScheduleInterface() {
+export default function ExcutionsInterface() {
   const router = useRouter()
-  const initialData: ScheduleRow[] = [
+  const initialData: ExcutionsRow[] = [
     {
       id: '1',
       workflow: 'Daily Backup',
@@ -228,10 +231,10 @@ export default function ScheduleInterface() {
     },
   ]
 
-  const [data] = useState<ScheduleRow[]>(initialData)
+  const [data] = useState<ExcutionsRow[]>(initialData)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [tab, setTab] = useState<'schedule' | 'holiday'>('schedule')
+  const [tab, setTab] = useState<'inprogress' | 'sheduled' | 'historical'>('inprogress')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -239,7 +242,12 @@ export default function ScheduleInterface() {
 
   // Use the columns from the historical columns as default
   // Dynamically select columns based on tab
-  const columns = tab === 'schedule' ? ScheduleColumns : HolidayColumns
+  const columns =
+    tab === 'inprogress'
+      ? ProgressColumns
+      : tab === 'sheduled'
+        ? ScheduledColumns
+        : HistoricalColumns
 
   const table = useReactTable({
     data,
@@ -263,7 +271,7 @@ export default function ScheduleInterface() {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
-  const handleRowClick = (row: ScheduleRow) => {
+  const handleRowClick = (row: ExcutionsRow) => {
     const pathname = window.location.pathname
     const isAdmin = pathname.startsWith('/admin')
     const route = isAdmin ? `/admin/excutions/${row.id}` : `/[tenant]/excutions/${row.id}`
@@ -278,24 +286,32 @@ export default function ScheduleInterface() {
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'schedule'}
+              data-active={tab === 'inprogress'}
               type="button"
-              onClick={() => setTab('schedule')}
+              onClick={() => setTab('inprogress')}
             >
-              Schedule
+              In Progress
             </button>
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'holiday'}
+              data-active={tab === 'sheduled'}
               type="button"
-              onClick={() => setTab('holiday')}
+              onClick={() => setTab('sheduled')}
             >
-              Holiday settings
+              Sheduled
+            </button>
+            <button
+              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
+              data-active={tab === 'historical'}
+              type="button"
+              onClick={() => setTab('historical')}
+            >
+              Historical
             </button>
           </nav>
         </div>
         {/* Tab Content */}
-        {tab === 'schedule' && (
+        {tab === 'inprogress' && (
           <>
             <div className="flex justify-end gap-2">
               <Button
@@ -318,13 +334,39 @@ export default function ScheduleInterface() {
             />
             <DataTable
               data={data.filter((d) => d.state === 'Running')}
-              columns={ScheduleColumns}
+              columns={ProgressColumns}
               onRowClick={handleRowClick}
               table={table}
             />
           </>
         )}
-        {tab === 'holiday' && (
+        {tab === 'sheduled' && (
+          <>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => {
+                  setModalMode('create')
+                  setIsModalOpen(true)
+                }}
+                className="flex items-center justify-center"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create
+              </Button>
+            </div>
+            <ScheduledToolbar
+              table={table}
+              statuses={[{ value: 'Scheduled', label: 'Scheduled' }]}
+            />
+            <DataTable
+              data={data.filter((d) => d.state === 'Scheduled')}
+              columns={ScheduledColumns}
+              onRowClick={handleRowClick}
+              table={table}
+            />
+          </>
+        )}
+        {tab === 'historical' && (
           <>
             <div className="flex justify-end gap-2">
               <Button
@@ -347,15 +389,15 @@ export default function ScheduleInterface() {
             />
             <DataTable
               data={data.filter((d) => d.state === 'Completed' || d.state === 'Failed')}
-              columns={HolidayColumns}
+              columns={HistoricalColumns}
               onRowClick={handleRowClick}
               table={table}
             />
           </>
         )}
       </div>
-      {tab === 'holiday' && (
-        <HolidayModal
+      {tab === 'historical' && (
+        <HistoricalModal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false)
@@ -363,8 +405,17 @@ export default function ScheduleInterface() {
           mode={modalMode}
         />
       )}
-      {tab === 'schedule' && (
-        <ScheduleModal
+      {tab === 'inprogress' && (
+        <ProgressModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+          }}
+          mode={modalMode}
+        />
+      )}
+      {tab === 'sheduled' && (
+        <ScheduledModal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false)
