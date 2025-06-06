@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 
 import type { RolesRow } from './roles'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import { DataTableRowActions } from './data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
 export const columns: ColumnDef<RolesRow>[] = [
   {
@@ -108,6 +108,6 @@ export const columns: ColumnDef<RolesRow>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => <DataTableRowAction row={row} />,
   },
 ]

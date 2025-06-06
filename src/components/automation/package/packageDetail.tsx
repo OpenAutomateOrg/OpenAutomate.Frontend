@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/components/ui/use-toast'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import useSWR from 'swr'
+import { swrKeys, createSWRErrorMessage } from '@/lib/swr-config'
 import { useParams, useRouter } from 'next/navigation'
 import { 
   Download, 
@@ -20,46 +22,41 @@ import {
   ArrowLeft 
 } from 'lucide-react'
 import {
-  AutomationPackageResponseDto,
   PackageVersionResponseDto,
   getAutomationPackageById,
   getPackageDownloadUrl,
   deleteAutomationPackage,
   deletePackageVersion,
 } from '@/lib/api/automation-packages'
-import { createErrorToast, extractErrorMessage } from '@/lib/utils/error-utils'
+import { createErrorToast } from '@/lib/utils/error-utils'
 
 export default function PackageDetail() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
   const packageId = params.id as string
-  
-  const [packageData, setPackageData] = useState<AutomationPackageResponseDto | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)  // Fetch package details
-  const fetchPackageDetails = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getAutomationPackageById(packageId)
-      setPackageData(data)
-    } catch (err) {
-      console.error('Error fetching package details:', err)
-      const errorMessage = extractErrorMessage(err)
-      setError(errorMessage)
-      toast(createErrorToast(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [packageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ✅ SWR for data fetching - following guideline #8: use framework-level loaders
+  const { data: packageData, error, isLoading, mutate } = useSWR(
+    packageId ? swrKeys.packageById(packageId) : null,
+    () => getAutomationPackageById(packageId)
+  )
+
+  // UI state
+  const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)
+
+  // ✅ Error handling in dedicated effect (guideline #3)
+  // Client-only: Requires toast notifications for user feedback
   useEffect(() => {
-    if (packageId) {
-      fetchPackageDetails()
+    if (error) {
+      console.error('Failed to load package details:', error)
+      toast({
+        title: 'Error',
+        description: createSWRErrorMessage(error),
+        variant: 'destructive',
+      })
     }
-  }, [packageId, fetchPackageDetails])
+  }, [error, toast])
 
   const handleDownloadVersion = async (version: PackageVersionResponseDto) => {
     try {
@@ -77,8 +74,6 @@ export default function PackageDetail() {
       })
     } catch (err) {
       console.error('Error downloading package:', err)
-      const errorMessage = extractErrorMessage(err)
-      setError(errorMessage)
       toast(createErrorToast(err))
     } finally {
       setDownloadingVersion(null)
@@ -92,8 +87,8 @@ export default function PackageDetail() {
 
     try {
       await deletePackageVersion(packageId, version.versionNumber)
-      await fetchPackageDetails() // Refresh data
-      
+      mutate() // ✅ Use SWR's mutate for cache invalidation
+
       // Success toast
       toast({
         title: 'Version Deleted',
@@ -102,8 +97,6 @@ export default function PackageDetail() {
       })
     } catch (err) {
       console.error('Error deleting version:', err)
-      const errorMessage = extractErrorMessage(err)
-      setError(errorMessage)
       toast(createErrorToast(err))
     }
   }
@@ -126,8 +119,6 @@ export default function PackageDetail() {
     router.back()
     } catch (err) {
       console.error('Error deleting package:', err)
-      const errorMessage = extractErrorMessage(err)
-      setError(errorMessage)
       toast(createErrorToast(err))
     }
   }
@@ -144,7 +135,8 @@ export default function PackageDetail() {
     return new Date(dateString).toLocaleString()
   }
 
-  if (loading) {
+  // ✅ Loading state handling
+  if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -155,17 +147,39 @@ export default function PackageDetail() {
     )
   }
 
-  if (error || !packageData) {
+  // ✅ Error state handling - note: errors are also handled via toast in useEffect
+  if (error && !packageData) {
     return (
       <div className="flex h-full items-center justify-center">
         <Alert className="max-w-md">
           <AlertDescription>
-            {error || 'Package not found'}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-2" 
-              onClick={() => fetchPackageDetails()}
+            {createSWRErrorMessage(error) ?? 'Package not found'}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => mutate()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // Handle case where package is not found
+  if (!packageData) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Alert className="max-w-md">
+          <AlertDescription>
+            Package not found
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => mutate()}
             >
               Retry
             </Button>
@@ -204,11 +218,7 @@ export default function PackageDetail() {
         </div>
       </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Package Info */}

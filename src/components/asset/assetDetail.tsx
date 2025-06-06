@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ArrowLeft, Eye, EyeOff, Key, FileText, User, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import useSWR from 'swr'
+import { swrKeys, createSWRErrorMessage } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 import {
   getAssetDetail,
   getAssetAgents,
-  AssetDetailDto,
-  BotAgentSummaryDto,
 } from '@/lib/api/assets'
 
 interface AssetDetailProps {
@@ -18,30 +19,51 @@ interface AssetDetailProps {
 
 export default function AssetDetail({ id }: AssetDetailProps) {
   const router = useRouter()
-  const [asset, setAsset] = useState<AssetDetailDto | null>(null)
-  const [agents, setAgents] = useState<BotAgentSummaryDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  // ✅ SWR for asset details - following guideline #8: use framework-level loaders
+  const { data: asset, error: assetError, isLoading: assetLoading } = useSWR(
+    id ? swrKeys.assetById(id) : null,
+    () => getAssetDetail(id)
+  )
+
+  // ✅ SWR for asset agents
+  const { data: agents, error: agentsError, isLoading: agentsLoading } = useSWR(
+    id ? swrKeys.assetAgents(id) : null,
+    () => getAssetAgents(id)
+  )
+
+  // UI state
   const [showSecret, setShowSecret] = useState(false)
 
+  // ✅ Combine loading states
+  const loading = assetLoading || agentsLoading
+  const error = assetError ?? agentsError
+
+  // ✅ Error handling in dedicated effect (guideline #3)
+  // Client-only: Requires toast notifications for user feedback
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-    Promise.all([getAssetDetail(id), getAssetAgents(id)])
-      .then(([assetRes, agentsRes]) => {
-        setAsset(assetRes)
-        setAgents(agentsRes)
+    if (error) {
+      console.error('Failed to load asset details:', error)
+      toast({
+        title: 'Error',
+        description: createSWRErrorMessage(error),
+        variant: 'destructive',
       })
-      .catch(() => setError('Failed to load asset detail'))
-      .finally(() => setLoading(false))
-  }, [id])
+    }
+  }, [error, toast])
 
   const handleBack = () => {
     router.back()
   }
 
+  // ✅ Loading state handling
   if (loading) return <div>Loading...</div>
-  if (error) return <div className="text-red-500">{error}</div>
+
+  // ✅ Error state handling - note: errors are also handled via toast in useEffect
+  if (error && !asset) return <div className="text-red-500">{createSWRErrorMessage(error)}</div>
+
+  // Handle case where asset is not found
   if (!asset) return <div>Asset not found</div>
 
   return (
@@ -119,7 +141,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
               <User className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold">Authorized Agents</h3>
             </div>
-            {agents.length === 0 ? (
+            {(agents?.length ?? 0) === 0 ? (
               <div className="h-[100px] flex items-center justify-center text-muted-foreground">
                 No authorized agents.
               </div>
@@ -133,7 +155,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {agents.map((agent) => (
+                    {agents?.map((agent) => (
                       <tr key={agent.id} className="hover:bg-accent/30 transition">
                         <td className="border px-3 py-2">{agent.name}</td>
                         <td className="border px-3 py-2">{agent.machineName}</td>

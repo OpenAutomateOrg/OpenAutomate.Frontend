@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -57,41 +57,11 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   // Available resources from API
   const [availableResources, setAvailableResources] = useState<AvailableResourceDto[]>([])
   const [loadingResources, setLoadingResources] = useState(false)
-  
-  // Resource selection state
+    // Resource selection state
   const [selectedResource, setSelectedResource] = useState('')
   const [selectedPermission, setSelectedPermission] = useState('')
 
-  // Load available resources when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      loadAvailableResources()
-    }
-  }, [isOpen])
-
-  // Populate form when editing a role
-  useEffect(() => {
-    if (editingRole) {
-      setRoleName(editingRole.name)
-      setRoleDescription(editingRole.description)
-      
-      // Convert existing permissions to our format
-      const existingPermissions: ResourcePermission[] = editingRole.permissions?.map(p => ({
-        resourceName: p.resourceName,
-        permission: p.permission,
-        displayName: p.resourceName // We'll update this when we load resources
-      })) || []
-      
-      setResourcePermissions(existingPermissions)
-    } else {
-      // Reset form for new role
-      setRoleName('')
-      setRoleDescription('')
-      setResourcePermissions([])
-    }
-  }, [editingRole])
-
-  const loadAvailableResources = async () => {
+  const loadAvailableResources = useCallback(async () => {
     try {
       setLoadingResources(true)
       const resources = await rolesApi.getAvailableResources()
@@ -119,7 +89,35 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     } finally {
       setLoadingResources(false)
     }
-  }
+  }, [editingRole?.permissions, toast])
+
+  // Load available resources when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadAvailableResources()
+    }
+  }, [isOpen, loadAvailableResources])
+
+  // Populate form when editing a role
+  useEffect(() => {
+    if (editingRole) {
+      setRoleName(editingRole.name)
+      setRoleDescription(editingRole.description)
+      
+      // Convert existing permissions to our format
+      const existingPermissions: ResourcePermission[] = editingRole.permissions?.map(p => ({
+        resourceName: p.resourceName,
+        permission: p.permission,
+        displayName: p.resourceName // We'll update this when we load resources
+      })) || []
+      
+      setResourcePermissions(existingPermissions)
+    } else {      // Reset form for new role
+      setRoleName('')
+      setRoleDescription('')
+      setResourcePermissions([])
+    }
+  }, [editingRole])
 
   const handleAddResourcePermission = () => {
     if (!selectedResource || !selectedPermission) {
@@ -240,23 +238,23 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
           description: 'Role created successfully.',
         })
       }
-      
-      onClose(true) // Reload data
-    } catch (error: any) {
+        onClose(true) // Reload data
+    } catch (error: unknown) {
       console.error('Failed to save role:', error)
       
       let errorMessage = 'Failed to save role. Please try again.'
       
       // Handle specific error types
-      if (error?.message) {
-        if (error.message.includes('already exists')) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorWithMessage = error as { message: string }
+        if (errorWithMessage.message.includes('already exists')) {
           errorMessage = `A role with the name "${roleName}" already exists. Please choose a different name.`
-        } else if (error.message.includes('validation')) {
+        } else if (errorWithMessage.message.includes('validation')) {
           errorMessage = 'Please check your input and try again.'
-        } else if (error.message.includes('permission')) {
+        } else if (errorWithMessage.message.includes('permission')) {
           errorMessage = 'You do not have permission to perform this action.'
         } else {
-          errorMessage = error.message
+          errorMessage = errorWithMessage.message
         }
       }
       
@@ -353,12 +351,8 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                       </SelectItem>
                       <SelectItem value={PermissionLevels.VIEW.toString()}>
                         {getPermissionDescription(PermissionLevels.VIEW)}
-                      </SelectItem>
-                      <SelectItem value={PermissionLevels.CREATE.toString()}>
+                      </SelectItem>                      <SelectItem value={PermissionLevels.CREATE.toString()}>
                         {getPermissionDescription(PermissionLevels.CREATE)}
-                      </SelectItem>
-                      <SelectItem value={PermissionLevels.EXECUTE.toString()}>
-                        {getPermissionDescription(PermissionLevels.EXECUTE)}
                       </SelectItem>
                       <SelectItem value={PermissionLevels.UPDATE.toString()}>
                         {getPermissionDescription(PermissionLevels.UPDATE)}

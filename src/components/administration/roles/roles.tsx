@@ -1,11 +1,11 @@
 'use client'
 
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { CreateEditModal } from './create-edit-modal'
 import { useRouter } from 'next/navigation'
-import { rolesApi, type RoleWithPermissionsDto } from '@/lib/api/roles'
+import { rolesApi } from '@/lib/api/roles'
 import { useToast } from '@/components/ui/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
@@ -18,7 +18,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
 
 export interface RolesRow {
   id: string
@@ -36,51 +37,49 @@ export interface RolesRow {
 export default function RolesInterface() {
   const router = useRouter()
   const { toast } = useToast()
-  
-  // State management
-  const [data, setData] = useState<RolesRow[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // SWR for data fetching - replaces manual state management
+  const { data: roles, error, isLoading, mutate } = useSWR(
+    swrKeys.roles(),
+    rolesApi.getAllRoles
+  )
+
+  // UI state management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<RolesRow | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Load roles data
-  const loadRoles = async () => {
-    try {
-      setLoading(true)
-      const roles = await rolesApi.getAllRoles()
-      
-      // Transform backend data to match our schema
-      const transformedRoles: RolesRow[] = roles.map(role => ({
-        id: role.id,
-        name: role.name,
-        description: role.description,
-        isSystemAuthority: role.isSystemAuthority,
-        createdAt: role.createdAt,
-        updatedAt: role.updatedAt,
-        permissions: role.permissions?.map(p => ({
-          resourceName: p.resourceName,
-          permission: p.permission,
-        }))
+  // Transform data during render (following guideline #1: prefer deriving data during render)
+  const data = useMemo(() => {
+    if (!roles) return []
+
+    // Transform backend data to match our schema
+    return roles.map(role => ({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      isSystemAuthority: role.isSystemAuthority,
+      createdAt: role.createdAt,
+      updatedAt: role.updatedAt,
+      permissions: role.permissions?.map(p => ({
+        resourceName: p.resourceName,
+        permission: p.permission,
       }))
-      
-      setData(transformedRoles)
-    } catch (error) {
+    }))
+  }, [roles])
+
+  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
+  // Client-only: Requires toast notifications
+  useEffect(() => {
+    if (error) {
       console.error('Failed to load roles:', error)
       toast({
         title: 'Error',
         description: 'Failed to load roles. Please try again.',
         variant: 'destructive',
       })
-    } finally {
-      setLoading(false)
     }
-  }
-
-  // Load data on component mount
-  useEffect(() => {
-    loadRoles()
-  }, [])
+  }, [error, toast])
 
   // Filter data based on search term
   const filteredData = data.filter(role =>
@@ -113,8 +112,8 @@ export default function RolesInterface() {
         title: 'Success',
         description: 'Role deleted successfully.',
       })
-      // Reload data
-      await loadRoles()
+      // Reload data using SWR's mutate
+      await mutate()
     } catch (error) {
       console.error('Failed to delete role:', error)
       toast({
@@ -129,9 +128,9 @@ export default function RolesInterface() {
   const handleModalClose = async (shouldReload = false) => {
     setIsCreateModalOpen(false)
     setEditingRole(null)
-    
+
     if (shouldReload) {
-      await loadRoles()
+      await mutate()
     }
   }
 
@@ -167,7 +166,7 @@ export default function RolesInterface() {
       
       {/* Table */}
       <div className="rounded-md border relative">
-        {loading && (
+        {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
           </div>
@@ -210,8 +209,8 @@ export default function RolesInterface() {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {role.permissions && role.permissions.length > 0 ? (
-                        role.permissions.slice(0, 3).map((perm, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                        role.permissions.slice(0, 3).map((perm) => (
+                          <Badge key={perm.resourceName} variant="outline" className="text-xs">
                             {perm.resourceName}
                           </Badge>
                         ))
@@ -262,7 +261,7 @@ export default function RolesInterface() {
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  {loading ? 'Loading...' : 'No roles found.'}
+                  {isLoading ? 'Loading...' : 'No roles found.'}
                 </TableCell>
               </TableRow>
             )}
@@ -271,6 +270,7 @@ export default function RolesInterface() {
       </div>
 
       <CreateEditModal
+        key={editingRole?.id ?? 'new'} // Dynamic key to reset component state
         isOpen={isCreateModalOpen}
         onClose={handleModalClose}
         editingRole={editingRole}

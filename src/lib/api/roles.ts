@@ -166,9 +166,8 @@ export const PermissionLevels = {
   NO_ACCESS: 0,
   VIEW: 1,
   CREATE: 2,
-  EXECUTE: 3,
-  UPDATE: 4,
-  DELETE: 5,
+  UPDATE: 3,
+  DELETE: 4,
 } as const
 
 /**
@@ -182,10 +181,8 @@ export const getPermissionDescription = (level: number): string => {
       return 'View Only'
     case PermissionLevels.CREATE:
       return 'View & Create'
-    case PermissionLevels.EXECUTE:
-      return 'View, Create & Execute'
     case PermissionLevels.UPDATE:
-      return 'View, Create, Execute & Update'
+      return 'View, Create & Update (includes Execute)'
     case PermissionLevels.DELETE:
       return 'Full Administrative Access'
     default:

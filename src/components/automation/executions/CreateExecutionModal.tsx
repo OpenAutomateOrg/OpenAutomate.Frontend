@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -31,7 +31,9 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Play } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { createErrorToast } from '@/lib/utils/error-utils'
-import { getAllAutomationPackages, AutomationPackageResponseDto } from '@/lib/api/automation-packages'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
+import { getAllAutomationPackages } from '@/lib/api/automation-packages'
 import { getAllBotAgents, BotAgentResponseDto } from '@/lib/api/bot-agents'
 import { triggerExecution, TriggerExecutionDto } from '@/lib/api/executions'
 
@@ -55,10 +57,33 @@ export default function CreateExecutionModal({
   onSuccess,
 }: CreateExecutionModalProps) {
   const { toast } = useToast()
-  const [packages, setPackages] = useState<AutomationPackageResponseDto[]>([])
-  const [agents, setAgents] = useState<BotAgentResponseDto[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+
+  // SWR for data fetching - replaces manual state management
+  const { data: packages, error: packagesError } = useSWR(
+    isOpen ? swrKeys.packages() : null, // Only fetch when modal is open
+    getAllAutomationPackages
+  )
+
+  const { data: agents, error: agentsError } = useSWR(
+    isOpen ? swrKeys.agents() : null, // Only fetch when modal is open
+    getAllBotAgents
+  )
+
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Derive filtered data during render (following guideline #1)
+  const filteredPackages = useMemo(() =>
+    packages?.filter(p => p.isActive) ?? [],
+    [packages]
+  )
+
+  const filteredAgents = useMemo(() =>
+    agents?.filter(a => a.status !== 'Disconnected') ?? [],
+    [agents]
+  )
+
+  // Combined loading state
+  const isLoading = !packages || !agents
 
   const form = useForm<CreateExecutionFormData>({
     resolver: zodResolver(createExecutionSchema),
@@ -70,36 +95,24 @@ export default function CreateExecutionModal({
   })
 
   const selectedPackageId = form.watch('packageId')
-  const selectedPackage = packages.find(p => p.id === selectedPackageId)
+  const selectedPackage = packages?.find(p => p.id === selectedPackageId)
   const availableVersions = selectedPackage?.versions || []
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [packagesData, agentsData] = await Promise.all([
-        getAllAutomationPackages(),
-        getAllBotAgents(),
-      ])
-
-      // Filter active packages and agents by status only (not isActive)
-      setPackages(packagesData.filter(p => p.isActive))
-      setAgents(agentsData.filter(a => a.status !== 'Disconnected'))
-    } catch (error) {
-      console.error('Error loading data:', error)
-      toast(createErrorToast(error))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Load packages and agents when modal opens
+  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
+  // Client-only: Requires toast notifications
   useEffect(() => {
-    if (isOpen) {
-      loadData()
+    if (packagesError) {
+      console.error('Error loading packages:', packagesError)
+      toast(createErrorToast(packagesError))
     }
-  }, [isOpen, loadData])
+    if (agentsError) {
+      console.error('Error loading agents:', agentsError)
+      toast(createErrorToast(agentsError))
+    }
+  }, [packagesError, agentsError, toast])
 
   // Reset version when package changes
+  // Client-only: Requires form state manipulation
   useEffect(() => {
     if (selectedPackageId) {
       form.setValue('version', '')
@@ -108,7 +121,7 @@ export default function CreateExecutionModal({
 
   // Helper function to validate agent
   const validateAgent = (agentId: string): BotAgentResponseDto | null => {
-    const selectedAgent = agents.find(a => a.id === agentId)
+    const selectedAgent = agents?.find(a => a.id === agentId)
 
     if (!selectedAgent) {
       toast({
@@ -141,7 +154,7 @@ export default function CreateExecutionModal({
 
   // Helper function to validate package and version
   const validatePackageAndVersion = (packageId: string, version: string) => {
-    const selectedPackage = packages.find(p => p.id === packageId)
+    const selectedPackage = packages?.find(p => p.id === packageId)
     const selectedVersion = selectedPackage?.versions.find(v => v.versionNumber === version)
 
     if (!selectedPackage || !selectedVersion) {
@@ -275,7 +288,7 @@ export default function CreateExecutionModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {packages.map((pkg) => (
+                        {filteredPackages.map((pkg) => (
                           <SelectItem key={pkg.id} value={pkg.id}>
                             <div className="flex flex-col">
                               <span className="font-medium">{pkg.name}</span>
@@ -343,7 +356,7 @@ export default function CreateExecutionModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {agents.map((agent) => (
+                        {filteredAgents.map((agent) => (
                           <SelectItem key={agent.id} value={agent.id}>
                             <div className="flex items-center justify-between w-full">
                               <div className="flex flex-col">
@@ -353,16 +366,16 @@ export default function CreateExecutionModal({
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div 
+                                <div
                                   className={`h-2 w-2 rounded-full ${
-                                    agent.status === 'Available' 
-                                      ? 'bg-green-500' 
+                                    agent.status === 'Available'
+                                      ? 'bg-green-500'
                                       : agent.status === 'Busy'
                                       ? 'bg-yellow-500'
                                       : 'bg-red-500'
                                   }`}
                                 />
-                                <span 
+                                <span
                                   className={`text-xs font-medium ${
                                     agent.status === 'Available'
                                       ? 'text-green-600'
