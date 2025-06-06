@@ -46,6 +46,7 @@ export const swrKeys = {
   // Agents
   agents: () => ['agents'] as const,
   agentsWithOData: (options?: Record<string, unknown>) => ['agents', 'odata', options] as const,
+  agentById: (id: string) => ['agents', id] as const,
   
   // Packages
   packages: () => ['packages'] as const,

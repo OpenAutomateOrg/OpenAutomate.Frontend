@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,25 +12,26 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Trash2 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-import { 
-  rolesApi, 
-  PermissionLevels, 
+import {
+  rolesApi,
+  PermissionLevels,
   getPermissionDescription,
   isValidPermissionLevel,
-  type AvailableResourceDto,
   type CreateRoleDto,
-  type UpdateRoleDto 
+  type UpdateRoleDto
 } from '@/lib/api/roles'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
 import type { RolesRow } from './roles'
 
 interface CreateEditModalProps {
@@ -53,71 +54,57 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   const [roleDescription, setRoleDescription] = useState('')
   const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  
-  // Available resources from API
-  const [availableResources, setAvailableResources] = useState<AvailableResourceDto[]>([])
-  const [loadingResources, setLoadingResources] = useState(false)
-    // Resource selection state
+
+  // Resource selection state
   const [selectedResource, setSelectedResource] = useState('')
   const [selectedPermission, setSelectedPermission] = useState('')
 
-  const loadAvailableResources = useCallback(async () => {
-    try {
-      setLoadingResources(true)
-      const resources = await rolesApi.getAvailableResources()
-      setAvailableResources(resources)
-      
-      // Update display names for existing permissions
-      if (editingRole?.permissions) {
-        const updatedPermissions = editingRole.permissions.map(p => {
-          const resource = resources.find(r => r.resourceName === p.resourceName)
-          return {
-            resourceName: p.resourceName,
-            permission: p.permission,
-            displayName: resource?.displayName || p.resourceName
-          }
-        })
-        setResourcePermissions(updatedPermissions)
-      }
-    } catch (error) {
-      console.error('Failed to load resources:', error)
+  // ✅ SWR for available resources - following guideline #8: use framework-level loaders
+  const { data: availableResources, error: resourcesError, isLoading: loadingResources } = useSWR(
+    isOpen ? swrKeys.availableResources() : null, // Only fetch when modal is open
+    rolesApi.getAvailableResources
+  )
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (resourcesError) {
+      console.error('Failed to load resources:', resourcesError)
       toast({
         title: 'Error',
         description: 'Failed to load available resources.',
         variant: 'destructive',
       })
-    } finally {
-      setLoadingResources(false)
     }
-  }, [editingRole?.permissions, toast])
+  }, [resourcesError, toast])
 
-  // Load available resources when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      loadAvailableResources()
-    }
-  }, [isOpen, loadAvailableResources])
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const initialResourcePermissions = useMemo(() => {
+    if (!editingRole?.permissions || !availableResources) return []
+
+    return editingRole.permissions.map(p => {
+      const resource = availableResources.find(r => r.resourceName === p.resourceName)
+      return {
+        resourceName: p.resourceName,
+        permission: p.permission,
+        displayName: resource?.displayName || p.resourceName
+      }
+    })
+  }, [editingRole?.permissions, availableResources])
 
   // Populate form when editing a role
   useEffect(() => {
     if (editingRole) {
       setRoleName(editingRole.name)
       setRoleDescription(editingRole.description)
-      
-      // Convert existing permissions to our format
-      const existingPermissions: ResourcePermission[] = editingRole.permissions?.map(p => ({
-        resourceName: p.resourceName,
-        permission: p.permission,
-        displayName: p.resourceName // We'll update this when we load resources
-      })) || []
-      
-      setResourcePermissions(existingPermissions)
-    } else {      // Reset form for new role
+      setResourcePermissions(initialResourcePermissions)
+    } else {
+      // Reset form for new role
       setRoleName('')
       setRoleDescription('')
       setResourcePermissions([])
     }
-  }, [editingRole])
+  }, [editingRole, initialResourcePermissions])
 
   const handleAddResourcePermission = () => {
     if (!selectedResource || !selectedPermission) {
@@ -141,8 +128,8 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
 
     // Check if resource already has permission
     const existingIndex = resourcePermissions.findIndex(p => p.resourceName === selectedResource)
-    const resource = availableResources.find(r => r.resourceName === selectedResource)
-    
+    const resource = availableResources?.find(r => r.resourceName === selectedResource)
+
     const newPermission: ResourcePermission = {
       resourceName: selectedResource,
       permission,
@@ -268,9 +255,9 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }
 
-  const availableResourcesForSelection = availableResources.filter(
+  const availableResourcesForSelection = availableResources?.filter(
     resource => !resourcePermissions.some(p => p.resourceName === resource.resourceName)
-  )
+  ) ?? []
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>

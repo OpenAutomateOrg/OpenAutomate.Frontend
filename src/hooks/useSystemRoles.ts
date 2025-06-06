@@ -86,7 +86,7 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
     isLoading: loadingAdmins,
     mutate: mutateAdmins
   } = useSWR(
-    isSystemAdmin && options.fetchAdmins ? swrKeys.usersByRole(SystemRole.Admin) : null,
+    isSystemAdmin && options.fetchAdmins ? swrKeys.usersByRole(SystemRole.Admin.toString()) : null,
     () => systemRolesApi.getUsersByRole(SystemRole.Admin)
   )
 
@@ -97,7 +97,7 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
     isLoading: loadingStandardUsers,
     mutate: mutateStandardUsers
   } = useSWR(
-    isSystemAdmin && options.fetchStandardUsers ? swrKeys.usersByRole(SystemRole.User) : null,
+    isSystemAdmin && options.fetchStandardUsers ? swrKeys.usersByRole(SystemRole.User.toString()) : null,
     () => systemRolesApi.getUsersByRole(SystemRole.User)
   )
 

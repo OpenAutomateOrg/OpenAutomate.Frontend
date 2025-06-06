@@ -31,6 +31,9 @@ import {
 } from '@/lib/api/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
 export const assetSchema = z.object({
   id: z.string(),
@@ -53,19 +56,18 @@ export default function AssetInterface() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { updateUrl } = useUrlParams()
+  const { toast } = useToast()
+
+  // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [assets, setAssets] = useState<AssetRow[]>([])
   const [totalCount, setTotalCount] = useState<number>(0)
   const totalCountRef = useRef<number>(0)
-  const [isLoading, setIsLoading] = useState(false)
   const [isPending, setIsPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
-  const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   const [hasExactCount, setHasExactCount] = useState(false)
   const getCalculatedPageCount = (total: number, size: number) =>
     Math.max(1, Math.ceil(total / size))
@@ -109,24 +111,7 @@ export default function AssetInterface() {
   const [sorting, setSorting] = useState<SortingState>(initSorting)
   const [pagination, setPagination] = useState<PaginationState>(initPagination)
 
-  // Calculate page count based on total count
-  const pageCount = useMemo(() => {
-    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize)
-    const hasMorePages =
-      assets.length === pagination.pageSize &&
-      totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
-    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex)
-    if (hasMorePages) {
-      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2)
-    }
-    return Math.max(minValidPageCount, calculatedCount)
-  }, [pagination.pageSize, pagination.pageIndex, assets.length, totalCount])
-
-  const isUnknownTotalCount = useMemo(() => {
-    return !hasExactCount && assets.length === pagination.pageSize
-  }, [hasExactCount, assets.length, pagination.pageSize])
-
-  // Construct OData query parameters
+  // ✅ Construct OData query parameters (following guideline #1: derive data during render)
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
       $count: true,
@@ -165,39 +150,55 @@ export default function AssetInterface() {
       params.$filter = filters.join(' and ')
     }
 
-    return params
-  }, [pagination, sorting, columnFilters])
+    return params  }, [pagination, sorting, columnFilters])
 
-  const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
-
-  const handleEditAsset = useCallback(
-    async (asset: AssetRow) => {
-      try {
-        setIsLoading(true)
-        const assetDetail = await getAssetDetail(asset.id)
-        const assetAgents = await getAssetAgents(asset.id)
-        const formattedAgents = assetAgents.map((agent) => ({
-          id: agent.id,
-          name: agent.name,
-        }))
-        const updatedAsset = {
-          ...asset,
-          type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
-          value: assetDetail.value ?? '',
-          agents: formattedAgents.length > 0 ? formattedAgents : [],
-        }
-        setSelectedAsset(updatedAsset)
-        setModalMode('edit')
-        setIsModalOpen(true)
-      } catch (error) {
-        console.error('Error preparing asset for edit:', error)
-        setError('Failed to load asset details for editing.')
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [setIsLoading, setSelectedAsset, setModalMode, setIsModalOpen, setError],
+  // ✅ SWR for assets data - following guideline #8: use framework-level loaders
+  const queryParams = getODataQueryParams()
+  const { data: assetsResponse, error: assetsError, isLoading, mutate: mutateAssets } = useSWR(
+    swrKeys.assetsWithOData(queryParams as Record<string, unknown>),
+    () => getAssetsWithOData(queryParams)
   )
+
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const assets = useMemo(() => {
+    if (!assetsResponse?.value) return []
+    return assetsResponse.value.map((asset: AssetRow) => ({
+      id: asset.id,
+      key: asset.key,
+      type: asset.type,
+      description: asset.description,
+      createdBy: asset.createdBy,
+    }))
+  }, [assetsResponse])
+
+  // Calculate page count based on total count
+  const pageCount = useMemo(() => {
+    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize)
+    const hasMorePages =
+      assets.length === pagination.pageSize &&
+      totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
+    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex)
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2)
+    }
+    return Math.max(minValidPageCount, calculatedCount)
+  }, [pagination.pageSize, pagination.pageIndex, assets.length, totalCount])
+
+  const isUnknownTotalCount = useMemo(() => {
+    return !hasExactCount && assets.length === pagination.pageSize
+  }, [hasExactCount, assets.length, pagination.pageSize])
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (assetsError) {
+      console.error('Failed to load assets:', assetsError)
+      toast({
+        title: 'Error',
+        description: 'Failed to load assets. Please try again.',
+        variant: 'destructive',
+      })
+    }  }, [assetsError, toast])
 
   const updateTotalCounts = useCallback(
     (response: ODataResponse<AssetRow>) => {
@@ -224,23 +225,49 @@ export default function AssetInterface() {
     [pagination.pageIndex, pagination.pageSize],
   )
 
-  const processAssetData = useCallback(
-    (response: ODataResponse<AssetRow>) => {
-      if (!Array.isArray(response.value)) {
-        setAssets([])
-        return
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (assetsResponse) {
+      updateTotalCounts(assetsResponse)
+    }
+  }, [assetsResponse, updateTotalCounts])
+
+  const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
+
+  const handleEditAsset = useCallback(
+    async (asset: AssetRow) => {
+      try {
+        const assetDetail = await getAssetDetail(asset.id)
+        const assetAgents = await getAssetAgents(asset.id)
+        const formattedAgents = assetAgents.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+        }))
+        const updatedAsset = {
+          ...asset,
+          type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
+          value: assetDetail.value ?? '',
+          agents: formattedAgents.length > 0 ? formattedAgents : [],
+        }
+        setSelectedAsset(updatedAsset)
+        setModalMode('edit')
+        setIsModalOpen(true)
+      } catch (error) {
+        console.error('Error preparing asset for edit:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load asset details for editing.',
+          variant: 'destructive',
+        })
       }
-      const formattedAssets = response.value.map((asset: AssetRow) => ({
-        id: asset.id,
-        key: asset.key,
-        type: asset.type,
-        description: asset.description,
-        createdBy: asset.createdBy,
-      }))
-      setAssets(formattedAssets || [])
-      // Handle empty page edge case
+    },    [toast],
+  )
+
+  // ✅ Handle empty page edge case (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (assetsResponse?.value) {
       const isEmptyPageBeyondFirst =
-        response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+        assetsResponse.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
       if (isEmptyPageBeyondFirst) {
         const calculatedPageCount = Math.max(
           1,
@@ -251,30 +278,19 @@ export default function AssetInterface() {
           updateUrl(pathname, { page: '1' })
         }
       }
-    },
-    [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname],
-  )
-
-  const fetchAssets = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const queryParams = getODataQueryParams()
-      const response = (await getAssetsWithOData(queryParams)) as ODataResponse<AssetRow>
-      updateTotalCounts(response)
-      processAssetData(response)
-    } catch {
-      setError('Failed to load assets. Please try again.')
-    } finally {
-      setIsLoading(false)
-      setIsPending(false)
-      setIsChangingPageSize(false)
     }
-  }, [getODataQueryParams, updateTotalCounts, processAssetData])
+  }, [assetsResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+
+  // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
+  const refreshAssets = useCallback(async () => {
+    setIsPending(false)
+    setIsChangingPageSize(false)
+    await mutateAssets()
+  }, [mutateAssets])
 
   const tableColumns = useMemo(
-    () => createColumns(handleEditAsset, fetchAssets),
-    [handleEditAsset, fetchAssets],
+    () => createColumns(handleEditAsset, refreshAssets),
+    [handleEditAsset, refreshAssets],
   )
 
   // Setup table instance
@@ -380,19 +396,8 @@ export default function AssetInterface() {
     [updateUrl, pathname],
   )
 
-  // Fetch data when filters, sorting, or pagination change
-  useEffect(() => {
-    if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-    fetchTimeout.current = setTimeout(() => {
-      fetchAssets()
-    }, 100)
-    return () => {
-      if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-    }
-  }, [fetchAssets, columnFilters, sorting, pagination])
-
-  // Simple handlers
-  const handleAssetCreated = () => fetchAssets()
+  // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
+  const handleAssetCreated = () => mutateAssets()
 
   const handleRowClick = (row: AssetRow) => {
     const isAdmin = pathname.startsWith('/admin')
@@ -400,11 +405,6 @@ export default function AssetInterface() {
     const route = isAdmin ? `/admin/asset/${row.id}` : `/${tenant}/asset/${row.id}`
     router.push(route)
   }
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchAssets()
-  }, [fetchAssets])
 
   return (
     <>
@@ -432,10 +432,10 @@ export default function AssetInterface() {
           </div>
         </div>
 
-        {error && (
+        {assetsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
-            <Button variant="outline" className="mt-2" onClick={fetchAssets}>
+            <p className="text-red-800 dark:text-red-300">Failed to load assets. Please try again.</p>
+            <Button variant="outline" className="mt-2" onClick={() => mutateAssets()}>
               Retry
             </Button>
           </div>
@@ -455,7 +455,7 @@ export default function AssetInterface() {
         />
 
         <DataTable
-          data={assets || []}
+          data={assets ?? []}
           columns={tableColumns}
           onRowClick={(row) => {
             if (isModalOpen) return
@@ -494,7 +494,7 @@ export default function AssetInterface() {
           }}
         />
 
-        {!isLoading && assets.length === 0 && !error && (
+        {!isLoading && assets.length === 0 && !assetsError && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No assets found. Create your first asset to get started.</p>
           </div>

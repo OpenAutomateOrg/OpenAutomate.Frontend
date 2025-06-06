@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Download, RefreshCw } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import { AgentRow } from './agent'
+import { useEffect, useMemo } from 'react'
 import { getBotAgentById } from '@/lib/api/bot-agents'
 import { config } from '@/lib/config'
 import { useAgentStatus } from '@/hooks/useAgentStatus'
 import type { ReactNode } from 'react'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
 interface AgentDetailProps {
   readonly id: string
@@ -34,37 +36,41 @@ export default function AgentDetail({ id }: AgentDetailProps) {
   const params = useParams()
   const tenant = params?.tenant as string
   const agentStatuses = useAgentStatus(tenant)
-  const [agent, setAgent] = useState<AgentRow | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  // ✅ SWR for agent data - following guideline #8: use framework-level loaders
+  const { data: agentData, error: agentError, isLoading: loading } = useSWR(
+    id ? swrKeys.agentById(id) : null,
+    () => getBotAgentById(id)
+  )
+
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const agent = useMemo(() => {
+    if (!agentData) return null
+    return {
+      ...agentData,
+      botAgentId: agentData.id, // Ensure botAgentId is present
+    }
+  }, [agentData])
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (agentError) {
+      console.error('Failed to load agent details:', agentError)
+      toast({
+        title: 'Error',
+        description: 'Failed to load agent details.',
+        variant: 'destructive',
+      })
+    }
+  }, [agentError, toast])
 
   // Frontend URL for agent connection
   const frontendUrl =
     typeof window !== 'undefined'
       ? `${window.location.protocol}//${window.location.host}`
       : config.app.url
-
-  const fetchAgentDetails = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const agentData = await getBotAgentById(id)
-      // Map the response to match our expected type with botAgentId
-      setAgent({
-        ...agentData,
-        botAgentId: agentData.id, // Ensure botAgentId is present
-      })
-    } catch (err) {
-      console.error('Error fetching agent details:', err)
-      setError('Failed to load agent details')
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    fetchAgentDetails()
-  }, [id, fetchAgentDetails])
 
   // Custom error handler to filter out SignalR connection errors
   useEffect(() => {
@@ -98,7 +104,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
 
   // Determine the real-time status if available
   const realTimeStatus = agentStatuses[id]?.status
-  const statusToDisplay = realTimeStatus || agent?.status || ''
+  const statusToDisplay = realTimeStatus ?? agent?.status ?? ''
 
   if (loading) {
     return (
@@ -110,11 +116,11 @@ export default function AgentDetail({ id }: AgentDetailProps) {
     )
   }
 
-  if (error) {
+  if (agentError) {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-        <p className="text-red-800 dark:text-red-300">{error}</p>
-        <Button variant="outline" className="mt-2" onClick={fetchAgentDetails}>
+        <p className="text-red-800 dark:text-red-300">Failed to load agent details.</p>
+        <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
           Retry
         </Button>
       </div>

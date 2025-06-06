@@ -31,6 +31,9 @@ import {
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { useAgentStatus } from '@/hooks/useAgentStatus'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
 export const agentSchema = z.object({
   id: z.string(),
@@ -48,28 +51,21 @@ export default function AgentInterface() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { updateUrl } = useUrlParams()
+  const { toast } = useToast()
 
-  // State for modal
+  // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-
-  // Table state
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [agents, setAgents] = useState<AgentRow[]>([])
   const [totalCount, setTotalCount] = useState<number>(0)
   const totalCountRef = useRef<number>(0)
-
-  // UI state
-  const [isLoading, setIsLoading] = useState(false)
   const [isPending, setIsPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
   const [hasExactCount, setHasExactCount] = useState(false)
 
   // Create refs for debouncing
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
-  const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   const shouldInitializeUrl = useRef(true)
 
   // Initialize state from URL params
@@ -117,7 +113,7 @@ export default function AgentInterface() {
   // Extract tenant from pathname (e.g., /tenant/agent)
   const tenant = pathname.split('/')[1]
 
-  // Convert table state to OData query parameters
+  // ✅ Convert table state to OData query parameters (following guideline #1: derive data during render)
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
       $top: pagination.pageSize,
@@ -158,62 +154,80 @@ export default function AgentInterface() {
 
     return params
   }, [pagination, sorting, columnFilters])
+  // ✅ SWR for agents data - following guideline #8: use framework-level loaders
+  const queryParams = getODataQueryParams()
+  const { data: agentsResponse, error: agentsError, isLoading, mutate: mutateAgents } = useSWR(
+    swrKeys.agentsWithOData(queryParams as Record<string, unknown>),
+    () => getBotAgentsWithOData(queryParams)
+  )
 
-  // Fetch data with proper handling
-  const fetchAgents = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const agents = useMemo(() => {
+    if (!agentsResponse?.value) return []
+    return agentsResponse.value.map((agent: BotAgentResponseDto) => ({
+      ...agent,
+      botAgentId: agent.id, // Ensure botAgentId is present for real-time merge
+    }))
+  }, [agentsResponse])
 
-    // Helper function to update counts based on OData response
-    const updateTotalCounts = (response: ODataResponse<BotAgentResponseDto>) => {
-      if (typeof response['@odata.count'] === 'number') {
-        setTotalCount(response['@odata.count'])
-        totalCountRef.current = response['@odata.count']
-        setHasExactCount(true)
-        return
-      }
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (agentsError) {
+      console.error('Failed to load agents:', agentsError)
+      toast({
+        title: 'Error',
+        description: 'Failed to load agents. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }, [agentsError, toast])
 
-      if (!Array.isArray(response.value)) {
-        return
-      }
-
-      // When count isn't available, estimate from current page
-      const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
-
-      // Only update if the new minimum count is higher than current
-      if (minCount > totalCountRef.current) {
-        setTotalCount(minCount)
-        totalCountRef.current = minCount
-      }
-
-      // If we got a full page on first page, assume there might be more
-      const isFullFirstPage =
-        response.value.length === pagination.pageSize && pagination.pageIndex === 0
-      if (isFullFirstPage) {
-        setTotalCount(minCount + 1) // Indicate there might be more
-        totalCountRef.current = minCount + 1
-      }
-
-      setHasExactCount(false)
+  // Helper function to update counts based on OData response
+  const updateTotalCounts = useCallback((response: ODataResponse<BotAgentResponseDto>) => {
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count'])
+      totalCountRef.current = response['@odata.count']
+      setHasExactCount(true)
+      return
     }
 
-    // Helper function to process agent data and handle pagination edge cases
-    const processAgentData = (response: ODataResponse<BotAgentResponseDto>) => {
-      if (!Array.isArray(response.value)) {
-        setAgents([])
-        return
-      }
+    if (!Array.isArray(response.value)) {
+      return
+    }
 
-      const formattedAgents = response.value.map((agent: BotAgentResponseDto) => ({
-        ...agent,
-        botAgentId: agent.id, // Ensure botAgentId is present for real-time merge
-      }))
+    // When count isn't available, estimate from current page
+    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
 
-      setAgents(formattedAgents)
+    // Only update if the new minimum count is higher than current
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount)
+      totalCountRef.current = minCount
+    }
 
-      // Handle empty page edge case
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage =
+      response.value.length === pagination.pageSize && pagination.pageIndex === 0
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1) // Indicate there might be more
+      totalCountRef.current = minCount + 1
+    }
+
+    setHasExactCount(false)
+  }, [pagination.pageIndex, pagination.pageSize])
+
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (agentsResponse) {
+      updateTotalCounts(agentsResponse)
+    }
+  }, [agentsResponse, updateTotalCounts])
+
+  // ✅ Handle empty page edge case (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (agentsResponse?.value) {
       const isEmptyPageBeyondFirst =
-        response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+        agentsResponse.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
 
       if (isEmptyPageBeyondFirst) {
         const calculatedPageCount = Math.max(
@@ -227,22 +241,14 @@ export default function AgentInterface() {
         }
       }
     }
+  }, [agentsResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
 
-    try {
-      const queryParams = getODataQueryParams()
-      const response = await getBotAgentsWithOData(queryParams)
-
-      // Update counts and process data using helper functions
-      updateTotalCounts(response)
-      processAgentData(response)
-    } catch (_err) {
-      setError('Failed to load agents. Please try again. - ' + _err)
-    } finally {
-      setIsLoading(false)
-      setIsPending(false)
-      setIsChangingPageSize(false)
-    }
-  }, [getODataQueryParams, pagination.pageIndex, pagination.pageSize, updateUrl, pathname])
+  // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
+  const refreshAgents = useCallback(async () => {
+    setIsPending(false)
+    setIsChangingPageSize(false)
+    await mutateAgents()
+  }, [mutateAgents])
 
   // Use real-time status only, no refetch on status update
   const agentStatuses = useAgentStatus(tenant)
@@ -338,7 +344,7 @@ export default function AgentInterface() {
   // Setup table instance with real-time data and custom row ID
   const table = useReactTable({
     data: agentsWithRealtimeStatus,
-    columns: createAgentColumns(fetchAgents),
+    columns: createAgentColumns(refreshAgents),
     state: {
       sorting,
       columnVisibility,
@@ -431,41 +437,21 @@ export default function AgentInterface() {
     },
     [table, updateUrl, pathname],
   )
-
   // Clean up timeouts on unmount
   useEffect(() => {
     return () => {
       if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
-      if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
     }
   }, [])
 
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-
-    fetchTimeout.current = setTimeout(() => {
-      fetchAgents()
-    }, 100) // Small delay to batch state changes
-
-    return () => {
-      if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-    }
-  }, [fetchAgents, pagination])
-
-  // Simple handlers
-  const handleAgentCreated = () => fetchAgents()
+  // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
+  const handleAgentCreated = () => mutateAgents()
 
   const handleRowClick = (row: AgentRow) => {
     const isAdmin = pathname.startsWith('/admin')
     const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
     router.push(route)
   }
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchAgents()
-  }, [fetchAgents, pagination])
 
   return (
     <>
@@ -504,10 +490,10 @@ export default function AgentInterface() {
           </div>
         </div>
 
-        {error && (
+        {agentsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
-            <Button variant="outline" className="mt-2" onClick={fetchAgents}>
+            <p className="text-red-800 dark:text-red-300">Failed to load agents. Please try again.</p>
+            <Button variant="outline" className="mt-2" onClick={() => mutateAgents()}>
               Retry
             </Button>
           </div>
@@ -529,7 +515,7 @@ export default function AgentInterface() {
 
         <DataTable
           data={agentsWithRealtimeStatus}
-          columns={createAgentColumns(fetchAgents)}
+          columns={createAgentColumns(refreshAgents)}
           table={table}
           onRowClick={handleRowClick}
           isLoading={isLoading}
@@ -565,7 +551,7 @@ export default function AgentInterface() {
           }}
         />
 
-        {!isLoading && agents.length === 0 && !error && (
+        {!isLoading && agents.length === 0 && !agentsError && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No agents found. Create your first agent to get started.</p>
           </div>
