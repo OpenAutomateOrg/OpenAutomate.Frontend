@@ -4,11 +4,12 @@ import { ColumnDef } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
 
-import type { ExcutionsRow } from '../excutions'
+import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
+import ExecutionStatusBadge from '../ExecutionStatusBadge'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
-export const columns: ColumnDef<ExcutionsRow>[] = [
+export const columns: ColumnDef<ExecutionsRow>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -80,25 +81,9 @@ export const columns: ColumnDef<ExcutionsRow>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="State" />,
     cell: ({ row }) => {
       const state = String(row.getValue('state'))
-      let stateClass = ''
-      switch (state) {
-        case 'Success':
-          stateClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-          break
-        case 'Failed':
-          stateClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-          break
-        case 'Running':
-          stateClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-          break
-        default:
-          stateClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-      }
       return (
         <div className="flex items-center">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${stateClass}`}>
-            {state}
-          </span>
+          <ExecutionStatusBadge status={state} />
         </div>
       )
     },
