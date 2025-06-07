@@ -6,7 +6,7 @@ import { columns as HistoricalColumns } from './historical/columns'
 import { columns as ProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import CreateExecutionModal from './CreateExecutionModal'
 
 import { z } from 'zod'
@@ -41,10 +41,8 @@ export const executionsSchema = z.object({
   createdBy: z.string(),
   label: z.string(),
   status: z.string(),
-  workflow: z.string().optional(),
   Version: z.string().optional(),
   Agent: z.string().optional(),
-  'Agent Group': z.string().optional(),
   State: z.string().optional(),
   'Start Time': z.string().optional(),
   'End Time': z.string().optional(),
@@ -55,7 +53,6 @@ export const executionsSchema = z.object({
   'Created Date': z.string().optional(),
   'Created By': z.string().optional(),
   agent: z.string().optional(),
-  agentGroup: z.string().optional(),
   state: z.string().optional(),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
@@ -85,11 +82,46 @@ export default function ExecutionsInterface() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
+  // Define transformation function before using it in useMemo
+  const transformExecutionToRow = useCallback((execution: ExecutionResponseDto): ExecutionsRow => {
+    return {
+      id: execution.id,
+      Version: execution.packageVersion || '',
+      Agent: execution.botAgentName || '',
+      State: execution.status,
+      'Start Time': execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
+      'End Time': execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
+      Source: 'Manual', // Assuming manual trigger for now
+      Command: 'execute',
+      Schedules: 'Once', // For immediate executions
+      'Task Id': execution.id,
+      'Created Date': execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
+      'Created By': 'Current User', // TODO: Get from auth context when available
+
+      // Legacy fields for compatibility
+      name: execution.packageName || '',
+      type: 'execution',
+      value: execution.packageVersion || '',
+      createdBy: 'Current User',
+      label: execution.botAgentName || '',
+      status: execution.status,
+      agent: execution.botAgentName || '',
+      state: execution.status,
+      startTime: execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
+      endTime: execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
+      source: 'Manual',
+      command: 'execute',
+      schedules: 'Once',
+      taskId: execution.id,
+      createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
+    }
+  }, [])
+
   // Transform data during render (following guideline #1: prefer deriving data during render)
   const data = useMemo(() => {
     if (!executions) return []
     return executions.map(execution => transformExecutionToRow(execution))
-  }, [executions])
+  }, [executions, transformExecutionToRow])
 
   // Use the columns from the historical columns as default
   // Dynamically select columns based on tab
@@ -130,43 +162,6 @@ export default function ExecutionsInterface() {
       toast(createErrorToast(error))
     }
   }, [error, toast])
-
-  const transformExecutionToRow = (execution: ExecutionResponseDto): ExecutionsRow => {
-    return {
-      id: execution.id,
-      workflow: execution.packageName || '',
-      Version: execution.packageVersion || '',
-      Agent: execution.botAgentName || '',
-      'Agent Group': '', // Not available in current data model
-      State: execution.status,
-      'Start Time': execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
-      'End Time': execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
-      Source: 'Manual', // Assuming manual trigger for now
-      Command: 'execute',
-      Schedules: 'Once', // For immediate executions
-      'Task Id': execution.id,
-      'Created Date': execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
-      'Created By': 'Current User', // TODO: Get from auth context when available
-      
-      // Legacy fields for compatibility
-      name: execution.packageName || '',
-      type: 'execution',
-      value: execution.packageVersion || '',
-      createdBy: 'Current User',
-      label: execution.botAgentName || '',
-      status: execution.status,
-      agent: execution.botAgentName || '',
-      agentGroup: '',
-      state: execution.status,
-      startTime: execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
-      endTime: execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
-      source: 'Manual',
-      command: 'execute',
-      schedules: 'Once',
-      taskId: execution.id,
-      createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
-    }
-  }
 
   const handleCreateSuccess = () => {
     // Refresh the data after successful execution creation using SWR's mutate
