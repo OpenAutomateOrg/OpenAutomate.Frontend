@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
 
 // Form validation schema
 const formSchema = z
@@ -48,6 +49,49 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [registerError, setRegisterError] = React.useState<string | null>(null)
 
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl')
+
+  // Check if this is coming from an invitation
+  const isInvitation = returnUrl?.includes('/invitation/accept')
+
+  // Function to extract token and tenant from return URL
+  const extractInvitationParams = () => {
+    if (!returnUrl) return { token: null, tenant: null }
+
+    try {
+      // Create URL object to parse components
+      const url = new URL(returnUrl, window.location.origin)
+      const token = url.searchParams.get('token')
+
+      // Extract tenant from path pattern /[tenant]/invitation/accept
+      const pathParts = url.pathname.split('/')
+      const tenant = pathParts[1] // First segment after leading slash
+
+      return { token, tenant }
+    } catch (error) {
+      console.error('Error parsing return URL:', error)
+      return { token: null, tenant: null }
+    }
+  }
+
+  // Function to accept invitation after registration
+  const acceptInvitationAfterRegister = async () => {
+    try {
+      const { token, tenant } = extractInvitationParams()
+
+      if (token && tenant) {
+        await organizationInvitationsApi.acceptInvitation(tenant, token)
+        // Redirect to organization dashboard
+        router.push(`/${tenant}/dashboard`)
+        return true
+      }
+    } catch (error) {
+      console.error('Error accepting invitation:', error)
+    }
+    return false
+  }
+
   // Initialize form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -74,8 +118,17 @@ export function RegisterForm() {
         lastName: data.lastName,
       })
 
-      // Redirect to verification pending page in the auth route group
-      router.push(`/verification-pending?email=${encodeURIComponent(data.email)}`)
+      // If this registration is from an invitation, process the invitation
+      if (isInvitation) {
+        const accepted = await acceptInvitationAfterRegister()
+        if (accepted) return // If accepted and redirected, we're done
+      }
+
+      // Redirect to verification pending page with returnUrl for later use
+      const params = new URLSearchParams({ email: data.email })
+      if (returnUrl) params.append('returnUrl', returnUrl)
+      const verificationUrl = `/verification-pending?${params.toString()}`
+      router.push(verificationUrl)
     } catch (error: unknown) {
       console.error('Registration failed', error)
       const errorMessage =
@@ -92,7 +145,7 @@ export function RegisterForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {(registerError || error) && (
             <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{registerError || error}</AlertDescription>
+              <AlertDescription>{registerError ?? error}</AlertDescription>
             </Alert>
           )}
 

@@ -8,7 +8,7 @@ import { config } from '@/lib/config'
 export async function GET(request: NextRequest) {
   try {
     // Get the token from the query parameters
-    const token = request.nextUrl.searchParams?.get('token')
+    const token = request.nextUrl.searchParams.get('token')
 
     if (!token) {
       // If no token is provided, redirect to the error page

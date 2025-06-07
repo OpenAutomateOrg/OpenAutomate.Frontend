@@ -2,14 +2,17 @@
 
 import { ColumnDef, Table, Column, Row } from '@tanstack/react-table'
 import React from 'react'
-
 import { Checkbox } from '@/components/ui/checkbox'
-
 import type { AssetRow } from './asset'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<AssetRow>[] = [
+type EditFunctionType = (asset: AssetRow) => void
+
+export const createColumns = (
+  onEdit?: EditFunctionType,
+  onDeleted?: () => void,
+): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
     header: ({ table }: { table: Table<AssetRow> }) => (
@@ -17,48 +20,68 @@ export const columns: ColumnDef<AssetRow>[] = [
         checked={
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
-        onCheckedChange={(value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value)}
+        onCheckedChange={(value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(!!value)
+        }
         aria-label="Select all"
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }: { row: Row<AssetRow> }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      const stopPropagation = (e: React.MouseEvent) => {
+        e.stopPropagation()
+      }
+
+      return (
+        <span
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
+        >
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+            onClick={stopPropagation}
+          />
+        </span>
+      )
+    },
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'key',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Key" />,
+    id: 'actions',
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      return (
-        <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">{row.getValue('key')}</span>
-        </div>
-      )
+      return <DataTableRowAction asset={row.original} onEdit={onEdit} onDeleted={onDeleted} />
+    },
+  },
+  {
+    accessorKey: 'key',
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Key" className="font-bold text-base" />
+    ),
+    cell: ({ row }: { row: Row<AssetRow> }) => {
+      return <span className="font-medium truncate">{row.getValue('key')}</span>
     },
     filterFn: (row, id, value) => {
-      const key = row.getValue(id);
-      if (typeof key !== 'string' || typeof value !== 'string') return false;
-      return key.toLowerCase().includes(value.toLowerCase());
+      const key = row.getValue(id)
+      if (typeof key !== 'string' || typeof value !== 'string') return false
+      return key.toLowerCase().includes(value.toLowerCase())
     },
   },
   {
     accessorKey: 'type',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Type" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Type" className="font-bold text-base" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const typeValue = row.getValue('type');
-      return (
-        <div className="flex w-[100px] items-center">
-          <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
-        </div>
-      )
+      const typeValue = row.getValue('type')
+      return <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
     },
     filterFn: (row, id, value) => {
       const rowValue = String(row.getValue(id))
@@ -67,20 +90,21 @@ export const columns: ColumnDef<AssetRow>[] = [
   },
   {
     accessorKey: 'description',
-    header: ({ column }: { column: Column<AssetRow, unknown> }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }: { column: Column<AssetRow, unknown> }) => (
+      <DataTableColumnHeader column={column} title="Description" className="font-bold text-base" />
+    ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
-      const desc = row.getValue('description');
+      const desc = row.getValue('description')
       return (
-        <div className="flex items-center">
-          <span>{typeof desc === 'string' && desc.trim() ? desc : 'N/a'}</span>
-        </div>
+        <span
+          className={typeof desc === 'string' && desc.trim() ? '' : 'text-muted-foreground italic'}
+        >
+          {typeof desc === 'string' && desc.trim() ? desc : 'N/a'}
+        </span>
       )
     },
   },
-  {
-    id: "actions",
-    cell: () => {
-      return <DataTableRowAction />
-    },
-  },
 ]
+
+// Maintain backward compatibility
+export const columns = createColumns()

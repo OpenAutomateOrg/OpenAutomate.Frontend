@@ -1,0 +1,18 @@
+{
+  "login": {
+    "title": "Sign In",
+    "description": "Enter your email and password to continue",
+    "signupPrompt": "Don't have an account?",
+    "signupLink": "Sign up"
+  },
+  "button": {
+    "filter": "Filter",
+    "clear": "Clear"
+  },
+  "sectionCard": {
+    "user": "User",
+    "schedules": "Schedules",
+    "assets": "Assets",
+    "agent": "Agent"
+  }
+}

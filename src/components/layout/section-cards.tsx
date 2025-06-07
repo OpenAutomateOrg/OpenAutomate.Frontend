@@ -1,14 +1,19 @@
+'use client'
+
 import { TrendingDownIcon, TrendingUpIcon } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLocale } from '@/providers/locale-provider'
 
 export function SectionCards() {
+  const { t } = useLocale()
+
   return (
     <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card ">
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>User</CardDescription>
+          <CardDescription>{t('sectionCard.user')}</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             $1,250.00
           </CardTitle>
@@ -32,7 +37,7 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Schedules</CardDescription>
+          <CardDescription>{t('sectionCard.schedules')}</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             1,234
           </CardTitle>
@@ -56,7 +61,7 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Assets</CardDescription>
+          <CardDescription>{t('sectionCard.assets')}</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             45,678
           </CardTitle>
@@ -80,7 +85,7 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>Agent</CardDescription>
+          <CardDescription>{t('sectionCard.agent')}</CardDescription>
           <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
             4.5%
           </CardTitle>

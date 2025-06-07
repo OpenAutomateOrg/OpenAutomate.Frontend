@@ -1,14 +1,13 @@
 'use client'
 
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Column, Row } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
-
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<AgentRow>[] = [
+export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -34,7 +33,8 @@ export const columns: ColumnDef<AgentRow>[] = [
   },
   {
     id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
   },
   {
     accessorKey: 'name',
@@ -59,7 +59,7 @@ export const columns: ColumnDef<AgentRow>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const status = String(row.getValue('status'));
-      
+
       // Define status badge styling based on the status value
       let statusClass = '';
       switch (status) {
@@ -77,7 +77,7 @@ export const columns: ColumnDef<AgentRow>[] = [
         default:
           statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
       }
-      
+
       return (
         <div className="flex items-center">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
@@ -89,13 +89,17 @@ export const columns: ColumnDef<AgentRow>[] = [
   },
   {
     accessorKey: 'lastConnected',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Connected" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AgentRow> }) => <DataTableColumnHeader column={column} title="Last Connected" />,
+    cell: ({ row }: { row: Row<AgentRow> }) => {
       // Get the value and convert it to a string to ensure it's safe for display
       const rawValue = row.getValue('lastConnected');
-      const lastConnected = typeof rawValue === 'string' ? rawValue : 
-                           (rawValue === null || rawValue === undefined) ? '' : String(rawValue);
-      
+      let lastConnected = '';
+      if (typeof rawValue === 'string') {
+        lastConnected = rawValue;
+      } else if (rawValue !== null && rawValue !== undefined) {
+        lastConnected = String(rawValue);
+      }
+
       // Format the date if it's a valid date string
       let formattedDate = 'Never';
       try {
@@ -111,7 +115,7 @@ export const columns: ColumnDef<AgentRow>[] = [
       } catch (error) {
         console.error('Error formatting date:', error);
       }
-      
+
       return (
         <div className="flex items-center">
           <span>{formattedDate}</span>

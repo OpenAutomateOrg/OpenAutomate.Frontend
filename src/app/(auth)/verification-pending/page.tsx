@@ -31,7 +31,8 @@ function VerificationPendingLoading() {
 // Client component that uses search params
 function VerificationPendingContent() {
   const searchParams = useSearchParams()
-  const email = searchParams?.get('email')
+  const email = searchParams.get('email')
+  const returnUrl = searchParams.get('returnUrl')
   const [isResending, setIsResending] = useState(false)
   const [alert, setAlert] = useState<{
     type: 'success' | 'error'
@@ -61,6 +62,9 @@ function VerificationPendingContent() {
       setIsResending(false)
     }
   }
+
+  // Generate login URL with return URL if available
+  const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
 
   return (
     <div className="container flex-1 flex items-center justify-center py-12">
@@ -99,7 +103,7 @@ function VerificationPendingContent() {
               {isResending ? 'Sending...' : 'Resend verification email'}
             </Button>
 
-            <Link href="/login">
+            <Link href={loginUrl}>
               <Button variant="ghost" className="w-full">
                 Return to login
               </Button>

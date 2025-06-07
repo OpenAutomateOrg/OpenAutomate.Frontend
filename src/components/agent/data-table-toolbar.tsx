@@ -17,13 +17,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
-  statuses: { value: string; label: string }[] // Options for Status filter
-  onSearch?: (value: string) => void
-  onStatusChange?: (value: string) => void
-  searchValue?: string
-  isFiltering?: boolean
-  isPending?: boolean
+  readonly table: Table<TData>
+  readonly statuses: { value: string; label: string }[] // Options for Status filter
+  readonly onSearch?: (value: string) => void
+  readonly onStatusChange?: (value: string) => void
+  readonly searchValue?: string
+  readonly isFiltering?: boolean
+  readonly isPending?: boolean
 }
 
 export function DataTableToolbar<TData>({
@@ -36,36 +36,39 @@ export function DataTableToolbar<TData>({
   isPending = false,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
-  
+
   // Get active filter count
   const activeFilterCount = table.getState().columnFilters.length
-  
+
   // Create a ref for the search input to preserve focus
   const searchInputRef = useRef<HTMLInputElement>(null)
   const lastCursorPositionRef = useRef<number | null>(null)
-  
-  // Preserve the cursor position when the component re-renders 
+
+  // Preserve the cursor position when the component re-renders
   useEffect(() => {
     // Only restore focus if we were previously focused
-    if (document.activeElement !== searchInputRef.current && lastCursorPositionRef.current !== null) {
+    if (
+      document.activeElement !== searchInputRef.current &&
+      lastCursorPositionRef.current !== null
+    ) {
       if (searchInputRef.current) {
         searchInputRef.current.focus()
         if (lastCursorPositionRef.current !== null) {
           searchInputRef.current.setSelectionRange(
             lastCursorPositionRef.current,
-            lastCursorPositionRef.current
+            lastCursorPositionRef.current,
           )
         }
       }
     }
   }, [isPending, isFiltering])
-  
+
   const handleFilterChange = (value: string) => {
     // Save cursor position before potential re-render
     if (searchInputRef.current) {
       lastCursorPositionRef.current = searchInputRef.current.selectionStart
     }
-    
+
     // If external search handler is provided, call it
     if (onSearch) {
       onSearch(value)
@@ -80,8 +83,8 @@ export function DataTableToolbar<TData>({
       <div className="flex flex-1 items-center space-x-2">
         <div className="relative w-full md:w-auto md:flex-1 max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          
-        <Input
+
+          <Input
             ref={searchInputRef}
             placeholder="Search by Name or Machine Name..."
             value={searchValue}
@@ -95,59 +98,55 @@ export function DataTableToolbar<TData>({
               }
             }}
           />
-          
+
           {isFiltering && (
             <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
           )}
-          
+
           {!isFiltering && searchValue !== '' && (
-            <X 
+            <X
               className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
               onClick={() => handleFilterChange('')}
             />
-        )}
+          )}
         </div>
 
         {/* Status Filter */}
         {table.getColumn('status') && (
           <div className="flex items-center space-x-1">
-          <Select
+            <Select
               onValueChange={(value) => {
                 if (onStatusChange) {
                   // Use the external handler if provided
                   onStatusChange(value)
                 } else {
                   // Fall back to direct table manipulation
-                  if (value === 'all') {
-                    table.getColumn('status')?.setFilterValue('')
-                  } else {
-                    table.getColumn('status')?.setFilterValue(value)
-                  }
+                  table.getColumn('status')?.setFilterValue(value === 'all' ? '' : value)
                 }
               }}
-              value={
-                (table.getColumn('status')?.getFilterValue() as string) || 'all'
-              }
+              value={(table.getColumn('status')?.getFilterValue() as string) || 'all'}
               disabled={isFiltering || isPending}
-          >
+            >
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Filter status" />
-                  {(table.getColumn('status')?.getFilterValue() as string | undefined) && 
-                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">1</Badge>
-                  }
+                  {(table.getColumn('status')?.getFilterValue() as string | undefined) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                      1
+                    </Badge>
+                  )}
                 </div>
-            </SelectTrigger>
-            <SelectContent>
+              </SelectTrigger>
+              <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-              {statuses.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
