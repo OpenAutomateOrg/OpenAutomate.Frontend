@@ -40,15 +40,7 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
     // cell: ({ row }) => <DataTableRowActions row={row} />,
     header: 'Action',
   },
-  {
-    accessorKey: 'workflow',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Workflow" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('workflow')}</span>
-      </div>
-    ),
-  },
+
   {
     accessorKey: 'version',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
@@ -67,15 +59,7 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: 'agentGroup',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent Group" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('agentGroup')}</span>
-      </div>
-    ),
-  },
+
   {
     accessorKey: 'state',
     header: ({ column }) => <DataTableColumnHeader column={column} title="State" />,
