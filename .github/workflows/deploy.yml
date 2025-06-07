@@ -2,7 +2,7 @@ name: Deploy OpenAutomate Frontend
 
 on:
   push:
-    branches: [develop]
+    branches: [staging]
   workflow_dispatch:
 
 jobs:
