@@ -123,7 +123,7 @@ export const organizationInvitationsApi = {
     },
 
     /**
-     * Lấy danh sách lời mời của OU
+     * Get list invitation in OU
      * @param tenant The organization slug
      * @returns { count: number, invitations: OrganizationInvitationResponse[] }
      */
