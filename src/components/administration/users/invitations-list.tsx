@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { PlusCircle, Search, X, Filter, MoreHorizontal } from 'lucide-react'
 import { organizationInvitationsApi, OrganizationInvitationResponse } from '@/lib/api/organization-unit-invitations'
@@ -109,6 +109,9 @@ export default function InvitationsList() {
     const [pageIndex, setPageIndex] = useState(0)
     const [pageSize, setPageSize] = useState(10)
     const [inviteOpen, setInviteOpen] = useState(false)
+    // Refs for tracking total count
+    const totalCountRef = useRef<number>(0)
+    const [hasExactCount, setHasExactCount] = useState(false)
 
     // Refs for input cursor position tracking
     const emailInputRef = useRef<HTMLInputElement>(null)
@@ -147,6 +150,46 @@ export default function InvitationsList() {
 
     const invitations = data?.value ?? [];
     const count = data?.['@odata.count'] ?? invitations.length;
+
+    // Update total count based on OData response
+    useEffect(() => {
+        if (data) {
+            if (typeof data['@odata.count'] === 'number') {
+                totalCountRef.current = data['@odata.count'];
+                setHasExactCount(true);
+            } else {
+                // If no @odata.count, use length as minimum count
+                const minCount = pageIndex * pageSize + invitations.length;
+                if (minCount > totalCountRef.current) {
+                    totalCountRef.current = minCount;
+                }
+
+                // If we have a full page and we're on the first page, assume there's at least one more
+                const isFullFirstPage = invitations.length === pageSize && pageIndex === 0;
+                if (isFullFirstPage) {
+                    totalCountRef.current = minCount + 1;
+                }
+
+                setHasExactCount(false);
+            }
+        }
+    }, [data, pageIndex, pageSize, invitations.length]);
+
+    // Calculate page count with better edge case handling
+    const totalPages = useMemo(() => {
+        const calculatedCount = Math.max(1, Math.ceil(count / pageSize));
+        const hasMorePages =
+            invitations.length === pageSize &&
+            count <= pageSize * (pageIndex + 1);
+        const minValidPageCount = pageIndex + 1;
+
+        if (hasMorePages) {
+            return Math.max(minValidPageCount, calculatedCount, pageIndex + 2);
+        }
+        return Math.max(minValidPageCount, calculatedCount);
+    }, [count, pageSize, pageIndex, invitations.length]);
+
+    const isUnknownTotalCount = !hasExactCount && invitations.length === pageSize;
 
     // Check for active filters
     const isFiltered = searchEmail || searchStatus !== 'All';
@@ -241,7 +284,8 @@ export default function InvitationsList() {
                 currentPage={pageIndex + 1}
                 pageSize={pageSize}
                 totalCount={count}
-                totalPages={Math.max(1, Math.ceil(count / pageSize))}
+                totalPages={totalPages}
+                isUnknownTotalCount={isUnknownTotalCount}
                 onPageChange={page => setPageIndex(page - 1)}
                 onPageSizeChange={setPageSize}
             />

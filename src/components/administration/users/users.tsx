@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from './columns'
@@ -14,7 +14,7 @@ import { OrganizationUnitUser, getOrganizationUnitUsersWithOData } from '@/lib/a
 import { UsersDataTableToolbar } from './data-table-toolbar'
 import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, Row } from '@tanstack/react-table'
 import useSWR from 'swr'
 
 export const usersSchema = z.object({
@@ -60,6 +60,10 @@ export default function UsersInterface() {
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(10)
 
+  // Refs for tracking total count
+  const totalCountRef = useRef<number>(0)
+  const [hasExactCount, setHasExactCount] = useState(false)
+
   // Debounced filter values
   const debouncedEmail = useDebounce(searchEmail, 400)
   const debouncedFirstName = useDebounce(searchFirstName, 400)
@@ -94,6 +98,46 @@ export default function UsersInterface() {
   const users = usersResponse?.value ?? []
   const totalCount = usersResponse?.['@odata.count'] ?? users.length
 
+  // Update total count based on OData response
+  useEffect(() => {
+    if (usersResponse) {
+      if (typeof usersResponse['@odata.count'] === 'number') {
+        totalCountRef.current = usersResponse['@odata.count'];
+        setHasExactCount(true);
+      } else {
+        // If no @odata.count, use length as minimum count
+        const minCount = pageIndex * pageSize + users.length;
+        if (minCount > totalCountRef.current) {
+          totalCountRef.current = minCount;
+        }
+
+        // If we have a full page and we're on the first page, assume there's at least one more
+        const isFullFirstPage = users.length === pageSize && pageIndex === 0;
+        if (isFullFirstPage) {
+          totalCountRef.current = minCount + 1;
+        }
+
+        setHasExactCount(false);
+      }
+    }
+  }, [usersResponse, pageIndex, pageSize, users.length]);
+
+  // Calculate page count with better edge case handling
+  const totalPages = useMemo(() => {
+    const calculatedCount = Math.max(1, Math.ceil(totalCount / pageSize));
+    const hasMorePages =
+      users.length === pageSize &&
+      totalCount <= pageSize * (pageIndex + 1);
+    const minValidPageCount = pageIndex + 1;
+
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pageIndex + 2);
+    }
+    return Math.max(minValidPageCount, calculatedCount);
+  }, [totalCount, pageSize, pageIndex, users.length]);
+
+  const isUnknownTotalCount = !hasExactCount && users.length === pageSize;
+
   // Map API user to table row
   function mapOrganizationUnitUserToUsersRow(user: OrganizationUnitUser) {
     return {
@@ -118,7 +162,7 @@ export default function UsersInterface() {
     col.id === 'actions'
       ? {
         ...col,
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<UsersRow> }) => (
           <DataTableRowAction row={row} onDeleted={mutate} />
         ),
       }
@@ -185,7 +229,8 @@ export default function UsersInterface() {
             currentPage={pageIndex + 1}
             pageSize={pageSize}
             totalCount={totalCount}
-            totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
+            totalPages={totalPages}
+            isUnknownTotalCount={isUnknownTotalCount}
             onPageChange={page => setPageIndex(page - 1)}
             onPageSizeChange={setPageSize}
           />
