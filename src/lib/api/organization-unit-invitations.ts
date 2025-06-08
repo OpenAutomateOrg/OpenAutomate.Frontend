@@ -45,6 +45,35 @@ function parseAcceptInvitationError(err: unknown): { success: true } | never {
 }
 
 /**
+ * Processes an OData response or array to ensure consistent format
+ * @param response The response from the server (either an OData object or array)
+ * @returns A properly formatted OData response
+ */
+function processODataResponse(response: unknown): { value: OrganizationInvitationResponse[]; '@odata.count'?: number } {
+    // If it's already in OData format
+    if (typeof response === 'object' && response !== null && 'value' in response) {
+        return response as { value: OrganizationInvitationResponse[]; '@odata.count'?: number };
+    }
+
+    // If it's an array (non-OData format)
+    if (Array.isArray(response)) {
+        return { value: response as OrganizationInvitationResponse[], '@odata.count': response.length };
+    }
+
+    // If it has invitations property (old API format)
+    if (typeof response === 'object' && response !== null && 'invitations' in response) {
+        const typedResponse = response as { count: number; invitations: OrganizationInvitationResponse[] };
+        return {
+            value: typedResponse.invitations,
+            '@odata.count': typedResponse.count
+        };
+    }
+
+    // Default empty response
+    return { value: [] };
+}
+
+/**
  * Organization invitations API
  */
 export const organizationInvitationsApi = {
@@ -123,13 +152,24 @@ export const organizationInvitationsApi = {
     },
 
     /**
-     * Get list invitation in OU
+     * Get list invitation in OU (OData)
      * @param tenant The organization slug
-     * @returns { count: number, invitations: OrganizationInvitationResponse[] }
+     * @param odataOptions OData params (filter, top, skip, count)
+     * @returns OData response { value: OrganizationInvitationResponse[], @odata.count: number }
      */
-    listInvitations: async (tenant: string): Promise<{ count: number, invitations: OrganizationInvitationResponse[] }> => {
-        return api.get<{ count: number, invitations: OrganizationInvitationResponse[] }>(
-            `${tenant}/api/organization-unit-invitation/list`
-        )
+    listInvitations: async (
+        tenant: string,
+        odataOptions?: Record<string, any>
+    ): Promise<{ value: OrganizationInvitationResponse[]; '@odata.count'?: number }> => {
+        let url = `/${tenant}/odata/OrganizationUnitInvitations`;
+        if (odataOptions) {
+            const params = new URLSearchParams();
+            Object.entries(odataOptions).forEach(([k, v]) => {
+                if (v !== undefined) params.append(k, v as string);
+            });
+            url += `?${params.toString()}`;
+        }
+        const response = await api.get<unknown>(url);
+        return processODataResponse(response);
     },
 } 

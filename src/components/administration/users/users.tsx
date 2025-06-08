@@ -10,12 +10,12 @@ import { InviteModal } from './invite-modal'
 import InvitationsList from './invitations-list'
 
 import { z } from 'zod'
-import { useParams } from 'next/navigation'
 import { OrganizationUnitUser, getOrganizationUnitUsersWithOData } from '@/lib/api/organization-unit-user'
 import { UsersDataTableToolbar } from './data-table-toolbar'
 import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
-import type { Row } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
+import useSWR from 'swr'
 
 export const usersSchema = z.object({
   email: z.string(),
@@ -48,29 +48,51 @@ const ALL_ROLES = 'ALL'
 const roleOptions = ['OPERATOR', 'USER', 'DEVELOPER', 'OWNER']
 
 export default function UsersInterface() {
-  const params = useParams()
-  const tenant = params.tenant as string
 
   const [searchEmail, setSearchEmail] = useState('')
   const [searchFirstName, setSearchFirstName] = useState('')
   const [searchLastName, setSearchLastName] = useState('')
   const [searchRole, setSearchRole] = useState(ALL_ROLES)
 
-  const [users, setUsers] = useState<OrganizationUnitUser[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tab, setTab] = useState<'user' | 'invitation'>('user')
 
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(10)
-  const [totalCount, setTotalCount] = useState(0)
 
   // Debounced filter values
   const debouncedEmail = useDebounce(searchEmail, 400)
   const debouncedFirstName = useDebounce(searchFirstName, 400)
   const debouncedLastName = useDebounce(searchLastName, 400)
   const debouncedRole = useDebounce(searchRole, 400)
+
+  // Build OData options for SWR key
+  const odataOptions = {
+    $filter: [
+      debouncedEmail ? `contains(tolower(email),'${debouncedEmail.toLowerCase()}')` : undefined,
+      debouncedFirstName ? `contains(tolower(firstName),'${debouncedFirstName.toLowerCase()}')` : undefined,
+      debouncedLastName ? `contains(tolower(lastName),'${debouncedLastName.toLowerCase()}')` : undefined,
+      debouncedRole && debouncedRole !== ALL_ROLES ? `tolower(role) eq '${debouncedRole.toLowerCase()}'` : undefined,
+    ].filter(Boolean).join(' and ') || undefined,
+    $top: pageSize,
+    $skip: pageIndex * pageSize,
+    $count: true,
+  }
+
+  // SWR for users data
+  const {
+    data: usersResponse,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(
+    ['organization-unit-users', odataOptions],
+    () => getOrganizationUnitUsersWithOData(odataOptions),
+    { keepPreviousData: true }
+  )
+
+  const users = usersResponse?.value ?? []
+  const totalCount = usersResponse?.['@odata.count'] ?? users.length
 
   // Map API user to table row
   function mapOrganizationUnitUserToUsersRow(user: OrganizationUnitUser) {
@@ -84,40 +106,20 @@ export default function UsersInterface() {
     }
   }
 
-  // Fetch users with OData filter (debounced)
-  const fetchUsers = () => {
-    setLoading(true)
-    const filters: string[] = []
-    if (debouncedEmail) filters.push(`contains(tolower(email),'${debouncedEmail.toLowerCase()}')`)
-    if (debouncedFirstName) filters.push(`contains(tolower(firstName),'${debouncedFirstName.toLowerCase()}')`)
-    if (debouncedLastName) filters.push(`contains(tolower(lastName),'${debouncedLastName.toLowerCase()}')`)
-    if (debouncedRole && debouncedRole !== ALL_ROLES) filters.push(`tolower(role) eq '${debouncedRole.toLowerCase()}'`)
-    const odataOptions = {
-      $filter: filters.length > 0 ? filters.join(' and ') : undefined,
-      $top: pageSize,
-      $skip: pageIndex * pageSize,
-      $count: true,
-    }
-    getOrganizationUnitUsersWithOData(odataOptions)
-      .then(res => {
-        setUsers(res.value)
-        setTotalCount(res['@odata.count'] ?? res.value.length)
-      })
-      .catch(() => setError('Failed to load users'))
-      .finally(() => setLoading(false))
-  }
-
+  // Error state for display
+  const [localError, setLocalError] = useState<string | null>(null)
   useEffect(() => {
-    fetchUsers()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant, debouncedEmail, debouncedFirstName, debouncedLastName, debouncedRole, pageIndex, pageSize])
+    if (error) setLocalError('Failed to load users')
+    else setLocalError(null)
+  }, [error])
 
-  const columnsWithAction = columns.map(col =>
+  // Fix for the TypeScript warning about row prop
+  const columnsWithAction: ColumnDef<UsersRow>[] = columns.map(col =>
     col.id === 'actions'
       ? {
         ...col,
-        cell: ({ row }: { row: Row<UsersRow> }) => (
-          <DataTableRowAction row={row} onDeleted={fetchUsers} />
+        cell: ({ row }) => (
+          <DataTableRowAction row={row} onDeleted={mutate} />
         ),
       }
       : col
@@ -160,7 +162,7 @@ export default function UsersInterface() {
                 setSearchRole={setSearchRole}
                 roleOptions={roleOptions}
                 ALL_ROLES={ALL_ROLES}
-                loading={loading}
+                loading={isLoading}
                 onReset={() => {
                   setSearchEmail('')
                   setSearchFirstName('')
@@ -176,7 +178,7 @@ export default function UsersInterface() {
           <DataTable
             columns={columnsWithAction}
             data={users.map(mapOrganizationUnitUserToUsersRow)}
-            isLoading={loading}
+            isLoading={isLoading}
             totalCount={totalCount}
           />
           <Pagination
@@ -187,7 +189,7 @@ export default function UsersInterface() {
             onPageChange={page => setPageIndex(page - 1)}
             onPageSizeChange={setPageSize}
           />
-          {error && <div className="text-red-500">{error}</div>}
+          {localError && <div className="text-red-500">{localError}</div>}
           <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
         </div>
       )}
