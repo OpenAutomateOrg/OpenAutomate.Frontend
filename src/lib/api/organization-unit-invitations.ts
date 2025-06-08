@@ -120,5 +120,16 @@ export const organizationInvitationsApi = {
             }
             throw err;
         }
-    }
+    },
+
+    /**
+     * Lấy danh sách lời mời của OU
+     * @param tenant The organization slug
+     * @returns { count: number, invitations: OrganizationInvitationResponse[] }
+     */
+    listInvitations: async (tenant: string): Promise<{ count: number, invitations: OrganizationInvitationResponse[] }> => {
+        return api.get<{ count: number, invitations: OrganizationInvitationResponse[] }>(
+            `${tenant}/api/organization-unit-invitation/list`
+        )
+    },
 } 

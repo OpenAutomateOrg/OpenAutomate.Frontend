@@ -7,6 +7,7 @@ import { columns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState } from 'react'
 import { InviteModal } from './invite-modal'
+import InvitationsList from './invitations-list'
 
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
