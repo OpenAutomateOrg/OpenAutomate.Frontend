@@ -36,6 +36,15 @@ export interface CheckTokenResponse {
     organizationUnitId: string
 }
 
+// OData options interface
+export interface ODataOptions {
+    $filter?: string;
+    $top?: number;
+    $skip?: number;
+    $count?: boolean;
+    [key: string]: string | number | boolean | undefined;
+}
+
 function parseAcceptInvitationError(err: unknown): { success: true } | never {
     const errorObj = err as { status?: number; message?: string; response?: { data?: { message?: string } } };
     if (errorObj?.status === 409) return { success: true };
@@ -159,7 +168,7 @@ export const organizationInvitationsApi = {
      */
     listInvitations: async (
         tenant: string,
-        odataOptions?: Record<string, any>
+        odataOptions?: ODataOptions
     ): Promise<{ value: OrganizationInvitationResponse[]; '@odata.count'?: number }> => {
         let url = `/${tenant}/odata/OrganizationUnitInvitations`;
         if (odataOptions) {

@@ -2,14 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { PlusCircle, Search, X, Filter } from 'lucide-react'
+import { PlusCircle, Search, X, Filter, MoreHorizontal } from 'lucide-react'
 import { organizationInvitationsApi, OrganizationInvitationResponse } from '@/lib/api/organization-unit-invitations'
 import { DataTable } from '@/components/layout/table/data-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, Row, Table, Column } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pagination } from '@/components/ui/pagination'
-import { MoreHorizontal } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
@@ -20,7 +19,7 @@ import useSWR from 'swr'
 const invitationColumns: ColumnDef<OrganizationInvitationResponse>[] = [
     {
         id: 'select',
-        header: ({ table }: { table: any }) => (
+        header: ({ table }: { table: Table<OrganizationInvitationResponse> }) => (
             <Checkbox
                 checked={
                     table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
@@ -32,7 +31,7 @@ const invitationColumns: ColumnDef<OrganizationInvitationResponse>[] = [
                 className="translate-y-[2px]"
             />
         ),
-        cell: ({ row }: { row: any }) => (
+        cell: ({ row }: { row: Row<OrganizationInvitationResponse> }) => (
             <Checkbox
                 checked={row.getIsSelected()}
                 onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
@@ -46,30 +45,40 @@ const invitationColumns: ColumnDef<OrganizationInvitationResponse>[] = [
     {
         id: 'actions',
         header: 'Action',
-        cell: ({ row }: { row: any }) => <InvitationRowActions row={row} />,
+        cell: () => <InvitationRowActions />,
     },
     {
         accessorKey: 'recipientEmail',
-        header: ({ column }: { column: any }) => <DataTableColumnHeader column={column} title="Email" />,
-        cell: ({ row }: { row: any }) => <span>{row.getValue('recipientEmail')}</span>,
+        header: ({ column }: { column: Column<OrganizationInvitationResponse, unknown> }) => <DataTableColumnHeader column={column} title="Email" />,
+        cell: ({ row }: { row: Row<OrganizationInvitationResponse> }) => <span>{row.getValue('recipientEmail')}</span>,
         enableSorting: true,
     },
     {
         accessorKey: 'status',
-        header: ({ column }: { column: any }) => <DataTableColumnHeader column={column} title="Status" />,
-        cell: ({ row }: { row: any }) => <span>{row.getValue('status')}</span>,
+        header: ({ column }: { column: Column<OrganizationInvitationResponse, unknown> }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ row }: { row: Row<OrganizationInvitationResponse> }) => <span>{row.getValue('status')}</span>,
         enableSorting: true,
     },
     {
         accessorKey: 'expiresAt',
-        header: ({ column }: { column: any }) => <DataTableColumnHeader column={column} title="Expires At" />,
-        cell: ({ row }: { row: any }) => {
+        header: ({ column }: { column: Column<OrganizationInvitationResponse, unknown> }) => <DataTableColumnHeader column={column} title="Expires At" />,
+        cell: ({ row }: { row: Row<OrganizationInvitationResponse> }) => {
             try {
                 const dateValue = row.getValue('expiresAt');
                 if (!dateValue) return <span>-</span>;
 
-                // Format date the same way as in users.tsx
-                const date = new Date(dateValue);
+                let dateStr: string | undefined;
+                if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+                    dateStr = String(dateValue);
+                } else if (dateValue instanceof Date) {
+                    dateStr = dateValue.toISOString();
+                } else {
+                    // Do not stringify objects, just return error
+                    console.warn('Invalid date format received:', dateValue);
+                    return <span>Invalid format</span>;
+                }
+
+                const date = new Date(dateStr);
                 if (isNaN(date.getTime())) return <span>Invalid date</span>;
 
                 return <span>{date.toISOString().replace('T', ' ').slice(0, 10)}</span>;
@@ -82,7 +91,7 @@ const invitationColumns: ColumnDef<OrganizationInvitationResponse>[] = [
     },
 ]
 
-function InvitationRowActions({ row }: { readonly row: any }) {
+function InvitationRowActions() {
     return (
         <Button variant="ghost" size="icon">
             <MoreHorizontal className="h-4 w-4" />
