@@ -1,28 +1,36 @@
 'use client'
 
 import { Table } from '@tanstack/react-table'
-import { X, Search, Loader2 } from 'lucide-react'
+import { X, Search, Filter, Loader2 } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
-  statuses: { value: string; label: string }[] // Options for Status filter
-  onSearch?: (value: string) => void
-  onStatusChange?: (value: string) => void
-  searchValue?: string
-  isFiltering?: boolean
-  isPending?: boolean
+  readonly table: Table<TData>
+  readonly statuses: { value: string; label: string }[] // Options for Status filter
+  readonly onSearch?: (value: string) => void
+  readonly onStatusChange?: (value: string) => void
+  readonly searchValue?: string
+  readonly isFiltering?: boolean
+  readonly isPending?: boolean
 }
 
 export function DataTableToolbar<TData>({
   table,
+  statuses,
   onSearch,
+  onStatusChange,
   searchValue = '',
   isFiltering = false,
   isPending = false,
@@ -78,10 +86,10 @@ export function DataTableToolbar<TData>({
 
           <Input
             ref={searchInputRef}
-            placeholder="Search "
+            placeholder="Search by name or description..."
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
-            className="h-10 pl-8 w-full pr-8"
+            className="h-10 pl-8 w-full pr-8 transition-all border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20"
             disabled={isFiltering}
             onFocus={() => {
               // Save cursor position when input is focused
@@ -91,17 +99,55 @@ export function DataTableToolbar<TData>({
             }}
           />
 
-          {isFiltering && (
+          {(isFiltering || isPending) && (
             <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
           )}
 
-          {!isFiltering && searchValue !== '' && (
+          {!isFiltering && !isPending && searchValue !== '' && (
             <X
               className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
               onClick={() => handleFilterChange('')}
             />
           )}
         </div>
+
+        {/* Status Filter */}
+        {table.getColumn('isActive') && (
+          <div className="flex items-center space-x-1">
+            <Select
+              onValueChange={(value) => {
+                if (onStatusChange) {
+                  // Use the external handler if provided
+                  onStatusChange(value)
+                } else {
+                  // Fall back to direct table manipulation
+                  table.getColumn('isActive')?.setFilterValue(value === 'all' ? '' : value)
+                }
+              }}
+              value={(table.getColumn('isActive')?.getFilterValue() as string) || 'all'}
+              disabled={isFiltering || isPending}
+            >
+              <SelectTrigger className="h-10 sm:w-[180px] transition-all border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20">
+                <div className="flex items-center">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter status" />
+                  {(table.getColumn('isActive')?.getFilterValue() as string | undefined) && (
+                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
+                      1
+                    </Badge>
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {statuses.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Active Filter Count Badge */}
         {activeFilterCount > 0 && (
@@ -118,7 +164,7 @@ export function DataTableToolbar<TData>({
               table.resetColumnFilters()
               if (onSearch) onSearch('')
             }}
-            className="h-8 px-2 lg:px-3"
+            className="h-8 px-2 lg:px-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             disabled={isFiltering}
           >
             Reset
