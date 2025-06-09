@@ -2,7 +2,7 @@
 
 import { PlusCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns } from '@/components/automation/package/columns'
+import { createPackageColumns } from '@/components/automation/package/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from '@/components/automation/package/create-edit-modal'
@@ -108,7 +108,7 @@ export default function PackageInterface() {
   // UI state for search input
   const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') ?? '')
 
-  // Convert table state to OData query parameters
+  // ✅ Convert table state to OData query parameters (following guideline #1: derive data during render)
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
       $top: pagination.pageSize,
@@ -119,34 +119,42 @@ export default function PackageInterface() {
 
     // Add sorting
     if (sorting.length > 0) {
-      params.$orderby = `${sorting[0].id} ${sorting[0].desc ? 'desc' : 'asc'}`
+      params.$orderby = sorting.map((sort) => `${sort.id} ${sort.desc ? 'desc' : 'asc'}`).join(',')
     }
 
     // Add filtering
-    const filters: string[] = []
+    if (columnFilters.length > 0) {
+      const filters = columnFilters
+        .filter((filter) => !(typeof filter.value === 'string' && filter.value === ''))
+        .map((filter) => {
+          const column = filter.id
+          const value = filter.value
 
-    // Name and Description filter
-    const nameFilter = columnFilters.find((filter) => filter.id === 'name')
-    if (nameFilter?.value) {
-      const searchTerm = (nameFilter.value as string).toLowerCase();
-      // Tìm kiếm cả trong name và description
-      filters.push(`(contains(tolower(name), '${searchTerm}') or contains(tolower(description), '${searchTerm}'))`)
-    }
+          if (typeof value === 'string') {
+            if (column === 'name' && value) {
+              return `(contains(tolower(name), '${value.toLowerCase()}') or contains(tolower(description), '${value.toLowerCase()}'))`
+            }
+            if (column === 'isActive') {
+              return `isActive eq ${value === 'true'}`
+            }
+            return `contains(tolower(${column}), '${value.toLowerCase()}')`
+          } else if (Array.isArray(value)) {
+            return value.map((v) => `${column} eq '${v}'`).join(' or ')
+          }
 
-    // Status filter
-    const statusFilter = columnFilters.find((filter) => filter.id === 'isActive')
-    if (statusFilter?.value) {
-      filters.push(`isActive eq ${statusFilter.value === 'true'}`)
-    }
+          return ''
+        })
+        .filter(Boolean)
 
-    if (filters.length > 0) {
-      params.$filter = filters.join(' and ')
+      if (filters.length > 0) {
+        params.$filter = filters.join(' and ')
+      }
     }
 
     return params
   }, [pagination, sorting, columnFilters])
 
-  // SWR for packages data
+  // ✅ SWR for packages data - following guideline #8: use framework-level loaders
   const queryParams = getODataQueryParams()
   const { 
     data: packagesResponse, 
@@ -155,21 +163,16 @@ export default function PackageInterface() {
     mutate: mutatePackages 
   } = useSWR(
     swrKeys.packagesWithOData(queryParams as Record<string, unknown>),
-    () => getAutomationPackagesWithOData(queryParams),
-    {
-      onSuccess: (data) => {
-        console.log('Packages data loaded:', data)
-      }
-    }
+    () => getAutomationPackagesWithOData(queryParams)
   )
 
-  // Transform data during render
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
   const packages = useMemo(() => {
     if (!packagesResponse?.value) return []
     return packagesResponse.value
   }, [packagesResponse])
 
-  // Handle SWR errors
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
   useEffect(() => {
     if (packagesError) {
       console.error('Failed to load packages:', packagesError)
@@ -203,9 +206,10 @@ export default function PackageInterface() {
       totalCountRef.current = minCount
     }
 
-    // If we got a full page, assume there might be more
-    const isFullPage = response.value.length === pagination.pageSize
-    if (isFullPage) {
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage =
+      response.value.length === pagination.pageSize && pagination.pageIndex === 0
+    if (isFullFirstPage) {
       setTotalCount(minCount + 1) // Indicate there might be more
       totalCountRef.current = minCount + 1
     }
@@ -213,14 +217,14 @@ export default function PackageInterface() {
     setHasExactCount(false)
   }, [pagination.pageIndex, pagination.pageSize])
 
-  // Update total count when data changes
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
   useEffect(() => {
     if (packagesResponse) {
       updateTotalCounts(packagesResponse)
     }
   }, [packagesResponse, updateTotalCounts])
 
-  // Handle empty page edge case
+  // ✅ Handle empty page edge case (following guideline #1: derive data during render)
   useEffect(() => {
     if (packagesResponse?.value) {
       const isEmptyPageBeyondFirst =
@@ -239,6 +243,13 @@ export default function PackageInterface() {
       }
     }
   }, [packagesResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+
+  // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
+  const refreshPackages = useCallback(async () => {
+    setIsPending(false)
+    setIsChangingPageSize(false)
+    await mutatePackages()
+  }, [mutatePackages])
 
   // Initialize URL with default params if needed
   useEffect(() => {
@@ -292,10 +303,10 @@ export default function PackageInterface() {
     return !hasExactCount && packages.length === pagination.pageSize
   }, [hasExactCount, packages.length, pagination.pageSize])
 
-  // Setup table instance
+  // Setup table instance with optimized configuration
   const table = useReactTable({
     data: packages,
-    columns,
+    columns: createPackageColumns(refreshPackages),
     state: {
       sorting,
       columnVisibility,
@@ -366,7 +377,7 @@ export default function PackageInterface() {
         }
 
         setIsPending(false)
-      }, 500)
+      }, 300) // Giảm thời gian debounce xuống 300ms để cảm giác mượt mà hơn
     },
     [table, updateUrl, pathname],
   )
@@ -404,13 +415,6 @@ export default function PackageInterface() {
     router.push(route)
   }
 
-  // Refresh handler
-  const handleRefresh = () => {
-    setIsPending(false)
-    setIsChangingPageSize(false)
-    mutatePackages()
-  }
-
   const statusOptions = [
     { value: 'all', label: 'All Statuses' },
     { value: 'true', label: 'Active' },
@@ -419,7 +423,7 @@ export default function PackageInterface() {
 
   return (
     <>
-      <div className="flex h-full flex-1 flex-col space-y-8">
+      <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Automation Packages</h2>
           <div className="flex items-center space-x-2">
@@ -432,10 +436,10 @@ export default function PackageInterface() {
             )}
             <Button
               variant="outline"
-              onClick={handleRefresh}
+              onClick={refreshPackages}
               disabled={isLoading || isPending}
             >
-              {(isLoading || isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Refresh
             </Button>
             <Button
@@ -450,6 +454,15 @@ export default function PackageInterface() {
             </Button>
           </div>
         </div>
+
+        {packagesError && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+            <p className="text-red-800 dark:text-red-300">Failed to load packages. Please try again.</p>
+            <Button variant="outline" className="mt-2" onClick={() => mutatePackages()}>
+              Retry
+            </Button>
+          </div>
+        )}
         
         <DataTableToolbar
           table={table}
@@ -463,10 +476,10 @@ export default function PackageInterface() {
         
         <DataTable
           data={packages}
-          columns={columns}
+          columns={createPackageColumns(refreshPackages)}
           onRowClick={handleRowClick}
           table={table}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           totalCount={totalCount}
         />
 
@@ -475,12 +488,11 @@ export default function PackageInterface() {
           pageSize={pagination.pageSize}
           totalCount={totalCount}
           totalPages={pageCount}
-          isLoading={isLoading || isPending}
+          isLoading={isLoading}
           isChangingPageSize={isChangingPageSize}
           isUnknownTotalCount={isUnknownTotalCount}
           rowsLabel="packages"
           onPageChange={(page: number) => {
-            console.log('Changing to page:', page)
             const currentPage = pagination.pageIndex + 1
             if (page !== currentPage) {
               setPagination({ ...pagination, pageIndex: page - 1 })
@@ -488,7 +500,6 @@ export default function PackageInterface() {
             }
           }}
           onPageSizeChange={(size: number) => {
-            console.log('Changing page size to:', size)
             if (size !== pagination.pageSize) {
               setIsChangingPageSize(true)
               const currentStartRow = pagination.pageIndex * pagination.pageSize
@@ -505,7 +516,7 @@ export default function PackageInterface() {
           }}
         />
 
-        {!isLoading && !isPending && packages.length === 0 && !packagesError && (
+        {!isLoading && packages.length === 0 && !packagesError && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No packages found. Create your first package to get started.</p>
           </div>
@@ -518,7 +529,7 @@ export default function PackageInterface() {
           setIsModalOpen(false)
         }}
         mode={modalMode}
-        onSuccess={handleRefresh}
+        onSuccess={refreshPackages}
       />
     </>
   )

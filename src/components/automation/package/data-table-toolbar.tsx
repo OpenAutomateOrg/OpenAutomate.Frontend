@@ -89,7 +89,7 @@ export function DataTableToolbar<TData>({
             placeholder="Search by name or description..."
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
-            className="h-10 pl-8 w-full pr-8 transition-all border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20"
+            className="h-10 pl-8 w-full pr-8"
             disabled={isFiltering}
             onFocus={() => {
               // Save cursor position when input is focused
@@ -99,11 +99,11 @@ export function DataTableToolbar<TData>({
             }}
           />
 
-          {(isFiltering || isPending) && (
+          {isFiltering && (
             <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
           )}
 
-          {!isFiltering && !isPending && searchValue !== '' && (
+          {!isFiltering && searchValue !== '' && (
             <X
               className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
               onClick={() => handleFilterChange('')}
@@ -127,7 +127,7 @@ export function DataTableToolbar<TData>({
               value={(table.getColumn('isActive')?.getFilterValue() as string) || 'all'}
               disabled={isFiltering || isPending}
             >
-              <SelectTrigger className="h-10 sm:w-[180px] transition-all border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20">
+              <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Filter status" />
@@ -139,6 +139,7 @@ export function DataTableToolbar<TData>({
                 </div>
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -164,7 +165,7 @@ export function DataTableToolbar<TData>({
               table.resetColumnFilters()
               if (onSearch) onSearch('')
             }}
-            className="h-8 px-2 lg:px-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="h-8 px-2 lg:px-3"
             disabled={isFiltering}
           >
             Reset
