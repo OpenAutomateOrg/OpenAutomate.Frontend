@@ -36,12 +36,50 @@ export interface CheckTokenResponse {
     organizationUnitId: string
 }
 
+// OData options interface
+export interface ODataOptions {
+    $filter?: string;
+    $top?: number;
+    $skip?: number;
+    $count?: boolean;
+    [key: string]: string | number | boolean | undefined;
+}
+
 function parseAcceptInvitationError(err: unknown): { success: true } | never {
     const errorObj = err as { status?: number; message?: string; response?: { data?: { message?: string } } };
     if (errorObj?.status === 409) return { success: true };
     if (errorObj?.response?.data?.message) throw new Error(errorObj.response.data.message);
     if (errorObj?.message) throw new Error(errorObj.message);
     throw new Error('Failed to accept invitation.');
+}
+
+/**
+ * Processes an OData response or array to ensure consistent format
+ * @param response The response from the server (either an OData object or array)
+ * @returns A properly formatted OData response
+ */
+function processODataResponse(response: unknown): { value: OrganizationInvitationResponse[]; '@odata.count'?: number } {
+    // If it's already in OData format
+    if (typeof response === 'object' && response !== null && 'value' in response) {
+        return response as { value: OrganizationInvitationResponse[]; '@odata.count'?: number };
+    }
+
+    // If it's an array (non-OData format)
+    if (Array.isArray(response)) {
+        return { value: response as OrganizationInvitationResponse[], '@odata.count': response.length };
+    }
+
+    // If it has invitations property (old API format)
+    if (typeof response === 'object' && response !== null && 'invitations' in response) {
+        const typedResponse = response as { count: number; invitations: OrganizationInvitationResponse[] };
+        return {
+            value: typedResponse.invitations,
+            '@odata.count': typedResponse.count
+        };
+    }
+
+    // Default empty response
+    return { value: [] };
 }
 
 /**
@@ -120,5 +158,27 @@ export const organizationInvitationsApi = {
             }
             throw err;
         }
-    }
+    },
+
+    /**
+     * Get list invitation in OU (OData)
+     * @param tenant The organization slug
+     * @param odataOptions OData params (filter, top, skip, count)
+     * @returns OData response { value: OrganizationInvitationResponse[], @odata.count: number }
+     */
+    listInvitations: async (
+        tenant: string,
+        odataOptions?: ODataOptions
+    ): Promise<{ value: OrganizationInvitationResponse[]; '@odata.count'?: number }> => {
+        let url = `/${tenant}/odata/OrganizationUnitInvitations`;
+        if (odataOptions) {
+            const params = new URLSearchParams();
+            Object.entries(odataOptions).forEach(([k, v]) => {
+                if (v !== undefined) params.append(k, v as string);
+            });
+            url += `?${params.toString()}`;
+        }
+        const response = await api.get<unknown>(url);
+        return processODataResponse(response);
+    },
 } 
