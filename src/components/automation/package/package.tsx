@@ -1,6 +1,6 @@
 'use client'
 
-import { PlusCircle, Download, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { PlusCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns } from '@/components/automation/package/columns'
 import { DataTable } from '@/components/layout/table/data-table'
