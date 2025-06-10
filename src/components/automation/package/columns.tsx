@@ -7,7 +7,7 @@ import { AutomationPackageResponseDto, PackageVersionResponseDto } from '@/lib/a
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
 
-export const columns: ColumnDef<AutomationPackageResponseDto>[] = [
+export const createPackageColumns = (onRefresh?: () => void): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -35,15 +35,15 @@ export const columns: ColumnDef<AutomationPackageResponseDto>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
-    header: 'Actions',
+    cell: ({ row }) => <DataTableRowActions row={row} onRefresh={onRefresh} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
   },
   {
     accessorKey: 'name',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
-      <div className="flex items-center">
-        <span className="font-medium">{row.getValue('name')}</span>
+      <div className="flex space-x-2">
+        <span className="max-w-[500px] truncate font-medium">{row.getValue('name')}</span>
       </div>
     ),
   },
@@ -101,9 +101,13 @@ export const columns: ColumnDef<AutomationPackageResponseDto>[] = [
       
       return (
       <div className="flex items-center">
-          <Badge variant={isActive ? 'default' : 'secondary'}>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            isActive 
+              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+          }`}>
             {isActive ? 'Active' : 'Inactive'}
-          </Badge>
+          </span>
       </div>
       )
     },
@@ -112,12 +116,28 @@ export const columns: ColumnDef<AutomationPackageResponseDto>[] = [
     accessorKey: 'createdAt',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
-      const date = new Date(row.getValue('createdAt') as string)
+      // Format the date using Intl.DateTimeFormat for consistent display
+      let formattedDate = '';
+      try {
+        const date = new Date(row.getValue('createdAt') as string);
+        if (!isNaN(date.getTime())) {
+          formattedDate = new Intl.DateTimeFormat('en-US', {
+            dateStyle: 'medium',
+          }).format(date);
+        }
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        formattedDate = 'Invalid date';
+      }
+      
       return (
         <div className="flex items-center">
-          <span>{date.toLocaleDateString()}</span>
-      </div>
+          <span>{formattedDate}</span>
+        </div>
       )
-  },
+    },
   },
 ]
+
+// Export a default columns array for backward compatibility
+export const columns = createPackageColumns()
