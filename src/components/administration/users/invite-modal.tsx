@@ -66,6 +66,10 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                     ? 'This user is already a member of this organization.'
                     : (errorMsg || 'An unknown error occurred'),
                 variant: 'destructive',
+                style: {
+                    background: '#ff6a6a',
+                    color: '#fff',
+                },
             })
         } finally {
             setIsLoading(false)
