@@ -1,7 +1,7 @@
 'use client'
 
 import { Row } from '@tanstack/react-table'
-import { MoreHorizontal, Trash, Loader2, X } from 'lucide-react'
+import { MoreHorizontal, Trash, Loader2, X, UserCheck } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { deleteOrganizationUnitUser } from '@/lib/api/organization-unit-user'
 import React, { useState } from 'react'
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { UsersRow } from './users'
+import SetRoleModal from './set-role-modal'
 
 interface DataTableRowActionsProps {
   readonly row: Row<UsersRow>
@@ -23,6 +24,7 @@ interface DataTableRowActionsProps {
 export default function DataTableRowAction({ row, onDeleted }: DataTableRowActionsProps) {
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [setRoleOpen, setSetRoleOpen] = useState(false)
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -47,15 +49,25 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[160px]">
+          <DropdownMenuItem onClick={() => setSetRoleOpen(true)} className="flex items-center gap-2">
+            <span className="min-w-[1.25rem] flex justify-center"><UserCheck className="w-4 h-4 text-foreground" /></span>
+            <span>Set Role</span>
+          </DropdownMenuItem>
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            className="flex items-center gap-2 text-destructive focus:text-destructive"
             onClick={() => setOpen(true)}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+            <span className="min-w-[1.25rem] flex justify-center"><Trash className="w-4 h-4 text-destructive" aria-hidden="true" /></span>
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <SetRoleModal
+        isOpen={setRoleOpen}
+        onClose={() => setSetRoleOpen(false)}
+        userId={row.original.userId}
+        email={row.original.email}
+      />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent onInteractOutside={e => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">

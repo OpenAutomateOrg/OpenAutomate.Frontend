@@ -20,6 +20,7 @@ export interface OrganizationUnitUser {
     email: string
     firstName: string
     lastName: string
+    roles: string[]
     role: string
     joinedAt: string
 }
@@ -28,9 +29,11 @@ function getCurrentTenant(): string {
     if (typeof window !== 'undefined') {
         const path = window.location.pathname.split('/')
         if (path.length > 1 && path[1]) {
+            console.log('Current tenant:', path[1])
             return path[1]
         }
     }
+    console.log('Using default tenant')
     return 'default'
 }
 
@@ -78,7 +81,29 @@ export const organizationUnitUserApi = {
         const res = await api.get<OrganizationUnitUserResponse>(`/api/ou/${tenant}/users`)
         return res.users
     },
+
+    /**
+     * Assign multiple roles to a user in one request (replaces all existing roles)
+     * @param userId The user ID
+     * @param authorityIds List of role/authority IDs to assign
+     */
+    assignRolesBulk: async (userId: string, authorityIds: string[]): Promise<void> => {
+        const tenant = getCurrentTenant()
+        const formattedAuthorityIds = authorityIds.map(id => id.trim())
+        const endpoint = `${tenant}/api/author/user/${userId}/assign-multiple-roles`
+
+        try {
+            return await api.post<void>(
+                endpoint,
+                { authorityIds: formattedAuthorityIds }
+            )
+        } catch (error) {
+            console.error('Error assigning roles:', error)
+            throw error
+        }
+    }
 }
+
 export const deleteOrganizationUnitUser = async (userId: string): Promise<void> => {
     const tenant = getCurrentTenant()
     await api.delete<void>(`/api/ou/${tenant}/users/${userId}`)
