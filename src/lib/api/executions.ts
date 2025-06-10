@@ -27,6 +27,22 @@ export interface UpdateExecutionStatusDto {
   logOutput?: string
 }
 
+export interface ODataQueryOptions {
+  $filter?: string
+  $orderby?: string
+  $top?: number
+  $skip?: number
+  $select?: string
+  $count?: boolean
+  $expand?: string
+}
+
+export interface ODataResponse<T> {
+  value: T[]
+  '@odata.count'?: number
+  '@odata.nextLink'?: string
+}
+
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
   if (typeof window !== 'undefined') {
@@ -37,6 +53,44 @@ const getCurrentTenant = (): string => {
     }
   }
   return 'default' // Fallback to a default tenant
+}
+
+/**
+ * Build query string from OData options
+ */
+function buildODataQueryString(options?: ODataQueryOptions): string {
+  const queryParams = new URLSearchParams()
+
+  // Always include count=true to get total count for pagination
+  queryParams.append('$count', 'true')
+
+  if (options) {
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && key !== '$count') {
+        // Skip $count as we've already added it
+        queryParams.append(key, String(value))
+      }
+    })
+  }
+
+  return queryParams.toString()
+}
+
+/**
+ * Process OData response
+ */
+function processODataResponse<T>(response: unknown): ODataResponse<T> {
+  if (!response || typeof response !== 'object') {
+    return { value: [] }
+  }
+  
+  const result = response as Record<string, unknown>
+  
+  return {
+    value: Array.isArray(result.value) ? result.value as T[] : [],
+    '@odata.count': typeof result['@odata.count'] === 'number' ? result['@odata.count'] : undefined,
+    '@odata.nextLink': typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
+  }
 }
 
 /**
@@ -52,12 +106,69 @@ export const triggerExecution = async (data: TriggerExecutionDto): Promise<Execu
 }
 
 /**
- * Get all executions for the current tenant using OData
+ * Get all executions for the current tenant
  */
 export const getAllExecutions = async (): Promise<ExecutionResponseDto[]> => {
   const tenant = getCurrentTenant()
-  const response = await api.get<ExecutionResponseDto[]>(`${tenant}/odata/Executions`)
-  return response
+  try {
+    const response = await api.get<ExecutionResponseDto[]>(`${tenant}/api/executions`)
+    return response
+  } catch (error) {
+    console.error('Error fetching all executions:', error)
+    return []
+  }
+}
+
+/**
+ * Get executions with OData query capabilities (filtering, sorting, pagination)
+ */
+export const getExecutionsWithOData = async (
+  options?: ODataQueryOptions,
+): Promise<ODataResponse<ExecutionResponseDto>> => {
+  const tenant = getCurrentTenant()
+  
+  // Add strict enforcement of pagination parameters
+  const safeOptions = { ...options };
+  if (safeOptions.$top === undefined || safeOptions.$top <= 0) {
+    safeOptions.$top = 10; // Default to 10 items if not specified
+  }
+  
+  // Add cache busting parameter for pagination requests
+  const timestamp = new Date().getTime();
+  
+  const queryString = buildODataQueryString(safeOptions);
+  let endpoint = `${tenant}/odata/Executions`;
+  
+  // Add the query string with cache busting
+  if (queryString) {
+    endpoint += `?${queryString}&_t=${timestamp}`;
+  } else {
+    endpoint += `?_t=${timestamp}`;
+  }
+
+  console.log(`Fetching executions with endpoint: ${endpoint}`);
+  console.log(`Page: ${safeOptions.$skip ? safeOptions.$skip / safeOptions.$top + 1 : 1}, Size: ${safeOptions.$top}`);
+
+  try {
+    const response = await api.get<unknown>(endpoint)
+    
+    // Process the response to ensure consistent structure
+    const processedResponse = processODataResponse<ExecutionResponseDto>(response)
+    
+    // Strictly enforce the requested page size
+    if (safeOptions.$top && processedResponse.value.length > safeOptions.$top) {
+      console.warn(`OData returned ${processedResponse.value.length} items but only ${safeOptions.$top} were requested. Trimming results.`)
+      processedResponse.value = processedResponse.value.slice(0, safeOptions.$top)
+    }
+    
+    console.log(`Received ${processedResponse.value.length} executions from OData`);
+    
+    return processedResponse
+  } catch (error) {
+    console.error('Error fetching executions with OData:', error)
+    // Return empty response on error
+    return { value: [] }
+  }
 }
 
 /**
@@ -65,8 +176,20 @@ export const getAllExecutions = async (): Promise<ExecutionResponseDto[]> => {
  */
 export const getExecutionById = async (id: string): Promise<ExecutionResponseDto> => {
   const tenant = getCurrentTenant()
-  const response = await api.get<ExecutionResponseDto>(`${tenant}/odata/Executions(${id})`)
-  return response
+  try {
+    const response = await api.get<ExecutionResponseDto>(`${tenant}/odata/Executions(${id})`)
+    return response
+  } catch (error) {
+    console.error(`Error fetching execution with ID ${id}:`, error)
+    // Try fallback to regular API
+    try {
+      const fallbackResponse = await api.get<ExecutionResponseDto>(`${tenant}/api/executions/${id}`)
+      return fallbackResponse
+    } catch (fallbackError) {
+      console.error(`Fallback also failed for execution with ID ${id}:`, fallbackError)
+      throw error // Re-throw the original error
+    }
+  }
 }
 
 /**
