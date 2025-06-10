@@ -130,7 +130,7 @@ export function DataTableToolbar<TData>({
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter status" />
+                  <SelectValue placeholder="" />
                   {(table.getColumn('isActive')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
@@ -138,8 +138,7 @@ export function DataTableToolbar<TData>({
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                                              <SelectContent>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}

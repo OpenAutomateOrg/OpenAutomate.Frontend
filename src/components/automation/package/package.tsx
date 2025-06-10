@@ -416,7 +416,7 @@ export default function PackageInterface() {
   }
 
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: 'Show All' },
     { value: 'true', label: 'Active' },
     { value: 'false', label: 'Inactive' },
   ]
@@ -427,13 +427,6 @@ export default function PackageInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Automation Packages</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} package{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button
               variant="outline"
               onClick={refreshPackages}
@@ -472,6 +465,7 @@ export default function PackageInterface() {
           searchValue={searchValue}
           isFiltering={isLoading}
           isPending={isPending}
+          totalCount={totalCount}
         />
         
         <DataTable
