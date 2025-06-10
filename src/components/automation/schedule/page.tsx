@@ -3,15 +3,12 @@
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns as ScheduleColumns } from './schedule/columns'
-import { columns as HolidayColumns } from './holiday/columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState } from 'react'
-import { CreateEditModal as HolidayModal } from './holiday/create-edit-modal'
 import { CreateEditModal as ScheduleModal } from './schedule/create-edit-modal'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { DataTableToolbar as HistoricalToolbar } from './holiday/data-table-toolbar'
 import { DataTableToolbar as ProgressToolbar } from './schedule/data-table-toolbar'
 
 import {
@@ -231,15 +228,13 @@ export default function ScheduleInterface() {
   const [data] = useState<ScheduleRow[]>(initialData)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [tab, setTab] = useState<'schedule' | 'holiday'>('schedule')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
-  // Use the columns from the historical columns as default
-  // Dynamically select columns based on tab
-  const columns = tab === 'schedule' ? ScheduleColumns : HolidayColumns
+  // Use the schedule columns
+  const columns = ScheduleColumns
 
   const table = useReactTable({
     data,
@@ -273,105 +268,39 @@ export default function ScheduleInterface() {
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
-        {/* Tabs */}
-        <div className="mb-4 border-b border-gray-200">
-          <nav className="flex space-x-8" aria-label="Tabs">
-            <button
-              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'schedule'}
-              type="button"
-              onClick={() => setTab('schedule')}
-            >
-              Schedule
-            </button>
-            <button
-              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'holiday'}
-              type="button"
-              onClick={() => setTab('holiday')}
-            >
-              Holiday settings
-            </button>
-          </nav>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => {
+              setModalMode('create')
+              setIsModalOpen(true)
+            }}
+            className="flex items-center justify-center"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create
+          </Button>
         </div>
-        {/* Tab Content */}
-        {tab === 'schedule' && (
-          <>
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => {
-                  setModalMode('create')
-                  setIsModalOpen(true)
-                }}
-                className="flex items-center justify-center"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create
-              </Button>
-            </div>
-            <ProgressToolbar
-              table={table}
-              statuses={[
-                { value: 'Running', label: 'Running' },
-                { value: 'Scheduled', label: 'Scheduled' },
-              ]}
-            />
-            <DataTable
-              data={data.filter((d) => d.state === 'Running')}
-              columns={ScheduleColumns}
-              onRowClick={handleRowClick}
-              table={table}
-            />
-          </>
-        )}
-        {tab === 'holiday' && (
-          <>
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={() => {
-                  setModalMode('create')
-                  setIsModalOpen(true)
-                }}
-                className="flex items-center justify-center"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create
-              </Button>
-            </div>
-            <HistoricalToolbar
-              table={table}
-              statuses={[
-                { value: 'Completed', label: 'Completed' },
-                { value: 'Failed', label: 'Failed' },
-              ]}
-            />
-            <DataTable
-              data={data.filter((d) => d.state === 'Completed' || d.state === 'Failed')}
-              columns={HolidayColumns}
-              onRowClick={handleRowClick}
-              table={table}
-            />
-          </>
-        )}
+        <ProgressToolbar
+          table={table}
+          statuses={[
+            { value: 'Running', label: 'Running' },
+            { value: 'Scheduled', label: 'Scheduled' },
+          ]}
+        />
+        <DataTable
+          data={data.filter((d) => d.state === 'Running')}
+          columns={ScheduleColumns}
+          onRowClick={handleRowClick}
+          table={table}
+        />
       </div>
-      {tab === 'holiday' && (
-        <HolidayModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false)
-          }}
-          mode={modalMode}
-        />
-      )}
-      {tab === 'schedule' && (
-        <ScheduleModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false)
-          }}
-          mode={modalMode}
-        />
-      )}
+      <ScheduleModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+        }}
+        mode={modalMode}
+      />
     </>
   )
 }
