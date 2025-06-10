@@ -24,6 +24,7 @@ interface DataTableToolbarProps<TData> {
   readonly searchValue?: string
   readonly isFiltering?: boolean
   readonly isPending?: boolean
+  readonly totalCount?: number // Add totalCount prop for displaying total packages
 }
 
 export function DataTableToolbar<TData>({
@@ -34,6 +35,7 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
+  totalCount = 0,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -146,6 +148,13 @@ export function DataTableToolbar<TData>({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        )}
+        
+        {/* Total Count Display */}
+        {totalCount > 0 && (
+          <div className="text-sm font-medium ml-2">
+            <span>Total: {totalCount} package{totalCount !== 1 ? 's' : ''}</span>
           </div>
         )}
 
