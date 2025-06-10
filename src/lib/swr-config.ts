@@ -36,7 +36,7 @@ export const swrConfig: SWRConfiguration = {
  */
 export const swrKeys = {
   // Executions
-  executions: () => 'executions',
+  executions: () => ['executions'] as const,
   executionsWithOData: (params: Record<string, unknown>) => ['executions', 'odata', params],
   executionById: (id: string) => ['executions', id] as const,
   

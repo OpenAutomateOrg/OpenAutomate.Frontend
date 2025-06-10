@@ -237,18 +237,6 @@ export default function ExecutionsInterface() {
     }
   )
 
-  // Force reload when pagination changes
-  useEffect(() => {
-    console.log('Pagination changed, forcing reload with params:', queryParams);
-    mutateExecutions();
-  }, [pagination.pageIndex, pagination.pageSize, mutateExecutions, queryParams]);
-
-  // Force reload when tab changes
-  useEffect(() => {
-    console.log('Tab changed to', tab, 'forcing reload');
-    mutateExecutions();
-  }, [tab, mutateExecutions]);
-
   // Fallback to regular executions API if OData fails or returns empty data
   const { data: fallbackExecutions } = useSWR(
     executionsResponse?.value?.length === 0 || executionsError ? swrKeys.executions() : null,
@@ -294,6 +282,18 @@ export default function ExecutionsInterface() {
     }
   }, [])
 
+  // Force reload when pagination changes - include queryParams in dependencies to fix the linter warning
+  useEffect(() => {
+    console.log('Pagination changed, forcing reload with params:', queryParams);
+    mutateExecutions();
+  }, [pagination.pageIndex, pagination.pageSize, mutateExecutions, queryParams]);
+
+  // Force reload when tab changes
+  useEffect(() => {
+    console.log('Tab changed to', tab, 'forcing reload');
+    mutateExecutions();
+  }, [tab, mutateExecutions]);
+
   // Transform data during render
   const executions = useMemo(() => {
     // Use fallback data if OData response is empty
@@ -332,14 +332,8 @@ export default function ExecutionsInterface() {
         filteredData = filteredData.filter(row => row.state === stateFilter)
       }
       
-      // Store total count for pagination
-      if (totalCount !== filteredData.length) {
-        console.log('Updating total count from fallback data:', filteredData.length);
-        setTimeout(() => {
-          setTotalCount(filteredData.length)
-          totalCountRef.current = filteredData.length
-        }, 0);
-      }
+      // Store filtered data length for later use in useEffect
+      const filteredLength = filteredData.length;
       
       // 4. Apply pagination manually for fallback data
       const start = pagination.pageIndex * pagination.pageSize
@@ -349,6 +343,15 @@ export default function ExecutionsInterface() {
       
       const paginatedData = filteredData.slice(start, end)
       console.log(`Returning ${paginatedData.length} items from fallback data`);
+      
+      // Set totalCount outside of useMemo to avoid circular dependency
+      if (totalCount !== filteredLength) {
+        // Queue an update for the next render cycle
+        setTimeout(() => {
+          setTotalCount(filteredLength);
+          totalCountRef.current = filteredLength;
+        }, 0);
+      }
       
       return paginatedData
     }
@@ -362,6 +365,50 @@ export default function ExecutionsInterface() {
     console.log(`Returning ${executionsResponse.value.length} items from OData response`);
     return executionsResponse.value.map(execution => transformExecutionToRow(execution))
   }, [executionsResponse, fallbackExecutions, transformExecutionToRow, tab, searchValue, columnFilters, pagination, totalCount]);
+
+  // Update totalCount from filteredData in a separate useEffect
+  useEffect(() => {
+    if (fallbackExecutions && (!executionsResponse?.value || executionsResponse.value.length === 0)) {
+      // Calculate filtered length using same logic as in useMemo
+      let filteredData = fallbackExecutions.map(execution => transformExecutionToRow(execution));
+      
+      // Apply tab filtering
+      filteredData = filteredData.filter(row => {
+        if (tab === 'inprogress') {
+          return row.state === 'Running' || row.state === 'Pending'
+        } else if (tab === 'sheduled') {
+          return row.state === 'Scheduled'
+        } else if (tab === 'historical') {
+          return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
+        }
+        return true
+      });
+      
+      // Apply search filtering
+      if (searchValue) {
+        filteredData = filteredData.filter(row => {
+          const agentMatch = row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase());
+          return agentMatch;
+        });
+      }
+      
+      // Apply state filter
+      const stateFilter = columnFilters.find(filter => filter.id === 'state')?.value as string;
+      if (stateFilter) {
+        filteredData = filteredData.filter(row => row.state === stateFilter);
+      }
+      
+      // Update total count if different
+      if (totalCount !== filteredData.length) {
+        console.log('Updating total count from fallback data:', filteredData.length);
+        setTotalCount(filteredData.length);
+        totalCountRef.current = filteredData.length;
+      }
+    }
+  }, [fallbackExecutions, executionsResponse, transformExecutionToRow, tab, searchValue, columnFilters, totalCount]);
+
+  // Extract actual data array from the executions object
+  const executionsData = useMemo(() => executions, [executions]);
 
   // Helper function to update counts based on OData response
   const updateTotalCounts = useCallback((response: ODataResponse<ExecutionResponseDto>) => {
@@ -497,7 +544,7 @@ export default function ExecutionsInterface() {
 
     // Check if we have a full page of results that might indicate more pages
     const hasMorePages =
-      executions.length === pagination.pageSize &&
+      executionsData.length === pagination.pageSize &&
       totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
 
     // Calculate the minimum valid page count
@@ -509,12 +556,12 @@ export default function ExecutionsInterface() {
     }
 
     return Math.max(minValidPageCount, calculatedCount)
-  }, [pagination.pageSize, pagination.pageIndex, executions.length, totalCount])
+  }, [pagination.pageSize, pagination.pageIndex, executionsData.length, totalCount])
 
   // Helper to check if the count is a reliable total or just a minimum
   const isUnknownTotalCount = useMemo(() => {
-    return !hasExactCount && executions.length === pagination.pageSize
-  }, [hasExactCount, executions.length, pagination.pageSize])
+    return !hasExactCount && executionsData.length === pagination.pageSize
+  }, [hasExactCount, executionsData.length, pagination.pageSize])
 
   // Define columns based on tab
   const columns =
@@ -525,7 +572,7 @@ export default function ExecutionsInterface() {
         : HistoricalColumns
 
   const table = useReactTable({
-    data: executions,
+    data: executionsData,
     columns,
     state: {
       sorting,
@@ -756,10 +803,9 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by Agent..."
             />
             <DataTable
-              data={executions}
+              data={executionsData}
               columns={ProgressColumns}
               onRowClick={handleRowClick}
               table={table}
@@ -778,10 +824,9 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by Agent..."
             />
             <DataTable
-              data={executions}
+              data={executionsData}
               columns={ScheduledColumns}
               onRowClick={handleRowClick}
               table={table}
@@ -804,10 +849,9 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by Agent..."
             />
             <DataTable
-              data={executions}
+              data={executionsData}
               columns={HistoricalColumns}
               onRowClick={handleRowClick}
               table={table}
@@ -865,7 +909,7 @@ export default function ExecutionsInterface() {
           }}
         />
 
-        {!isDataLoading && executions.length === 0 && !executionsError && (
+        {!isDataLoading && executionsData.length === 0 && !executionsError && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No executions found.</p>
           </div>
