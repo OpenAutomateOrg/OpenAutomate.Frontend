@@ -174,12 +174,12 @@ export default function ExecutionsInterface() {
           const value = filter.value
 
           if (typeof value === 'string') {
-            // Search by ID or Agent
+            // Search by Agent only
             if (column === 'agent' && value) {
-              return `(contains(tolower(id), '${value.toLowerCase()}') or contains(tolower(botAgentName), '${value.toLowerCase()}'))`
+              return `contains(tolower(botAgentName), '${value.toLowerCase()}')`
             }
             if (column === 'packageName' && value) {
-              return `(contains(tolower(id), '${value.toLowerCase()}') or contains(tolower(botAgentName), '${value.toLowerCase()}'))`
+              return `contains(tolower(botAgentName), '${value.toLowerCase()}')`
             }
             if (column === 'state' && value) {
               return `state eq '${value}'`
@@ -318,12 +318,11 @@ export default function ExecutionsInterface() {
         return true
       })
       
-      // 2. Apply search filtering if search value exists - search by ID or Agent
+      // 2. Apply search filtering if search value exists - search by Agent only
       if (searchValue) {
         filteredData = filteredData.filter(row => {
-          const idMatch = row.id && row.id.toLowerCase().includes(searchValue.toLowerCase());
           const agentMatch = row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase());
-          return idMatch || agentMatch;
+          return agentMatch;
         })
       }
       
@@ -593,7 +592,7 @@ export default function ExecutionsInterface() {
       if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
 
       searchDebounceTimeout.current = setTimeout(() => {
-        // Use the same column for all tabs - we're searching by ID now
+        // Use the same column for all tabs - we're searching by Agent name only
         const searchColumn = tab === 'sheduled' ? 'packageName' : 'agent'
         const column = table.getColumn(searchColumn)
 
@@ -757,7 +756,7 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by ID or Agent..."
+              searchPlaceholder="Search by Agent..."
             />
             <DataTable
               data={executions}
@@ -779,7 +778,7 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by ID or Agent..."
+              searchPlaceholder="Search by Agent..."
             />
             <DataTable
               data={executions}
@@ -805,7 +804,7 @@ export default function ExecutionsInterface() {
               searchValue={searchValue}
               isFiltering={isDataLoading}
               isPending={isPending}
-              searchPlaceholder="Search by ID or Agent..."
+              searchPlaceholder="Search by Agent..."
             />
             <DataTable
               data={executions}
