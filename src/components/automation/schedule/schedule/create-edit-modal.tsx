@@ -95,7 +95,7 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
             </div>
 
             <Tabs defaultValue="trigger" className="w-full">
-              <TabsList className="grid grid-cols-4 mb-4">
+              <TabsList className="grid grid-cols-3 mb-4">
                 <TabsTrigger
                   value="trigger"
                   className="border-b-2 border-red-500 data-[state=active]:border-b-2"
@@ -104,7 +104,6 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
                 </TabsTrigger>
                 <TabsTrigger value="executionTarget">ExecutionTarget</TabsTrigger>
                 <TabsTrigger value="parameters">Parameters</TabsTrigger>
-                <TabsTrigger value="holidaySettings">Holiday settings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="trigger" className="space-y-4">
@@ -258,45 +257,7 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="holidaySettings">
-                <div className="space-y-4 py-2">
-                  <p className="text-sm">
-                    When executing a scheduled task on Holiday, Agents will:
-                  </p>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <div className="flex h-5 items-center">
-                        <input
-                          type="radio"
-                          id="continue"
-                          name="holidayAction"
-                          defaultChecked
-                          className="h-4 w-4 accent-red-500 focus:ring-red-500"
-                        />
-                      </div>
-                      <label htmlFor="continue" className="text-sm">
-                        Continue with the scheduled task
-                      </label>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="flex h-5 items-center">
-                        <input type="radio" id="skip" name="holidayAction" className="h-4 w-4" />
-                      </div>
-                      <label htmlFor="skip" className="text-sm">
-                        Skip the task on holiday
-                      </label>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="flex h-5 items-center">
-                        <input type="radio" id="delay" name="holidayAction" className="h-4 w-4" />
-                      </div>
-                      <label htmlFor="delay" className="text-sm">
-                        Delay the task until the next workday
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
+
             </Tabs>
           </div>
 
