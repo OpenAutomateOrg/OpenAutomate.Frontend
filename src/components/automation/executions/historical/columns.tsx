@@ -36,21 +36,6 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
     enableHiding: false,
   },
   {
-    id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
-    header: 'Action',
-  },
-
-  {
-    accessorKey: 'version',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('version')}</span>
-      </div>
-    ),
-  },
-  {
     accessorKey: 'agent',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Agent" />,
     cell: ({ row }) => (

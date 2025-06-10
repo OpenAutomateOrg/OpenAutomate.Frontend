@@ -24,6 +24,7 @@ interface DataTableToolbarProps<TData> {
   searchValue?: string
   isFiltering?: boolean
   isPending?: boolean
+  searchPlaceholder?: string // Add search placeholder prop
 }
 
 export function DataTableToolbar<TData>({
@@ -34,6 +35,7 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
+  searchPlaceholder = 'Search by ID or Agent...',
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -86,7 +88,7 @@ export function DataTableToolbar<TData>({
 
           <Input
             ref={searchInputRef}
-            placeholder="Search "
+            placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 w-full pr-8"
