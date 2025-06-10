@@ -16,6 +16,7 @@ import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import useSWR from 'swr'
+import { rolesApi, RoleWithPermissionsDto } from '@/lib/api/roles'
 
 export const usersSchema = z.object({
   email: z.string(),
@@ -44,15 +45,12 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-const ALL_ROLES = 'ALL'
-const roleOptions = ['OPERATOR', 'USER', 'DEVELOPER', 'OWNER']
-
 export default function UsersInterface() {
 
   const [searchEmail, setSearchEmail] = useState('')
   const [searchFirstName, setSearchFirstName] = useState('')
   const [searchLastName, setSearchLastName] = useState('')
-  const [searchRole, setSearchRole] = useState(ALL_ROLES)
+  const [searchRole, setSearchRole] = useState<string>('ALL')
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tab, setTab] = useState<'user' | 'invitation'>('user')
@@ -68,7 +66,9 @@ export default function UsersInterface() {
   const debouncedEmail = useDebounce(searchEmail, 400)
   const debouncedFirstName = useDebounce(searchFirstName, 400)
   const debouncedLastName = useDebounce(searchLastName, 400)
-  const debouncedRole = useDebounce(searchRole, 400)
+
+  const { data: allRoles } = useSWR<RoleWithPermissionsDto[]>('roles', rolesApi.getAllRoles)
+  const roleOptions = useMemo(() => allRoles ? allRoles.map(r => r.name) : [], [allRoles])
 
   // Build OData options for SWR key
   const odataOptions = {
@@ -76,7 +76,7 @@ export default function UsersInterface() {
       debouncedEmail ? `contains(tolower(email),'${debouncedEmail.toLowerCase()}')` : undefined,
       debouncedFirstName ? `contains(tolower(firstName),'${debouncedFirstName.toLowerCase()}')` : undefined,
       debouncedLastName ? `contains(tolower(lastName),'${debouncedLastName.toLowerCase()}')` : undefined,
-      debouncedRole && debouncedRole !== ALL_ROLES ? `tolower(role) eq '${debouncedRole.toLowerCase()}'` : undefined,
+      searchRole !== 'ALL' ? `roles/any(r: tolower(r) eq '${searchRole.toLowerCase()}')` : undefined,
     ].filter(Boolean).join(' and ') || undefined,
     $top: pageSize,
     $skip: pageIndex * pageSize,
@@ -145,7 +145,7 @@ export default function UsersInterface() {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      roles: user.role,
+      roles: Array.isArray(user.roles) ? user.roles.join(', ') : user.role,
       joinedAt: new Date(user.joinedAt).toISOString().replace('T', ' ').slice(0, 10),
     }
   }
@@ -205,13 +205,12 @@ export default function UsersInterface() {
                 searchRole={searchRole}
                 setSearchRole={setSearchRole}
                 roleOptions={roleOptions}
-                ALL_ROLES={ALL_ROLES}
                 loading={isLoading}
                 onReset={() => {
                   setSearchEmail('')
                   setSearchFirstName('')
                   setSearchLastName('')
-                  setSearchRole(ALL_ROLES)
+                  setSearchRole('ALL')
                 }}
               />
             </div>

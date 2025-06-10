@@ -108,9 +108,14 @@ const processSuccessResponse = async <T>(response: Response): Promise<T> => {
   if (response.status === 204) {
     return {} as T
   }
-
-  // Parse JSON response
-  return (await response.json()) as T
+  const contentType = response.headers.get('content-type')
+  const contentLength = response.headers.get('content-length')
+  if (!contentType || contentType.indexOf('application/json') === -1 || contentLength === '0') {
+    return {} as T
+  }
+  const text = await response.text()
+  if (!text) return {} as T
+  return JSON.parse(text) as T
 }
 
 /**
@@ -253,7 +258,7 @@ const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, st
  */
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, data?: unknown): Promise<T> {
   const url = getFullUrl(endpoint)
-  
+
   // Prepare body and headers based on data
   const { body, headers: bodyHeaders } = prepareRequestBody(data)
   const headers = {

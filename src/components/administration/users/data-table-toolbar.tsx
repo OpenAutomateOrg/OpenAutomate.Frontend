@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface UsersDataTableToolbarProps {
   readonly searchEmail: string
@@ -17,7 +18,6 @@ interface UsersDataTableToolbarProps {
   readonly searchRole: string
   readonly setSearchRole: (v: string) => void
   readonly roleOptions: string[]
-  readonly ALL_ROLES: string
   readonly loading?: boolean
   readonly onReset: () => void
 }
@@ -32,7 +32,6 @@ export function UsersDataTableToolbar({
   searchRole,
   setSearchRole,
   roleOptions,
-  ALL_ROLES,
   loading = false,
   onReset,
 }: UsersDataTableToolbarProps) {
@@ -40,7 +39,7 @@ export function UsersDataTableToolbar({
     searchEmail,
     searchFirstName,
     searchLastName,
-    searchRole !== ALL_ROLES ? searchRole : '',
+    searchRole !== 'ALL' ? searchRole : '',
   ].filter(Boolean).length
 
   const isFiltered = activeFilterCount > 0
@@ -152,22 +151,37 @@ export function UsersDataTableToolbar({
           />
         )}
       </div>
-      {/* Role filter */}
+      {/* Role filter - single select */}
       <div className="relative w-48">
-        <Select value={searchRole} onValueChange={setSearchRole} disabled={loading}>
-          <SelectTrigger className="pl-8">
-            <div className="flex items-center">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter Role" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_ROLES}>All Roles</SelectItem>
-            {roleOptions.map(role => (
-              <SelectItem key={role} value={role}>{role}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Select
+                value={searchRole}
+                onValueChange={setSearchRole}
+                disabled={loading}
+              >
+                <SelectTrigger className="pl-8 max-w-[180px] truncate">
+                  <div className="flex items-center min-w-0">
+                    <Filter className="mr-2 h-4 w-4 shrink-0" />
+                    <span className="truncate" title={searchRole !== 'ALL' ? searchRole : 'All Roles'}>
+                      <SelectValue placeholder="All Roles" />
+                    </span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Roles</SelectItem>
+                  {roleOptions.map(role => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TooltipTrigger>
+            <TooltipContent>
+              {searchRole !== 'ALL' ? searchRole : 'All Roles'}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       {activeFilterCount > 0 && (
         <Badge variant="secondary" className="rounded-sm px-1">

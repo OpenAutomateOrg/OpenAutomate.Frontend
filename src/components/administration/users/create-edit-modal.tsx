@@ -24,8 +24,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 
 interface ItemModalProps {
-  isOpen: boolean
-  onClose: () => void
+  readonly isOpen: boolean
+  readonly onClose: () => void
 }
 
 export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
