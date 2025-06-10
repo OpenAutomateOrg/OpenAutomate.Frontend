@@ -24,6 +24,7 @@ interface DataTableToolbarProps<TData> {
   readonly searchValue?: string
   readonly isFiltering?: boolean
   readonly isPending?: boolean
+  readonly totalCount?: number // Add totalCount prop for displaying total packages
 }
 
 export function DataTableToolbar<TData>({
@@ -34,6 +35,7 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
+  totalCount = 0,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -130,7 +132,7 @@ export function DataTableToolbar<TData>({
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter status" />
+                  <SelectValue placeholder="" />
                   {(table.getColumn('isActive')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
@@ -138,8 +140,7 @@ export function DataTableToolbar<TData>({
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                                              <SelectContent>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -147,6 +148,13 @@ export function DataTableToolbar<TData>({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        )}
+        
+        {/* Total Count Display */}
+        {totalCount > 0 && (
+          <div className="text-sm font-medium ml-2">
+            <span>Total: {totalCount} package{totalCount !== 1 ? 's' : ''}</span>
           </div>
         )}
 
