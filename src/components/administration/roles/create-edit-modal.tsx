@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -48,16 +48,11 @@ interface ResourcePermission {
 
 export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModalProps) {
   const { toast } = useToast()
-  
-  // Form state
-  const [roleName, setRoleName] = useState('')
-  const [roleDescription, setRoleDescription] = useState('')
-  const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>([])
-  const [isLoading, setIsLoading] = useState(false)
 
   // Resource selection state
   const [selectedResource, setSelectedResource] = useState('')
   const [selectedPermission, setSelectedPermission] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // ✅ SWR for available resources - following guideline #8: use framework-level loaders
   const { data: availableResources, error: resourcesError, isLoading: loadingResources } = useSWR(
@@ -78,8 +73,15 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }, [resourcesError, toast])
 
-  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
-  const initialResourcePermissions = useMemo(() => {
+
+
+  // ✅ Initialize form state directly from props (following guideline #4: use dynamic key to reset state)
+  // Note: Parent component uses dynamic key: key={editingRole?.id ?? 'new'}
+  // This ensures component remounts and state resets when switching between create/edit modes
+  const [roleName, setRoleName] = useState(editingRole?.name ?? '')
+  const [roleDescription, setRoleDescription] = useState(editingRole?.description ?? '')
+  const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>(() => {
+    // ✅ Lazy initial state to avoid dependency on memoized value
     if (!editingRole?.permissions || !availableResources) return []
 
     return editingRole.permissions.map(p => {
@@ -87,24 +89,10 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       return {
         resourceName: p.resourceName,
         permission: p.permission,
-        displayName: resource?.displayName || p.resourceName
+        displayName: resource?.displayName ?? p.resourceName
       }
     })
-  }, [editingRole?.permissions, availableResources])
-
-  // Populate form when editing a role
-  useEffect(() => {
-    if (editingRole) {
-      setRoleName(editingRole.name)
-      setRoleDescription(editingRole.description)
-      setResourcePermissions(initialResourcePermissions)
-    } else {
-      // Reset form for new role
-      setRoleName('')
-      setRoleDescription('')
-      setResourcePermissions([])
-    }
-  }, [editingRole, initialResourcePermissions])
+  })
 
   const handleAddResourcePermission = () => {
     if (!selectedResource || !selectedPermission) {
@@ -133,7 +121,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     const newPermission: ResourcePermission = {
       resourceName: selectedResource,
       permission,
-      displayName: resource?.displayName || selectedResource
+      displayName: resource?.displayName ?? selectedResource
     }
 
     if (existingIndex >= 0) {
@@ -393,7 +381,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || loadingResources}>
-              {isLoading ? 'Saving...' : editingRole ? 'Update Role' : 'Create Role'}
+              {isLoading ? 'Saving...' : (editingRole ? 'Update Role' : 'Create Role')}
             </Button>
           </DialogFooter>
         </form>

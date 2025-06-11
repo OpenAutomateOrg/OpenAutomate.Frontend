@@ -200,37 +200,42 @@ export default function AssetInterface() {
       })
     }  }, [assetsError, toast])
 
-  const updateTotalCounts = useCallback(
-    (response: ODataResponse<AssetRow>) => {
-      if (typeof response['@odata.count'] === 'number') {
-        setTotalCount(response['@odata.count'])
-        totalCountRef.current = response['@odata.count']
-        setHasExactCount(true)
-        return
-      }
-      if (!Array.isArray(response.value)) return
-      const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
-      if (minCount > totalCountRef.current) {
-        setTotalCount(minCount)
-        totalCountRef.current = minCount
-      }
-      const isFullFirstPage =
-        response.value.length === pagination.pageSize && pagination.pageIndex === 0
-      if (isFullFirstPage) {
-        setTotalCount(minCount + 1)
-        totalCountRef.current = minCount + 1
-      }
-      setHasExactCount(false)
-    },
-    [pagination.pageIndex, pagination.pageSize],
-  )
-
   // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  // Client-only: Requires state updates for pagination
   useEffect(() => {
-    if (assetsResponse) {
-      updateTotalCounts(assetsResponse)
+    if (!assetsResponse) return
+
+    const response = assetsResponse
+
+    // Handle exact count from OData
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count'])
+      totalCountRef.current = response['@odata.count']
+      setHasExactCount(true)
+      return
     }
-  }, [assetsResponse, updateTotalCounts])
+
+    if (!Array.isArray(response.value)) return
+
+    // When count isn't available, estimate from current page
+    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
+
+    // Only update if the new minimum count is higher than current
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount)
+      totalCountRef.current = minCount
+    }
+
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage =
+      response.value.length === pagination.pageSize && pagination.pageIndex === 0
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1)
+      totalCountRef.current = minCount + 1
+    }
+
+    setHasExactCount(false)
+  }, [assetsResponse, pagination.pageIndex, pagination.pageSize])
 
   const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
 

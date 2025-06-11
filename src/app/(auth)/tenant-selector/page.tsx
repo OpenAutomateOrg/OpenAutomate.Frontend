@@ -39,7 +39,7 @@ function TenantSelectorContent() {
     if (!authLoading && !isAuthenticated) {
       router.push('/login')
     }
-  }, [authLoading, isAuthenticated, router])
+  }, [authLoading, isAuthenticated]) // ✅ Removed router dependency to prevent infinite loops
 
   // Initialize the shouldStayOnPage state based on URL param (only on mount)
   useEffect(() => {
@@ -57,7 +57,7 @@ function TenantSelectorContent() {
     if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
       selectOrganizationUnit(organizationUnits[0].slug)
     }
-  }, [isLoading, organizationUnits, selectOrganizationUnit, shouldStayOnPage])
+  }, [isLoading, organizationUnits, shouldStayOnPage]) // ✅ Removed selectOrganizationUnit dependency
 
   // Setup visibility change listener for refresh
   useEffect(() => {
@@ -74,7 +74,7 @@ function TenantSelectorContent() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [refresh])
+  }, []) // ✅ Removed refresh dependency - SWR mutate should be stable
 
   // Handle manual refresh with animation
   const handleManualRefresh = async () => {

@@ -19,7 +19,7 @@ export function useOrganizationUnits() {
     (slug: string) => {
       router.push(`/${slug}/dashboard`)
     },
-    [router],
+    [], // ✅ Removed router dependency to prevent infinite loops
   )
 
   return {

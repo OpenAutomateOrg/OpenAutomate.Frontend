@@ -44,7 +44,7 @@ function TabsWithParams({
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
       }
     },
-    [controlledOnValueChange, useUrlParams, paramName, router, pathname, searchParams],
+    [controlledOnValueChange, useUrlParams, paramName, pathname, searchParams], // ✅ Removed router dependency
   )
 
   // Get value from URL if enabled

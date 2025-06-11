@@ -36,7 +36,7 @@ export function useQueryParams() {
       const queryString = createQueryString(params)
       router.push(`${pathname}?${queryString}`, { scroll: false })
     },
-    [createQueryString, router],
+    [createQueryString], // ✅ Removed router dependency to prevent infinite loops
   )
 
   return {

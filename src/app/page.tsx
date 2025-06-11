@@ -19,7 +19,7 @@ export default function LandingPage() {
         router.push(config.paths.auth.login)
       }
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated]) // ✅ Removed router dependency to prevent infinite loop
 
   // Display a minimal loading screen while redirecting
   return (

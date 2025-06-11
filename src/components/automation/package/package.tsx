@@ -184,8 +184,14 @@ export default function PackageInterface() {
     }
   }, [packagesError, toast])
 
-  // Helper function to update counts based on OData response
-  const updateTotalCounts = useCallback((response: ODataResponse<AutomationPackageResponseDto>) => {
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  // Client-only: Requires state updates for pagination
+  useEffect(() => {
+    if (!packagesResponse) return
+
+    const response = packagesResponse
+
+    // Handle exact count from OData
     if (typeof response['@odata.count'] === 'number') {
       setTotalCount(response['@odata.count'])
       totalCountRef.current = response['@odata.count']
@@ -215,14 +221,7 @@ export default function PackageInterface() {
     }
 
     setHasExactCount(false)
-  }, [pagination.pageIndex, pagination.pageSize])
-
-  // ✅ Update total count when data changes (following guideline #1: derive data during render)
-  useEffect(() => {
-    if (packagesResponse) {
-      updateTotalCounts(packagesResponse)
-    }
-  }, [packagesResponse, updateTotalCounts])
+  }, [packagesResponse, pagination.pageIndex, pagination.pageSize])
 
   // ✅ Handle empty page edge case (following guideline #1: derive data during render)
   useEffect(() => {
