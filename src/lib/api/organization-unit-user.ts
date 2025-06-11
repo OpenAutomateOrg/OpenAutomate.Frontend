@@ -21,7 +21,6 @@ export interface OrganizationUnitUser {
     firstName: string
     lastName: string
     roles: string[]
-    role: string
     joinedAt: string
 }
 

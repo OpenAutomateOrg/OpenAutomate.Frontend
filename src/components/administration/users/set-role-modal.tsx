@@ -37,8 +37,7 @@ export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUs
     // Initialize addedRoles from userRoles when modal opens
     React.useEffect(() => {
         if (isOpen) {
-            if (userRoles) {
-                console.log('User roles:', userRoles)
+            if (userRoles && Array.isArray(userRoles)) {
                 setAddedRoles(userRoles)
             } else {
                 setAddedRoles([])

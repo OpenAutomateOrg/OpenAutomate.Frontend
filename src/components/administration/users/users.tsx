@@ -145,7 +145,7 @@ export default function UsersInterface() {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      roles: Array.isArray(user.roles) ? user.roles.join(', ') : user.role,
+      roles: Array.isArray(user.roles) ? user.roles.join(', ') : '',
       joinedAt: new Date(user.joinedAt).toISOString().replace('T', ' ').slice(0, 10),
     }
   }
