@@ -34,10 +34,15 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
       await deleteOrganizationUnitUser(row.original.userId)
       setOpen(false)
       if (onDeleted) onDeleted()
-    } catch (err: any) {
+    } catch (err: unknown) {
       let message = 'Delete failed!'
-      if (err?.message) {
-        message = err.message
+      if (
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as Record<string, unknown>).message === 'string'
+      ) {
+        message = (err as Record<string, unknown>).message as string
       }
       toast({
         title: 'Delete User Failed',

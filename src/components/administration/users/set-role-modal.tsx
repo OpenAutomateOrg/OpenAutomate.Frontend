@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '
 import { Button } from '@/components/ui/button'
 import useSWR, { mutate as globalMutate } from 'swr'
 import { useToast } from '@/components/ui/use-toast'
-import { rolesApi, RoleWithPermissionsDto, RoleDto } from '@/lib/api/roles'
-import { organizationUnitUserApi } from '@/lib/api/organization-unit-user'
+import { RoleDto } from '@/lib/api/roles'
+import { organizationUnitUserApi, OrganizationUnitUser } from '@/lib/api/organization-unit-user'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Trash } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import type { AuthorityDto } from '@/lib/api/organization-unit-user'
 
 interface SetRoleModalProps {
     readonly isOpen: boolean
@@ -20,13 +21,27 @@ interface SetRoleModalProps {
 
 export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUsersList }: SetRoleModalProps) {
     const { toast } = useToast()
-    // Fetch all roles in the organization unit using SWR
-    const { data: allRoles, isLoading } = useSWR<RoleWithPermissionsDto[]>('roles', rolesApi.getAllRoles)
-    // Fetch roles currently assigned to the user using SWR
-    const { data: userRoles, isLoading: isUserRolesLoading } = useSWR<RoleDto[]>(
-        isOpen ? `user-roles-${userId}` : null,
-        () => rolesApi.getUserAuthorities(userId)
-    )
+    // Fetch all roles in the organization unit using SWR (now from new API)
+    const tenant = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+    const { data: allRoles, isLoading } = useSWR<AuthorityDto[]>(
+        isOpen && tenant ? `ou-roles-${tenant}` : null,
+        () => organizationUnitUserApi.getRolesInOrganizationUnit(tenant)
+    );
+    const { data: ouUsers, isLoading: isOuUsersLoading } = useSWR(
+        isOpen && tenant ? `ou-users-${tenant}` : null,
+        () => organizationUnitUserApi.getUsers(tenant)
+    );
+    const userRoles = useMemo(() => {
+        if (!ouUsers) return [];
+        const user = ouUsers.find((u: OrganizationUnitUser) => u.userId === userId);
+        if (!user) return [];
+        // Map to RoleDto[] (id, name, description)
+        return (user.roles || []).map((roleName: string) => {
+            const role = allRoles?.find((r: AuthorityDto) => r.name === roleName);
+            return role ? { id: role.id, name: role.name, description: role.description } : { id: roleName, name: roleName, description: '' };
+        });
+    }, [ouUsers, userId, allRoles]);
+    const isUserRolesLoading = isOuUsersLoading;
 
     // State for the currently selected role in the dropdown
     const [selectedRoleId, setSelectedRoleId] = useState<string>('')
@@ -46,15 +61,16 @@ export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUs
     }, [isOpen, userRoles])
 
     // Compute available roles for select (exclude already added)
-    const availableRoles = useMemo((): RoleWithPermissionsDto[] => {
-        if (!allRoles) return []
-        return allRoles.filter((r: RoleWithPermissionsDto) => !addedRoles.some((ar: RoleDto) => ar.id === r.id))
-    }, [allRoles, addedRoles])
+    const availableRoles = useMemo((): AuthorityDto[] => {
+        if (!allRoles) return [];
+        // Only remove roles already assigned to the user (by id)
+        return allRoles.filter((r: AuthorityDto) => !addedRoles.some((ar: RoleDto) => ar.id === r.id));
+    }, [allRoles, addedRoles]);
 
     // Add selected role to the table
     const handleAddRole = (): void => {
         if (!selectedRoleId) return
-        const role = allRoles?.find((r: RoleWithPermissionsDto) => r.id === selectedRoleId)
+        const role = allRoles?.find((r: AuthorityDto) => r.id === selectedRoleId)
         if (role && !addedRoles.some((ar: RoleDto) => ar.id === role.id)) {
             setAddedRoles((prev: RoleDto[]) => [...prev, role])
             setSelectedRoleId('')
@@ -73,11 +89,16 @@ export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUs
             await organizationUnitUserApi.assignRolesBulk(userId, addedRoles.map((r: RoleDto) => r.id))
             toast({ title: 'Success', description: 'Roles updated successfully.' })
             setAddedRoles([])
+
+            // Refresh both the user list and the user roles data
+            globalMutate(`user-roles-${userId}`) // Refresh user roles
+            globalMutate((key) => Array.isArray(key) && key[0] === 'organization-unit-users') // Refresh user list
+
+            // If a specific refresh function was provided, call that too
             if (refreshUsersList) {
                 refreshUsersList()
-            } else {
-                globalMutate((key) => Array.isArray(key) && key[0] === 'organization-unit-users')
             }
+
             onClose()
         } catch (err) {
             /// Show error toast to user, do not rethrow because error is already handled for UX.
@@ -102,7 +123,7 @@ export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUs
                             <SelectValue placeholder="Select a role to add" />
                         </SelectTrigger>
                         <SelectContent>
-                            {availableRoles.map((role: RoleWithPermissionsDto) => (
+                            {availableRoles.map((role: AuthorityDto) => (
                                 <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
                             ))}
                         </SelectContent>

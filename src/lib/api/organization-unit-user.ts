@@ -75,10 +75,23 @@ export interface OrganizationUnitUserResponse {
     users: OrganizationUnitUser[]
 }
 
+export interface AuthorityDto {
+    id: string
+    name: string
+    description: string
+}
+
 export const organizationUnitUserApi = {
     getUsers: async (tenant: string): Promise<OrganizationUnitUser[]> => {
         const res = await api.get<OrganizationUnitUserResponse>(`/api/ou/${tenant}/users`)
         return res.users
+    },
+
+    /**
+     * Get all roles in a specific organization unit by tenant slug
+     */
+    getRolesInOrganizationUnit: async (tenant: string): Promise<AuthorityDto[]> => {
+        return api.get<AuthorityDto[]>(`/api/ou/${tenant}/users/roles`)
     },
 
     /**
