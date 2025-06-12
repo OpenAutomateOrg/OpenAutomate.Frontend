@@ -33,7 +33,6 @@ function TenantSelectorContent() {
 
   // Also store a state of the force parameter to prevent flickers
   const [shouldStayOnPage, setShouldStayOnPage] = useState(true)
-
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -45,7 +44,6 @@ function TenantSelectorContent() {
   useEffect(() => {
     setShouldStayOnPage(forceStay)
   }, [forceStay])
-
   // If user belongs to only one organization, auto-redirect to it
   // unless the force parameter is set to keep them on this page
   useEffect(() => {
@@ -57,8 +55,7 @@ function TenantSelectorContent() {
     if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
       selectOrganizationUnit(organizationUnits[0].slug)
     }
-  }, [isLoading, organizationUnits, selectOrganizationUnit, shouldStayOnPage])
-
+  }, [isLoading, organizationUnits, shouldStayOnPage, selectOrganizationUnit])
   // Setup visibility change listener for refresh
   useEffect(() => {
     const handleVisibilityChange = () => {

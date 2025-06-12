@@ -151,8 +151,27 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           } catch (err) {
             logger.warning('Failed to get current user, attempting token refresh', err)
             // If fetching current user fails, try to refresh the token
-            const refreshed = await refreshToken()
-            if (!refreshed) {
+            try {
+              const response = await authApi.refreshToken()
+
+              // Update token in storage
+              setAuthToken(response.token)
+
+              // Update user if it exists in the response
+              const userToSet = response.user || {
+                id: response.id,
+                email: response.email,
+                firstName: response.firstName,
+                lastName: response.lastName,
+                systemRole: response.systemRole || SystemRole.User,
+              }
+
+              // Update in storage and local state
+              setStoredUser(userToSet)
+              setUser(userToSet)
+              logger.success('Token refreshed successfully during init')
+            } catch (refreshErr) {
+              logger.error('Token refresh failed during init:', refreshErr)
               clearAuthData()
               setUser(null)
             }
@@ -168,7 +187,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     }
 
     initAuth()
-  }, [refreshToken])
+  }, []) // ✅ No dependencies to prevent infinite loop
 
   // Login function
   const login = useCallback(

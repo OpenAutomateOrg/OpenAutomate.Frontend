@@ -14,7 +14,6 @@ export function useOrganizationUnits() {
     swrKeys.organizationUnits(),
     () => organizationUnitApi.getMyOrganizationUnits().then(r => r.organizationUnits)
   )
-
   const selectOrganizationUnit = useCallback(
     (slug: string) => {
       router.push(`/${slug}/dashboard`)

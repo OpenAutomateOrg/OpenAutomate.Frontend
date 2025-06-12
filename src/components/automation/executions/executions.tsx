@@ -19,8 +19,7 @@ import {
   getExecutionsWithOData, 
   getAllExecutions,
   ExecutionResponseDto, 
-  ODataQueryOptions, 
-  ODataResponse 
+  ODataQueryOptions 
 } from '@/lib/api/executions'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
@@ -282,17 +281,8 @@ export default function ExecutionsInterface() {
     }
   }, [])
 
-  // Force reload when pagination changes - include queryParams in dependencies to fix the linter warning
-  useEffect(() => {
-    console.log('Pagination changed, forcing reload with params:', queryParams);
-    mutateExecutions();
-  }, [pagination.pageIndex, pagination.pageSize, mutateExecutions, queryParams]);
-
-  // Force reload when tab changes
-  useEffect(() => {
-    console.log('Tab changed to', tab, 'forcing reload');
-    mutateExecutions();
-  }, [tab, mutateExecutions]);
+  // ✅ SWR automatically refetches when queryParams change, no manual reload needed
+  // Removed problematic useEffect hooks that caused infinite loops
 
   // Transform data during render
   const executions = useMemo(() => {
@@ -410,48 +400,45 @@ export default function ExecutionsInterface() {
   // Extract actual data array from the executions object
   const executionsData = useMemo(() => executions, [executions]);
 
-  // Helper function to update counts based on OData response
-  const updateTotalCounts = useCallback((response: ODataResponse<ExecutionResponseDto>) => {
-    if (typeof response['@odata.count'] === 'number') {
-      setTotalCount(response['@odata.count'])
-      totalCountRef.current = response['@odata.count']
-      setHasExactCount(true)
-      return
-    }
-
-    if (!Array.isArray(response.value)) {
-      return
-    }
-
-    // When count isn't available, estimate from current page
-    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
-
-    // Only update if the new minimum count is higher than current
-    if (minCount > totalCountRef.current) {
-      setTotalCount(minCount)
-      totalCountRef.current = minCount
-    }
-
-    // If we got a full page on first page, assume there might be more
-    const isFullFirstPage =
-      response.value.length === pagination.pageSize && pagination.pageIndex === 0
-    if (isFullFirstPage) {
-      setTotalCount(minCount + 1) // Indicate there might be more
-      totalCountRef.current = minCount + 1
-    }
-
-    setHasExactCount(false)
-  }, [pagination.pageIndex, pagination.pageSize])
-
-  // Update total count when data changes
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  // Client-only: Requires state updates for pagination
   useEffect(() => {
     if (executionsResponse) {
       console.log('OData response received:', executionsResponse)
-      updateTotalCounts(executionsResponse)
+      const response = executionsResponse
+
+      // Handle exact count from OData
+      if (typeof response['@odata.count'] === 'number') {
+        setTotalCount(response['@odata.count'])
+        totalCountRef.current = response['@odata.count']
+        setHasExactCount(true)
+        return
+      }
+
+      if (Array.isArray(response.value)) {
+        // When count isn't available, estimate from current page
+        const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
+
+        // Only update if the new minimum count is higher than current
+        if (minCount > totalCountRef.current) {
+          setTotalCount(minCount)
+          totalCountRef.current = minCount
+        }
+
+        // If we got a full page on first page, assume there might be more
+        const isFullFirstPage =
+          response.value.length === pagination.pageSize && pagination.pageIndex === 0
+        if (isFullFirstPage) {
+          setTotalCount(minCount + 1) // Indicate there might be more
+          totalCountRef.current = minCount + 1
+        }
+
+        setHasExactCount(false)
+      }
     } else if (fallbackExecutions && fallbackExecutions.length > 0) {
       // Use fallback data length as the count if OData failed
       console.log('Using fallback data count:', fallbackExecutions.length)
-      
+
       // Apply tab filtering to get accurate count
       const filteredCount = fallbackExecutions.filter(execution => {
         if (tab === 'inprogress') {
@@ -463,13 +450,13 @@ export default function ExecutionsInterface() {
         }
         return true
       }).length
-      
+
       console.log('Filtered fallback count:', filteredCount)
       setTotalCount(filteredCount)
       totalCountRef.current = filteredCount
       setHasExactCount(true)
     }
-  }, [executionsResponse, fallbackExecutions, updateTotalCounts, tab])
+  }, [executionsResponse, fallbackExecutions, tab, pagination.pageIndex, pagination.pageSize])
 
   // Handle empty page edge case
   useEffect(() => {

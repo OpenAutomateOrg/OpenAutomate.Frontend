@@ -8,7 +8,6 @@ import { config } from '@/lib/config'
 export default function LandingPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading } = useAuth()
-
   useEffect(() => {
     // If the user is already authenticated, redirect them to organization selector
     // Otherwise, redirect to login page

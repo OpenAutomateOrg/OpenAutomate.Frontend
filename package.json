@@ -4,15 +4,18 @@
   "private": true,
   "description": "OpenAutomate Orchestrator - Multi-tenant automation platform",
   "scripts": {
-    "dev": "next dev -p 3001",
-    "build": "next build",
+    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next dev -p 3001",
+    "dev:safe": "cross-env NODE_OPTIONS=\"--max-old-space-size=2048\" next dev -p 3001",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sonar": "sonar-scanner",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "clean": "rm -rf .next && rm -rf node_modules/.cache",
+    "clean:win": "rmdir /s /q .next && rmdir /s /q node_modules\\.cache"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
@@ -63,6 +66,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "eslint-config-prettier": "^10.1.2",

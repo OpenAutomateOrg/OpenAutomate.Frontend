@@ -25,7 +25,6 @@ import {
 import {
   getBotAgentsWithOData,
   type ODataQueryOptions,
-  ODataResponse,
   BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'
@@ -114,7 +113,7 @@ export default function AgentInterface() {
   const tenant = pathname.split('/')[1]
 
   // ✅ Convert table state to OData query parameters (following guideline #1: derive data during render)
-  const getODataQueryParams = useCallback((): ODataQueryOptions => {
+  const queryParams = useMemo((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
       $top: pagination.pageSize,
       $skip: pagination.pageIndex * pagination.pageSize,
@@ -154,8 +153,8 @@ export default function AgentInterface() {
 
     return params
   }, [pagination, sorting, columnFilters])
+
   // ✅ SWR for agents data - following guideline #8: use framework-level loaders
-  const queryParams = getODataQueryParams()
   const { data: agentsResponse, error: agentsError, isLoading, mutate: mutateAgents } = useSWR(
     swrKeys.agentsWithOData(queryParams as Record<string, unknown>),
     () => getBotAgentsWithOData(queryParams)
@@ -183,8 +182,14 @@ export default function AgentInterface() {
     }
   }, [agentsError, toast])
 
-  // Helper function to update counts based on OData response
-  const updateTotalCounts = useCallback((response: ODataResponse<BotAgentResponseDto>) => {
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  // Client-only: Requires state updates for pagination
+  useEffect(() => {
+    if (!agentsResponse) return
+
+    const response = agentsResponse
+
+    // Handle exact count from OData
     if (typeof response['@odata.count'] === 'number') {
       setTotalCount(response['@odata.count'])
       totalCountRef.current = response['@odata.count']
@@ -214,14 +219,7 @@ export default function AgentInterface() {
     }
 
     setHasExactCount(false)
-  }, [pagination.pageIndex, pagination.pageSize])
-
-  // ✅ Update total count when data changes (following guideline #1: derive data during render)
-  useEffect(() => {
-    if (agentsResponse) {
-      updateTotalCounts(agentsResponse)
-    }
-  }, [agentsResponse, updateTotalCounts])
+  }, [agentsResponse, pagination.pageIndex, pagination.pageSize])
 
   // ✅ Handle empty page edge case (following guideline #1: derive data during render)
   useEffect(() => {

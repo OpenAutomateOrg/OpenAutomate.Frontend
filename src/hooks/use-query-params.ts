@@ -27,7 +27,6 @@ export function useQueryParams() {
     },
     [searchParams],
   )
-
   /**
    * Update URL with new query parameters without triggering navigation
    */
