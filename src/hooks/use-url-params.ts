@@ -27,7 +27,6 @@ export function useUrlParams() {
     },
     [searchParams],
   )
-
   /**
    * Update URL with new query parameters without triggering navigation
    */
@@ -36,7 +35,7 @@ export function useUrlParams() {
       const queryString = createQueryString(params)
       router.push(`${pathname}?${queryString}`, { scroll: false })
     },
-    [createQueryString], // ✅ Removed router dependency to prevent infinite loops
+    [createQueryString, router],
   )
 
   return {

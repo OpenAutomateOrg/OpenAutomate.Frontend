@@ -25,7 +25,6 @@ import {
 import {
   getBotAgentsWithOData,
   type ODataQueryOptions,
-  ODataResponse,
   BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'

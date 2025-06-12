@@ -14,12 +14,11 @@ export function useOrganizationUnits() {
     swrKeys.organizationUnits(),
     () => organizationUnitApi.getMyOrganizationUnits().then(r => r.organizationUnits)
   )
-
   const selectOrganizationUnit = useCallback(
     (slug: string) => {
       router.push(`/${slug}/dashboard`)
     },
-    [], // ✅ Removed router dependency to prevent infinite loops
+    [router],
   )
 
   return {

@@ -46,11 +46,6 @@ export const assetSchema = z.object({
 export type AssetRow = z.infer<typeof assetSchema>
 export type AssetEditRow = AssetRow & { value?: string; agents?: { id: string; name: string }[] }
 
-interface ODataResponse<T> {
-  '@odata.count'?: number
-  value: T[]
-}
-
 export default function AssetInterface() {
   const router = useRouter()
   const pathname = usePathname()

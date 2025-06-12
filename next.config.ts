@@ -9,6 +9,49 @@ const nextConfig: NextConfig = {
   // Disable dev indicators in development
   devIndicators: false,
 
+  // Webpack configuration for memory optimization
+  webpack: (config, { dev, isServer }) => {
+    // Memory optimization for development
+    if (dev) {
+      // Limit memory usage for webpack cache
+      config.cache = {
+        type: 'memory',
+        maxGenerations: 1,
+      }
+
+      // Optimize chunk splitting to reduce memory usage
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: -10,
+              chunks: 'all',
+            },
+          },
+        },
+      }
+    }
+
+    return config
+  },
+
+  // Experimental features for better memory management
+  experimental: {
+    // Reduce memory usage during development
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Enable webpack build worker for better memory management
+    webpackBuildWorker: true,
+  },
+
   // Configure headers for security
   async headers() {
     return [

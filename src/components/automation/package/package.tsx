@@ -25,7 +25,6 @@ import {
 import {
   getAutomationPackagesWithOData,
   type ODataQueryOptions,
-  ODataResponse,
   AutomationPackageResponseDto,
 } from '@/lib/api/automation-packages'
 import { useUrlParams } from '@/hooks/use-url-params'

@@ -19,8 +19,7 @@ import {
   getExecutionsWithOData, 
   getAllExecutions,
   ExecutionResponseDto, 
-  ODataQueryOptions, 
-  ODataResponse 
+  ODataQueryOptions 
 } from '@/lib/api/executions'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'

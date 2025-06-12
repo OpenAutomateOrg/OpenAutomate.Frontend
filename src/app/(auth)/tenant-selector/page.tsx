@@ -33,19 +33,17 @@ function TenantSelectorContent() {
 
   // Also store a state of the force parameter to prevent flickers
   const [shouldStayOnPage, setShouldStayOnPage] = useState(true)
-
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login')
     }
-  }, [authLoading, isAuthenticated]) // ✅ Removed router dependency to prevent infinite loops
+  }, [authLoading, isAuthenticated, router])
 
   // Initialize the shouldStayOnPage state based on URL param (only on mount)
   useEffect(() => {
     setShouldStayOnPage(forceStay)
   }, [forceStay])
-
   // If user belongs to only one organization, auto-redirect to it
   // unless the force parameter is set to keep them on this page
   useEffect(() => {
@@ -57,8 +55,7 @@ function TenantSelectorContent() {
     if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
       selectOrganizationUnit(organizationUnits[0].slug)
     }
-  }, [isLoading, organizationUnits, shouldStayOnPage]) // ✅ Removed selectOrganizationUnit dependency
-
+  }, [isLoading, organizationUnits, shouldStayOnPage, selectOrganizationUnit])
   // Setup visibility change listener for refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -74,7 +71,7 @@ function TenantSelectorContent() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, []) // ✅ Removed refresh dependency - SWR mutate should be stable
+  }, [refresh])
 
   // Handle manual refresh with animation
   const handleManualRefresh = async () => {

@@ -8,7 +8,6 @@ import { config } from '@/lib/config'
 export default function LandingPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading } = useAuth()
-
   useEffect(() => {
     // If the user is already authenticated, redirect them to organization selector
     // Otherwise, redirect to login page
@@ -19,7 +18,7 @@ export default function LandingPage() {
         router.push(config.paths.auth.login)
       }
     }
-  }, [isLoading, isAuthenticated]) // ✅ Removed router dependency to prevent infinite loop
+  }, [isLoading, isAuthenticated, router])
 
   // Display a minimal loading screen while redirecting
   return (
