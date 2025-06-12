@@ -10,13 +10,12 @@ import { InviteModal } from './invite-modal'
 import InvitationsList from './invitations-list'
 
 import { z } from 'zod'
-import { OrganizationUnitUser, getOrganizationUnitUsersWithOData } from '@/lib/api/organization-unit-user'
+import { OrganizationUnitUser, getOrganizationUnitUsersWithOData, organizationUnitUserApi, AuthorityDto } from '@/lib/api/organization-unit-user'
 import { UsersDataTableToolbar } from './data-table-toolbar'
 import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import useSWR from 'swr'
-import { rolesApi, RoleWithPermissionsDto } from '@/lib/api/roles'
 
 export const usersSchema = z.object({
   email: z.string(),
@@ -67,8 +66,23 @@ export default function UsersInterface() {
   const debouncedFirstName = useDebounce(searchFirstName, 400)
   const debouncedLastName = useDebounce(searchLastName, 400)
 
-  const { data: allRoles } = useSWR<RoleWithPermissionsDto[]>('roles', rolesApi.getAllRoles)
-  const roleOptions = useMemo(() => allRoles ? allRoles.map(r => r.name) : [], [allRoles])
+  const tenant = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+  const { data: allRoles } = useSWR<AuthorityDto[]>(
+    tenant ? `ou-roles-${tenant}` : null,
+    () => organizationUnitUserApi.getRolesInOrganizationUnit(tenant)
+  );
+  const roleOptions = useMemo(() => {
+    if (!allRoles) return [];
+    // Deduplicate by name (case-insensitive)
+    const unique = new Map<string, string>();
+    for (const role of allRoles) {
+      const key = role.name.trim().toLowerCase();
+      if (!unique.has(key)) {
+        unique.set(key, role.name);
+      }
+    }
+    return Array.from(unique.values());
+  }, [allRoles]);
 
   // Build OData options for SWR key
   const odataOptions = {
@@ -145,7 +159,7 @@ export default function UsersInterface() {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      roles: Array.isArray(user.roles) ? user.roles.join(', ') : user.role,
+      roles: Array.isArray(user.roles) ? user.roles.join(', ') : '',
       joinedAt: new Date(user.joinedAt).toISOString().replace('T', ' ').slice(0, 10),
     }
   }

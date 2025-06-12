@@ -95,7 +95,7 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
               <div className="flex flex-wrap gap-2 p-2 bg-background rounded-md border min-h-[80px]">
                 {emails.map((email, index) => (
                   <div
-                    key={index}
+                    key={email}
                     className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md"
                   >
                     <span className="text-sm">{email}</span>

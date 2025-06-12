@@ -5,6 +5,7 @@ import { MoreHorizontal, Trash, Loader2, X, UserCheck } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { deleteOrganizationUnitUser } from '@/lib/api/organization-unit-user'
 import React, { useState } from 'react'
+import { useToast } from '@/components/ui/use-toast'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [setRoleOpen, setSetRoleOpen] = useState(false)
+  const { toast } = useToast()
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -32,8 +34,25 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
       await deleteOrganizationUnitUser(row.original.userId)
       setOpen(false)
       if (onDeleted) onDeleted()
-    } catch {
-      alert('Delete failed!')
+    } catch (err: unknown) {
+      let message = 'Delete failed!'
+      if (
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as Record<string, unknown>).message === 'string'
+      ) {
+        message = (err as Record<string, unknown>).message as string
+      }
+      toast({
+        title: 'Delete User Failed',
+        description: message,
+        variant: 'destructive',
+        style: {
+          background: '#ff6a6a',
+          color: '#fff',
+        },
+      })
     } finally {
       setDeleting(false)
     }
