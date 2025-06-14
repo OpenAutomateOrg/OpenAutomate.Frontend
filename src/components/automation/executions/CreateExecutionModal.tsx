@@ -48,7 +48,7 @@ type CreateExecutionFormData = z.infer<typeof createExecutionSchema>
 interface CreateExecutionModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (newExecution?: { id: string, packageName: string, botAgentName: string }) => void
 }
 
 export default function CreateExecutionModal({
@@ -240,7 +240,13 @@ export default function CreateExecutionModal({
       })
       form.reset()
       onClose()
-      onSuccess?.()
+      
+      // ✅ Pass execution details to callback for optimistic update
+      onSuccess?.({
+        id: result.id,
+        packageName: selectedPackage.name,
+        botAgentName: validatedAgent.name,
+      })
     } catch (error: unknown) {
       handleExecutionError(error)
     } finally {
