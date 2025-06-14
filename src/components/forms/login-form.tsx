@@ -136,12 +136,7 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-medium text-orange-600 hover:text-orange-700"
-                  >
-                    Forgot password?
-                  </Link>
+
                 </div>
                 <FormControl>
                   <Input
@@ -169,12 +164,19 @@ export function LoginForm() {
                     disabled={isLoading}
                   />
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Remember me</FormLabel>
+                <div className="flex justify-between w-full items-center">
+                  <FormLabel className="text-sm">Remember me</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </FormItem>
             )}
           />
+
 
           <Button
             type="submit"
