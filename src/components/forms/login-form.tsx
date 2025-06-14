@@ -89,10 +89,12 @@ export function LoginForm() {
       } else {
         router.push('/tenant-selector') // Default redirect to tenant selector
       }
-    } catch (error: unknown) {
-      console.error('Login failed', error)
+    } catch (error: any) {
+      // Prefer backend message, then error.message, then default
       const errorMessage =
-        error instanceof Error ? error.message : 'Login failed. Please try again.'
+        error?.response?.data?.message ??
+        error?.message ??
+        'Login failed. Please try again.'
       setError(errorMessage)
     } finally {
       setIsLoading(false)
