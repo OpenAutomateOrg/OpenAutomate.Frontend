@@ -185,30 +185,48 @@ export default function UsersInterface() {
 
   return (
     <>
-      <div className="mb-4 border-b border-gray-200">
-        <nav className="flex space-x-8" aria-label="Tabs">
-          <button
-            className="px-3 py-2 font-medium text-base border-b-2 border-transparent hover:border-[#FF6A00] hover:text-[#FF6A00] data-[active=true]:border-[#FF6A00] data-[active=true]:text-[#FF6A00]"
-            data-active={tab === 'user'}
-            type="button"
-            onClick={() => setTab('user')}
-          >
-            User
-          </button>
-          <button
-            className="px-3 py-2 font-medium text-base border-b-2 border-transparent hover:border-[#FF6A00] hover:text-[#FF6A00] data-[active=true]:border-[#FF6A00] data-[active=true]:text-[#FF6A00]"
-            data-active={tab === 'invitation'}
-            type="button"
-            onClick={() => setTab('invitation')}
-          >
-            Invitation
-          </button>
-        </nav>
-      </div>
-      {tab === 'user' && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-row items-center justify-between gap-2">
-            <div className="flex-1">
+      <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
+        {/* Tabs */}
+        <div className="mb-4 border-b border-gray-200">
+          <nav className="flex space-x-8" aria-label="Tabs">
+            <button
+              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
+              data-active={tab === 'user'}
+              type="button"
+              onClick={() => setTab('user')}
+            >
+              User
+            </button>
+            <button
+              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
+              data-active={tab === 'invitation'}
+              type="button"
+              onClick={() => setTab('invitation')}
+            >
+              Invitation
+            </button>
+          </nav>
+        </div>
+
+        {tab === 'user' && (
+          <>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+              <div className="flex items-center space-x-2">
+                {totalCount > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <span>
+                      Total: {totalCount} user{totalCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+                <Button onClick={() => setInviteOpen(true)} className="flex items-center justify-center">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
               <UsersDataTableToolbar
                 searchEmail={searchEmail}
                 setSearchEmail={setSearchEmail}
@@ -227,33 +245,40 @@ export default function UsersInterface() {
                   setSearchRole('ALL')
                 }}
               />
+              <DataTable
+                columns={columnsWithAction}
+                data={users.map(mapOrganizationUnitUserToUsersRow)}
+                isLoading={isLoading}
+                totalCount={totalCount}
+              />
+              <Pagination
+                currentPage={pageIndex + 1}
+                pageSize={pageSize}
+                totalCount={totalCount}
+                totalPages={totalPages}
+                isUnknownTotalCount={isUnknownTotalCount}
+                onPageChange={page => setPageIndex(page - 1)}
+                onPageSizeChange={setPageSize}
+              />
+              {localError && (
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+                  <p className="text-red-800 dark:text-red-300">{localError}</p>
+                  <Button variant="outline" className="mt-2" onClick={() => mutate()}>
+                    Retry
+                  </Button>
+                </div>
+              )}
+              {!isLoading && users.length === 0 && !localError && (
+                <div className="text-center py-10 text-muted-foreground">
+                  <p>No users found.</p>
+                </div>
+              )}
+              <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
             </div>
-            <Button onClick={() => setInviteOpen(true)} className="mb-2">
-              <PlusCircle className="mr-2 h-4 w-4" /> Invite User
-            </Button>
-          </div>
-          <DataTable
-            columns={columnsWithAction}
-            data={users.map(mapOrganizationUnitUserToUsersRow)}
-            isLoading={isLoading}
-            totalCount={totalCount}
-          />
-          <Pagination
-            currentPage={pageIndex + 1}
-            pageSize={pageSize}
-            totalCount={totalCount}
-            totalPages={totalPages}
-            isUnknownTotalCount={isUnknownTotalCount}
-            onPageChange={page => setPageIndex(page - 1)}
-            onPageSizeChange={setPageSize}
-          />
-          {localError && <div className="text-red-500">{localError}</div>}
-          <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
-        </div>
-      )}
-      {tab === 'invitation' && (
-        <InvitationsList />
-      )}
+          </>
+        )}
+        {tab === 'invitation' && <InvitationsList />}
+      </div>
     </>
   )
 }
