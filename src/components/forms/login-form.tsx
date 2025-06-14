@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { config } from '@/lib/config'
 
 // Form validation schema
@@ -104,10 +103,20 @@ export function LoginForm() {
   return (
     <div className="grid gap-6">
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <>
+          <style>{`
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(-8px);}
+        to { opacity: 1; transform: translateY(0);}
+      }
+    `}</style>
+          <div className="flex items-center gap-3 p-4 mb-2 rounded-lg border border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-950 shadow-sm animate-[fade-in_0.3s_ease]">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300">
+              <AlertCircle className="w-6 h-6" />
+            </span>
+            <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
+          </div>
+        </>
       )}
 
       <Form {...form}>
