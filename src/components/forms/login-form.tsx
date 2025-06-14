@@ -88,12 +88,16 @@ export function LoginForm() {
       } else {
         router.push('/tenant-selector') // Default redirect to tenant selector
       }
-    } catch (error: any) {
-      // Prefer backend message, then error.message, then default
-      const errorMessage =
-        error?.response?.data?.message ??
-        error?.message ??
-        'Login failed. Please try again.'
+    } catch (error: unknown) {
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (typeof error === 'object' && error !== null) {
+        const axiosError = error as { response?: { data?: { message?: string } }, message?: string };
+        errorMessage =
+          axiosError.response?.data?.message ??
+          axiosError.message ??
+          errorMessage;
+      }
       setError(errorMessage)
     } finally {
       setIsLoading(false)
