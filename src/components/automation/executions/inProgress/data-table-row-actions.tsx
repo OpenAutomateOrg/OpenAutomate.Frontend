@@ -15,15 +15,26 @@ import type { ExecutionsRow } from '../executions'
 
 interface DataTableRowActionsProps {
   row: Row<ExecutionsRow>
+  onEdit?: (execution: ExecutionsRow) => void
+  onDelete?: (execution: ExecutionsRow) => void
+  onRefresh?: () => void
 }
 
-export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
+export default function DataTableRowAction({ 
+  row, 
+  onEdit, 
+  onDelete, 
+  onRefresh 
+}: DataTableRowActionsProps) {
   const handleEdit = () => {
-    console.log('Edit asset:', row.original)
+    console.log('Edit execution:', row.original)
+    onEdit?.(row.original)
   }
 
   const handleDelete = () => {
-    console.log('Delete asset:', row.original)
+    console.log('Delete execution:', row.original)
+    onDelete?.(row.original)
+    onRefresh?.()
   }
 
   return (

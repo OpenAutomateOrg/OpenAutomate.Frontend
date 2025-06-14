@@ -3,7 +3,7 @@
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { columns as HistoricalColumns } from './historical/columns'
-import { columns as ProgressColumns } from './inProgress/columns'
+import { createInProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
@@ -25,6 +25,7 @@ import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
+import { useExecutionStatus } from '@/hooks/useExecutionStatus'
 
 import {
   useReactTable,
@@ -151,6 +152,23 @@ export default function ExecutionsInterface() {
   // Extract tenant from pathname (e.g., /tenant/executions)
   const tenant = pathname.split('/')[1]
 
+  // ✅ Real-time execution status updates via SignalR
+  const executionStatuses = useExecutionStatus(tenant)
+
+  // ✅ SignalR error handling (following React guide compliance)
+  // Client-only: Better error handling without global console override
+  useEffect(() => {
+    // Instead of globally suppressing console.error, we handle SignalR errors
+    // through the SignalR connection's error handling mechanisms
+    // This avoids the dangerous practice of global console override
+
+    // Note: SignalR errors should be handled in the useExecutionStatus hook
+    // or through proper error boundaries, not by suppressing console.error
+    console.debug('[Executions] Component mounted - SignalR error handling delegated to connection hooks')
+
+    // No cleanup needed since we're not modifying global state
+  }, [])
+
   // Convert table state to OData query parameters
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
@@ -247,11 +265,15 @@ export default function ExecutionsInterface() {
 
   // Define transformation function before using it in useMemo
   const transformExecutionToRow = useCallback((execution: ExecutionResponseDto): ExecutionsRow => {
+    // Check for real-time status update for this execution
+    const realtimeUpdate = executionStatuses[execution.id]
+    const currentStatus = realtimeUpdate?.status || execution.status
+
     return {
       id: execution.id,
       Version: execution.packageVersion || '',
       Agent: execution.botAgentName || '',
-      State: execution.status,
+      State: currentStatus,
       'Start Time': execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
       'End Time': execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
       Source: 'Manual', // Assuming manual trigger for now
@@ -267,9 +289,9 @@ export default function ExecutionsInterface() {
       value: execution.packageVersion || '',
       createdBy: 'Current User',
       label: execution.botAgentName || '',
-      status: execution.status,
+      status: currentStatus,
       agent: execution.botAgentName || '',
-      state: execution.status,
+      state: currentStatus,
       startTime: execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
       endTime: execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
       source: 'Manual',
@@ -279,7 +301,24 @@ export default function ExecutionsInterface() {
       createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
       packageName: execution.packageName || '',
     }
+  }, [executionStatuses])
+
+  // ✅ Create columns with proper handlers
+  const handleEditExecution = useCallback((execution: ExecutionsRow) => {
+    console.log('Edit execution:', execution)
+    // TODO: Implement edit execution logic
   }, [])
+
+  const handleDeleteExecution = useCallback((execution: ExecutionsRow) => {
+    console.log('Delete execution:', execution)
+    // TODO: Implement delete execution logic
+  }, [])
+
+  const ProgressColumns = useMemo(() => createInProgressColumns({
+    onEdit: handleEditExecution,
+    onDelete: handleDeleteExecution,
+    onRefresh: () => mutateExecutions()
+  }), [handleEditExecution, handleDeleteExecution, mutateExecutions])
 
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops
@@ -689,10 +728,69 @@ export default function ExecutionsInterface() {
     }
   }, [executionsError, fallbackExecutions, toast])
 
-  const handleCreateSuccess = () => {
-    // Refresh the data after successful execution creation
-    mutateExecutions()
-  }
+  // ✅ Auto-refresh data when execution status changes to terminal states
+  // Client-only: Real-time data synchronization
+  useEffect(() => {
+    const terminalStatuses = ['Completed', 'Failed', 'Cancelled']
+    const hasTerminalUpdate = Object.values(executionStatuses).some(status => 
+      terminalStatuses.includes(status.status)
+    )
+    
+    if (hasTerminalUpdate) {
+      // Debounce the refresh to avoid excessive API calls
+      const refreshTimeout = setTimeout(() => {
+        mutateExecutions()
+      }, 1000)
+      
+      return () => clearTimeout(refreshTimeout)
+    }
+  }, [executionStatuses, mutateExecutions])
+
+  const handleCreateSuccess = useCallback((newExecution?: { id: string, packageName: string, botAgentName: string }) => {
+    // ✅ Following React guideline: API calls in event handlers, not effects
+
+    if (newExecution) {
+      // ✅ Optimistic update: immediately add the new execution to the UI
+      // The real-time SignalR system will provide updates as the execution progresses
+
+      // ✅ Update SWR cache optimistically using mutate with data
+      mutateExecutions((currentData) => {
+        if (!currentData) return currentData
+
+        // For OData response structure
+        if ('value' in currentData && Array.isArray(currentData.value)) {
+          const newExecutionDto: ExecutionResponseDto = {
+            id: newExecution.id,
+            packageName: newExecution.packageName,
+            botAgentName: newExecution.botAgentName,
+            status: 'Pending',
+            startTime: new Date().toISOString(),
+            endTime: undefined,
+            packageVersion: undefined,
+            errorMessage: undefined,
+            logOutput: undefined,
+            botAgentId: '',
+            packageId: ''
+          }
+
+          return {
+            ...currentData,
+            value: [newExecutionDto, ...currentData.value],
+            '@odata.count': (currentData['@odata.count'] || 0) + 1
+          }
+        }
+
+        return currentData
+      }, false) // false = don't revalidate immediately
+    }
+
+    // ✅ Schedule debounced refresh to ensure we get the latest data from server
+    // This handles cases where optimistic update might be incomplete
+    // Note: We don't return a cleanup function from this callback - that's only for useEffect
+    setTimeout(() => {
+      mutateExecutions()
+    }, 2000) // 2 second delay to allow server processing
+   }, [mutateExecutions])
 
   const handleCreateClick = () => {
     setIsCreateModalOpen(true)

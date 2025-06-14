@@ -7,9 +7,19 @@ import { Checkbox } from '@/components/ui/checkbox'
 import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import ExecutionStatusBadge from '../ExecutionStatusBadge'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<ExecutionsRow>[] = [
+interface CreateInProgressColumnsProps {
+  onEdit?: (execution: ExecutionsRow) => void
+  onDelete?: (execution: ExecutionsRow) => void
+  onRefresh?: () => void
+}
+
+export const createInProgressColumns = ({ 
+  onEdit, 
+  onDelete, 
+  onRefresh 
+}: CreateInProgressColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -34,6 +44,38 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    id: 'actions',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    cell: ({ row }) => (
+      <DataTableRowAction 
+        row={row} 
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onRefresh={onRefresh}
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: 'packageName',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Package Name" />,
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span className="font-medium">{row.getValue('packageName') || 'N/A'}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'Version',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Package Version" />,
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span>{row.getValue('Version') || 'N/A'}</span>
+      </div>
+    ),
   },
   {
     accessorKey: 'agent',
@@ -163,3 +205,6 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
     ),
   },
 ]
+
+// Default export for backward compatibility
+export const columns = createInProgressColumns()
