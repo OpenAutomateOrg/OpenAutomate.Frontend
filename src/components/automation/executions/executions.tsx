@@ -155,29 +155,18 @@ export default function ExecutionsInterface() {
   // ✅ Real-time execution status updates via SignalR
   const executionStatuses = useExecutionStatus(tenant)
 
-  // ✅ Intercept console errors for SignalR (following React guide compliance)
-  // Client-only: Console error suppression for better UX
+  // ✅ SignalR error handling (following React guide compliance)
+  // Client-only: Better error handling without global console override
   useEffect(() => {
-    const originalError = console.error
-    console.error = (...args: unknown[]) => {
-      // Filter out SignalR-related errors
-      if (
-        args.length > 0 &&
-        typeof args[0] === 'string' &&
-        (args[0].includes('SignalR') ||
-          args[0].includes('WebSocket') ||
-          args[0].includes('transport') ||
-          args[0].includes('HubConnection'))
-      ) {
-        console.debug('[Suppressed SignalR Error]', ...args)
-        return
-      }
-      originalError(...args)
-    }
+    // Instead of globally suppressing console.error, we handle SignalR errors
+    // through the SignalR connection's error handling mechanisms
+    // This avoids the dangerous practice of global console override
 
-    return () => {
-      console.error = originalError
-    }
+    // Note: SignalR errors should be handled in the useExecutionStatus hook
+    // or through proper error boundaries, not by suppressing console.error
+    console.debug('[Executions] Component mounted - SignalR error handling delegated to connection hooks')
+
+    // No cleanup needed since we're not modifying global state
   }, [])
 
   // Convert table state to OData query parameters
@@ -759,7 +748,7 @@ export default function ExecutionsInterface() {
 
   const handleCreateSuccess = useCallback((newExecution?: { id: string, packageName: string, botAgentName: string }) => {
     // ✅ Following React guideline: API calls in event handlers, not effects
-    
+
     if (newExecution) {
       // ✅ Optimistic update: immediately add the new execution to the UI
       // The real-time SignalR system will provide updates as the execution progresses
@@ -767,7 +756,7 @@ export default function ExecutionsInterface() {
       // ✅ Update SWR cache optimistically using mutate with data
       mutateExecutions((currentData) => {
         if (!currentData) return currentData
-        
+
         // For OData response structure
         if ('value' in currentData && Array.isArray(currentData.value)) {
           const newExecutionDto: ExecutionResponseDto = {
@@ -783,25 +772,24 @@ export default function ExecutionsInterface() {
             botAgentId: '',
             packageId: ''
           }
-          
+
           return {
             ...currentData,
             value: [newExecutionDto, ...currentData.value],
             '@odata.count': (currentData['@odata.count'] || 0) + 1
           }
         }
-        
+
         return currentData
       }, false) // false = don't revalidate immediately
     }
-    
-    // ✅ Debounced refresh to ensure we get the latest data from server
+
+    // ✅ Schedule debounced refresh to ensure we get the latest data from server
     // This handles cases where optimistic update might be incomplete
-    const refreshTimeout = setTimeout(() => {
+    // Note: We don't return a cleanup function from this callback - that's only for useEffect
+    setTimeout(() => {
       mutateExecutions()
     }, 2000) // 2 second delay to allow server processing
-    
-         return () => clearTimeout(refreshTimeout)
    }, [mutateExecutions])
 
   const handleCreateClick = () => {
