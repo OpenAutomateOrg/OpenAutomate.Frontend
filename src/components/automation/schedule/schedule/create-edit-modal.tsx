@@ -21,10 +21,10 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon, InfoIcon, Search } from 'lucide-react'
+import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { ChevronsUpDownIcon as ChevronUpDown } from 'lucide-react'
+
 
 interface ItemModalProps {
   isOpen: boolean
@@ -200,62 +200,9 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
                   <span className="text-sm">minute(s)</span>
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-md flex gap-2">
-                  <InfoIcon className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p>When will the sessions start?</p>
-                    <p>The first session will start at 23:02:00 21/05/2025</p>
-                    <p>The second session will start at 23:03:00 21/05/2025</p>
-                  </div>
-                </div>
+                
               </TabsContent>
 
-              <TabsContent value="executionTarget">
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search" className="pl-8" />
-                  </div>
-                  <div className="border rounded-md">
-                    <div className="bg-muted/50 grid grid-cols-3 py-2 px-4">
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Name</span>
-                        <ChevronUpDown className="h-4 w-4" />
-                      </div>
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Machine name</span>
-                        <ChevronUpDown className="h-4 w-4" />
-                      </div>
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Status</span>
-                      </div>
-                    </div>
-                    <div className="py-8 text-center text-sm text-muted-foreground">No data...</div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="parameters">
-                <div className="space-y-4">
-                  <Button>Add</Button>
-                  <div className="border rounded-md">
-                    <div className="bg-muted/50 grid grid-cols-3 py-2 px-4">
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Name</span>
-                        <ChevronUpDown className="h-4 w-4" />
-                      </div>
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Machine name</span>
-                        <ChevronUpDown className="h-4 w-4" />
-                      </div>
-                      <div className="flex items-center gap-1 text-sm font-medium">
-                        <span>Status</span>
-                      </div>
-                    </div>
-                    <div className="py-8 text-center text-sm text-muted-foreground">No data...</div>
-                  </div>
-                </div>
-              </TabsContent>
 
 
             </Tabs>
