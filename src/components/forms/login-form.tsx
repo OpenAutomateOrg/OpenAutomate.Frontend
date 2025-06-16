@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { config } from '@/lib/config'
 
 // Form validation schema
@@ -90,9 +89,15 @@ export function LoginForm() {
         router.push('/tenant-selector') // Default redirect to tenant selector
       }
     } catch (error: unknown) {
-      console.error('Login failed', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Login failed. Please try again.'
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (typeof error === 'object' && error !== null) {
+        const axiosError = error as { response?: { data?: { message?: string } }, message?: string };
+        errorMessage =
+          axiosError.response?.data?.message ??
+          axiosError.message ??
+          errorMessage;
+      }
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -102,10 +107,12 @@ export function LoginForm() {
   return (
     <div className="grid gap-6">
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-3 p-4 mb-2 rounded-lg border border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-950 shadow-sm fade-in">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300">
+            <AlertCircle className="w-6 h-6" />
+          </span>
+          <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
+        </div>
       )}
 
       <Form {...form}>
@@ -136,12 +143,7 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-medium text-orange-600 hover:text-orange-700"
-                  >
-                    Forgot password?
-                  </Link>
+
                 </div>
                 <FormControl>
                   <Input
@@ -169,12 +171,19 @@ export function LoginForm() {
                     disabled={isLoading}
                   />
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Remember me</FormLabel>
+                <div className="flex justify-between w-full items-center">
+                  <FormLabel className="text-sm">Remember me</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </FormItem>
             )}
           />
+
 
           <Button
             type="submit"
