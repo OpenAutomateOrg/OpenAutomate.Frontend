@@ -205,72 +205,83 @@ export default function InvitationsList() {
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex flex-row items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                    {/* Email filter */}
-                    <div className="relative w-48">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            ref={emailInputRef}
-                            placeholder="Search by Email"
-                            value={searchEmail}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                emailCursorRef.current = e.target.selectionStart;
-                                setSearchEmail(e.target.value);
-                            }}
-                            className="pl-8 pr-8"
-                            disabled={isLoading}
-                            onFocus={(e) => {
-                                emailCursorRef.current = e.target.selectionStart;
-                            }}
-                        />
-                        {searchEmail && (
-                            <X
-                                className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-                                onClick={() => setSearchEmail('')}
-                            />
-                        )}
-                    </div>
-
-                    {/* Status filter */}
-                    <div className="relative w-48">
-                        <Select value={searchStatus} onValueChange={setSearchStatus} disabled={isLoading}>
-                            <SelectTrigger className="pl-8">
-                                <div className="flex items-center">
-                                    <Filter className="mr-2 h-4 w-4" />
-                                    <SelectValue placeholder="Filter Status" />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Statuses</SelectItem>
-                                {STATUS_OPTIONS.filter(s => s !== 'All').map(option => (
-                                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Active filter count badge */}
-                    {activeFilterCount > 0 && (
-                        <Badge variant="secondary" className="rounded-sm px-1">
-                            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
-                        </Badge>
+        <div className="flex flex-col h-full w-full space-y-8">
+            {/* Header Row */}
+            <div className="flex justify-between items-center w-full flex-wrap gap-2">
+                <h2 className="text-2xl font-bold tracking-tight">Invitations</h2>
+                <div className="flex items-center space-x-2">
+                    {count > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                            <span>
+                                Total: {count} invitation{count !== 1 ? 's' : ''}
+                            </span>
+                        </div>
                     )}
+                    <Button onClick={() => setInviteOpen(true)} className="flex items-center justify-center">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                    </Button>
+                </div>
+            </div>
 
-                    {/* Reset filters button */}
-                    {isFiltered && (
-                        <Button variant="ghost" onClick={resetFilters} className="h-8 px-2 lg:px-3" disabled={isLoading}>
-                            Reset
-                            <X className="ml-2 h-4 w-4" />
-                        </Button>
+            {/* Filters Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 mb-2 w-full">
+                {/* Email filter */}
+                <div className="relative w-48">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        ref={emailInputRef}
+                        placeholder="Search by Email"
+                        value={searchEmail}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            emailCursorRef.current = e.target.selectionStart;
+                            setSearchEmail(e.target.value);
+                        }}
+                        className="pl-8 pr-8"
+                        disabled={isLoading}
+                        onFocus={(e) => {
+                            emailCursorRef.current = e.target.selectionStart;
+                        }}
+                    />
+                    {searchEmail && (
+                        <X
+                            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+                            onClick={() => setSearchEmail('')}
+                        />
                     )}
                 </div>
 
-                {/* Invite User button */}
-                <Button onClick={() => setInviteOpen(true)} className="mb-2">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Invite User
-                </Button>
+                {/* Status filter */}
+                <div className="relative w-48">
+                    <Select value={searchStatus} onValueChange={setSearchStatus} disabled={isLoading}>
+                        <SelectTrigger className="pl-8">
+                            <div className="flex items-center">
+                                <Filter className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter Status" />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="All">All Statuses</SelectItem>
+                            {STATUS_OPTIONS.filter(s => s !== 'All').map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Active filter count badge */}
+                {activeFilterCount > 0 && (
+                    <Badge variant="secondary" className="rounded-sm px-1">
+                        {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+                    </Badge>
+                )}
+
+                {/* Reset filters button */}
+                {isFiltered && (
+                    <Button variant="ghost" onClick={resetFilters} className="h-8 px-2 lg:px-3" disabled={isLoading}>
+                        Reset
+                        <X className="ml-2 h-4 w-4" />
+                    </Button>
+                )}
             </div>
 
             <DataTable
@@ -290,7 +301,19 @@ export default function InvitationsList() {
                 onPageSizeChange={setPageSize}
             />
 
-            {error && <div className="text-red-500">Failed to load invitations</div>}
+            {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+                    <p className="text-red-800 dark:text-red-300">Failed to load invitations</p>
+                    <Button variant="outline" className="mt-2" onClick={() => mutate()}>
+                        Retry
+                    </Button>
+                </div>
+            )}
+            {!isLoading && invitations.length === 0 && !error && (
+                <div className="text-center py-10 text-muted-foreground">
+                    <p>No invitations found.</p>
+                </div>
+            )}
 
             {/* Invite User Modal */}
             <InviteModal isOpen={inviteOpen} onClose={() => {
