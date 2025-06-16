@@ -184,9 +184,9 @@ export default function UsersInterface() {
   )
 
   return (
-    <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
+    <div className="flex flex-col h-full w-full space-y-8">
       {/* Tabs */}
-      <div className="mb-4 border-b border-gray-200">
+      <div className="mb-4 border-b border-gray-200 w-full">
         <nav className="flex space-x-8" aria-label="Tabs">
           <button
             className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -209,7 +209,7 @@ export default function UsersInterface() {
 
       {tab === 'user' && (
         <>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center w-full flex-wrap gap-2">
             <h2 className="text-2xl font-bold tracking-tight">Users</h2>
             <div className="flex items-center space-x-2">
               {totalCount > 0 && (
@@ -225,7 +225,7 @@ export default function UsersInterface() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 w-full">
             <UsersDataTableToolbar
               searchEmail={searchEmail}
               setSearchEmail={setSearchEmail}

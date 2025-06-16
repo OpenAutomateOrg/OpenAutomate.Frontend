@@ -205,9 +205,9 @@ export default function InvitationsList() {
     };
 
     return (
-        <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
+        <div className="flex flex-col h-full w-full space-y-8">
             {/* Header Row */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center w-full flex-wrap gap-2">
                 <h2 className="text-2xl font-bold tracking-tight">Invitations</h2>
                 <div className="flex items-center space-x-2">
                     {count > 0 && (
@@ -224,7 +224,7 @@ export default function InvitationsList() {
             </div>
 
             {/* Filters Toolbar */}
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2 w-full">
                 {/* Email filter */}
                 <div className="relative w-48">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
