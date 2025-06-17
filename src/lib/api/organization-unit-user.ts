@@ -83,7 +83,7 @@ export interface AuthorityDto {
 
 export const organizationUnitUserApi = {
     getUsers: async (tenant: string): Promise<OrganizationUnitUser[]> => {
-        const res = await api.get<OrganizationUnitUserResponse>(`/api/ou/${tenant}/users`)
+        const res = await api.get<OrganizationUnitUserResponse>(`${tenant}/api/ou/users`)
         return res.users
     },
 
@@ -91,7 +91,7 @@ export const organizationUnitUserApi = {
      * Get all roles in a specific organization unit by tenant slug
      */
     getRolesInOrganizationUnit: async (tenant: string): Promise<AuthorityDto[]> => {
-        return api.get<AuthorityDto[]>(`/api/ou/${tenant}/users/roles`)
+        return api.get<AuthorityDto[]>(`${tenant}/api/ou/users/roles`)
     },
 
     /**
@@ -118,5 +118,5 @@ export const organizationUnitUserApi = {
 
 export const deleteOrganizationUnitUser = async (userId: string): Promise<void> => {
     const tenant = getCurrentTenant()
-    await api.delete<void>(`/api/ou/${tenant}/users/${userId}`)
+    await api.delete<void>(`${tenant}/api/ou/users/${userId}`)
 }
