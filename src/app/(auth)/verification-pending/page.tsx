@@ -45,14 +45,36 @@ function VerificationPendingContent() {
 
     setIsResending(true)
     try {
-      await authApi.resendVerificationEmail(email)
+      // Sử dụng phương thức không yêu cầu xác thực
+      await authApi.resendVerificationEmailByEmail(email)
       setAlert({
         type: 'success',
         title: 'Verification email sent',
         message: 'Please check your inbox for the verification link.',
       })
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.'
+      console.error('Failed to resend verification email:', error);
+      
+      // Trích xuất thông báo lỗi chi tiết hơn
+      let errorMessage = 'An unexpected error occurred.';
+      if (error && typeof error === 'object') {
+        // Kiểm tra Error object tiêu chuẩn
+        if ('message' in error && typeof error.message === 'string') {
+          errorMessage = error.message;
+        } 
+        // Kiểm tra lỗi response từ axios
+        else if ('response' in error && 
+                 typeof error.response === 'object' && 
+                 error.response && 
+                 'data' in error.response && 
+                 typeof error.response.data === 'object' && 
+                 error.response.data && 
+                 'message' in error.response.data && 
+                 typeof error.response.data.message === 'string') {
+          errorMessage = error.response.data.message;
+        }
+      }
+      
       setAlert({
         type: 'error',
         title: 'Failed to resend email',
