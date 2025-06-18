@@ -21,6 +21,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
 import { config } from '@/lib/config'
+import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
 
 // Form validation schema
 const formSchema = z.object({
@@ -40,30 +41,46 @@ export function LoginForm() {
   const { login } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
+  const [isEmailVerificationError, setIsEmailVerificationError] = React.useState<boolean>(false)
 
   // Check for return URL or expired token
   const returnUrl = searchParams.get('returnUrl') ?? config.paths.auth.organizationSelector
   const isExpired = searchParams.get('expired') === 'true'
+  const needVerification = searchParams.get('needVerification') === 'true'
+  const emailParam = searchParams.get('email')
 
   // Check if this is coming from an invitation
   const isInvitation = returnUrl?.includes('/invitation/accept')
-
-  // Show expired token message if needed
-  React.useEffect(() => {
-    if (isExpired) {
-      setError('Your session has expired. Please sign in again.')
-    }
-  }, [isExpired])
 
   // Initialize form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: emailParam || '',
       password: '',
       rememberMe: false,
     },
   })
+
+  // Show expired token message or verification message if needed
+  React.useEffect(() => {
+    if (isExpired) {
+      setError('Your session has expired. Please sign in again.')
+    }
+    
+    // If coming back from verification page or with needVerification flag
+    if (needVerification && emailParam) {
+      setUnverifiedEmail(emailParam)
+      setIsEmailVerificationError(true)
+      setError('Please verify your email address before logging in. Check your inbox for a verification link or request a new one.')
+      
+      // Pre-fill the email field if it wasn't set in the defaultValues
+      if (form.getValues('email') !== emailParam) {
+        form.setValue('email', emailParam)
+      }
+    }
+  }, [isExpired, needVerification, emailParam, form])
 
   // Form submit handler
   async function onSubmit(data: FormData) {
@@ -92,13 +109,31 @@ export function LoginForm() {
       let errorMessage = 'Login failed. Please try again.';
 
       if (typeof error === 'object' && error !== null) {
-        const axiosError = error as { response?: { data?: { message?: string } }, message?: string };
+        const axiosError = error as { response?: { data?: { message?: string, code?: string } }, message?: string };
         errorMessage =
           axiosError.response?.data?.message ??
           axiosError.message ??
           errorMessage;
+        
+        // Check if this is an email verification error
+        if (
+          errorMessage.toLowerCase().includes('verify') || 
+          errorMessage.toLowerCase().includes('verification') ||
+          errorMessage.toLowerCase().includes('email not verified') ||
+          axiosError.response?.data?.code === 'EMAIL_NOT_VERIFIED'
+        ) {
+          // Set the unverified email and show verification error
+          setUnverifiedEmail(data.email);
+          setIsEmailVerificationError(true);
+          setError('Please verify your email address before logging in. Check your inbox for a verification link or request a new one.');
+          return;
+        }
       }
-      setError(errorMessage)
+      
+      // Reset verification error state for other errors
+      setIsEmailVerificationError(false);
+      setUnverifiedEmail(null);
+      setError(errorMessage);
     } finally {
       setIsLoading(false)
     }
@@ -113,6 +148,11 @@ export function LoginForm() {
           </span>
           <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
         </div>
+      )}
+      
+      {/* Show resend verification button if this is an email verification error */}
+      {isEmailVerificationError && unverifiedEmail && (
+        <EmailVerificationAlert email={unverifiedEmail} />
       )}
 
       <Form {...form}>
