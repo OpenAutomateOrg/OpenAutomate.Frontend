@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { authApi } from '@/lib/api/auth'
 import { Icons } from '@/components/ui/icons'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 // Loading fallback component
 function VerificationPendingLoading() {
@@ -45,7 +46,7 @@ function VerificationPendingContent() {
 
     setIsResending(true)
     try {
-      // Sử dụng phương thức không yêu cầu xác thực
+      // Use the non-authenticated endpoint
       await authApi.resendVerificationEmailByEmail(email)
       setAlert({
         type: 'success',
@@ -55,25 +56,8 @@ function VerificationPendingContent() {
     } catch (error: unknown) {
       console.error('Failed to resend verification email:', error);
       
-      // Trích xuất thông báo lỗi chi tiết hơn
-      let errorMessage = 'An unexpected error occurred.';
-      if (error && typeof error === 'object') {
-        // Kiểm tra Error object tiêu chuẩn
-        if ('message' in error && typeof error.message === 'string') {
-          errorMessage = error.message;
-        } 
-        // Kiểm tra lỗi response từ axios
-        else if ('response' in error && 
-                 typeof error.response === 'object' && 
-                 error.response && 
-                 'data' in error.response && 
-                 typeof error.response.data === 'object' && 
-                 error.response.data && 
-                 'message' in error.response.data && 
-                 typeof error.response.data.message === 'string') {
-          errorMessage = error.response.data.message;
-        }
-      }
+      // Extract error message using shared utility
+      const errorMessage = extractErrorMessage(error);
       
       setAlert({
         type: 'error',

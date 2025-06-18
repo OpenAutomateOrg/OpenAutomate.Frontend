@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
 import { authApi } from '@/lib/api/auth'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 interface EmailVerificationAlertProps {
-  email: string
+  readonly email: string
 }
 
 export function EmailVerificationAlert({ email }: EmailVerificationAlertProps) {
@@ -27,25 +28,8 @@ export function EmailVerificationAlert({ email }: EmailVerificationAlertProps) {
       setResendStatus('error')
       console.error('Failed to resend verification email:', error)
       
-      // Extract error message for display
-      let displayError = 'Failed to resend. Please try again.';
-      if (error && typeof error === 'object') {
-        // Check for standard Error object
-        if ('message' in error && typeof error.message === 'string') {
-          displayError = error.message;
-        } 
-        // Check for axios error response
-        else if ('response' in error && 
-                 typeof error.response === 'object' && 
-                 error.response && 
-                 'data' in error.response && 
-                 typeof error.response.data === 'object' && 
-                 error.response.data && 
-                 'message' in error.response.data && 
-                 typeof error.response.data.message === 'string') {
-          displayError = error.response.data.message;
-        }
-      }
+      // Use the shared utility function to extract error message
+      const displayError = extractErrorMessage(error) ?? 'Failed to resend. Please try again.';
       setErrorMessage(displayError);
     } finally {
       setIsResending(false)
@@ -72,7 +56,7 @@ export function EmailVerificationAlert({ email }: EmailVerificationAlertProps) {
       
       {resendStatus === 'error' && (
         <p className="mt-2 text-sm text-center text-red-600">
-          {errorMessage || 'Failed to resend. Please try again.'}
+          {errorMessage ?? 'Failed to resend. Please try again.'}
         </p>
       )}
     </div>

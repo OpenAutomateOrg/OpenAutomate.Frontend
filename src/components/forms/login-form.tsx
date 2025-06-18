@@ -63,6 +63,9 @@ export function LoginForm() {
     },
   })
 
+  // Get form methods to use in effect
+  const { getValues, setValue } = form;
+
   // Show expired token message or verification message if needed
   React.useEffect(() => {
     if (isExpired) {
@@ -76,11 +79,11 @@ export function LoginForm() {
       setError('Please verify your email address before logging in. Check your inbox for a verification link or request a new one.')
       
       // Pre-fill the email field if it wasn't set in the defaultValues
-      if (form.getValues('email') !== emailParam) {
-        form.setValue('email', emailParam)
+      if (getValues('email') !== emailParam) {
+        setValue('email', emailParam)
       }
     }
-  }, [isExpired, needVerification, emailParam, form])
+  }, [isExpired, needVerification, emailParam, getValues, setValue])
 
   // Form submit handler
   async function onSubmit(data: FormData) {
