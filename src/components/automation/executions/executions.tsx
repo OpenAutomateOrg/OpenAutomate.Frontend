@@ -2,7 +2,7 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns as HistoricalColumns } from './historical/columns'
+import { createColumns as createHistoricalColumns } from './historical/columns'
 import { createInProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
@@ -70,6 +70,7 @@ export const executionsSchema = z.object({
   taskId: z.string().optional(),
   createdDate: z.string().optional(),
   packageName: z.string().optional(),
+  hasLogs: z.boolean().optional(),
 })
 
 export type ExecutionsRow = z.infer<typeof executionsSchema>
@@ -269,13 +270,43 @@ export default function ExecutionsInterface() {
     const realtimeUpdate = executionStatuses[execution.id]
     const currentStatus = realtimeUpdate?.status || execution.status
 
+    // Helper function to safely format dates
+    const formatDate = (dateString: string | undefined | null): string => {
+      if (!dateString) return ''
+      try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) {
+          return ''
+        }
+        return new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date)
+      } catch (error) {
+        console.error('Date formatting error:', error, 'for date:', dateString)
+        return ''
+      }
+    }
+
+    const formattedStartTime = formatDate(execution.startTime)
+    const formattedEndTime = formatDate(execution.endTime)
+
+    // Debug logging for date transformation
+    console.log('Execution transformation:', {
+      id: execution.id,
+      startTime: execution.startTime,
+      endTime: execution.endTime,
+      formattedStartTime,
+      formattedEndTime
+    })
+
     return {
       id: execution.id,
       Version: execution.packageVersion || '',
       Agent: execution.botAgentName || '',
       State: currentStatus,
-      'Start Time': execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
-      'End Time': execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
+      'Start Time': formattedStartTime,
+      'End Time': formattedEndTime,
       Source: 'Manual', // Assuming manual trigger for now
       Command: 'execute',
       Schedules: 'Once', // For immediate executions
@@ -292,33 +323,27 @@ export default function ExecutionsInterface() {
       status: currentStatus,
       agent: execution.botAgentName || '',
       state: currentStatus,
-      startTime: execution.startTime ? new Date(execution.startTime).toLocaleString() : '',
-      endTime: execution.endTime ? new Date(execution.endTime).toLocaleString() : '',
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
       source: 'Manual',
       command: 'execute',
       schedules: 'Once',
       taskId: execution.id,
       createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
       packageName: execution.packageName || '',
+      hasLogs: execution.hasLogs || false,
     }
   }, [executionStatuses])
 
   // ✅ Create columns with proper handlers
-  const handleEditExecution = useCallback((execution: ExecutionsRow) => {
-    console.log('Edit execution:', execution)
-    // TODO: Implement edit execution logic
-  }, [])
-
-  const handleDeleteExecution = useCallback((execution: ExecutionsRow) => {
-    console.log('Delete execution:', execution)
-    // TODO: Implement delete execution logic
-  }, [])
 
   const ProgressColumns = useMemo(() => createInProgressColumns({
-    onEdit: handleEditExecution,
-    onDelete: handleDeleteExecution,
-    onRefresh: () => mutateExecutions()
-  }), [handleEditExecution, handleDeleteExecution, mutateExecutions])
+    onDeleted: () => mutateExecutions()
+  }), [mutateExecutions])
+
+  const HistoricalColumns = useMemo(() => createHistoricalColumns({
+    onDeleted: () => mutateExecutions()
+  }), [mutateExecutions])
 
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops
@@ -855,13 +880,16 @@ export default function ExecutionsInterface() {
                 </span>
               </div>
             )}
-            <Button
-              onClick={handleCreateClick}
-              className="flex items-center justify-center"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Execution
-            </Button>
+            {/* Only show Create Execution button for In Progress tab */}
+            {tab === 'inprogress' && (
+              <Button
+                onClick={handleCreateClick}
+                className="flex items-center justify-center"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Execution
+              </Button>
+            )}
           </div>
         </div>
 
