@@ -16,6 +16,7 @@ export interface ExecutionResponseDto {
   endTime?: string
   errorMessage?: string
   logOutput?: string
+  hasLogs?: boolean
   botAgentName?: string
   packageName?: string
   packageVersion?: string
@@ -214,4 +215,74 @@ export const cancelExecution = async (id: string): Promise<ExecutionResponseDto>
   const tenant = getCurrentTenant()
   const response = await api.post<ExecutionResponseDto>(`${tenant}/api/executions/${id}/cancel`)
   return response
+}
+
+/**
+ * Get download URL for execution logs
+ */
+export const getExecutionLogDownloadUrl = async (id: string): Promise<{ downloadUrl: string }> => {
+  const tenant = getCurrentTenant()
+  const response = await api.get<{ downloadUrl: string }>(`${tenant}/api/executions/${id}/logs/download`)
+  return response
+}
+
+/**
+ * Download execution logs as a file
+ */
+export const downloadExecutionLogs = async (id: string, fileName?: string): Promise<void> => {
+  try {
+    // Get the pre-signed download URL
+    const { downloadUrl } = await getExecutionLogDownloadUrl(id)
+    
+    const finalFileName = fileName || `execution_${id}_logs.log`
+    
+    // Try to fetch the file as blob first for better download control
+    try {
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/octet-stream',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const blob = await response.blob()
+      
+      // Create a blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = finalFileName
+      link.style.display = 'none'
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (fetchError) {
+      console.warn('Fetch method failed, falling back to direct link:', fetchError)
+      
+      // Fallback to direct link method
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = finalFileName
+      link.target = '_blank' // Ensure it doesn't navigate in the same tab
+      link.rel = 'noopener noreferrer'
+      link.style.display = 'none'
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  } catch (error) {
+    console.error('Error downloading execution logs:', error)
+    throw error
+  }
 } 
