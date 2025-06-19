@@ -272,11 +272,6 @@ export default function ScheduleInterface() {
     setIsModalOpen(true)
   }
 
-  const handleEditClick = (schedule: ScheduleRow) => {
-    setEditingSchedule(schedule)
-    setModalMode('edit')
-    setIsModalOpen(true)
-  }
 
   const handleModalClose = (shouldRefresh?: boolean) => {
     setIsModalOpen(false)
