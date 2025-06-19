@@ -228,6 +228,7 @@ export default function ScheduleInterface() {
   const [data] = useState<ScheduleRow[]>(initialData)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleRow | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -265,17 +266,32 @@ export default function ScheduleInterface() {
     router.push(route)
   }
 
+  const handleCreateClick = () => {
+    setEditingSchedule(null)
+    setModalMode('create')
+    setIsModalOpen(true)
+  }
+
+  const handleEditClick = (schedule: ScheduleRow) => {
+    setEditingSchedule(schedule)
+    setModalMode('edit')
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = (shouldRefresh?: boolean) => {
+    setIsModalOpen(false)
+    setEditingSchedule(null)
+    // TODO: If shouldRefresh is true, refresh the data with SWR mutate
+    if (shouldRefresh) {
+      // mutate() // This will be added when SWR is implemented
+    }
+  }
+
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => {
-              setModalMode('create')
-              setIsModalOpen(true)
-            }}
-            className="flex items-center justify-center"
-          >
+          <Button onClick={handleCreateClick} className="flex items-center justify-center">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create
           </Button>
@@ -294,12 +310,14 @@ export default function ScheduleInterface() {
           table={table}
         />
       </div>
+
+      {/* ✅ Dynamic key resets component state */}
       <ScheduleModal
+        key={editingSchedule?.id ?? 'new'}
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-        }}
+        onClose={handleModalClose}
         mode={modalMode}
+        editingSchedule={editingSchedule}
       />
     </>
   )
