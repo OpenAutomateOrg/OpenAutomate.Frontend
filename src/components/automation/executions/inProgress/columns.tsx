@@ -1,6 +1,7 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
+import React from 'react'
 
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -10,15 +11,11 @@ import ExecutionStatusBadge from '../ExecutionStatusBadge'
 import DataTableRowAction from './data-table-row-actions'
 
 interface CreateInProgressColumnsProps {
-  onEdit?: (execution: ExecutionsRow) => void
-  onDelete?: (execution: ExecutionsRow) => void
-  onRefresh?: () => void
+  onDeleted?: () => void
 }
 
 export const createInProgressColumns = ({ 
-  onEdit, 
-  onDelete, 
-  onRefresh 
+  onDeleted 
 }: CreateInProgressColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
@@ -34,14 +31,27 @@ export const createInProgressColumns = ({
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
+    cell: ({ row }) => {
+      const stopPropagation = (e: React.MouseEvent) => {
+        e.stopPropagation()
+      }
+
+      return (
+        <span
+          onClick={stopPropagation}
+          onMouseDown={stopPropagation}
+          onPointerDown={stopPropagation}
+        >
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+            onClick={stopPropagation}
+          />
+        </span>
+      )
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -50,10 +60,8 @@ export const createInProgressColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
     cell: ({ row }) => (
       <DataTableRowAction 
-        row={row} 
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onRefresh={onRefresh}
+        execution={row.original} 
+        onDeleted={onDeleted}
       />
     ),
     enableSorting: false,
@@ -175,35 +183,7 @@ export const createInProgressColumns = ({
       </div>
     ),
   },
-  {
-    accessorKey: 'createdDate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
-    cell: ({ row }) => {
-      const value = row.getValue('createdDate')
-      let formatted = ''
-      try {
-        if (value) {
-          const date = new Date(value as string)
-          if (!isNaN(date.getTime())) {
-            formatted = new Intl.DateTimeFormat('en-US', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }).format(date)
-          }
-        }
-      } catch {}
-      return <span>{formatted}</span>
-    },
-  },
-  {
-    accessorKey: 'createdBy',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created By" />,
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('createdBy')}</span>
-      </div>
-    ),
-  },
+
 ]
 
 // Default export for backward compatibility

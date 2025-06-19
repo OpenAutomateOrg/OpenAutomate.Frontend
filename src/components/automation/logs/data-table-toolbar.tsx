@@ -188,8 +188,8 @@ export function DataTableToolbar<TData>({
           </div>
         )}
 
-        {/* Workflow Filter */}
-        {table.getColumn('workflow') && (
+        {/* Package Filter */}
+        {table.getColumn('packageName') && (
           <div className="flex items-center space-x-1">
             <Select
               onValueChange={(value) => {
@@ -197,20 +197,20 @@ export function DataTableToolbar<TData>({
                   onStatusChange(value)
                 } else {
                   if (value === 'all') {
-                    table.getColumn('workflow')?.setFilterValue('')
+                    table.getColumn('packageName')?.setFilterValue('')
                   } else {
-                    table.getColumn('workflow')?.setFilterValue(value)
+                    table.getColumn('packageName')?.setFilterValue(value)
                   }
                 }
               }}
-              value={(table.getColumn('workflow')?.getFilterValue() as string) || 'all'}
+              value={(table.getColumn('packageName')?.getFilterValue() as string) || 'all'}
               disabled={isFiltering || isPending}
             >
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter workflow" />
-                  {(table.getColumn('workflow')?.getFilterValue() as string | undefined) && (
+                  <SelectValue placeholder="Filter package" />
+                  {(table.getColumn('packageName')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
                     </Badge>
@@ -218,7 +218,7 @@ export function DataTableToolbar<TData>({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Workflows</SelectItem>
+                <SelectItem value="all">All Packages</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
