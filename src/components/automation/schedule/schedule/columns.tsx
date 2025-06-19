@@ -58,11 +58,11 @@ export const columns: ColumnDef<ScheduleRow>[] = [
     ),
   },
   {
-    accessorKey: 'workflow',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Workflow" />,
+    accessorKey: 'packageName',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Package Name" />,
     cell: ({ row }) => (
       <div className="flex items-center">
-        <span>{row.getValue('workflow')}</span>
+        <span>{row.getValue('packageName')}</span>
       </div>
     ),
   },
