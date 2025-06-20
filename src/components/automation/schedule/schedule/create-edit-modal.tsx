@@ -10,8 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -20,202 +18,232 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon } from 'lucide-react'
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/use-toast'
 
+// Sub-components
+import { TriggerTab } from './components/TriggerTab'
+import { ExecutionTargetTab } from './components/ExecutionTargetTab'
+import { ParametersTab } from './components/ParametersTab'
 
-interface ItemModalProps {
-  isOpen: boolean
-  onClose: () => void
-  mode: 'create' | 'edit'
+// Types
+export interface ScheduleFormData {
+  name: string
+  workflow: string
+  timezone: string
+  recurrence: {
+    type: 'Once' | 'Minutes' | 'Hourly' | 'Daily' | 'Weekly' | 'Monthly'
+    value: string
+    startDate?: Date
+    endDate?: Date
+    startTime?: string
+    dailyHour?: string
+    dailyMinute?: string
+    weeklyHour?: string
+    weeklyMinute?: string
+    selectedDays?: string[]
+    monthlyHour?: string
+    monthlyMinute?: string
+    monthlyOnType?: 'day' | 'the'
+    selectedDay?: string
+    selectedOrdinal?: string
+    selectedWeekday?: string
+    selectedMonths?: string[]
+  }
 }
 
-export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date('2025-05-21'))
-  const [endDate, setEndDate] = useState<Date | undefined>()
-  const [recurrenceType, setRecurrenceType] = useState('Minutes')
-  const [recurrenceValue, setRecurrenceValue] = useState('1')
-  const isEditing = mode === 'edit'
+interface ScheduleData {
+  id?: string
+  name?: string
+  workflow?: string
+  timezone?: string
+  recurrence?: Partial<ScheduleFormData['recurrence']>
+}
 
-  const resetForm = () => {}
+interface CreateEditModalProps {
+  isOpen: boolean
+  onClose: (shouldRefresh?: boolean) => void
+  mode: 'create' | 'edit'
+  editingSchedule?: ScheduleData | null
+}
+
+export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: CreateEditModalProps) {
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState('trigger')
+
+  // ✅ Initialize form with editing data (reset via key prop in parent)
+  const [formData, setFormData] = useState<ScheduleFormData>({
+    name: editingSchedule?.name ?? '',
+    workflow: editingSchedule?.workflow ?? '',
+    timezone: editingSchedule?.timezone ?? 'asia-saigon',
+    recurrence: {
+      type: editingSchedule?.recurrence?.type ?? 'Minutes',
+      value: editingSchedule?.recurrence?.value ?? '1',
+      startDate: editingSchedule?.recurrence?.startDate ?? new Date('2025-05-21'),
+      endDate: editingSchedule?.recurrence?.endDate,
+      startTime: editingSchedule?.recurrence?.startTime ?? '00:00',
+      dailyHour: editingSchedule?.recurrence?.dailyHour ?? '00',
+      dailyMinute: editingSchedule?.recurrence?.dailyMinute ?? '00',
+      weeklyHour: editingSchedule?.recurrence?.weeklyHour ?? '17',
+      weeklyMinute: editingSchedule?.recurrence?.weeklyMinute ?? '00',
+      selectedDays: editingSchedule?.recurrence?.selectedDays ?? ['Tuesday', 'Thursday', 'Friday'],
+      monthlyHour: editingSchedule?.recurrence?.monthlyHour ?? '00',
+      monthlyMinute: editingSchedule?.recurrence?.monthlyMinute ?? '00',
+      monthlyOnType: editingSchedule?.recurrence?.monthlyOnType ?? 'day',
+      selectedDay: editingSchedule?.recurrence?.selectedDay ?? '31',
+      selectedOrdinal: editingSchedule?.recurrence?.selectedOrdinal ?? '2nd',
+      selectedWeekday: editingSchedule?.recurrence?.selectedWeekday ?? 'Wednesday',
+      selectedMonths: editingSchedule?.recurrence?.selectedMonths ?? [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ],
+    },
+  })
+
+  const updateFormData = (updates: Partial<ScheduleFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }
+
+  const updateRecurrence = (updates: Partial<ScheduleFormData['recurrence']>) => {
+    setFormData((prev) => ({
+      ...prev,
+      recurrence: { ...prev.recurrence, ...updates },
+    }))
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      // TODO: Replace with actual API call
+      if (mode === 'edit') {
+        // await schedulesApi.update(editingSchedule.id, formData)
+        toast({ title: 'Success', description: 'Schedule updated successfully' })
+      } else {
+        // await schedulesApi.create(formData)
+        toast({ title: 'Success', description: 'Schedule created successfully' })
+      }
+      onClose(true) // ✅ Signal parent to refresh
+    } catch {
+      toast({
+        title: 'Error',
+        description: `Failed to ${mode} schedule`,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const handleClose = () => {
-    resetForm()
     onClose()
   }
 
   return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>{mode === 'edit' ? 'Edit Schedule' : 'Create Schedule'}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <BasicInfoSection formData={formData} onUpdate={updateFormData} />
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="trigger">Trigger</TabsTrigger>
+              <TabsTrigger value="executionTarget">Execution Target</TabsTrigger>
+              <TabsTrigger value="parameters">Parameters</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="trigger">
+              <TriggerTab recurrence={formData.recurrence} onUpdate={updateRecurrence} />
+            </TabsContent>
+
+            <TabsContent value="executionTarget">
+              <ExecutionTargetTab />
+            </TabsContent>
+
+            <TabsContent value="parameters">
+              <ParametersTab />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Update' : 'Create'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ✅ Extracted Basic Info Section Component
+interface BasicInfoSectionProps {
+  formData: ScheduleFormData
+  onUpdate: (updates: Partial<ScheduleFormData>) => void
+}
+
+function BasicInfoSection({ formData, onUpdate }: BasicInfoSectionProps) {
+  return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit ' : 'Create '}</DialogTitle>
-          </DialogHeader>
+      <div className="grid gap-2">
+        <label htmlFor="name" className="text-sm font-medium">
+          Name<span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => onUpdate({ name: e.target.value })}
+          placeholder="Enter schedule name"
+        />
+      </div>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Name<span className="text-red-500">*</span>
-              </label>
-              <Input id="name" />
-            </div>
+      <div className="grid gap-2">
+        <label htmlFor="workflow" className="text-sm font-medium">
+          Workflow<span className="text-red-500">*</span>
+        </label>
+        <Select value={formData.workflow} onValueChange={(value) => onUpdate({ workflow: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose workflow" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="workflow1">Workflow 1</SelectItem>
+            <SelectItem value="workflow2">Workflow 2</SelectItem>
+            <SelectItem value="workflow3">Workflow 3</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="grid gap-2">
-              <label htmlFor="workflow" className="text-sm font-medium">
-                Workflow<span className="text-red-500">*</span>
-              </label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose workflow" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="workflow1">Workflow 1</SelectItem>
-                  <SelectItem value="workflow2">Workflow 2</SelectItem>
-                  <SelectItem value="workflow3">Workflow 3</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="timezone" className="text-sm font-medium">
-                Time Zone<span className="text-red-500">*</span>
-              </label>
-              <Select defaultValue="asia-saigon">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select time zone" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asia-saigon">(UTC+7:00) Asia/Saigon</SelectItem>
-                  <SelectItem value="america-new_york">(UTC-5:00) America/New_York</SelectItem>
-                  <SelectItem value="europe-london">(UTC+0:00) Europe/London</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Tabs defaultValue="trigger" className="w-full">
-              <TabsList className="grid grid-cols-3 mb-4">
-                <TabsTrigger
-                  value="trigger"
-                  className="border-b-2 border-red-500 data-[state=active]:border-b-2"
-                >
-                  Trigger
-                </TabsTrigger>
-                <TabsTrigger value="executionTarget">ExecutionTarget</TabsTrigger>
-                <TabsTrigger value="parameters">Parameters</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="trigger" className="space-y-4">
-                <div className="grid gap-2">
-                  <label htmlFor="recurrence" className="text-sm font-medium">
-                    Recurrence<span className="text-red-500">*</span>
-                  </label>
-                  <Select value={recurrenceType} onValueChange={setRecurrenceType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Minutes">Minutes</SelectItem>
-                      <SelectItem value="Hourly">Hourly</SelectItem>
-                      <SelectItem value="Daily">Daily</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <label htmlFor="startDate" className="text-sm font-medium">
-                      Start Date <span className="text-red-500">*</span>
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !startDate && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? format(startDate, 'yyyy-MM-dd') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="endDate" className="text-sm font-medium">
-                      End Date
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !endDate && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, 'yyyy-MM-dd') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={setEndDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">Every</span>
-                  <Select value={recurrenceValue} onValueChange={setRecurrenceValue}>
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="15">15</SelectItem>
-                      <SelectItem value="30">30</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span className="text-sm">minute(s)</span>
-                </div>
-
-                
-              </TabsContent>
-
-
-
-            </Tabs>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="grid gap-2">
+        <label htmlFor="timezone" className="text-sm font-medium">
+          Time Zone<span className="text-red-500">*</span>
+        </label>
+        <Select value={formData.timezone} onValueChange={(value) => onUpdate({ timezone: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select time zone" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asia-saigon">(UTC+7:00) Asia/Saigon</SelectItem>
+            <SelectItem value="america-new_york">(UTC-5:00) America/New_York</SelectItem>
+            <SelectItem value="europe-london">(UTC+0:00) Europe/London</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </>
   )
 }
