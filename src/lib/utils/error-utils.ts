@@ -14,7 +14,7 @@ interface ApiError {
 function parseApiErrorDetails(details: string): string | null {
   try {
     const parsedDetails = JSON.parse(details)
-    return parsedDetails.error || parsedDetails.message || null
+    return parsedDetails.error ?? parsedDetails.message ?? null
   } catch {
     return null
   }
@@ -31,20 +31,51 @@ function extractApiErrorMessage(apiError: ApiError): string {
     }
     return apiError.details
   }
-  return apiError.message || 'An error occurred'
+  return apiError.message ?? 'An error occurred'
 }
 
 /**
  * Extracts message from generic object with error/message properties
  */
 function extractObjectErrorMessage(errorObj: Record<string, unknown>): string | null {
-  if (errorObj.error && typeof errorObj.error === 'string') {
+  if (errorObj.error !== undefined && errorObj.error !== null && typeof errorObj.error === 'string') {
     return errorObj.error
   }
-  if (errorObj.message && typeof errorObj.message === 'string') {
+  if (errorObj.message !== undefined && errorObj.message !== null && typeof errorObj.message === 'string') {
     return errorObj.message
   }
   return null
+}
+
+/**
+ * Extracts message from Axios error response
+ */
+function extractAxiosErrorMessage(error: unknown): string | null {
+  if (error !== null && typeof error === 'object' && 
+      'response' in error && 
+      typeof error.response === 'object' && 
+      error.response !== null && 
+      'data' in error.response) {
+    
+    const responseData = error.response.data;
+    
+    // Check for message in response data
+    if (typeof responseData === 'object' && responseData !== null) {
+      if ('message' in responseData && typeof responseData.message === 'string') {
+        return responseData.message;
+      }
+      if ('error' in responseData && typeof responseData.error === 'string') {
+        return responseData.error;
+      }
+    }
+    
+    // If response data is a string itself
+    if (typeof responseData === 'string') {
+      return responseData;
+    }
+  }
+  
+  return null;
 }
 
 /**
@@ -74,9 +105,15 @@ export function extractErrorMessage(error: unknown): string {
     return error.message
   }
 
-  if (typeof error === 'object') {
+  // Check for Axios error format
+  const axiosErrorMessage = extractAxiosErrorMessage(error);
+  if (axiosErrorMessage !== null) {
+    return axiosErrorMessage;
+  }
+
+  if (typeof error === 'object' && error !== null) {
     const message = extractObjectErrorMessage(error as Record<string, unknown>)
-    if (message) {
+    if (message !== null) {
       return message
     }
   }
@@ -88,7 +125,7 @@ export function extractErrorMessage(error: unknown): string {
  * Determines the appropriate toast variant based on error type
  */
 export function getErrorVariant(error: unknown): 'destructive' | 'default' {
-  if (typeof error === 'object' && error && 'status' in error) {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
     const apiError = error as ApiError
     // Use default for informational responses (1xx, 2xx, 3xx)
     if (apiError.status < 400) {

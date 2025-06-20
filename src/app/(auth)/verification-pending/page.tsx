@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { authApi } from '@/lib/api/auth'
 import { Icons } from '@/components/ui/icons'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 // Loading fallback component
 function VerificationPendingLoading() {
@@ -45,14 +46,19 @@ function VerificationPendingContent() {
 
     setIsResending(true)
     try {
-      await authApi.resendVerificationEmail(email)
+      // Use the non-authenticated endpoint
+      await authApi.resendVerificationEmailByEmail(email)
       setAlert({
         type: 'success',
         title: 'Verification email sent',
         message: 'Please check your inbox for the verification link.',
       })
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.'
+      console.error('Failed to resend verification email:', error);
+      
+      // Extract error message using shared utility
+      const errorMessage = extractErrorMessage(error);
+      
       setAlert({
         type: 'error',
         title: 'Failed to resend email',
