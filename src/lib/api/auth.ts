@@ -20,7 +20,7 @@ const endpoints = {
   resetPassword: 'api/authen/reset-password',
   changePassword: 'api/users/change-password',
   resendVerification: 'api/email/resend',
-  resendVerificationByEmail: 'api/email/resend-by-email',
+  resendVerificationByEmail: 'api/email/resend-public',
   verifyEmail: 'api/email/verify',
 }
 
@@ -239,7 +239,7 @@ export const authApi = {
   resendVerificationEmail: async (email: string): Promise<void> => {
     await api.post(endpoints.resendVerification, { email })
   },
-  
+
   /**
    * Resend verification email by email address (does not require authentication)
    * @param email User's email address
