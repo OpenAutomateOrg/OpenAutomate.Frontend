@@ -15,7 +15,8 @@
     "sonar": "sonar-scanner",
     "test": "jest --coverage",
     "clean": "rm -rf .next && rm -rf node_modules/.cache",
-    "clean:win": "rmdir /s /q .next && rmdir /s /q node_modules\\.cache"
+    "clean:win": "rmdir /s /q .next && rmdir /s /q node_modules\\.cache",
+    "deploy": "rsync -av --exclude='.git' --exclude='.github' --exclude='.next' --exclude='node_modules' * root@134.209.98.78:/var/www/openautomate/frontend/"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",

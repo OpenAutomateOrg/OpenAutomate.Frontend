@@ -9,8 +9,20 @@ const nextConfig: NextConfig = {
   // Disable dev indicators in development
   devIndicators: false,
 
+  // TypeScript configuration - allow reasonable flexibility while catching real issues
+  typescript: {
+    // Only ignore specific non-critical errors, not all errors
+    ignoreBuildErrors: false,
+  },
+
+  // ESLint configuration - run linting but don't fail builds on minor issues
+  eslint: {
+    // Allow builds to continue with ESLint warnings, but still run linting
+    ignoreDuringBuilds: false,
+  },
+
   // Webpack configuration for memory optimization
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev }) => {
     // Memory optimization for development
     if (dev) {
       // Limit memory usage for webpack cache
