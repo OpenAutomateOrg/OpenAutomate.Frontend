@@ -13,6 +13,7 @@ import {
   Command,
   Users,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react'
 
 import { NavMain } from '@/components/layout/sidebar/nav-main'
@@ -210,6 +211,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         email: 'Loading...',
         avatar: '/avatars/placeholder.png',
       }
+  const navUserItem = {
+    upgrade: {
+      title: 'Upgrade account',
+      url: '',
+      icon: Sparkles,
+    },
+    management: [
+      {
+        title: 'Profile',
+        url: createTenantUrl('/profile'),
+        icon: Sparkles,
+      },
+      {
+        title: 'Setting',
+        url: '',
+        icon: Sparkles,
+      },
+      {
+        title: 'Notifications',
+        url: '',
+        icon: Sparkles,
+      },
+    ],
+    logout: {
+      title: 'Log out',
+      url: '',
+    },
+  }
 
   return (
     <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
@@ -227,7 +256,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={secondaryNavItems} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userData} />
+        <NavUser user={userData} navUser={navUserItem} />
       </SidebarFooter>
     </Sidebar>
   )
