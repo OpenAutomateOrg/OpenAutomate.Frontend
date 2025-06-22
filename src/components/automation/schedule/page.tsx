@@ -9,11 +9,12 @@ import { CreateEditModal as ScheduleModal } from './schedule/create-edit-modal'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { DataTableToolbar } from './schedule/data-table-toolbar'
 import { useToast } from '@/components/ui/use-toast'
-import { 
-  getSchedulesWithOData, 
+import {
+  getSchedulesWithOData,
   getAllSchedules,
-  ScheduleResponseDto, 
+  ScheduleResponseDto,
   ODataQueryOptions,
+  ODataResponse,
   RecurrenceType,
   getRecurrenceTypeDisplayName,
   enableSchedule,
@@ -257,71 +258,82 @@ export default function ScheduleInterface() {
     return schedulesResponse.value
   }, [schedulesResponse, fallbackSchedules, searchValue, columnFilters, pagination, totalCount]);
 
+  // Helper function to handle estimated count from response
+  const handleEstimatedCount = useCallback((responseValue: ScheduleResponseDto[]) => {
+    const minCount = pagination.pageIndex * pagination.pageSize + responseValue.length
+
+    // Only update if the new minimum count is higher than current
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount)
+      totalCountRef.current = minCount
+    }
+
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage = responseValue.length === pagination.pageSize && pagination.pageIndex === 0
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1) // Indicate there might be more
+      totalCountRef.current = minCount + 1
+    }
+
+    setHasExactCount(false)
+  }, [pagination.pageIndex, pagination.pageSize])
+
+  // Helper function to handle OData response count
+  const handleODataResponse = useCallback((response: ODataResponse<ScheduleResponseDto>) => {
+    console.log('OData response received:', response)
+
+    // Handle exact count from OData
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count'])
+      totalCountRef.current = response['@odata.count']
+      setHasExactCount(true)
+      return
+    }
+
+    if (Array.isArray(response.value)) {
+      handleEstimatedCount(response.value)
+    }
+  }, [handleEstimatedCount])
+
+  // Helper function to handle fallback schedules count
+  const handleFallbackCount = useCallback(() => {
+    if (!fallbackSchedules || fallbackSchedules.length === 0) return
+
+    console.log('Using fallback data count:', fallbackSchedules.length)
+    let filteredCount = fallbackSchedules.length
+
+    // Apply search filtering
+    if (searchValue) {
+      filteredCount = fallbackSchedules.filter(schedule => {
+        const nameMatch = schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase())
+        return nameMatch
+      }).length
+    }
+
+    // Apply status filter
+    const statusFilter = columnFilters.find(filter => filter.id === 'isEnabled')?.value as string
+    if (statusFilter && statusFilter !== 'all') {
+      filteredCount = fallbackSchedules.filter(schedule => {
+        if (statusFilter === 'enabled') return schedule.isEnabled
+        if (statusFilter === 'disabled') return !schedule.isEnabled
+        return true
+      }).length
+    }
+
+    console.log('Filtered fallback count:', filteredCount)
+    setTotalCount(filteredCount)
+    totalCountRef.current = filteredCount
+    setHasExactCount(true)
+  }, [fallbackSchedules, searchValue, columnFilters])
+
   // Update totalCount from OData response or filtered fallback data
   useEffect(() => {
     if (schedulesResponse) {
-      console.log('OData response received:', schedulesResponse)
-      const response = schedulesResponse
-
-      // Handle exact count from OData
-      if (typeof response['@odata.count'] === 'number') {
-        setTotalCount(response['@odata.count'])
-        totalCountRef.current = response['@odata.count']
-        setHasExactCount(true)
-        return
-      }
-
-      if (Array.isArray(response.value)) {
-        // When count isn't available, estimate from current page
-        const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
-
-        // Only update if the new minimum count is higher than current
-        if (minCount > totalCountRef.current) {
-          setTotalCount(minCount)
-          totalCountRef.current = minCount
-        }
-
-        // If we got a full page on first page, assume there might be more
-        const isFullFirstPage =
-          response.value.length === pagination.pageSize && pagination.pageIndex === 0
-        if (isFullFirstPage) {
-          setTotalCount(minCount + 1) // Indicate there might be more
-          totalCountRef.current = minCount + 1
-        }
-
-        setHasExactCount(false)
-      }
-    } else if (fallbackSchedules && fallbackSchedules.length > 0) {
-      // Use fallback data length as the count if OData failed
-      console.log('Using fallback data count:', fallbackSchedules.length)
-
-      // Apply filtering to get accurate count
-      let filteredCount = fallbackSchedules.length
-
-      // Apply search filtering
-      if (searchValue) {
-        filteredCount = fallbackSchedules.filter(schedule => {
-          const nameMatch = schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase());
-          return nameMatch;
-        }).length
-      }
-
-      // Apply status filter
-      const statusFilter = columnFilters.find(filter => filter.id === 'isEnabled')?.value as string
-      if (statusFilter && statusFilter !== 'all') {
-        filteredCount = fallbackSchedules.filter(schedule => {
-          if (statusFilter === 'enabled') return schedule.isEnabled
-          if (statusFilter === 'disabled') return !schedule.isEnabled
-          return true
-        }).length
-      }
-
-      console.log('Filtered fallback count:', filteredCount)
-      setTotalCount(filteredCount)
-      totalCountRef.current = filteredCount
-      setHasExactCount(true)
+      handleODataResponse(schedulesResponse)
+    } else {
+      handleFallbackCount()
     }
-  }, [schedulesResponse, fallbackSchedules, searchValue, columnFilters, pagination.pageIndex, pagination.pageSize])
+  }, [schedulesResponse, handleODataResponse, handleFallbackCount])
 
   // Handle empty page edge case
   useEffect(() => {
