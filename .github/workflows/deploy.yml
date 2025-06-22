@@ -32,5 +32,6 @@ jobs:
             cd /var/www/openautomate/frontend
             npm ci
             rm -f .env
+            # Build with consistent linting and TypeScript checking
             NODE_ENV=production npm run build
             pm2 restart openautomate-frontend --update-env || NODE_ENV=production pm2 start npm --name openautomate-frontend -- start
