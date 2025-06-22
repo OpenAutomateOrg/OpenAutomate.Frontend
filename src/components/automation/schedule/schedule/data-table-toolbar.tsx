@@ -1,12 +1,12 @@
 'use client'
 
 import { Table } from '@tanstack/react-table'
-import { X, Search, Filter, Loader2 } from 'lucide-react'
-import { useRef, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
+import { DataTableFacetedFilter } from '@/components/layout/table/data-table-faceted-filter'
+import { Loader2, Search, X } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -14,209 +14,180 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   statuses: { value: string; label: string }[] // Options for Status filter
+  recurrenceTypes: { value: string; label: string }[] // Options for Recurrence Type filter
   onSearch?: (value: string) => void
   onStatusChange?: (value: string) => void
+  onRecurrenceTypeChange?: (value: string) => void
   searchValue?: string
   isFiltering?: boolean
   isPending?: boolean
+  searchPlaceholder?: string
+  totalCount?: number // Add totalCount prop for displaying total schedules
 }
 
 export function DataTableToolbar<TData>({
   table,
   statuses,
+  recurrenceTypes,
   onSearch,
   onStatusChange,
+  onRecurrenceTypeChange,
   searchValue = '',
   isFiltering = false,
   isPending = false,
+  searchPlaceholder = 'Search schedules...',
+  totalCount = 0,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
-  // Get active filter count
-  const activeFilterCount = table.getState().columnFilters.length
-
-  // Create a ref for the search input to preserve focus
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const lastCursorPositionRef = useRef<number | null>(null)
-
-  // Preserve the cursor position when the component re-renders
-  useEffect(() => {
-    // Only restore focus if we were previously focused
-    if (
-      document.activeElement !== searchInputRef.current &&
-      lastCursorPositionRef.current !== null
-    ) {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus()
-        if (lastCursorPositionRef.current !== null) {
-          searchInputRef.current.setSelectionRange(
-            lastCursorPositionRef.current,
-            lastCursorPositionRef.current,
-          )
-        }
-      }
-    }
-  }, [isPending, isFiltering])
-
-  const handleFilterChange = (value: string) => {
-    // Save cursor position before potential re-render
-    if (searchInputRef.current) {
-      lastCursorPositionRef.current = searchInputRef.current.selectionStart
-    }
-
-    // If external search handler is provided, call it
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
     if (onSearch) {
       onSearch(value)
-    } else {
-      // Fallback to direct filter setting if no external handler
-      table.getColumn('name')?.setFilterValue(value)
+    }
+  }
+
+  const handleSearchClear = () => {
+    if (onSearch) {
+      onSearch('')
+    }
+  }
+
+  const handleStatusFilterChange = (value: string) => {
+    if (onStatusChange) {
+      onStatusChange(value)
+    }
+  }
+
+  const handleRecurrenceTypeFilterChange = (value: string) => {
+    if (onRecurrenceTypeChange) {
+      onRecurrenceTypeChange(value)
+    }
+  }
+
+  const handleClearFilters = () => {
+    table.resetColumnFilters()
+    if (onSearch) {
+      onSearch('')
+    }
+    if (onStatusChange) {
+      onStatusChange('all')
+    }
+    if (onRecurrenceTypeChange) {
+      onRecurrenceTypeChange('all')
     }
   }
 
   return (
-    <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+    <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
-        <div className="relative w-full md:w-auto md:flex-1 max-w-md">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-
+        {/* Search Input */}
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
           <Input
-            ref={searchInputRef}
-            placeholder="Search "
+            placeholder={searchPlaceholder}
             value={searchValue}
-            onChange={(event) => handleFilterChange(event.target.value)}
-            className="h-10 pl-8 w-full pr-8"
+            onChange={handleSearchChange}
+            className="h-8 w-[200px] pl-10 lg:w-[300px]"
             disabled={isFiltering}
-            onFocus={() => {
-              // Save cursor position when input is focused
-              if (searchInputRef.current) {
-                lastCursorPositionRef.current = searchInputRef.current.selectionStart
-              }
-            }}
           />
-
-          {isFiltering && (
-            <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
+          {isPending && (
+            <Loader2 className="absolute right-3 h-4 w-4 animate-spin text-muted-foreground" />
           )}
-
-          {!isFiltering && searchValue !== '' && (
-            <X
-              className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-              onClick={() => handleFilterChange('')}
-            />
+          {searchValue && !isPending && (
+            <Button
+              variant="ghost"
+              onClick={handleSearchClear}
+              className="absolute right-1 h-6 w-6 p-0 hover:bg-transparent"
+            >
+                             <X className="h-3 w-3" />
+              <span className="sr-only">Clear search</span>
+            </Button>
           )}
         </div>
 
-        {/* Agent Filter */}
-        {table.getColumn('agent') && (
-          <div className="flex items-center space-x-1">
-            <Select
-              onValueChange={(value) => {
-                if (onStatusChange) {
-                  onStatusChange(value)
-                } else {
-                  if (value === 'all') {
-                    table.getColumn('agent')?.setFilterValue('')
-                  } else {
-                    table.getColumn('agent')?.setFilterValue(value)
-                  }
-                }
-              }}
-              value={(table.getColumn('agent')?.getFilterValue() as string) || 'all'}
-              disabled={isFiltering || isPending}
-            >
-              <SelectTrigger className="h-10 sm:w-[180px]">
-                <div className="flex items-center">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter agent" />
-                  {(table.getColumn('agent')?.getFilterValue() as string | undefined) && (
-                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
-                      1
-                    </Badge>
-                  )}
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Agents</SelectItem>
-                {statuses.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Status Filter */}
+        {table.getColumn('isEnabled') && (
+          <DataTableFacetedFilter
+            column={table.getColumn('isEnabled')}
+            title="Status"
+            options={statuses}
+          />
         )}
 
-        {/* Package Filter */}
-        {table.getColumn('packageName') && (
-          <div className="flex items-center space-x-1">
-            <Select
-              onValueChange={(value) => {
-                if (onStatusChange) {
-                  onStatusChange(value)
-                } else {
-                  if (value === 'all') {
-                    table.getColumn('packageName')?.setFilterValue('')
-                  } else {
-                    table.getColumn('packageName')?.setFilterValue(value)
-                  }
-                }
-              }}
-              value={(table.getColumn('packageName')?.getFilterValue() as string) || 'all'}
-              disabled={isFiltering || isPending}
-            >
-              <SelectTrigger className="h-10 sm:w-[180px]">
-                <div className="flex items-center">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter package" />
-                  {(table.getColumn('packageName')?.getFilterValue() as string | undefined) && (
-                    <Badge variant="secondary" className="ml-2 rounded-sm px-1">
-                      1
-                    </Badge>
-                  )}
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Packages</SelectItem>
-                {statuses.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Recurrence Type Filter */}
+        {table.getColumn('recurrenceType') && (
+          <DataTableFacetedFilter
+            column={table.getColumn('recurrenceType')}
+            title="Recurrence"
+            options={recurrenceTypes}
+          />
         )}
 
-        {/* Active Filter Count Badge */}
-        {activeFilterCount > 0 && (
-          <Badge variant="secondary" className="rounded-sm px-1">
-            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
-          </Badge>
-        )}
+        {/* Alternative Status Filter using Select */}
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-medium">Status:</p>
+          <Select onValueChange={handleStatusFilterChange} defaultValue="all">
+            <SelectTrigger className="h-8 w-[120px]">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {statuses.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Reset Filters Button */}
+        {/* Alternative Recurrence Type Filter using Select */}
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-medium">Type:</p>
+          <Select onValueChange={handleRecurrenceTypeFilterChange} defaultValue="all">
+            <SelectTrigger className="h-8 w-[140px]">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {recurrenceTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Clear Filters Button */}
         {isFiltered && (
           <Button
             variant="ghost"
-            onClick={() => {
-              table.resetColumnFilters()
-              if (onSearch) onSearch('')
-            }}
+            onClick={handleClearFilters}
             className="h-8 px-2 lg:px-3"
-            disabled={isFiltering}
           >
             Reset
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+
+      {/* Right side - View Options and Total Count */}
+      <div className="flex items-center space-x-2">
+        {totalCount > 0 && (
+          <div className="text-sm text-muted-foreground">
+            <span>
+              {totalCount} schedule{totalCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   )
 }
