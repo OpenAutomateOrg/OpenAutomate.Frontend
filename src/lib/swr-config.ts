@@ -54,6 +54,7 @@ export const swrKeys = {
   packages: () => ['packages'] as const,
   packagesWithOData: (options?: Record<string, unknown>) => ['packages', 'odata', options] as const,
   packageById: (id: string) => ['packages', id] as const,
+  packageVersions: (id: string) => ['packages', id, 'versions'] as const,
   
   // Organization Units
   organizationUnits: () => ['organization-units'] as const,
@@ -69,6 +70,11 @@ export const swrKeys = {
   adminUsers: () => ['system-roles', 'admin'] as const,
   standardUsers: () => ['system-roles', 'user'] as const,
   usersByRole: (role: string) => ['system-roles', 'users', role] as const,
+
+  // Schedules
+  schedules: () => ['schedules'] as const,
+  schedulesWithOData: (options?: Record<string, unknown>) => ['schedules', 'odata', options] as const,
+  scheduleById: (id: string) => ['schedules', id] as const,
 }
 
 /**
