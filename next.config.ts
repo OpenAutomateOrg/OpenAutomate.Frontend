@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 // Get the API URL from environment variable
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
+const API_URL = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:5252'
 
 const nextConfig: NextConfig = {
   /* Public Website Configuration */
@@ -9,15 +9,15 @@ const nextConfig: NextConfig = {
   // Disable dev indicators in development
   devIndicators: false,
 
-  // TypeScript configuration - allow reasonable flexibility while catching real issues
+  // TypeScript configuration - strict checking to match production
   typescript: {
-    // Only ignore specific non-critical errors, not all errors
+    // Fail builds on TypeScript errors to catch issues early
     ignoreBuildErrors: false,
   },
 
-  // ESLint configuration - run linting but don't fail builds on minor issues
+  // ESLint configuration - strict linting to match production
   eslint: {
-    // Allow builds to continue with ESLint warnings, but still run linting
+    // Fail builds on ESLint errors to maintain code quality
     ignoreDuringBuilds: false,
   },
 

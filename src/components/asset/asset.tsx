@@ -116,7 +116,10 @@ export default function AssetInterface() {
 
     // Apply sorting
     if (sorting.length > 0) {
-      params.$orderby = `${sorting[0].id} ${sorting[0].desc ? 'desc' : 'asc'}`
+      const firstSort = sorting[0]
+      if (firstSort) {
+        params.$orderby = `${firstSort.id} ${firstSort.desc ? 'desc' : 'asc'}`
+      }
     }
 
     // Apply filtering
@@ -311,11 +314,14 @@ export default function AssetInterface() {
       setSorting(newSorting)
 
       if (newSorting.length > 0) {
-        updateUrl(pathname, {
-          sort: newSorting[0].id,
-          order: newSorting[0].desc ? 'desc' : 'asc',
-          page: '1', // Reset to first page when sorting changes
-        })
+        const firstSort = newSorting[0]
+        if (firstSort) {
+          updateUrl(pathname, {
+            sort: firstSort.id,
+            order: firstSort.desc ? 'desc' : 'asc',
+            page: '1', // Reset to first page when sorting changes
+          })
+        }
       } else {
         updateUrl(pathname, {
           sort: null,

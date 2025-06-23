@@ -103,7 +103,7 @@ const STATUS_OPTIONS = ['All', 'Pending', 'Accepted', 'Expired', 'Revoked']
 
 export default function InvitationsList() {
     const params = useParams()
-    const tenant = params.tenant as string
+    const tenant = params?.['tenant'] as string
     const [searchEmail, setSearchEmail] = useState('')
     const [searchStatus, setSearchStatus] = useState('All')
     const [pageIndex, setPageIndex] = useState(0)

@@ -24,7 +24,7 @@ interface UserNavProps {
 export function UserNav({ user }: UserNavProps) {
   const { logout } = useAuth()
   const params = useParams()
-  const tenantSlug = params?.tenant as string
+  const tenantSlug = params?.['tenant'] as string
 
   if (!user) return null
 

@@ -53,7 +53,10 @@ function TenantSelectorContent() {
     // 3. Not forcing to stay on this page
     // 4. Page has fully mounted
     if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
-      selectOrganizationUnit(organizationUnits[0].slug)
+      const firstOrg = organizationUnits[0]
+      if (firstOrg) {
+        selectOrganizationUnit(firstOrg.slug)
+      }
     }
   }, [isLoading, organizationUnits, shouldStayOnPage, selectOrganizationUnit])
   // Setup visibility change listener for refresh

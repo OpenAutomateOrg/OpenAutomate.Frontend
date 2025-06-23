@@ -32,7 +32,7 @@ const organizationIcons: Record<string, typeof Building2> = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams()
-  const tenantSlug = params?.tenant as string
+  const tenantSlug = params?.['tenant'] as string
   const { organizationUnits } = useOrganizationUnits()
   const { user } = useAuth()
 
@@ -43,7 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       // Use org description or slug as additional info
       plan: org.description || org.slug,
       url: `/${org.slug}/dashboard`,
-      icon: organizationIcons[org.slug] || organizationIcons.default,
+      icon: organizationIcons[org.slug] ?? Building2,
       // Mark the current tenant
       isActive: org.slug === tenantSlug,
     }))

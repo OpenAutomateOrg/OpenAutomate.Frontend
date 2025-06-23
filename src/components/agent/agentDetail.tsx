@@ -34,7 +34,7 @@ const getStatusBadgeClass = (status: string) => {
 export default function AgentDetail({ id }: AgentDetailProps) {
   const router = useRouter()
   const params = useParams()
-  const tenant = params?.tenant as string
+  const tenant = params?.['tenant'] as string
   const agentStatuses = useAgentStatus(tenant)
   const { toast } = useToast()
 

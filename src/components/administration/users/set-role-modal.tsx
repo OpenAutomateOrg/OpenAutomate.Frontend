@@ -25,11 +25,11 @@ export default function SetRoleModal({ isOpen, onClose, userId, email, refreshUs
     const tenant = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
     const { data: allRoles, isLoading } = useSWR<AuthorityDto[]>(
         isOpen && tenant ? `ou-roles-${tenant}` : null,
-        () => organizationUnitUserApi.getRolesInOrganizationUnit(tenant)
+        () => tenant ? organizationUnitUserApi.getRolesInOrganizationUnit(tenant) : Promise.resolve([])
     );
     const { data: ouUsers, isLoading: isOuUsersLoading } = useSWR(
         isOpen && tenant ? `ou-users-${tenant}` : null,
-        () => organizationUnitUserApi.getUsers(tenant)
+        () => tenant ? organizationUnitUserApi.getUsers(tenant) : Promise.resolve([])
     );
     const userRoles = useMemo(() => {
         if (!ouUsers) return [];

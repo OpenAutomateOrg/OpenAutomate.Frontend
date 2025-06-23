@@ -13,24 +13,32 @@ const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
-      // Reasonable TypeScript rules - catch real issues but not overly strict
-      '@typescript-eslint/no-unused-vars': ['warn', {
+      // Strict TypeScript rules - catch critical issues early
+      '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_'
       }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn', // Warn instead of error for gradual improvement
+      '@typescript-eslint/no-non-null-assertion': 'warn', // Warn for now, can be upgraded later
+      '@typescript-eslint/ban-ts-comment': 'error',
 
-      // React rules - focus on real issues
-      'react-hooks/exhaustive-deps': 'warn',
-      'react/no-unescaped-entities': 'warn',
+      // React rules - strict enforcement for critical issues
+      'react-hooks/exhaustive-deps': 'error',
+      'react/no-unescaped-entities': 'error',
 
-      // General code quality
-      'no-console': 'warn',
-      'prefer-const': 'warn',
+      // General code quality - focus on critical issues
+      'no-console': 'warn', // Keep as warn since it's common in development
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'no-unused-expressions': 'warn', // Warn instead of error
 
-      // Disable overly strict rules
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/ban-ts-comment': 'warn',
+      // Import/export rules - warn for now
+      'no-duplicate-imports': 'warn',
+
+      // Potential bug catchers - warn for gradual improvement
+      'no-implicit-coercion': 'warn',
+      'no-throw-literal': 'error',
+      'prefer-promise-reject-errors': 'error',
     }
   }
 ]

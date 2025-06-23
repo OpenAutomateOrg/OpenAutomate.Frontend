@@ -157,10 +157,14 @@ export function CreateEditModal({
     switch (recurrence.type) {
       case RecurrenceType.Once:
         if (recurrence.startDate && recurrence.startTime) {
-          const [hours, minutes] = recurrence.startTime.split(':')
-          const date = new Date(recurrence.startDate)
-          date.setHours(parseInt(hours), parseInt(minutes))
-          oneTimeExecution = date.toISOString()
+          const timeParts = recurrence.startTime.split(':')
+          const hours = timeParts[0]
+          const minutes = timeParts[1]
+          if (hours && minutes) {
+            const date = new Date(recurrence.startDate)
+            date.setHours(parseInt(hours), parseInt(minutes))
+            oneTimeExecution = date.toISOString()
+          }
         }
         break
       case RecurrenceType.Daily:

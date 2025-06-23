@@ -22,7 +22,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     const [isLoading, setIsLoading] = useState(false)
     const { toast } = useToast()
     const params = useParams()
-    const tenant = params.tenant as string
+    const tenant = params?.['tenant'] as string
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()

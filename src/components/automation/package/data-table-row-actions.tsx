@@ -73,10 +73,16 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
       const latestVersion = versions.sort(
         (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
       )[0]
-      toast({
-        title: "Downloading package",
-        description: `Downloading package: ${row.original.name} version: ${latestVersion.versionNumber}`,
-      })
+
+      if (latestVersion) {
+        toast({
+          title: "Downloading package",
+          description: `Downloading package: ${row.original.name} version: ${latestVersion.versionNumber}`,
+        })
+      } else {
+        setErrorMsg('No valid version found to download.')
+        setShowError(true)
+      }
     } else {
       setErrorMsg('No versions available to download.')
       setShowError(true)

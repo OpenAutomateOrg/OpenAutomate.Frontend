@@ -4,7 +4,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    // Reasonable strictness - catch real issues without being overly pedantic
+    // Strict TypeScript configuration - match production behavior
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -15,13 +15,15 @@
     "jsx": "preserve",
     "incremental": true,
 
-    // Additional reasonable checks
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitReturns": false,
+    // Enhanced strict checks to catch critical issues early
+    "noUnusedLocals": false, // Keep false to avoid too many errors initially
+    "noUnusedParameters": false, // Keep false to avoid too many errors initially
+    "exactOptionalPropertyTypes": false, // Keep false for compatibility
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true, // This catches the null/undefined issues we fixed
+    "noImplicitOverride": false, // Keep false for now
+    "noPropertyAccessFromIndexSignature": true, // This caught our env variable issue
 
     "plugins": [
       {

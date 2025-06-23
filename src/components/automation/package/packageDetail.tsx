@@ -34,7 +34,7 @@ export default function PackageDetail() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const packageId = params.id as string
+  const packageId = params?.['id'] as string
 
   // ✅ SWR for data fetching - following guideline #8: use framework-level loaders
   const { data: packageData, error, isLoading, mutate } = useSWR(

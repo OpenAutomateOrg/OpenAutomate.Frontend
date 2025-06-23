@@ -151,7 +151,7 @@ export default function ExecutionsInterface() {
   const [searchValue, setSearchValue] = useState<string>(searchParams.get('search') ?? '')
 
   // Extract tenant from pathname (e.g., /tenant/executions)
-  const tenant = pathname.split('/')[1]
+  const tenant = pathname.split('/')[1] || ''
 
   // ✅ Real-time execution status updates via SignalR
   const executionStatuses = useExecutionStatus(tenant)
@@ -638,11 +638,14 @@ export default function ExecutionsInterface() {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater
       setSorting(newSorting)
       if (newSorting.length > 0) {
-        updateUrl(pathname, {
-          sort: newSorting[0].id,
-          order: newSorting[0].desc ? 'desc' : 'asc',
-          page: '1', // Reset to first page when sorting changes
-        })
+        const firstSort = newSorting[0]
+        if (firstSort) {
+          updateUrl(pathname, {
+            sort: firstSort.id,
+            order: firstSort.desc ? 'desc' : 'asc',
+            page: '1', // Reset to first page when sorting changes
+          })
+        }
       } else {
         updateUrl(pathname, {
           sort: null,
@@ -757,18 +760,21 @@ export default function ExecutionsInterface() {
   // Client-only: Real-time data synchronization
   useEffect(() => {
     const terminalStatuses = ['Completed', 'Failed', 'Cancelled']
-    const hasTerminalUpdate = Object.values(executionStatuses).some(status => 
+    const hasTerminalUpdate = Object.values(executionStatuses).some(status =>
       terminalStatuses.includes(status.status)
     )
-    
+
     if (hasTerminalUpdate) {
       // Debounce the refresh to avoid excessive API calls
       const refreshTimeout = setTimeout(() => {
         mutateExecutions()
       }, 1000)
-      
+
       return () => clearTimeout(refreshTimeout)
     }
+
+    // Return undefined for the case when there's no terminal update
+    return undefined
   }, [executionStatuses, mutateExecutions])
 
   const handleCreateSuccess = useCallback((newExecution?: { id: string, packageName: string, botAgentName: string }) => {

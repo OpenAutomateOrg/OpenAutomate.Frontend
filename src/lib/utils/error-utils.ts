@@ -38,11 +38,11 @@ function extractApiErrorMessage(apiError: ApiError): string {
  * Extracts message from generic object with error/message properties
  */
 function extractObjectErrorMessage(errorObj: Record<string, unknown>): string | null {
-  if (errorObj.error !== undefined && errorObj.error !== null && typeof errorObj.error === 'string') {
-    return errorObj.error
+  if (errorObj['error'] !== undefined && errorObj['error'] !== null && typeof errorObj['error'] === 'string') {
+    return errorObj['error']
   }
-  if (errorObj.message !== undefined && errorObj.message !== null && typeof errorObj.message === 'string') {
-    return errorObj.message
+  if (errorObj['message'] !== undefined && errorObj['message'] !== null && typeof errorObj['message'] === 'string') {
+    return errorObj['message']
   }
   return null
 }

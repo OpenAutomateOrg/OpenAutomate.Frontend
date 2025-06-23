@@ -26,7 +26,7 @@ const styles: LogStyles = {
 export const log = (message: string, level: LogLevel = 'info', ...data: unknown[]) => {
   // Only log in development environment
   if (process.env.NODE_ENV !== 'production') {
-    const style = styles[level] || styles.default
+    const style = styles[level] || styles['default']
     console.log(`%c${message}`, style, ...data)
   }
 }
@@ -60,11 +60,11 @@ export const logAuth = (
   data?: Record<string, unknown> | string | number | boolean,
 ) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.group(`%c🔐 ${message}`, styles.group)
+    console.group(`%c🔐 ${message}`, styles['group'])
 
     if (data) {
       if (typeof data === 'object') {
-        console.log('%cDetails:', styles.object)
+        console.log('%cDetails:', styles['object'])
         console.table(data)
       } else {
         console.log(data)
@@ -81,9 +81,9 @@ export const logAuth = (
 export const logDivider = (label?: string) => {
   if (process.env.NODE_ENV !== 'production') {
     if (label) {
-      console.log(`%c---------------- ${label} ----------------`, styles.info)
+      console.log(`%c---------------- ${label} ----------------`, styles['info'])
     } else {
-      console.log('%c----------------------------------------', styles.info)
+      console.log('%c----------------------------------------', styles['info'])
     }
   }
 }

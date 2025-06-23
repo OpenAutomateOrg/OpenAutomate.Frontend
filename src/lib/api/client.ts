@@ -171,7 +171,7 @@ const handle401Response = async <T>(
 
     // Prepare the retry request properly with the new token
     const retryHeaders = prepareHeaders(options, data)
-    retryHeaders.Authorization = `Bearer ${newToken}`
+    retryHeaders['Authorization'] = `Bearer ${newToken}`
 
     // Use the same body preparation logic to avoid ArrayBuffer issues
     const { body } = prepareRequestBody(data)
@@ -243,10 +243,10 @@ const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, st
 
   const headers = { ...baseHeaders, ...options.headers } as Record<string, string>
 
-  if (!headers.Authorization) {
+  if (!headers['Authorization']) {
     const token = getAuthToken()
     if (token) {
-      headers.Authorization = `Bearer ${token}`
+      headers['Authorization'] = `Bearer ${token}`
     }
   }
 

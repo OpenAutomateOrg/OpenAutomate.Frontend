@@ -69,7 +69,7 @@ export default function UsersInterface() {
   const tenant = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
   const { data: allRoles } = useSWR<AuthorityDto[]>(
     tenant ? `ou-roles-${tenant}` : null,
-    () => organizationUnitUserApi.getRolesInOrganizationUnit(tenant)
+    () => tenant ? organizationUnitUserApi.getRolesInOrganizationUnit(tenant) : Promise.resolve([])
   );
   const roleOptions = useMemo(() => {
     if (!allRoles) return [];

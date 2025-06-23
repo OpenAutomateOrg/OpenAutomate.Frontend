@@ -115,7 +115,7 @@ function processODataResponse<T>(response: unknown): ODataResponse<T> {
   const result = response as Record<string, unknown>
   
   return {
-    value: Array.isArray(result.value) ? result.value as T[] : [],
+    value: Array.isArray(result['value']) ? result['value'] as T[] : [],
     '@odata.count': typeof result['@odata.count'] === 'number' ? result['@odata.count'] : undefined,
     '@odata.nextLink': typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
   }

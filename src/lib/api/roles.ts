@@ -57,7 +57,7 @@ const getTenantSlug = (): string => {
   
   const path = window.location.pathname
   const segments = path.split('/').filter(Boolean)
-  return segments.length > 0 ? segments[0] : ''
+  return segments.length > 0 ? segments[0] ?? '' : ''
 }
 
 /**

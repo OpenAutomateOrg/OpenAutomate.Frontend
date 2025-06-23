@@ -5,7 +5,7 @@ import RolesDetail from '@/components/administration/roles/rolesDetail'
 
 export default function Page() {
   const params = useParams()
-  const id = params.id as string
+  const id = params?.['id'] as string
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">

@@ -40,9 +40,9 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
         err &&
         typeof err === 'object' &&
         'message' in err &&
-        typeof (err as Record<string, unknown>).message === 'string'
+        typeof (err as Record<string, unknown>)['message'] === 'string'
       ) {
-        message = (err as Record<string, unknown>).message as string
+        message = (err as Record<string, unknown>)['message'] as string
       }
       toast({
         title: 'Delete User Failed',

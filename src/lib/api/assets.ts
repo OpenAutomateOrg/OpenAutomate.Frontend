@@ -180,12 +180,14 @@ function processODataResponse(response: unknown): ODataResponse<AssetResponseDto
 
     if (arrayProps.length > 0) {
       const arrayProp = arrayProps[0]
-      console.log(`Found array property "${arrayProp}" in response`)
-      const arr = (response as Record<string, unknown[]>)[arrayProp] as AssetResponseDto[]
-      const count = (response as Record<string, unknown>)['@odata.count']
-      return {
-        value: arr,
-        '@odata.count': (typeof count === 'number' ? count : undefined) ?? arr.length,
+      if (arrayProp) {
+        console.log(`Found array property "${arrayProp}" in response`)
+        const arr = (response as Record<string, unknown[]>)[arrayProp] as AssetResponseDto[]
+        const count = (response as Record<string, unknown>)['@odata.count']
+        return {
+          value: arr,
+          '@odata.count': (typeof count === 'number' ? count : undefined) ?? arr.length,
+        }
       }
     }
   }
