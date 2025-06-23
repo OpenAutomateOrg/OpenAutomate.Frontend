@@ -32,7 +32,8 @@ jobs:
             cd /var/www/openautomate/frontend
 
             # Install dependencies (handle lock file sync issues)
-            npm install --legacy-peer-deps || npm ci --legacy-peer-deps
+            # First try npm install to sync lock file, then clean install
+            npm install --legacy-peer-deps
 
             # Clean up any existing environment files
             rm -f .env .env.local
