@@ -31,8 +31,8 @@ jobs:
           script: |
             cd /var/www/openautomate/frontend
 
-            # Install dependencies (including dev dependencies for build process)
-            npm ci --production=false
+            # Install dependencies (handle lock file sync issues)
+            npm install --legacy-peer-deps || npm ci --legacy-peer-deps
 
             # Clean up any existing environment files
             rm -f .env .env.local
@@ -45,11 +45,20 @@ jobs:
               echo "Warning: .env.production not found"
             fi
 
-            # Build with production environment variables
-            NODE_ENV=production npm run build
+            # Build with production environment variables (use direct next build to avoid cross-env issues)
+            NODE_ENV=production npx next build
 
-            # Clean up .env after build (keep .env.production for runtime)
-            rm -f .env
+            # Check if build was successful
+            if [ $? -eq 0 ]; then
+              echo "Build successful, proceeding with deployment"
 
-            # Start/restart the application using ecosystem config
-            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+              # Clean up .env after build (keep .env.production for runtime)
+              rm -f .env
+
+              # Start/restart the application using ecosystem config
+              pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+            else
+              echo "Build failed, not restarting application"
+              rm -f .env
+              exit 1
+            fi
