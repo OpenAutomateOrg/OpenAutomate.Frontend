@@ -32,6 +32,7 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
   refreshToken: () => Promise<boolean>
+  updateUser: (userData: Partial<User>) => void
   error: string | null
 }
 
@@ -292,6 +293,19 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     }
   }, [router])
 
+  // Update user function
+  const updateUser = useCallback(
+    (userData: Partial<User>) => {
+      if (user) {
+        const updatedUser = { ...user, ...userData }
+        setUser(updatedUser)
+        setStoredUser(updatedUser)
+        logger.success('User data updated successfully')
+      }
+    },
+    [user],
+  )
+
   return (
     <AuthContext.Provider
       value={useMemo(
@@ -304,9 +318,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           register,
           logout,
           refreshToken,
+          updateUser,
           error,
         }),
-        [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, error],
+        [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, updateUser, error],
       )}
     >
       {children}

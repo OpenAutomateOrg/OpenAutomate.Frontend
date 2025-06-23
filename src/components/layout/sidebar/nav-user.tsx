@@ -36,7 +36,6 @@ interface NavUserItem {
 
 interface NavUserProps {
   navUser: {
-    upgrade: NavUserItem
     management: NavUserItem[]
     logout: NavUserItem
   }
@@ -82,17 +81,6 @@ export function NavUser({ user, navUser }: UserProps & NavUserProps) {
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Link href={navUser.upgrade.url}>
-                  <div className="flex align-center items-center gap-2">
-                    {navUser.upgrade.icon && <navUser.upgrade.icon />}
-                    <span>{navUser.upgrade.title}</span>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {navUser.management.map((management: NavUserItem) => (

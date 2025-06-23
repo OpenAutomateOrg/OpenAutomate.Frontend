@@ -212,20 +212,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         avatar: '/avatars/placeholder.png',
       }
   const navUserItem = {
-    upgrade: {
-      title: 'Upgrade account',
-      url: '',
-      icon: Sparkles,
-    },
     management: [
       {
         title: 'Profile',
         url: createTenantUrl('/profile'),
-        icon: Sparkles,
-      },
-      {
-        title: 'Setting',
-        url: '',
         icon: Sparkles,
       },
       {

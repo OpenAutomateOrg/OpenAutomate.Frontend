@@ -7,6 +7,7 @@ import type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
+  ChangeUserNameRequest,
 } from '@/types/auth'
 
 // API endpoints for authentication
@@ -18,7 +19,8 @@ const endpoints = {
   revokeToken: 'api/authen/revoke-token',
   forgotPassword: 'api/authen/forgot-password',
   resetPassword: 'api/authen/reset-password',
-  changePassword: 'api/users/change-password',
+  changeUserName: 'api/user/user',
+  changePassword: 'api/user/change-password',
   resendVerification: 'api/email/resend',
   verifyEmail: 'api/email/verify',
 }
@@ -221,6 +223,14 @@ export const authApi = {
     } catch (error: unknown) {
       handleResetPasswordError(error)
     }
+  },
+
+  /**
+   * Change the current user's name
+   * @param data First Name and new Last Name
+   */
+  changeUserName: async (id: string, data: ChangeUserNameRequest): Promise<void> => {
+    await api.put(endpoints.changeUserName, data)
   },
 
   /**
