@@ -2,7 +2,7 @@ name: Deploy OpenAutomate Frontend
 
 on:
   push:
-    branches: [staging, OA-779-Bug-Deploy-TypeScript-lint-issue]
+    branches: [staging]
   workflow_dispatch:
 
 jobs:
