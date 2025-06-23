@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: 'src/**, public/**, package.json, package-lock.json, next.config.ts, tsconfig.json, postcss.config.mjs, .env.production, components.json'
+          source: 'src/**, public/**, package.json, package-lock.json, next.config.ts, tsconfig.json, postcss.config.mjs, components.json, eslint.config.mjs, ecosystem.config.js'
           target: '/var/www/openautomate/frontend'
 
       - name: Build and restart frontend
@@ -30,7 +30,26 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /var/www/openautomate/frontend
-            npm ci
-            rm -f .env
+
+            # Install dependencies (including dev dependencies for build process)
+            npm ci --production=false
+
+            # Clean up any existing environment files
+            rm -f .env .env.local
+
+            # Copy production environment file to .env for build process
+            if [ -f .env.production ]; then
+              cp .env.production .env
+              echo "Using .env.production for build"
+            else
+              echo "Warning: .env.production not found"
+            fi
+
+            # Build with production environment variables
             NODE_ENV=production npm run build
-            pm2 restart openautomate-frontend --update-env || NODE_ENV=production pm2 start npm --name openautomate-frontend -- start
+
+            # Clean up .env after build (keep .env.production for runtime)
+            rm -f .env
+
+            # Start/restart the application using ecosystem config
+            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
