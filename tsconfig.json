@@ -4,7 +4,6 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    // Reasonable strictness - catch real issues without being overly pedantic
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -14,15 +13,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-
-    // Additional reasonable checks
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": false,
-
     "plugins": [
       {
         "name": "next"
