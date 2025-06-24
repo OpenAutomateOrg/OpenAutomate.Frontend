@@ -75,6 +75,10 @@ export interface ResetPasswordRequest {
   confirmPassword: string
 }
 
+export interface ChangeUserNameRequest {
+  firstName: string
+  lastName: string
+}
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
