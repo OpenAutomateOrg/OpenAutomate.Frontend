@@ -1,9 +1,11 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function NotFound() {
+export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md text-center shadow-lg">
