@@ -16,16 +16,17 @@ export const config = {
     /**
      * Application URL - different for dev and production
      */
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',    /**
+    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001' /**
      * Production domain - used for cookies in production
-     */
+     */,
     domain: process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'localhost',
   },
 
   /**
    * API configuration
    */
-  api: {    /**
+  api: {
+    /**
      * Base URL for API requests
      */
     baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5252',

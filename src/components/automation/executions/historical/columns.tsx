@@ -14,8 +14,8 @@ interface CreateHistoricalColumnsProps {
   onDeleted?: () => void
 }
 
-export const createColumns = ({ 
-  onDeleted 
+export const createColumns = ({
+  onDeleted,
 }: CreateHistoricalColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
@@ -58,12 +58,7 @@ export const createColumns = ({
   {
     id: 'actions',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-    cell: ({ row }) => (
-      <DataTableRowAction 
-        execution={row.original} 
-        onDeleted={onDeleted}
-      />
-    ),
+    cell: ({ row }) => <DataTableRowAction execution={row.original} onDeleted={onDeleted} />,
     enableSorting: false,
     enableHiding: false,
   },
@@ -162,7 +157,6 @@ export const createColumns = ({
       </div>
     ),
   },
-
 ]
 
 // Default export for backward compatibility

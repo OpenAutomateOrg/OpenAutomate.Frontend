@@ -14,8 +14,8 @@ interface CreateInProgressColumnsProps {
   onDeleted?: () => void
 }
 
-export const createInProgressColumns = ({ 
-  onDeleted 
+export const createInProgressColumns = ({
+  onDeleted,
 }: CreateInProgressColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
@@ -58,12 +58,7 @@ export const createInProgressColumns = ({
   {
     id: 'actions',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-    cell: ({ row }) => (
-      <DataTableRowAction 
-        execution={row.original} 
-        onDeleted={onDeleted}
-      />
-    ),
+    cell: ({ row }) => <DataTableRowAction execution={row.original} onDeleted={onDeleted} />,
     enableSorting: false,
     enableHiding: false,
   },
@@ -183,7 +178,6 @@ export const createInProgressColumns = ({
       </div>
     ),
   },
-
 ]
 
 // Default export for backward compatibility

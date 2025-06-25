@@ -118,7 +118,9 @@ export function useExecutionStatus(
   tenant: string,
   onStatusUpdate?: (update: ExecutionStatusUpdate) => void,
 ) {
-  const [executionStatuses, setExecutionStatuses] = useState<Record<string, ExecutionStatusUpdate>>({})
+  const [executionStatuses, setExecutionStatuses] = useState<Record<string, ExecutionStatusUpdate>>(
+    {},
+  )
   const connectionRef = useRef<HubConnection | null>(null)
 
   useEffect(() => {
@@ -130,7 +132,9 @@ export function useExecutionStatus(
     connection.onclose((error) => {
       if (error) {
         if (error.message && isExpectedSignalRError(error.message)) {
-          console.debug('[SignalR Execution] Connection issue - will automatically reconnect if possible')
+          console.debug(
+            '[SignalR Execution] Connection issue - will automatically reconnect if possible',
+          )
         } else {
           console.error('[SignalR Execution] Connection closed with error:', error)
         }
@@ -163,15 +167,15 @@ export function useExecutionStatus(
           message: update.message ?? update.Message,
           timestamp: update.timestamp ?? update.Timestamp ?? new Date().toISOString(),
         }
-        
+
         console.debug('[SignalR Execution] ExecutionStatusUpdate received:', normalized)
-        
+
         // Store by executionId instead of botAgentId for execution tracking
-        setExecutionStatuses((prev) => ({ 
-          ...prev, 
-          [normalized.executionId]: normalized 
+        setExecutionStatuses((prev) => ({
+          ...prev,
+          [normalized.executionId]: normalized,
         }))
-        
+
         if (onStatusUpdate) onStatusUpdate(normalized)
       },
     )
@@ -197,4 +201,4 @@ export function useExecutionStatus(
   }, [tenant, onStatusUpdate])
 
   return executionStatuses
-} 
+}

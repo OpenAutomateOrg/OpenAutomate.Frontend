@@ -19,7 +19,12 @@ import {
   DialogClose,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
-import { ScheduleResponseDto, deleteSchedule, enableSchedule, disableSchedule } from '@/lib/api/schedules'
+import {
+  ScheduleResponseDto,
+  deleteSchedule,
+  enableSchedule,
+  disableSchedule,
+} from '@/lib/api/schedules'
 import { createErrorToast } from '@/lib/utils/error-utils'
 
 interface DataTableRowActionsProps {
@@ -28,10 +33,10 @@ interface DataTableRowActionsProps {
   readonly onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
 }
 
-export default function DataTableRowAction({ 
-  schedule, 
-  onDeleted, 
-  onToggleEnabled 
+export default function DataTableRowAction({
+  schedule,
+  onDeleted,
+  onToggleEnabled,
 }: DataTableRowActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -51,12 +56,12 @@ export default function DataTableRowAction({
     setDeleting(true)
     try {
       await deleteSchedule(schedule.id)
-      
+
       toast({
         title: 'Schedule Deleted',
         description: `Schedule "${schedule.name}" has been deleted successfully.`,
       })
-      
+
       setDeleteDialogOpen(false)
       if (onDeleted) onDeleted()
     } catch (error) {
@@ -76,10 +81,10 @@ export default function DataTableRowAction({
     // Fallback implementation if no parent handler provided
     setToggling(true)
     try {
-      const updatedSchedule = schedule.isEnabled 
+      const updatedSchedule = schedule.isEnabled
         ? await disableSchedule(schedule.id)
         : await enableSchedule(schedule.id)
-      
+
       toast({
         title: `Schedule ${updatedSchedule.isEnabled ? 'Enabled' : 'Disabled'}`,
         description: `Schedule "${schedule.name}" has been ${updatedSchedule.isEnabled ? 'enabled' : 'disabled'}.`,
@@ -143,10 +148,11 @@ export default function DataTableRowAction({
               <Power className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             )}
             <span>
-              {toggling 
-                ? `${schedule.isEnabled ? 'Disabling' : 'Enabling'}...` 
-                : schedule.isEnabled ? 'Disable' : 'Enable'
-              }
+              {toggling
+                ? `${schedule.isEnabled ? 'Disabling' : 'Enabling'}...`
+                : schedule.isEnabled
+                  ? 'Disable'
+                  : 'Enable'}
             </span>
           </DropdownMenuItem>
 
@@ -166,9 +172,7 @@ export default function DataTableRowAction({
       </DropdownMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent
-          onInteractOutside={(e: Event) => e.preventDefault()}
-        >
+        <DialogContent onInteractOutside={(e: Event) => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -182,9 +186,7 @@ export default function DataTableRowAction({
               Schedule: <b>{schedule.name}</b>
             </span>
             <br />
-            <span className="text-sm text-muted-foreground">
-              This action cannot be undone.
-            </span>
+            <span className="text-sm text-muted-foreground">This action cannot be undone.</span>
           </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button

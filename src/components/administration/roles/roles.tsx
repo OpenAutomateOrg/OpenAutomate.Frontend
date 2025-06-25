@@ -39,10 +39,7 @@ export default function RolesInterface() {
   const { toast } = useToast()
 
   // SWR for data fetching - replaces manual state management
-  const { data: roles, error, isLoading, mutate } = useSWR(
-    swrKeys.roles(),
-    rolesApi.getAllRoles
-  )
+  const { data: roles, error, isLoading, mutate } = useSWR(swrKeys.roles(), rolesApi.getAllRoles)
 
   // UI state management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -54,17 +51,17 @@ export default function RolesInterface() {
     if (!roles) return []
 
     // Transform backend data to match our schema
-    return roles.map(role => ({
+    return roles.map((role) => ({
       id: role.id,
       name: role.name,
       description: role.description,
       isSystemAuthority: role.isSystemAuthority,
       createdAt: role.createdAt,
       updatedAt: role.updatedAt,
-      permissions: role.permissions?.map(p => ({
+      permissions: role.permissions?.map((p) => ({
         resourceName: p.resourceName,
         permission: p.permission,
-      }))
+      })),
     }))
   }, [roles])
 
@@ -82,9 +79,10 @@ export default function RolesInterface() {
   }, [error, toast])
 
   // Filter data based on search term
-  const filteredData = data.filter(role =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = data.filter(
+    (role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   // Handle row click for viewing role details
@@ -145,10 +143,10 @@ export default function RolesInterface() {
         </div>
         <div className="flex items-center space-x-2">
           <Button onClick={handleCreateRole} className="h-8 px-2 lg:px-3">
-              <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Create Role
-            </Button>
-          </div>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -163,7 +161,7 @@ export default function RolesInterface() {
           />
         </div>
       </div>
-      
+
       {/* Table */}
       <div className="rounded-md border relative">
         {isLoading && (

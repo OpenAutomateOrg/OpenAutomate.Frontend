@@ -10,9 +10,8 @@ export function useOrganizationUnits() {
   const router = useRouter()
 
   // SWR for data fetching - replaces 60+ lines of manual caching and state management
-  const { data, error, isLoading, mutate } = useSWR(
-    swrKeys.organizationUnits(),
-    () => organizationUnitApi.getMyOrganizationUnits().then(r => r.organizationUnits)
+  const { data, error, isLoading, mutate } = useSWR(swrKeys.organizationUnits(), () =>
+    organizationUnitApi.getMyOrganizationUnits().then((r) => r.organizationUnits),
   )
   const selectOrganizationUnit = useCallback(
     (slug: string) => {

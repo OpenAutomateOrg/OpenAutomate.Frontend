@@ -98,11 +98,7 @@ export const columns: ColumnDef<RolesRow>[] = [
           </div>
         )
       } catch {
-        return (
-          <div className="text-sm text-muted-foreground">
-            Invalid date
-          </div>
-        )
+        return <div className="text-sm text-muted-foreground">Invalid date</div>
       }
     },
   },

@@ -81,7 +81,9 @@ export const createAutomationPackage = async (
 /**
  * Get an automation package by ID
  */
-export const getAutomationPackageById = async (id: string): Promise<AutomationPackageResponseDto> => {
+export const getAutomationPackageById = async (
+  id: string,
+): Promise<AutomationPackageResponseDto> => {
   const tenant = getCurrentTenant()
   const response = await api.get<AutomationPackageResponseDto>(`${tenant}/api/packages/${id}`)
   return response
@@ -103,7 +105,7 @@ export const uploadPackageWithAutoCreation = async (
   data: UploadPackageWithMetadataRequest,
 ): Promise<AutomationPackageResponseDto> => {
   const tenant = getCurrentTenant()
-  
+
   const formData = new FormData()
   formData.append('file', data.file)
   if (data.name) formData.append('name', data.name)
@@ -125,7 +127,7 @@ export const uploadPackageVersion = async (
   data: UploadPackageVersionRequest,
 ): Promise<PackageVersionResponseDto> => {
   const tenant = getCurrentTenant()
-  
+
   const formData = new FormData()
   formData.append('file', data.file)
   formData.append('version', data.version)
@@ -237,7 +239,9 @@ function processODataResponse(response: unknown): ODataResponse<AutomationPackag
     if (arrayProps.length > 0) {
       const arrayProp = arrayProps[0]
       console.log(`Found array property "${arrayProp}" in response`)
-      const arr = (response as Record<string, unknown[]>)[arrayProp] as AutomationPackageResponseDto[]
+      const arr = (response as Record<string, unknown[]>)[
+        arrayProp
+      ] as AutomationPackageResponseDto[]
       const count = (response as Record<string, unknown>)['@odata.count']
       return {
         value: arr,
@@ -292,7 +296,7 @@ export const getPackageVersionsWithOData = async (
   try {
     const response = await api.get<unknown>(endpoint)
     console.log('Raw OData response for versions:', response)
-    
+
     // Process response similarly to packages
     if (Array.isArray(response)) {
       return {
@@ -300,10 +304,10 @@ export const getPackageVersionsWithOData = async (
         '@odata.count': response.length,
       }
     }
-    
+
     return { value: [] }
   } catch (error) {
     console.error('Error fetching package versions with OData:', error)
     return { value: [] }
   }
-} 
+}

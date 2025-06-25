@@ -27,14 +27,14 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
       await authApi.resendVerificationEmailByEmail(email)
       setResendStatus('success')
       setErrorMessage(null)
-      if (onResendSuccess) onResendSuccess();
+      if (onResendSuccess) onResendSuccess()
     } catch (error: unknown) {
       setResendStatus('error')
       console.error('Failed to resend verification email:', error)
 
       // Use the shared utility function to extract error message
-      const displayError = extractErrorMessage(error) ?? 'Failed to resend. Please try again.';
-      setErrorMessage(displayError);
+      const displayError = extractErrorMessage(error) ?? 'Failed to resend. Please try again.'
+      setErrorMessage(displayError)
     } finally {
       setIsResending(false)
     }
@@ -53,7 +53,10 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
       </Button>
 
       {resendStatus === 'success' && (
-        <Alert variant="success" className="animate-fade-in border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:border-green-700 dark:text-green-200">
+        <Alert
+          variant="success"
+          className="animate-fade-in border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:border-green-700 dark:text-green-200"
+        >
           <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
           <div>
             <AlertTitle className="font-semibold">Verification email sent!</AlertTitle>
@@ -67,10 +70,12 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
           <AlertCircle className="h-5 w-5 text-red-500" />
           <div>
             <AlertTitle className="font-semibold">Failed to resend</AlertTitle>
-            <AlertDescription>{errorMessage ?? 'Failed to resend. Please try again.'}</AlertDescription>
+            <AlertDescription>
+              {errorMessage ?? 'Failed to resend. Please try again.'}
+            </AlertDescription>
           </div>
         </Alert>
       )}
     </div>
   )
-} 
+}
