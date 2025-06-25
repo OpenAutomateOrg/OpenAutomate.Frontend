@@ -3,6 +3,7 @@
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PermissionLevel } from '@/types/auth'
 
 /**
  * Example component demonstrating conditional UI rendering based on user permissions
@@ -45,19 +46,19 @@ export function PermissionExample() {
           <div className="space-y-2">
             <h3 className="font-semibold">Asset Management</h3>
             
-            {hasPermission('AssetResource', 1) ? (
+            {hasPermission('AssetResource', PermissionLevel.View) ? (
               <div className="space-x-2">
                 <Button variant="outline" size="sm">View Assets</Button>
                 
-                {hasPermission('AssetResource', 2) && (
+                {hasPermission('AssetResource', PermissionLevel.Create) && (
                   <Button variant="outline" size="sm">Create Asset</Button>
                 )}
                 
-                {hasPermission('AssetResource', 3) && (
+                {hasPermission('AssetResource', PermissionLevel.Update) && (
                   <Button variant="outline" size="sm">Edit Assets</Button>
                 )}
                 
-                {hasPermission('AssetResource', 4) && (
+                {hasPermission('AssetResource', PermissionLevel.Delete) && (
                   <Button variant="destructive" size="sm">Delete Assets</Button>
                 )}
               </div>
@@ -70,19 +71,19 @@ export function PermissionExample() {
           <div className="space-y-2">
             <h3 className="font-semibold">Bot Agent Management</h3>
             
-            {hasPermission('AgentResource', 1) ? (
+            {hasPermission('AgentResource', PermissionLevel.View) ? (
               <div className="space-x-2">
                 <Button variant="outline" size="sm">View Agents</Button>
                 
-                {hasPermission('AgentResource', 2) && (
+                {hasPermission('AgentResource', PermissionLevel.Create) && (
                   <Button variant="outline" size="sm">Create Agent</Button>
                 )}
                 
-                {hasPermission('AgentResource', 3) && (
+                {hasPermission('AgentResource', PermissionLevel.Update) && (
                   <Button variant="outline" size="sm">Edit Agents</Button>
                 )}
                 
-                {hasPermission('AgentResource', 4) && (
+                {hasPermission('AgentResource', PermissionLevel.Delete) && (
                   <Button variant="destructive" size="sm">Delete Agents</Button>
                 )}
               </div>
@@ -95,15 +96,15 @@ export function PermissionExample() {
           <div className="space-y-2">
             <h3 className="font-semibold">Organization Management</h3>
             
-            {hasPermission('OrganizationUnitResource', 1) ? (
+            {hasPermission('OrganizationUnitResource', PermissionLevel.View) ? (
               <div className="space-x-2">
                 <Button variant="outline" size="sm">View Settings</Button>
                 
-                {hasPermission('OrganizationUnitResource', 3) && (
+                {hasPermission('OrganizationUnitResource', PermissionLevel.Update) && (
                   <Button variant="outline" size="sm">Manage Users</Button>
                 )}
                 
-                {hasPermission('OrganizationUnitResource', 4) && (
+                {hasPermission('OrganizationUnitResource', PermissionLevel.Delete) && (
                   <Button variant="destructive" size="sm">Admin Functions</Button>
                 )}
               </div>

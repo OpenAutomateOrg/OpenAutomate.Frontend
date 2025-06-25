@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { authApi } from '@/lib/api/auth'
 import { useRouter } from 'next/navigation'
-import { User, UserProfile, LoginRequest, RegisterRequest, SystemRole } from '@/types/auth'
+import { User, UserProfile, LoginRequest, RegisterRequest, SystemRole, PermissionLevel } from '@/types/auth'
 import {
   getAuthToken,
   setAuthToken,
@@ -34,7 +34,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshToken: () => Promise<boolean>
   updateUser: (userData: Partial<User>) => void
-  hasPermission: (resource: string, requiredPermission: number, tenant?: string) => boolean
+  hasPermission: (resource: string, requiredPermission: PermissionLevel, tenant?: string) => boolean
   error: string | null
 }
 
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const isSystemAdmin = user?.systemRole === SystemRole.Admin
 
   // Helper function to check permissions for a specific resource and tenant
-  const hasPermission = useCallback((resource: string, requiredPermission: number, tenant?: string): boolean => {
+  const hasPermission = useCallback((resource: string, requiredPermission: PermissionLevel, tenant?: string): boolean => {
     if (!userProfile) return false
 
     // System admins have all permissions

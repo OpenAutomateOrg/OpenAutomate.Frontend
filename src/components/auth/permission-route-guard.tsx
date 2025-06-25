@@ -3,6 +3,7 @@
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, ReactNode } from 'react'
+import { PermissionLevel } from '@/types/auth'
 
 interface PermissionRouteGuardProps {
   /**
@@ -16,9 +17,9 @@ interface PermissionRouteGuardProps {
   resource: string
 
   /**
-   * The minimum permission level required (1=View, 2=Create, 3=Update, 4=Delete)
+   * The minimum permission level required
    */
-  requiredPermission: number
+  requiredPermission: PermissionLevel
 
   /**
    * The path to redirect unauthorized users to

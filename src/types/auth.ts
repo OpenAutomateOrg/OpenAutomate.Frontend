@@ -17,6 +17,31 @@ export enum SystemRole {
   Admin = 1,
 }
 
+/**
+ * Permission levels for resources within an organization unit
+ */
+export enum PermissionLevel {
+  /**
+   * View access - read only
+   */
+  View = 1,
+
+  /**
+   * Create access - can create new resources
+   */
+  Create = 2,
+
+  /**
+   * Update access - can modify existing resources (includes Execute for automations)
+   */
+  Update = 3,
+
+  /**
+   * Delete access - full administrative access including deletion
+   */
+  Delete = 4,
+}
+
 export interface User {
   id: string
   email: string
@@ -32,7 +57,7 @@ export interface User {
  */
 export interface ResourcePermission {
   resourceName: string
-  permission: number
+  permission: PermissionLevel
 }
 
 /**
