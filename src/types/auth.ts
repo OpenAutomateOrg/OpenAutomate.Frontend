@@ -27,6 +27,36 @@ export interface User {
   lastLogin?: string
 }
 
+/**
+ * Resource permission for a specific resource within an organization unit
+ */
+export interface ResourcePermission {
+  resourceName: string
+  permission: number
+}
+
+/**
+ * Organization unit with user's permissions within it
+ */
+export interface OrganizationUnitPermissions {
+  id: string
+  name: string
+  slug: string
+  permissions: ResourcePermission[]
+}
+
+/**
+ * Complete user profile with permissions across all organization units
+ */
+export interface UserProfile {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  systemRole: SystemRole
+  organizationUnits: OrganizationUnitPermissions[]
+}
+
 export interface LoginRequest {
   email: string
   password: string
