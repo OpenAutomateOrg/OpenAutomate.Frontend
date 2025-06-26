@@ -155,14 +155,13 @@ export default function PackageInterface() {
 
   // ✅ SWR for packages data - following guideline #8: use framework-level loaders
   const queryParams = getODataQueryParams()
-  const { 
-    data: packagesResponse, 
-    error: packagesError, 
-    isLoading, 
-    mutate: mutatePackages 
-  } = useSWR(
-    swrKeys.packagesWithOData(queryParams as Record<string, unknown>),
-    () => getAutomationPackagesWithOData(queryParams)
+  const {
+    data: packagesResponse,
+    error: packagesError,
+    isLoading,
+    mutate: mutatePackages,
+  } = useSWR(swrKeys.packagesWithOData(queryParams as Record<string, unknown>), () =>
+    getAutomationPackagesWithOData(queryParams),
   )
 
   // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
@@ -240,7 +239,14 @@ export default function PackageInterface() {
         }
       }
     }
-  }, [packagesResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+  }, [
+    packagesResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
 
   // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
   const refreshPackages = useCallback(async () => {
@@ -425,11 +431,7 @@ export default function PackageInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Automation Packages</h2>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              onClick={refreshPackages}
-              disabled={isLoading || isPending}
-            >
+            <Button variant="outline" onClick={refreshPackages} disabled={isLoading || isPending}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Refresh
             </Button>
@@ -448,13 +450,15 @@ export default function PackageInterface() {
 
         {packagesError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">Failed to load packages. Please try again.</p>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load packages. Please try again.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => mutatePackages()}>
               Retry
             </Button>
           </div>
         )}
-        
+
         <DataTableToolbar
           table={table}
           statuses={statusOptions}
@@ -465,7 +469,7 @@ export default function PackageInterface() {
           isPending={isPending}
           totalCount={totalCount}
         />
-        
+
         <DataTable
           data={packages}
           columns={createPackageColumns(refreshPackages)}
@@ -514,7 +518,7 @@ export default function PackageInterface() {
           </div>
         )}
       </div>
-      
+
       <CreateEditModal
         isOpen={isModalOpen}
         onClose={() => {

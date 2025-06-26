@@ -21,12 +21,14 @@ interface RolesDetailProps {
 export default function RolesDetail({ id }: RolesDetailProps) {
   const router = useRouter()
   const { toast } = useToast()
-  
+
   // ✅ SWR for data fetching - following guideline #2: use SWR for all API data
-  const { data: role, error, isLoading, mutate } = useSWR(
-    swrKeys.roleById(id),
-    () => rolesApi.getRoleById(id)
-  )
+  const {
+    data: role,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(swrKeys.roleById(id), () => rolesApi.getRoleById(id))
 
   // UI state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -50,7 +52,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
   const handleDelete = async () => {
     if (!role) return
-    
+
     try {
       await rolesApi.deleteRole(role.id)
       toast({
@@ -66,7 +68,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
   const handleModalClose = async (shouldReload = false) => {
     setIsEditModalOpen(false)
-    
+
     if (shouldReload) {
       await mutate()
     }
@@ -116,16 +118,16 @@ export default function RolesDetail({ id }: RolesDetailProps) {
               )}
             </div>
           </div>
-          
+
           {!role.isSystemAuthority && (
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleEdit}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleDelete}
                 className="text-destructive hover:text-destructive"
               >
@@ -147,13 +149,11 @@ export default function RolesDetail({ id }: RolesDetailProps) {
             </div>
             <div className="space-y-4">
               <DetailBlock label="Type">
-                <Badge variant={role.isSystemAuthority ? "secondary" : "outline"}>
+                <Badge variant={role.isSystemAuthority ? 'secondary' : 'outline'}>
                   {role.isSystemAuthority ? 'System Role' : 'Custom Role'}
                 </Badge>
               </DetailBlock>
-              <DetailBlock label="Created">
-                {format(new Date(role.createdAt), 'PPP')}
-              </DetailBlock>
+              <DetailBlock label="Created">{format(new Date(role.createdAt), 'PPP')}</DetailBlock>
               {role.updatedAt && (
                 <DetailBlock label="Last Updated">
                   {format(new Date(role.updatedAt), 'PPP')}
@@ -212,7 +212,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
           isSystemAuthority: role.isSystemAuthority,
           createdAt: role.createdAt,
           updatedAt: role.updatedAt,
-          permissions: role.permissions
+          permissions: role.permissions,
         }}
       />
     </div>

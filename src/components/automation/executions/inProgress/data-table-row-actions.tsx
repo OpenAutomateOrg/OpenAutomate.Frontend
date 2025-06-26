@@ -40,14 +40,14 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
       // TODO: Implement deleteExecution API call when available
       // const { deleteExecution } = await import('@/lib/api/executions')
       // await deleteExecution(execution.id)
-      
+
       // For now, just simulate the deletion
       console.log('Delete execution:', execution.id)
       toast({
         title: 'Delete Simulation',
         description: 'Delete execution API not yet implemented.',
       })
-      
+
       setDeleteDialogOpen(false)
       if (onDeleted) onDeleted()
     } catch (error) {
@@ -76,7 +76,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
     try {
       const fileName = `execution_${execution.id.substring(0, 8)}_logs.log`
       await downloadExecutionLogs(execution.id, fileName)
-      
+
       toast({
         title: 'Download Started',
         description: 'Execution logs download has started.',
@@ -129,7 +129,9 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
             ) : (
               <FileText className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             )}
-            <span>{isDownloading ? 'Downloading...' : execution.hasLogs ? 'Download Logs' : 'No Logs'}</span>
+            <span>
+              {isDownloading ? 'Downloading...' : execution.hasLogs ? 'Download Logs' : 'No Logs'}
+            </span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
@@ -148,9 +150,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
       </DropdownMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent
-          onInteractOutside={(e: Event) => e.preventDefault()}
-        >
+        <DialogContent onInteractOutside={(e: Event) => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>

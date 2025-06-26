@@ -64,7 +64,10 @@ export const columns: ColumnDef<UsersRow>[] = [
       if (Array.isArray(value)) {
         roles = value
       } else if (typeof value === 'string') {
-        roles = value.split(',').map(r => r.trim()).filter(Boolean)
+        roles = value
+          .split(',')
+          .map((r) => r.trim())
+          .filter(Boolean)
       }
       const maxShow = 3
       return (
@@ -82,11 +85,11 @@ export const columns: ColumnDef<UsersRow>[] = [
             {roles.length > maxShow && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-xs text-gray-500 cursor-pointer">+{roles.length - maxShow} more</span>
+                  <span className="text-xs text-gray-500 cursor-pointer">
+                    +{roles.length - maxShow} more
+                  </span>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {roles.slice(maxShow).join(', ')}
-                </TooltipContent>
+                <TooltipContent>{roles.slice(maxShow).join(', ')}</TooltipContent>
               </Tooltip>
             )}
           </div>

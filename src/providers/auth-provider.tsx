@@ -10,8 +10,8 @@ import {
   useMemo,
 } from 'react'
 import { authApi } from '@/lib/api/auth'
-import { useRouter } from 'next/navigation'
-import { User, LoginRequest, RegisterRequest, SystemRole } from '@/types/auth'
+import { useRouter, useParams } from 'next/navigation'
+import { User, UserProfile, LoginRequest, RegisterRequest, SystemRole, PermissionLevel } from '@/types/auth'
 import {
   getAuthToken,
   setAuthToken,
@@ -25,6 +25,7 @@ import { config } from '@/lib/config'
 
 interface AuthContextType {
   user: User | null
+  userProfile: UserProfile | null
   isLoading: boolean
   isAuthenticated: boolean
   isSystemAdmin: boolean
@@ -32,6 +33,8 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
   refreshToken: () => Promise<boolean>
+  updateUser: (userData: Partial<User>) => void
+  hasPermission: (resource: string, requiredPermission: PermissionLevel, tenant?: string) => boolean
   error: string | null
 }
 
@@ -43,12 +46,49 @@ const TOKEN_REFRESH_INTERVAL = config.auth.tokenRefreshInterval
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const params = useParams()
 
   // Computed property for system admin status
   const isSystemAdmin = user?.systemRole === SystemRole.Admin
+
+  // Helper function to fetch and update user profile
+  const fetchAndUpdateUserProfile = useCallback(async (context: string = 'profile fetch'): Promise<void> => {
+    try {
+      const profile = await authApi.getUserProfile()
+      setUserProfile(profile)
+      logger.success(`User profile loaded successfully during ${context}`)
+    } catch (profileError) {
+      logger.warning(`Failed to load user profile during ${context}:`, profileError)
+      // Don't throw error to avoid breaking the calling flow
+    }
+  }, [])
+
+  // Helper function to check permissions for a specific resource and tenant
+  const hasPermission = useCallback((resource: string, requiredPermission: PermissionLevel, tenant?: string): boolean => {
+    if (!userProfile) return false
+
+    // System admins have all permissions
+    if (isSystemAdmin) return true
+
+    // Get current tenant from URL if not provided
+    const currentTenant = tenant || params.tenant
+    if (!currentTenant) return false
+
+    // Find the organization unit by slug
+    const orgUnit = userProfile.organizationUnits.find(ou => ou.slug === currentTenant)
+    if (!orgUnit) return false
+
+    // Find the resource permission
+    const resourcePermission = orgUnit.permissions.find(p => p.resourceName === resource)
+    if (!resourcePermission) return false
+
+    // Check if user has required permission level or higher
+    return resourcePermission.permission >= requiredPermission
+  }, [userProfile, isSystemAdmin, params.tenant])
 
   // Refresh token implementation
   const refreshToken = useCallback(async (): Promise<boolean> => {
@@ -70,6 +110,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       // Update in storage and local state
       setStoredUser(userToSet)
       setUser(userToSet)
+
+      // Fetch complete user profile with permissions after refresh
+      await fetchAndUpdateUserProfile('token refresh')
+
       logger.success('Token refreshed successfully')
       return true
     } catch (err) {
@@ -77,9 +121,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       // Clear auth data on refresh failure
       clearAuthData()
       setUser(null)
+      setUserProfile(null)
       return false
     }
-  }, [])
+  }, [fetchAndUpdateUserProfile])
 
   // Set up token refresh on interval and tab focus
   useEffect(() => {
@@ -118,6 +163,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       logger.warning('Authentication token expired')
       clearAuthData()
       setUser(null)
+      setUserProfile(null)
       router.push('/login')
     }
 
@@ -148,6 +194,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
             const currentUser = await authApi.getCurrentUser()
             setUser(currentUser)
             logger.success('User data refreshed from API')
+
+            // Also fetch the complete profile with permissions
+            await fetchAndUpdateUserProfile('initialization')
           } catch (err) {
             logger.warning('Failed to get current user, attempting token refresh', err)
             // If fetching current user fails, try to refresh the token
@@ -169,11 +218,16 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
               // Update in storage and local state
               setStoredUser(userToSet)
               setUser(userToSet)
+
+              // Fetch complete user profile with permissions
+              await fetchAndUpdateUserProfile('initialization token refresh')
+
               logger.success('Token refreshed successfully during init')
             } catch (refreshErr) {
               logger.error('Token refresh failed during init:', refreshErr)
               clearAuthData()
               setUser(null)
+              setUserProfile(null)
             }
           }
         }
@@ -181,6 +235,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         logger.error('Authentication initialization failed:', err)
         // Clear tokens if initialization fails
         clearAuthData()
+        setUser(null)
+        setUserProfile(null)
       } finally {
         setIsLoading(false)
       }
@@ -214,6 +270,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setStoredUser(userData)
         setUser(userData)
 
+        // Fetch complete user profile with permissions after login
+        await fetchAndUpdateUserProfile('login')
+
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
 
@@ -239,7 +298,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [router],
+    [router, fetchAndUpdateUserProfile],
   )
 
   // Register function
@@ -287,16 +346,31 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       // Clear user and tokens
       clearAuthData()
       setUser(null)
+      setUserProfile(null)
       router.push('/login')
       setIsLoading(false)
     }
   }, [router])
+
+  // Update user function
+  const updateUser = useCallback(
+    (userData: Partial<User>) => {
+      if (user) {
+        const updatedUser = { ...user, ...userData }
+        setUser(updatedUser)
+        setStoredUser(updatedUser)
+        logger.success('User data updated successfully')
+      }
+    },
+    [user],
+  )
 
   return (
     <AuthContext.Provider
       value={useMemo(
         () => ({
           user,
+          userProfile,
           isLoading,
           isAuthenticated: !!user,
           isSystemAdmin,
@@ -304,9 +378,11 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           register,
           logout,
           refreshToken,
+          updateUser,
+          hasPermission,
           error,
         }),
-        [user, isLoading, isSystemAdmin, login, register, logout, refreshToken, error],
+        [user, userProfile, isLoading, isSystemAdmin, login, register, logout, refreshToken, updateUser, hasPermission, error],
       )}
     >
       {children}

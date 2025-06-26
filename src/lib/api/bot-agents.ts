@@ -247,9 +247,12 @@ export const deleteBotAgent = async (id: string): Promise<void> => {
  */
 export const updateBotAgent = async (
   id: string,
-  data: UpdateBotAgentDto
+  data: UpdateBotAgentDto,
 ): Promise<BotAgentResponseDto> => {
   const tenant = getCurrentTenant()
-  const response = await api.put<BotAgentResponseDto, UpdateBotAgentDto>(`${tenant}/api/agents/${id}`, data)
+  const response = await api.put<BotAgentResponseDto, UpdateBotAgentDto>(
+    `${tenant}/api/agents/${id}`,
+    data,
+  )
   return response
-} 
+}

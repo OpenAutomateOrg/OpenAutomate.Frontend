@@ -48,7 +48,7 @@ type CreateExecutionFormData = z.infer<typeof createExecutionSchema>
 interface CreateExecutionModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (newExecution?: { id: string, packageName: string, botAgentName: string }) => void
+  onSuccess?: (newExecution?: { id: string; packageName: string; botAgentName: string }) => void
 }
 
 export default function CreateExecutionModal({
@@ -61,25 +61,22 @@ export default function CreateExecutionModal({
   // SWR for data fetching - replaces manual state management
   const { data: packages, error: packagesError } = useSWR(
     isOpen ? swrKeys.packages() : null, // Only fetch when modal is open
-    getAllAutomationPackages
+    getAllAutomationPackages,
   )
 
   const { data: agents, error: agentsError } = useSWR(
     isOpen ? swrKeys.agents() : null, // Only fetch when modal is open
-    getAllBotAgents
+    getAllBotAgents,
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Derive filtered data during render (following guideline #1)
-  const filteredPackages = useMemo(() =>
-    packages?.filter(p => p.isActive) ?? [],
-    [packages]
-  )
+  const filteredPackages = useMemo(() => packages?.filter((p) => p.isActive) ?? [], [packages])
 
-  const filteredAgents = useMemo(() =>
-    agents?.filter(a => a.status !== 'Disconnected') ?? [],
-    [agents]
+  const filteredAgents = useMemo(
+    () => agents?.filter((a) => a.status !== 'Disconnected') ?? [],
+    [agents],
   )
 
   // Combined loading state
@@ -95,7 +92,7 @@ export default function CreateExecutionModal({
   })
 
   const selectedPackageId = form.watch('packageId')
-  const selectedPackage = packages?.find(p => p.id === selectedPackageId)
+  const selectedPackage = packages?.find((p) => p.id === selectedPackageId)
   const availableVersions = selectedPackage?.versions || []
 
   // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
@@ -121,7 +118,7 @@ export default function CreateExecutionModal({
 
   // Helper function to validate agent
   const validateAgent = (agentId: string): BotAgentResponseDto | null => {
-    const selectedAgent = agents?.find(a => a.id === agentId)
+    const selectedAgent = agents?.find((a) => a.id === agentId)
 
     if (!selectedAgent) {
       toast({
@@ -154,8 +151,8 @@ export default function CreateExecutionModal({
 
   // Helper function to validate package and version
   const validatePackageAndVersion = (packageId: string, version: string) => {
-    const selectedPackage = packages?.find(p => p.id === packageId)
-    const selectedVersion = selectedPackage?.versions.find(v => v.versionNumber === version)
+    const selectedPackage = packages?.find((p) => p.id === packageId)
+    const selectedVersion = selectedPackage?.versions.find((v) => v.versionNumber === version)
 
     if (!selectedPackage || !selectedVersion) {
       toast({
@@ -240,7 +237,7 @@ export default function CreateExecutionModal({
       })
       form.reset()
       onClose()
-      
+
       // ✅ Pass execution details to callback for optimistic update
       onSuccess?.({
         id: result.id,
@@ -320,8 +317,8 @@ export default function CreateExecutionModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Version</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       value={field.value}
                       disabled={!selectedPackageId}
                     >
@@ -377,8 +374,8 @@ export default function CreateExecutionModal({
                                     agent.status === 'Available'
                                       ? 'bg-green-500'
                                       : agent.status === 'Busy'
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-500'
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-500'
                                   }`}
                                 />
                                 <span
@@ -386,8 +383,8 @@ export default function CreateExecutionModal({
                                     agent.status === 'Available'
                                       ? 'text-green-600'
                                       : agent.status === 'Busy'
-                                      ? 'text-yellow-600'
-                                      : 'text-red-600'
+                                        ? 'text-yellow-600'
+                                        : 'text-red-600'
                                   }`}
                                 >
                                   {agent.status}
@@ -427,4 +424,4 @@ export default function CreateExecutionModal({
       </DialogContent>
     </Dialog>
   )
-} 
+}

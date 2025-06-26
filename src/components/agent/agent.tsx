@@ -155,9 +155,13 @@ export default function AgentInterface() {
   }, [pagination, sorting, columnFilters])
 
   // ✅ SWR for agents data - following guideline #8: use framework-level loaders
-  const { data: agentsResponse, error: agentsError, isLoading, mutate: mutateAgents } = useSWR(
-    swrKeys.agentsWithOData(queryParams as Record<string, unknown>),
-    () => getBotAgentsWithOData(queryParams)
+  const {
+    data: agentsResponse,
+    error: agentsError,
+    isLoading,
+    mutate: mutateAgents,
+  } = useSWR(swrKeys.agentsWithOData(queryParams as Record<string, unknown>), () =>
+    getBotAgentsWithOData(queryParams),
   )
 
   // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
@@ -239,7 +243,14 @@ export default function AgentInterface() {
         }
       }
     }
-  }, [agentsResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+  }, [
+    agentsResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
 
   // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
   const refreshAgents = useCallback(async () => {
@@ -490,7 +501,9 @@ export default function AgentInterface() {
 
         {agentsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">Failed to load agents. Please try again.</p>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load agents. Please try again.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => mutateAgents()}>
               Retry
             </Button>

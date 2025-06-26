@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import useSWR from 'swr'
 import {
   Dialog,
   DialogContent,
@@ -20,18 +21,34 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
 
+// API imports
+import {
+  createSchedule,
+  updateSchedule,
+  CreateScheduleDto,
+  RecurrenceType,
+} from '@/lib/api/schedules'
+import {
+  getAllAutomationPackages,
+  AutomationPackageResponseDto,
+  PackageVersionResponseDto,
+} from '@/lib/api/automation-packages'
+import { swrKeys } from '@/lib/swr-config'
+import { createErrorToast } from '@/lib/utils/error-utils'
+
 // Sub-components
 import { TriggerTab } from './components/TriggerTab'
 import { ExecutionTargetTab } from './components/ExecutionTargetTab'
-import { ParametersTab } from './components/ParametersTab'
 
 // Types
 export interface ScheduleFormData {
   name: string
-  workflow: string
+  packageId: string
+  packageVersion: string
+  agentId: string
   timezone: string
   recurrence: {
-    type: 'Once' | 'Minutes' | 'Hourly' | 'Daily' | 'Weekly' | 'Monthly'
+    type: RecurrenceType
     value: string
     startDate?: Date
     endDate?: Date
@@ -54,7 +71,9 @@ export interface ScheduleFormData {
 interface ScheduleData {
   id?: string
   name?: string
-  workflow?: string
+  packageId?: string
+  packageVersion?: string
+  agentId?: string
   timezone?: string
   recurrence?: Partial<ScheduleFormData['recurrence']>
 }
@@ -64,9 +83,16 @@ interface CreateEditModalProps {
   onClose: (shouldRefresh?: boolean) => void
   mode: 'create' | 'edit'
   editingSchedule?: ScheduleData | null
+  onSuccess?: (schedule?: { id: string; name: string }) => void
 }
 
-export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: CreateEditModalProps) {
+export function CreateEditModal({
+  isOpen,
+  onClose,
+  mode,
+  editingSchedule,
+  onSuccess,
+}: CreateEditModalProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('trigger')
@@ -74,25 +100,33 @@ export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: Crea
   // ✅ Initialize form with editing data (reset via key prop in parent)
   const [formData, setFormData] = useState<ScheduleFormData>({
     name: editingSchedule?.name ?? '',
-    workflow: editingSchedule?.workflow ?? '',
-    timezone: editingSchedule?.timezone ?? 'asia-saigon',
+    packageId: editingSchedule?.packageId ?? '',
+    packageVersion: editingSchedule?.packageVersion ?? 'latest',
+    agentId: editingSchedule?.agentId ?? '',
+    timezone: editingSchedule?.timezone ?? 'Asia/Ho_Chi_Minh',
     recurrence: {
-      type: editingSchedule?.recurrence?.type ?? 'Minutes',
+      type: (editingSchedule?.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
       value: editingSchedule?.recurrence?.value ?? '1',
-      startDate: editingSchedule?.recurrence?.startDate ?? new Date('2025-05-21'),
+      startDate: editingSchedule?.recurrence?.startDate ?? new Date(),
       endDate: editingSchedule?.recurrence?.endDate,
-      startTime: editingSchedule?.recurrence?.startTime ?? '00:00',
-      dailyHour: editingSchedule?.recurrence?.dailyHour ?? '00',
+      startTime: editingSchedule?.recurrence?.startTime ?? '09:00',
+      dailyHour: editingSchedule?.recurrence?.dailyHour ?? '09',
       dailyMinute: editingSchedule?.recurrence?.dailyMinute ?? '00',
-      weeklyHour: editingSchedule?.recurrence?.weeklyHour ?? '17',
+      weeklyHour: editingSchedule?.recurrence?.weeklyHour ?? '09',
       weeklyMinute: editingSchedule?.recurrence?.weeklyMinute ?? '00',
-      selectedDays: editingSchedule?.recurrence?.selectedDays ?? ['Tuesday', 'Thursday', 'Friday'],
-      monthlyHour: editingSchedule?.recurrence?.monthlyHour ?? '00',
+      selectedDays: editingSchedule?.recurrence?.selectedDays ?? [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+      ],
+      monthlyHour: editingSchedule?.recurrence?.monthlyHour ?? '09',
       monthlyMinute: editingSchedule?.recurrence?.monthlyMinute ?? '00',
       monthlyOnType: editingSchedule?.recurrence?.monthlyOnType ?? 'day',
-      selectedDay: editingSchedule?.recurrence?.selectedDay ?? '31',
-      selectedOrdinal: editingSchedule?.recurrence?.selectedOrdinal ?? '2nd',
-      selectedWeekday: editingSchedule?.recurrence?.selectedWeekday ?? 'Wednesday',
+      selectedDay: editingSchedule?.recurrence?.selectedDay ?? '1',
+      selectedOrdinal: editingSchedule?.recurrence?.selectedOrdinal ?? '1st',
+      selectedWeekday: editingSchedule?.recurrence?.selectedWeekday ?? 'Monday',
       selectedMonths: editingSchedule?.recurrence?.selectedMonths ?? [
         'January',
         'February',
@@ -121,24 +155,120 @@ export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: Crea
     }))
   }
 
+  const validateForm = (): { isValid: boolean; error?: string } => {
+    if (!formData.name.trim()) {
+      return { isValid: false, error: 'Schedule name is required' }
+    }
+    if (!formData.packageId) {
+      return { isValid: false, error: 'Package selection is required' }
+    }
+    if (!formData.agentId) {
+      return { isValid: false, error: 'Agent selection is required' }
+    }
+    if (!formData.timezone) {
+      return { isValid: false, error: 'Timezone selection is required' }
+    }
+    return { isValid: true }
+  }
+
+  const convertToApiDto = (): CreateScheduleDto => {
+    const { recurrence } = formData
+
+    // Convert form data to API DTO format
+    let cronExpression: string | undefined
+    let oneTimeExecution: string | undefined
+
+    // Generate cron expression or one-time execution date based on recurrence type
+    switch (recurrence.type) {
+      case RecurrenceType.Once:
+        if (recurrence.startDate && recurrence.startTime) {
+          const [hours, minutes] = recurrence.startTime.split(':')
+          const date = new Date(recurrence.startDate)
+          date.setHours(parseInt(hours), parseInt(minutes))
+          oneTimeExecution = date.toISOString()
+        }
+        break
+      case RecurrenceType.Daily:
+        cronExpression = `0 ${recurrence.dailyMinute} ${recurrence.dailyHour} * * *`
+        break
+      case RecurrenceType.Weekly:
+        if (recurrence.selectedDays && recurrence.selectedDays.length > 0) {
+          const dayMap: { [key: string]: string } = {
+            Sunday: '0',
+            Monday: '1',
+            Tuesday: '2',
+            Wednesday: '3',
+            Thursday: '4',
+            Friday: '5',
+            Saturday: '6',
+          }
+          const days = recurrence.selectedDays.map((day) => dayMap[day]).join(',')
+          cronExpression = `0 ${recurrence.weeklyMinute} ${recurrence.weeklyHour} * * ${days}`
+        }
+        break
+      case RecurrenceType.Monthly:
+        if (recurrence.monthlyOnType === 'day' && recurrence.selectedDay) {
+          cronExpression = `0 ${recurrence.monthlyMinute} ${recurrence.monthlyHour} ${recurrence.selectedDay} * *`
+        }
+        break
+      case RecurrenceType.Hourly:
+        cronExpression = `0 0 */${recurrence.value} * * *`
+        break
+      case RecurrenceType.Minutes:
+        cronExpression = `0 */${recurrence.value} * * * *`
+        break
+    }
+
+    return {
+      name: formData.name.trim(),
+      description: '', // Can be added to form later
+      isEnabled: true, // Default to enabled
+      recurrenceType: recurrence.type,
+      cronExpression,
+      oneTimeExecution,
+      timeZoneId: formData.timezone,
+      automationPackageId: formData.packageId,
+      botAgentId: formData.agentId,
+    }
+  }
+
   const handleSubmit = async () => {
-    setIsSubmitting(true)
-    try {
-      // TODO: Replace with actual API call
-      if (mode === 'edit') {
-        // await schedulesApi.update(editingSchedule.id, formData)
-        toast({ title: 'Success', description: 'Schedule updated successfully' })
-      } else {
-        // await schedulesApi.create(formData)
-        toast({ title: 'Success', description: 'Schedule created successfully' })
-      }
-      onClose(true) // ✅ Signal parent to refresh
-    } catch {
+    const validation = validateForm()
+    if (!validation.isValid) {
       toast({
-        title: 'Error',
-        description: `Failed to ${mode} schedule`,
+        title: 'Validation Error',
+        description: validation.error,
         variant: 'destructive',
       })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const apiDto = convertToApiDto()
+
+      if (mode === 'edit' && editingSchedule?.id) {
+        // ✅ API call in event handler
+        const updatedSchedule = await updateSchedule(editingSchedule.id, apiDto)
+        toast({
+          title: 'Success',
+          description: `Schedule "${updatedSchedule.name}" updated successfully`,
+        })
+        if (onSuccess) onSuccess({ id: updatedSchedule.id, name: updatedSchedule.name })
+      } else {
+        // ✅ API call in event handler
+        const newSchedule = await createSchedule(apiDto)
+        toast({
+          title: 'Success',
+          description: `Schedule "${newSchedule.name}" created successfully`,
+        })
+        if (onSuccess) onSuccess({ id: newSchedule.id, name: newSchedule.name })
+      }
+
+      onClose(true) // ✅ Signal parent to refresh
+    } catch (error) {
+      console.error(`${mode} schedule failed:`, error)
+      toast(createErrorToast(error))
     } finally {
       setIsSubmitting(false)
     }
@@ -159,10 +289,9 @@ export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: Crea
           <BasicInfoSection formData={formData} onUpdate={updateFormData} />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="trigger">Trigger</TabsTrigger>
               <TabsTrigger value="executionTarget">Execution Target</TabsTrigger>
-              <TabsTrigger value="parameters">Parameters</TabsTrigger>
             </TabsList>
 
             <TabsContent value="trigger">
@@ -170,11 +299,10 @@ export function CreateEditModal({ isOpen, onClose, mode, editingSchedule }: Crea
             </TabsContent>
 
             <TabsContent value="executionTarget">
-              <ExecutionTargetTab />
-            </TabsContent>
-
-            <TabsContent value="parameters">
-              <ParametersTab />
+              <ExecutionTargetTab
+                selectedAgentId={formData.agentId}
+                onAgentSelect={(agentId) => updateFormData({ agentId })}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -199,6 +327,31 @@ interface BasicInfoSectionProps {
 }
 
 function BasicInfoSection({ formData, onUpdate }: BasicInfoSectionProps) {
+  // ✅ SWR for package data fetching
+  const {
+    data: packages = [],
+    error,
+    isLoading,
+  } = useSWR(swrKeys.packages(), getAllAutomationPackages)
+
+  // ✅ Derive available versions for selected package
+  const availableVersions = useMemo(() => {
+    if (!formData.packageId) return [{ value: 'latest', label: 'Latest' }]
+
+    const selectedPackage = packages.find(
+      (pkg: AutomationPackageResponseDto) => pkg.id === formData.packageId,
+    )
+    if (!selectedPackage?.versions) return [{ value: 'latest', label: 'Latest' }]
+
+    return [
+      { value: 'latest', label: 'Latest' },
+      ...selectedPackage.versions.map((version: PackageVersionResponseDto) => ({
+        value: version.versionNumber,
+        label: `v${version.versionNumber}`,
+      })),
+    ]
+  }, [packages, formData.packageId])
+
   return (
     <>
       <div className="grid gap-2">
@@ -213,20 +366,60 @@ function BasicInfoSection({ formData, onUpdate }: BasicInfoSectionProps) {
         />
       </div>
 
-      <div className="grid gap-2">
-        <label htmlFor="workflow" className="text-sm font-medium">
-          Workflow<span className="text-red-500">*</span>
-        </label>
-        <Select value={formData.workflow} onValueChange={(value) => onUpdate({ workflow: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose workflow" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="workflow1">Workflow 1</SelectItem>
-            <SelectItem value="workflow2">Workflow 2</SelectItem>
-            <SelectItem value="workflow3">Workflow 3</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <label htmlFor="package" className="text-sm font-medium">
+            Package<span className="text-red-500">*</span>
+          </label>
+          {isLoading ? (
+            <div className="h-10 bg-muted rounded-md animate-pulse" />
+          ) : error ? (
+            <div className="text-sm text-destructive">Failed to load packages</div>
+          ) : (
+            <Select
+              value={formData.packageId}
+              onValueChange={(value) =>
+                onUpdate({
+                  packageId: value,
+                  packageVersion: 'latest', // Reset version when package changes
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose package" />
+              </SelectTrigger>
+              <SelectContent>
+                {packages.map((pkg: AutomationPackageResponseDto) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="grid gap-2">
+          <label htmlFor="packageVersion" className="text-sm font-medium">
+            Package Version<span className="text-red-500">*</span>
+          </label>
+          <Select
+            value={formData.packageVersion}
+            onValueChange={(value) => onUpdate({ packageVersion: value })}
+            disabled={!formData.packageId}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select version" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableVersions.map((version: { value: string; label: string }) => (
+                <SelectItem key={version.value} value={version.value}>
+                  {version.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid gap-2">
@@ -238,9 +431,12 @@ function BasicInfoSection({ formData, onUpdate }: BasicInfoSectionProps) {
             <SelectValue placeholder="Select time zone" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="asia-saigon">(UTC+7:00) Asia/Saigon</SelectItem>
-            <SelectItem value="america-new_york">(UTC-5:00) America/New_York</SelectItem>
-            <SelectItem value="europe-london">(UTC+0:00) Europe/London</SelectItem>
+            <SelectItem value="Asia/Ho_Chi_Minh">(UTC+7:00) Asia/Ho Chi Minh</SelectItem>
+            <SelectItem value="America/New_York">(UTC-5:00) America/New York</SelectItem>
+            <SelectItem value="Europe/London">(UTC+0:00) Europe/London</SelectItem>
+            <SelectItem value="Asia/Tokyo">(UTC+9:00) Asia/Tokyo</SelectItem>
+            <SelectItem value="Australia/Sydney">(UTC+10:00) Australia/Sydney</SelectItem>
+            <SelectItem value="UTC">(UTC+0:00) UTC</SelectItem>
           </SelectContent>
         </Select>
       </div>

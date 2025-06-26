@@ -20,11 +20,11 @@ interface AssetDetailProps {
 }
 
 // Helper component for displaying asset value with secret toggle
-const AssetValueDisplay = ({ 
-  asset, 
-  showSecret, 
-  onToggleSecret 
-}: { 
+const AssetValueDisplay = ({
+  asset,
+  showSecret,
+  onToggleSecret,
+}: {
   asset: AssetDetailDto
   showSecret: boolean
   onToggleSecret: () => void
@@ -32,7 +32,7 @@ const AssetValueDisplay = ({
   if (asset.type === 0) {
     return <div className="text-base font-semibold border-b pb-1">{asset.value ?? '-'}</div>
   }
-  
+
   return (
     <div className="flex items-center gap-2 border-b pb-1">
       <span className="text-base font-semibold">
@@ -87,16 +87,18 @@ export default function AssetDetail({ id }: AssetDetailProps) {
   const { toast } = useToast()
 
   // ✅ SWR for asset details - following guideline #8: use framework-level loaders
-  const { data: asset, error: assetError, isLoading: assetLoading } = useSWR(
-    id ? swrKeys.assetById(id) : null,
-    () => getAssetDetail(id)
-  )
+  const {
+    data: asset,
+    error: assetError,
+    isLoading: assetLoading,
+  } = useSWR(id ? swrKeys.assetById(id) : null, () => getAssetDetail(id))
 
   // ✅ SWR for asset agents
-  const { data: agents, error: agentsError, isLoading: agentsLoading } = useSWR(
-    id ? swrKeys.assetAgents(id) : null,
-    () => getAssetAgents(id)
-  )
+  const {
+    data: agents,
+    error: agentsError,
+    isLoading: agentsLoading,
+  } = useSWR(id ? swrKeys.assetAgents(id) : null, () => getAssetAgents(id))
 
   // UI state
   const [showSecret, setShowSecret] = useState(false)
@@ -158,14 +160,15 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                   <FileText className="w-4 h-4" /> Description
                 </div>
                 <div className="text-base font-semibold border-b pb-1">{asset.description}</div>
-              </div>              <div>
+              </div>{' '}
+              <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Value
                 </div>
-                <AssetValueDisplay 
-                  asset={asset} 
-                  showSecret={showSecret} 
-                  onToggleSecret={() => setShowSecret(v => !v)} 
+                <AssetValueDisplay
+                  asset={asset}
+                  showSecret={showSecret}
+                  onToggleSecret={() => setShowSecret((v) => !v)}
                 />
               </div>
             </div>
@@ -187,7 +190,9 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             </div>
           </div>
           {/* Agent Table */}
-          <div className="mt-8">            <div className="flex items-center gap-2 mb-2">
+          <div className="mt-8">
+            {' '}
+            <div className="flex items-center gap-2 mb-2">
               <User className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold">Authorized Agents</h3>
             </div>

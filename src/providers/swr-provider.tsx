@@ -12,9 +12,5 @@ interface SWRProviderProps {
  * This needs to be a client component because SWR requires browser APIs
  */
 export function SWRProvider({ children }: SWRProviderProps) {
-  return (
-    <SWRConfig value={swrConfig}>
-      {children}
-    </SWRConfig>
-  )
+  return <SWRConfig value={swrConfig}>{children}</SWRConfig>
 }

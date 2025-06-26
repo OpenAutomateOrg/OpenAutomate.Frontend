@@ -3,7 +3,13 @@
 import { X, Search, Filter } from 'lucide-react'
 import React, { useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -65,7 +71,10 @@ export function UsersDataTableToolbar({
       firstNameInputRef.current
     ) {
       firstNameInputRef.current.focus()
-      firstNameInputRef.current.setSelectionRange(firstNameCursorRef.current, firstNameCursorRef.current)
+      firstNameInputRef.current.setSelectionRange(
+        firstNameCursorRef.current,
+        firstNameCursorRef.current,
+      )
     }
     if (
       document.activeElement !== lastNameInputRef.current &&
@@ -73,7 +82,10 @@ export function UsersDataTableToolbar({
       lastNameInputRef.current
     ) {
       lastNameInputRef.current.focus()
-      lastNameInputRef.current.setSelectionRange(lastNameCursorRef.current, lastNameCursorRef.current)
+      lastNameInputRef.current.setSelectionRange(
+        lastNameCursorRef.current,
+        lastNameCursorRef.current,
+      )
     }
   }, [loading])
 
@@ -92,7 +104,7 @@ export function UsersDataTableToolbar({
           }}
           className="pl-8 pr-8"
           disabled={loading}
-          onFocus={e => {
+          onFocus={(e) => {
             emailCursorRef.current = e.target.selectionStart
           }}
         />
@@ -116,7 +128,7 @@ export function UsersDataTableToolbar({
           }}
           className="pl-8 pr-8"
           disabled={loading}
-          onFocus={e => {
+          onFocus={(e) => {
             firstNameCursorRef.current = e.target.selectionStart
           }}
         />
@@ -140,7 +152,7 @@ export function UsersDataTableToolbar({
           }}
           className="pl-8 pr-8"
           disabled={loading}
-          onFocus={e => {
+          onFocus={(e) => {
             lastNameCursorRef.current = e.target.selectionStart
           }}
         />
@@ -156,30 +168,29 @@ export function UsersDataTableToolbar({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Select
-                value={searchRole}
-                onValueChange={setSearchRole}
-                disabled={loading}
-              >
+              <Select value={searchRole} onValueChange={setSearchRole} disabled={loading}>
                 <SelectTrigger className="pl-8 max-w-[180px] truncate">
                   <div className="flex items-center min-w-0">
                     <Filter className="mr-2 h-4 w-4 shrink-0" />
-                    <span className="truncate" title={searchRole !== 'ALL' ? searchRole : 'All Roles'}>
+                    <span
+                      className="truncate"
+                      title={searchRole !== 'ALL' ? searchRole : 'All Roles'}
+                    >
                       <SelectValue placeholder="All Roles" />
                     </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Roles</SelectItem>
-                  {roleOptions.map(role => (
-                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  {roleOptions.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </TooltipTrigger>
-            <TooltipContent>
-              {searchRole !== 'ALL' ? searchRole : 'All Roles'}
-            </TooltipContent>
+            <TooltipContent>{searchRole !== 'ALL' ? searchRole : 'All Roles'}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

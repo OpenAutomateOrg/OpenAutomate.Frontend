@@ -4,9 +4,11 @@ import type {
   LoginRequest,
   RegisterRequest,
   User,
+  UserProfile,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
+  ChangeUserNameRequest,
 } from '@/types/auth'
 
 // API endpoints for authentication
@@ -14,13 +16,15 @@ const endpoints = {
   login: 'api/authen/login',
   register: 'api/authen/register',
   user: 'api/authen/user',
+  profile: 'api/account/profile',
   refreshToken: 'api/authen/refresh-token',
   revokeToken: 'api/authen/revoke-token',
   forgotPassword: 'api/authen/forgot-password',
   resetPassword: 'api/authen/reset-password',
-  changePassword: 'api/users/change-password',
+  changeUserName: 'api/user/user',
+  changePassword: 'api/user/change-password',
   resendVerification: 'api/email/resend',
-  resendVerificationByEmail: 'api/email/resend-by-email',
+  resendVerificationByEmail: 'api/email/resend-public',
   verifyEmail: 'api/email/verify',
 }
 
@@ -131,6 +135,15 @@ export const authApi = {
   },
 
   /**
+   * Get the complete user profile with permissions across all organization units
+   * @returns Complete user profile with permissions
+   */
+  getUserProfile: async (): Promise<UserProfile> => {
+    const response = await api.get<UserProfile>(endpoints.profile)
+    return response
+  },
+
+  /**
    * Refresh the access token using the HTTP-only cookie refresh token
    * @returns New authentication tokens and user data
    */
@@ -225,6 +238,14 @@ export const authApi = {
   },
 
   /**
+   * Change the current user's name
+   * @param data First Name and new Last Name
+   */
+  changeUserName: async (id: string, data: ChangeUserNameRequest): Promise<void> => {
+    await api.put(endpoints.changeUserName, data)
+  },
+
+  /**
    * Change the current user's password
    * @param data Current and new password
    */
@@ -239,7 +260,7 @@ export const authApi = {
   resendVerificationEmail: async (email: string): Promise<void> => {
     await api.post(endpoints.resendVerification, { email })
   },
-  
+
   /**
    * Resend verification email by email address (does not require authentication)
    * @param email User's email address

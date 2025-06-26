@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ChevronDownIcon } from 'lucide-react'
+import { RecurrenceType } from '@/lib/api/schedules'
 import type { ScheduleFormData } from '../create-edit-modal'
 
 interface TriggerTabProps {
@@ -51,25 +52,23 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         </label>
         <Select
           value={recurrence.type}
-          onValueChange={(value: ScheduleFormData['recurrence']['type']) =>
-            onUpdate({ type: value })
-          }
+          onValueChange={(value: RecurrenceType) => onUpdate({ type: value })}
         >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Once">Once</SelectItem>
-            <SelectItem value="Minutes">Minutes</SelectItem>
-            <SelectItem value="Hourly">Hourly</SelectItem>
-            <SelectItem value="Daily">Daily</SelectItem>
-            <SelectItem value="Weekly">Weekly</SelectItem>
-            <SelectItem value="Monthly">Monthly</SelectItem>
+            <SelectItem value={RecurrenceType.Once}>Once</SelectItem>
+            <SelectItem value={RecurrenceType.Minutes}>Minutes</SelectItem>
+            <SelectItem value={RecurrenceType.Hourly}>Hourly</SelectItem>
+            <SelectItem value={RecurrenceType.Daily}>Daily</SelectItem>
+            <SelectItem value={RecurrenceType.Weekly}>Weekly</SelectItem>
+            <SelectItem value={RecurrenceType.Monthly}>Monthly</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {recurrence.type === 'Once' && (
+      {recurrence.type === RecurrenceType.Once && (
         <OnceConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -78,7 +77,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {recurrence.type === 'Daily' && (
+      {recurrence.type === RecurrenceType.Daily && (
         <DailyConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -89,7 +88,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {recurrence.type === 'Weekly' && (
+      {recurrence.type === RecurrenceType.Weekly && (
         <WeeklyConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -101,7 +100,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {recurrence.type === 'Monthly' && (
+      {recurrence.type === RecurrenceType.Monthly && (
         <MonthlyConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -113,7 +112,8 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {(recurrence.type === 'Minutes' || recurrence.type === 'Hourly') && (
+      {(recurrence.type === RecurrenceType.Minutes ||
+        recurrence.type === RecurrenceType.Hourly) && (
         <RecurringConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -367,7 +367,9 @@ function RecurringConfiguration({
             <SelectItem value="30">30</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm">{recurrence.type === 'Hourly' ? 'Hours' : 'minute(s)'}</span>
+        <span className="text-sm">
+          {recurrence.type === RecurrenceType.Hourly ? 'Hours' : 'minute(s)'}
+        </span>
       </div>
     </div>
   )

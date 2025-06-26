@@ -15,11 +15,11 @@ import { DataTableToolbar as HistoricalToolbar } from './historical/data-table-t
 import { DataTableToolbar as ProgressToolbar } from './inProgress/data-table-toolbar'
 import { DataTableToolbar as ScheduledToolbar } from './scheduled/data-table-toolbar'
 import { useToast } from '@/components/ui/use-toast'
-import { 
-  getExecutionsWithOData, 
+import {
+  getExecutionsWithOData,
   getAllExecutions,
-  ExecutionResponseDto, 
-  ODataQueryOptions 
+  ExecutionResponseDto,
+  ODataQueryOptions,
 } from '@/lib/api/executions'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
@@ -133,9 +133,11 @@ export default function ExecutionsInterface() {
 
     // Always enforce a valid page size, defaulting to 10
     const pageSize = size ? Math.max(1, parseInt(size)) : 10
-    
-    console.log(`Initializing pagination from URL: page=${page}, size=${size}, pageSize=${pageSize}`)
-    
+
+    console.log(
+      `Initializing pagination from URL: page=${page}, size=${size}, pageSize=${pageSize}`,
+    )
+
     return {
       pageIndex: page ? Math.max(0, parseInt(page) - 1) : 0,
       pageSize: pageSize,
@@ -165,7 +167,9 @@ export default function ExecutionsInterface() {
 
     // Note: SignalR errors should be handled in the useExecutionStatus hook
     // or through proper error boundaries, not by suppressing console.error
-    console.debug('[Executions] Component mounted - SignalR error handling delegated to connection hooks')
+    console.debug(
+      '[Executions] Component mounted - SignalR error handling delegated to connection hooks',
+    )
 
     // No cleanup needed since we're not modifying global state
   }, [])
@@ -217,23 +221,21 @@ export default function ExecutionsInterface() {
     }
 
     // Add tab-specific filtering
-    let tabFilter = '';
+    let tabFilter = ''
     switch (tab) {
       case 'inprogress':
         tabFilter = "status eq 'Running' or status eq 'Pending'"
-        break;
+        break
       case 'sheduled':
         tabFilter = "status eq 'Scheduled'"
-        break;
+        break
       case 'historical':
         tabFilter = "status eq 'Completed' or status eq 'Failed' or status eq 'Cancelled'"
-        break;
+        break
     }
-    
+
     if (tabFilter) {
-      params.$filter = params.$filter 
-        ? `(${params.$filter}) and (${tabFilter})` 
-        : tabFilter
+      params.$filter = params.$filter ? `(${params.$filter}) and (${tabFilter})` : tabFilter
     }
 
     return params
@@ -241,109 +243,125 @@ export default function ExecutionsInterface() {
 
   // SWR for executions data with OData query
   const queryParams = getODataQueryParams()
-  const swrKey = useMemo(() => swrKeys.executionsWithOData(queryParams as Record<string, unknown>), 
-    [queryParams]);
-
-  const { data: executionsResponse, error: executionsError, isLoading, mutate: mutateExecutions } = useSWR(
-    swrKey,
-    () => getExecutionsWithOData(queryParams),
-    {
-      dedupingInterval: 0, // Disable deduping to ensure fresh data on pagination change
-      revalidateOnFocus: false, // Prevent auto revalidation on window focus
-      revalidateIfStale: false, // Only revalidate when explicitly called
-      keepPreviousData: false, // Don't keep previous data when fetching new data
-    }
+  const swrKey = useMemo(
+    () => swrKeys.executionsWithOData(queryParams as Record<string, unknown>),
+    [queryParams],
   )
+
+  const {
+    data: executionsResponse,
+    error: executionsError,
+    isLoading,
+    mutate: mutateExecutions,
+  } = useSWR(swrKey, () => getExecutionsWithOData(queryParams), {
+    dedupingInterval: 0, // Disable deduping to ensure fresh data on pagination change
+    revalidateOnFocus: false, // Prevent auto revalidation on window focus
+    revalidateIfStale: false, // Only revalidate when explicitly called
+    keepPreviousData: false, // Don't keep previous data when fetching new data
+  })
 
   // Fallback to regular executions API if OData fails or returns empty data
   const { data: fallbackExecutions } = useSWR(
     executionsResponse?.value?.length === 0 || executionsError ? swrKeys.executions() : null,
-    getAllExecutions
+    getAllExecutions,
   )
-  
+
   // Combined loading state
   const isDataLoading = isLoading || (executionsError && !fallbackExecutions)
 
   // Define transformation function before using it in useMemo
-  const transformExecutionToRow = useCallback((execution: ExecutionResponseDto): ExecutionsRow => {
-    // Check for real-time status update for this execution
-    const realtimeUpdate = executionStatuses[execution.id]
-    const currentStatus = realtimeUpdate?.status || execution.status
+  const transformExecutionToRow = useCallback(
+    (execution: ExecutionResponseDto): ExecutionsRow => {
+      // Check for real-time status update for this execution
+      const realtimeUpdate = executionStatuses[execution.id]
+      const currentStatus = realtimeUpdate?.status || execution.status
 
-    // Helper function to safely format dates
-    const formatDate = (dateString: string | undefined | null): string => {
-      if (!dateString) return ''
-      try {
-        const date = new Date(dateString)
-        if (isNaN(date.getTime())) {
+      // Helper function to safely format dates
+      const formatDate = (dateString: string | undefined | null): string => {
+        if (!dateString) return ''
+        try {
+          const date = new Date(dateString)
+          if (isNaN(date.getTime())) {
+            return ''
+          }
+          return new Intl.DateTimeFormat('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }).format(date)
+        } catch (error) {
+          console.error('Date formatting error:', error, 'for date:', dateString)
           return ''
         }
-        return new Intl.DateTimeFormat('en-US', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }).format(date)
-      } catch (error) {
-        console.error('Date formatting error:', error, 'for date:', dateString)
-        return ''
       }
-    }
 
-    const formattedStartTime = formatDate(execution.startTime)
-    const formattedEndTime = formatDate(execution.endTime)
+      const formattedStartTime = formatDate(execution.startTime)
+      const formattedEndTime = formatDate(execution.endTime)
 
-    // Debug logging for date transformation
-    console.log('Execution transformation:', {
-      id: execution.id,
-      startTime: execution.startTime,
-      endTime: execution.endTime,
-      formattedStartTime,
-      formattedEndTime
-    })
+      // Debug logging for date transformation
+      console.log('Execution transformation:', {
+        id: execution.id,
+        startTime: execution.startTime,
+        endTime: execution.endTime,
+        formattedStartTime,
+        formattedEndTime,
+      })
 
-    return {
-      id: execution.id,
-      Version: execution.packageVersion || '',
-      Agent: execution.botAgentName || '',
-      State: currentStatus,
-      'Start Time': formattedStartTime,
-      'End Time': formattedEndTime,
-      Source: 'Manual', // Assuming manual trigger for now
-      Command: 'execute',
-      Schedules: 'Once', // For immediate executions
-      'Task Id': execution.id,
-      'Created Date': execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
-      'Created By': 'Current User', // TODO: Get from auth context when available
+      return {
+        id: execution.id,
+        Version: execution.packageVersion || '',
+        Agent: execution.botAgentName || '',
+        State: currentStatus,
+        'Start Time': formattedStartTime,
+        'End Time': formattedEndTime,
+        Source: 'Manual', // Assuming manual trigger for now
+        Command: 'execute',
+        Schedules: 'Once', // For immediate executions
+        'Task Id': execution.id,
+        'Created Date': execution.startTime
+          ? new Date(execution.startTime).toLocaleDateString()
+          : '',
+        'Created By': 'Current User', // TODO: Get from auth context when available
 
-      // Legacy fields for compatibility
-      name: execution.packageName || '',
-      type: 'execution',
-      value: execution.packageVersion || '',
-      createdBy: 'Current User',
-      label: execution.botAgentName || '',
-      status: currentStatus,
-      agent: execution.botAgentName || '',
-      state: currentStatus,
-      startTime: formattedStartTime,
-      endTime: formattedEndTime,
-      source: 'Manual',
-      command: 'execute',
-      schedules: 'Once',
-      taskId: execution.id,
-      createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
-      packageName: execution.packageName || '',
-      hasLogs: execution.hasLogs || false,
-    }
-  }, [executionStatuses])
+        // Legacy fields for compatibility
+        name: execution.packageName || '',
+        type: 'execution',
+        value: execution.packageVersion || '',
+        createdBy: 'Current User',
+        label: execution.botAgentName || '',
+        status: currentStatus,
+        agent: execution.botAgentName || '',
+        state: currentStatus,
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
+        source: 'Manual',
+        command: 'execute',
+        schedules: 'Once',
+        taskId: execution.id,
+        createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
+        packageName: execution.packageName || '',
+        hasLogs: execution.hasLogs || false,
+      }
+    },
+    [executionStatuses],
+  )
 
   // ✅ Create columns with proper handlers
 
-  const ProgressColumns = useMemo(() => createInProgressColumns({
-    onDeleted: () => mutateExecutions()
-  }), [mutateExecutions])
+  const ProgressColumns = useMemo(
+    () =>
+      createInProgressColumns({
+        onDeleted: () => mutateExecutions(),
+      }),
+    [mutateExecutions],
+  )
 
-  const HistoricalColumns = useMemo(() => createHistoricalColumns({
-    onDeleted: () => mutateExecutions()
-  }), [mutateExecutions])
+  const HistoricalColumns = useMemo(
+    () =>
+      createHistoricalColumns({
+        onDeleted: () => mutateExecutions(),
+      }),
+    [mutateExecutions],
+  )
 
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops
@@ -351,17 +369,22 @@ export default function ExecutionsInterface() {
   // Transform data during render
   const executions = useMemo(() => {
     // Use fallback data if OData response is empty
-    if (fallbackExecutions && (!executionsResponse?.value || executionsResponse.value.length === 0)) {
-      console.log('Using fallback data with pagination:', pagination);
-      
+    if (
+      fallbackExecutions &&
+      (!executionsResponse?.value || executionsResponse.value.length === 0)
+    ) {
+      console.log('Using fallback data with pagination:', pagination)
+
       // Transform fallback data
-      const transformedData = fallbackExecutions.map(execution => transformExecutionToRow(execution))
-      
+      const transformedData = fallbackExecutions.map((execution) =>
+        transformExecutionToRow(execution),
+      )
+
       // Apply manual filtering for fallback data
       let filteredData = transformedData
-      
+
       // 1. Apply tab filtering
-      filteredData = filteredData.filter(row => {
+      filteredData = filteredData.filter((row) => {
         if (tab === 'inprogress') {
           return row.state === 'Running' || row.state === 'Pending'
         } else if (tab === 'sheduled') {
@@ -371,63 +394,78 @@ export default function ExecutionsInterface() {
         }
         return true
       })
-      
+
       // 2. Apply search filtering if search value exists - search by Agent only
       if (searchValue) {
-        filteredData = filteredData.filter(row => {
-          const agentMatch = row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase());
-          return agentMatch;
+        filteredData = filteredData.filter((row) => {
+          const agentMatch =
+            row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase())
+          return agentMatch
         })
       }
-      
+
       // 3. Apply state filter if exists
-      const stateFilter = columnFilters.find(filter => filter.id === 'state')?.value as string
+      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
       if (stateFilter) {
-        filteredData = filteredData.filter(row => row.state === stateFilter)
+        filteredData = filteredData.filter((row) => row.state === stateFilter)
       }
-      
+
       // Store filtered data length for later use in useEffect
-      const filteredLength = filteredData.length;
-      
+      const filteredLength = filteredData.length
+
       // 4. Apply pagination manually for fallback data
       const start = pagination.pageIndex * pagination.pageSize
       const end = start + pagination.pageSize
-      
-      console.log(`Slicing fallback data from ${start} to ${end} out of ${filteredData.length} items`);
-      
+
+      console.log(
+        `Slicing fallback data from ${start} to ${end} out of ${filteredData.length} items`,
+      )
+
       const paginatedData = filteredData.slice(start, end)
-      console.log(`Returning ${paginatedData.length} items from fallback data`);
-      
+      console.log(`Returning ${paginatedData.length} items from fallback data`)
+
       // Set totalCount outside of useMemo to avoid circular dependency
       if (totalCount !== filteredLength) {
         // Queue an update for the next render cycle
         setTimeout(() => {
-          setTotalCount(filteredLength);
-          totalCountRef.current = filteredLength;
-        }, 0);
+          setTotalCount(filteredLength)
+          totalCountRef.current = filteredLength
+        }, 0)
       }
-      
+
       return paginatedData
     }
-    
+
     // Otherwise use OData response
     if (!executionsResponse?.value) {
-      console.log('No data available from OData or fallback');
+      console.log('No data available from OData or fallback')
       return []
     }
-    
-    console.log(`Returning ${executionsResponse.value.length} items from OData response`);
-    return executionsResponse.value.map(execution => transformExecutionToRow(execution))
-  }, [executionsResponse, fallbackExecutions, transformExecutionToRow, tab, searchValue, columnFilters, pagination, totalCount]);
+
+    console.log(`Returning ${executionsResponse.value.length} items from OData response`)
+    return executionsResponse.value.map((execution) => transformExecutionToRow(execution))
+  }, [
+    executionsResponse,
+    fallbackExecutions,
+    transformExecutionToRow,
+    tab,
+    searchValue,
+    columnFilters,
+    pagination,
+    totalCount,
+  ])
 
   // Update totalCount from filteredData in a separate useEffect
   useEffect(() => {
-    if (fallbackExecutions && (!executionsResponse?.value || executionsResponse.value.length === 0)) {
+    if (
+      fallbackExecutions &&
+      (!executionsResponse?.value || executionsResponse.value.length === 0)
+    ) {
       // Calculate filtered length using same logic as in useMemo
-      let filteredData = fallbackExecutions.map(execution => transformExecutionToRow(execution));
-      
+      let filteredData = fallbackExecutions.map((execution) => transformExecutionToRow(execution))
+
       // Apply tab filtering
-      filteredData = filteredData.filter(row => {
+      filteredData = filteredData.filter((row) => {
         if (tab === 'inprogress') {
           return row.state === 'Running' || row.state === 'Pending'
         } else if (tab === 'sheduled') {
@@ -436,33 +474,42 @@ export default function ExecutionsInterface() {
           return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
         }
         return true
-      });
-      
+      })
+
       // Apply search filtering
       if (searchValue) {
-        filteredData = filteredData.filter(row => {
-          const agentMatch = row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase());
-          return agentMatch;
-        });
+        filteredData = filteredData.filter((row) => {
+          const agentMatch =
+            row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase())
+          return agentMatch
+        })
       }
-      
+
       // Apply state filter
-      const stateFilter = columnFilters.find(filter => filter.id === 'state')?.value as string;
+      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
       if (stateFilter) {
-        filteredData = filteredData.filter(row => row.state === stateFilter);
+        filteredData = filteredData.filter((row) => row.state === stateFilter)
       }
-      
+
       // Update total count if different
       if (totalCount !== filteredData.length) {
-        console.log('Updating total count from fallback data:', filteredData.length);
-        setTotalCount(filteredData.length);
-        totalCountRef.current = filteredData.length;
+        console.log('Updating total count from fallback data:', filteredData.length)
+        setTotalCount(filteredData.length)
+        totalCountRef.current = filteredData.length
       }
     }
-  }, [fallbackExecutions, executionsResponse, transformExecutionToRow, tab, searchValue, columnFilters, totalCount]);
+  }, [
+    fallbackExecutions,
+    executionsResponse,
+    transformExecutionToRow,
+    tab,
+    searchValue,
+    columnFilters,
+    totalCount,
+  ])
 
   // Extract actual data array from the executions object
-  const executionsData = useMemo(() => executions, [executions]);
+  const executionsData = useMemo(() => executions, [executions])
 
   // ✅ Update total count when data changes (following guideline #1: derive data during render)
   // Client-only: Requires state updates for pagination
@@ -504,13 +551,17 @@ export default function ExecutionsInterface() {
       console.log('Using fallback data count:', fallbackExecutions.length)
 
       // Apply tab filtering to get accurate count
-      const filteredCount = fallbackExecutions.filter(execution => {
+      const filteredCount = fallbackExecutions.filter((execution) => {
         if (tab === 'inprogress') {
           return execution.status === 'Running' || execution.status === 'Pending'
         } else if (tab === 'sheduled') {
           return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
-          return execution.status === 'Completed' || execution.status === 'Failed' || execution.status === 'Cancelled'
+          return (
+            execution.status === 'Completed' ||
+            execution.status === 'Failed' ||
+            execution.status === 'Cancelled'
+          )
         }
         return true
       }).length
@@ -526,7 +577,9 @@ export default function ExecutionsInterface() {
   useEffect(() => {
     if (executionsResponse?.value) {
       const isEmptyPageBeyondFirst =
-        executionsResponse.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+        executionsResponse.value.length === 0 &&
+        totalCountRef.current > 0 &&
+        pagination.pageIndex > 0
 
       if (isEmptyPageBeyondFirst) {
         const calculatedPageCount = Math.max(
@@ -540,7 +593,14 @@ export default function ExecutionsInterface() {
         }
       }
     }
-  }, [executionsResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+  }, [
+    executionsResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
 
   // Initialize URL with default params if needed
   useEffect(() => {
@@ -563,17 +623,17 @@ export default function ExecutionsInterface() {
   useEffect(() => {
     const page = searchParams.get('page')
     const size = searchParams.get('size')
-    
+
     if (page && size) {
       const pageIndex = Math.max(0, parseInt(page) - 1)
       const pageSize = parseInt(size)
-      
+
       // Only update if different to avoid infinite loops
       if (pageIndex !== pagination.pageIndex || pageSize !== pagination.pageSize) {
         console.log(`URL changed: page=${page}, size=${size}. Updating pagination state.`)
         setPagination({
           pageIndex,
-          pageSize
+          pageSize,
         })
       }
     }
@@ -658,13 +718,13 @@ export default function ExecutionsInterface() {
       console.log('Pagination change triggered')
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       console.log('Current pagination:', pagination, 'New pagination:', newPagination)
-      
+
       setPagination(newPagination)
       updateUrl(pathname, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
-      
+
       console.log('Forcing data reload for pagination change')
       mutateExecutions()
     },
@@ -701,7 +761,7 @@ export default function ExecutionsInterface() {
             search: value || null,
             page: '1', // Reset to first page when filter changes
           })
-          
+
           // Force reload data when search changes
           mutateExecutions()
         }
@@ -709,7 +769,7 @@ export default function ExecutionsInterface() {
         setIsPending(false)
       }, 500)
     },
-    [table, updateUrl, pathname, tab, mutateExecutions]
+    [table, updateUrl, pathname, tab, mutateExecutions],
   )
 
   // Handle status filter change
@@ -727,7 +787,7 @@ export default function ExecutionsInterface() {
         })
       }
     },
-    [table, updateUrl, pathname]
+    [table, updateUrl, pathname],
   )
 
   // Clean up timeouts on unmount
@@ -741,7 +801,7 @@ export default function ExecutionsInterface() {
   useEffect(() => {
     if (executionsError) {
       console.error('Failed to load executions:', executionsError)
-      
+
       // Only show toast if fallback also failed
       if (!fallbackExecutions) {
         toast({
@@ -757,65 +817,68 @@ export default function ExecutionsInterface() {
   // Client-only: Real-time data synchronization
   useEffect(() => {
     const terminalStatuses = ['Completed', 'Failed', 'Cancelled']
-    const hasTerminalUpdate = Object.values(executionStatuses).some(status => 
-      terminalStatuses.includes(status.status)
+    const hasTerminalUpdate = Object.values(executionStatuses).some((status) =>
+      terminalStatuses.includes(status.status),
     )
-    
+
     if (hasTerminalUpdate) {
       // Debounce the refresh to avoid excessive API calls
       const refreshTimeout = setTimeout(() => {
         mutateExecutions()
       }, 1000)
-      
+
       return () => clearTimeout(refreshTimeout)
     }
   }, [executionStatuses, mutateExecutions])
 
-  const handleCreateSuccess = useCallback((newExecution?: { id: string, packageName: string, botAgentName: string }) => {
-    // ✅ Following React guideline: API calls in event handlers, not effects
+  const handleCreateSuccess = useCallback(
+    (newExecution?: { id: string; packageName: string; botAgentName: string }) => {
+      // ✅ Following React guideline: API calls in event handlers, not effects
 
-    if (newExecution) {
-      // ✅ Optimistic update: immediately add the new execution to the UI
-      // The real-time SignalR system will provide updates as the execution progresses
+      if (newExecution) {
+        // ✅ Optimistic update: immediately add the new execution to the UI
+        // The real-time SignalR system will provide updates as the execution progresses
 
-      // ✅ Update SWR cache optimistically using mutate with data
-      mutateExecutions((currentData) => {
-        if (!currentData) return currentData
+        // ✅ Update SWR cache optimistically using mutate with data
+        mutateExecutions((currentData) => {
+          if (!currentData) return currentData
 
-        // For OData response structure
-        if ('value' in currentData && Array.isArray(currentData.value)) {
-          const newExecutionDto: ExecutionResponseDto = {
-            id: newExecution.id,
-            packageName: newExecution.packageName,
-            botAgentName: newExecution.botAgentName,
-            status: 'Pending',
-            startTime: new Date().toISOString(),
-            endTime: undefined,
-            packageVersion: undefined,
-            errorMessage: undefined,
-            logOutput: undefined,
-            botAgentId: '',
-            packageId: ''
+          // For OData response structure
+          if ('value' in currentData && Array.isArray(currentData.value)) {
+            const newExecutionDto: ExecutionResponseDto = {
+              id: newExecution.id,
+              packageName: newExecution.packageName,
+              botAgentName: newExecution.botAgentName,
+              status: 'Pending',
+              startTime: new Date().toISOString(),
+              endTime: undefined,
+              packageVersion: undefined,
+              errorMessage: undefined,
+              logOutput: undefined,
+              botAgentId: '',
+              packageId: '',
+            }
+
+            return {
+              ...currentData,
+              value: [newExecutionDto, ...currentData.value],
+              '@odata.count': (currentData['@odata.count'] || 0) + 1,
+            }
           }
 
-          return {
-            ...currentData,
-            value: [newExecutionDto, ...currentData.value],
-            '@odata.count': (currentData['@odata.count'] || 0) + 1
-          }
-        }
+          return currentData
+        }, false) // false = don't revalidate immediately
+      }
 
-        return currentData
-      }, false) // false = don't revalidate immediately
-    }
-
-    // ✅ Schedule debounced refresh to ensure we get the latest data from server
-    // This handles cases where optimistic update might be incomplete
-    // Note: We don't return a cleanup function from this callback - that's only for useEffect
-    setTimeout(() => {
-      mutateExecutions()
-    }, 2000) // 2 second delay to allow server processing
-   }, [mutateExecutions])
+      // ✅ Schedule debounced refresh to ensure we get the latest data from server
+      // This handles cases where optimistic update might be incomplete
+      // Note: We don't return a cleanup function from this callback - that's only for useEffect
+      setTimeout(() => {
+        mutateExecutions()
+      }, 2000) // 2 second delay to allow server processing
+    },
+    [mutateExecutions],
+  )
 
   const handleCreateClick = () => {
     setIsCreateModalOpen(true)
@@ -832,7 +895,7 @@ export default function ExecutionsInterface() {
     // Reset pagination to first page when tab changes
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
     updateUrl(pathname, { page: '1' })
-    
+
     // Force reload data immediately when tab changes
     mutateExecutions()
   }
@@ -882,10 +945,7 @@ export default function ExecutionsInterface() {
             )}
             {/* Only show Create Execution button for In Progress tab */}
             {tab === 'inprogress' && (
-              <Button
-                onClick={handleCreateClick}
-                className="flex items-center justify-center"
-              >
+              <Button onClick={handleCreateClick} className="flex items-center justify-center">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create Execution
               </Button>
@@ -895,7 +955,9 @@ export default function ExecutionsInterface() {
 
         {executionsError && !fallbackExecutions && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">Failed to load executions. Please try again.</p>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load executions. Please try again.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => mutateExecutions()}>
               Retry
             </Button>
@@ -984,16 +1046,16 @@ export default function ExecutionsInterface() {
           isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             console.log(`Page change requested to page ${page}`)
-            
+
             // Update pagination state
-            setPagination(prev => ({
+            setPagination((prev) => ({
               ...prev,
-              pageIndex: page - 1
+              pageIndex: page - 1,
             }))
-            
+
             // Update URL
             updateUrl(pathname, { page: page.toString() })
-            
+
             // Force immediate data reload with new pagination
             console.log('Reloading data after page change')
             setTimeout(() => {
@@ -1028,7 +1090,7 @@ export default function ExecutionsInterface() {
           </div>
         )}
       </div>
-      
+
       {/* Create Execution Modal */}
       <CreateExecutionModal
         isOpen={isCreateModalOpen}
@@ -1037,4 +1099,4 @@ export default function ExecutionsInterface() {
       />
     </>
   )
-} 
+}

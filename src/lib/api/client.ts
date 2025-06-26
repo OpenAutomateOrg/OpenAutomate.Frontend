@@ -75,7 +75,7 @@ const notifyTokenExpired = (): void => {
 const handleNetworkError = (error: unknown): never => {
   // If it's already an ApiError (from our code), just rethrow it
   if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
-    throw error;
+    throw error
   }
 
   if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
@@ -209,7 +209,9 @@ const getFullUrl = (endpoint: string): string => {
 /**
  * Prepare request body and headers for different data types
  */
-const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: Record<string, string> } => {
+const prepareRequestBody = <D>(
+  data: D,
+): { body: BodyInit | undefined; headers: Record<string, string> } => {
   if (!data) {
     return { body: undefined, headers: {} }
   }
@@ -218,7 +220,7 @@ const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: 
   if (data instanceof FormData) {
     return {
       body: data as BodyInit,
-      headers: {} // No headers needed, browser will set multipart/form-data with boundary
+      headers: {}, // No headers needed, browser will set multipart/form-data with boundary
     }
   }
 
@@ -226,8 +228,8 @@ const prepareRequestBody = <D>(data: D): { body: BodyInit | undefined; headers: 
   return {
     body: JSON.stringify(data),
     headers: {
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+    },
   }
 }
 
@@ -256,7 +258,11 @@ const prepareHeaders = (options: RequestInit, data?: unknown): Record<string, st
 /**
  * Generic function to make API requests
  */
-export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, data?: unknown): Promise<T> {
+export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  data?: unknown,
+): Promise<T> {
   const url = getFullUrl(endpoint)
 
   // Prepare body and headers based on data
@@ -291,13 +297,13 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}, d
     const errorData = await createApiError(response)
 
     // Log error for debugging
-    console.error(`API Error [${response.status}]:`, errorData.message);
+    console.error(`API Error [${response.status}]:`, errorData.message)
 
     throw errorData
   } catch (error) {
     if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
       // Nếu đã là ApiError, trả về ngay
-      throw error;
+      throw error
     }
     return handleNetworkError(error)
   }
@@ -313,43 +319,55 @@ export const api = {
   post: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
 
-    return fetchApi<T>(endpoint, {
-      ...options,
-      method: 'POST',
-      body,
-      headers: {
-        ...bodyHeaders,
-        ...options?.headers, // Allow options to override
+    return fetchApi<T>(
+      endpoint,
+      {
+        ...options,
+        method: 'POST',
+        body,
+        headers: {
+          ...bodyHeaders,
+          ...options?.headers, // Allow options to override
+        },
       },
-    }, data)
+      data,
+    )
   },
 
   put: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
 
-    return fetchApi<T>(endpoint, {
-      ...options,
-      method: 'PUT',
-      body,
-      headers: {
-        ...bodyHeaders,
-        ...options?.headers, // Allow options to override
+    return fetchApi<T>(
+      endpoint,
+      {
+        ...options,
+        method: 'PUT',
+        body,
+        headers: {
+          ...bodyHeaders,
+          ...options?.headers, // Allow options to override
+        },
       },
-    }, data)
+      data,
+    )
   },
 
   patch: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
     const { body, headers: bodyHeaders } = prepareRequestBody(data)
 
-    return fetchApi<T>(endpoint, {
-      ...options,
-      method: 'PATCH',
-      body,
-      headers: {
-        ...bodyHeaders,
-        ...options?.headers, // Allow options to override
+    return fetchApi<T>(
+      endpoint,
+      {
+        ...options,
+        method: 'PATCH',
+        body,
+        headers: {
+          ...bodyHeaders,
+          ...options?.headers, // Allow options to override
+        },
       },
-    }, data)
+      data,
+    )
   },
 
   delete: <T>(endpoint: string, options?: RequestInit) =>

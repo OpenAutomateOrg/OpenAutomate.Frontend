@@ -6,44 +6,46 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ScheduleRow } from '../page'
+import { ScheduleResponseDto, RecurrenceType } from '@/lib/api/schedules'
 
-interface ExcutionDetailProps {
+interface ScheduleDetailProps {
   id: string
 }
 
 // Helper function to get badge class based on status
-const getStatusBadgeClass = (status: string) => {
-  if (status === 'Disconnected') return 'bg-red-100 text-red-600 border-none'
-  if (status === 'Offline') return 'bg-yellow-100 text-yellow-600 border-none'
-  return 'bg-green-100 text-green-600 border-none'
+const getStatusBadgeClass = (isEnabled: boolean) => {
+  if (isEnabled) return 'bg-green-100 text-green-600 border-none'
+  return 'bg-red-100 text-red-600 border-none'
 }
 
-export default function ExcutionDetail({ id }: ExcutionDetailProps) {
+export default function ScheduleDetail({ id }: ScheduleDetailProps) {
   const router = useRouter()
-  const [agent, setExcution] = useState<ScheduleRow | null>(null)
+  const [schedule, setSchedule] = useState<ScheduleResponseDto | null>(null)
 
   useEffect(() => {
     // TODO: Replace with actual API call
-    const mockExcution: ScheduleRow = {
+    const mockSchedule: ScheduleResponseDto = {
       id,
-      name: 'Excution 2',
-      label: 'Excution Label',
-      value: 'Some Value',
-      type: 'Type A',
-      createdBy: 'Admin',
-      //   machineName: 'Machine name',
-      status: 'Disconnected',
-      //   lastConnected: '2023-10-15T14:30:00Z',
+      name: 'Daily Data Processing',
+      description: 'Processes daily data files',
+      isEnabled: true,
+      recurrenceType: RecurrenceType.Daily,
+      timeZoneId: 'Asia/Ho_Chi_Minh',
+      automationPackageId: '1',
+      botAgentId: '1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      automationPackageName: 'Data Processing Package',
+      botAgentName: 'Agent 1 - Windows Server',
     }
-    setExcution(mockExcution)
+    setSchedule(mockSchedule)
   }, [id])
 
   const handleBack = () => {
     router.back()
   }
 
-  if (!agent) {
+  if (!schedule) {
     return <div>Loading...</div>
   }
 
@@ -59,18 +61,20 @@ export default function ExcutionDetail({ id }: ExcutionDetailProps) {
         <CardContent className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <DetailBlock label="Name">{agent.name}</DetailBlock>
-              <DetailBlock label="Machine name"></DetailBlock>
+              <DetailBlock label="Name">{schedule.name}</DetailBlock>
+              <DetailBlock label="Description">
+                {schedule.description || 'No description'}
+              </DetailBlock>
+              <DetailBlock label="Package">{schedule.automationPackageName || 'N/A'}</DetailBlock>
             </div>
             <div className="space-y-4">
               <DetailBlock label="Status">
-                <Badge variant="outline" className={getStatusBadgeClass(agent.status)}>
-                  {agent.status}
+                <Badge variant="outline" className={getStatusBadgeClass(schedule.isEnabled)}>
+                  {schedule.isEnabled ? 'Enabled' : 'Disabled'}
                 </Badge>
               </DetailBlock>
-              <DetailBlock label="Last Connected">
-                {/* {new Date(agent.lastConnected).toLocaleString()} */}
-              </DetailBlock>
+              <DetailBlock label="Agent">{schedule.botAgentName || 'N/A'}</DetailBlock>
+              <DetailBlock label="Timezone">{schedule.timeZoneId}</DetailBlock>
             </div>
           </div>
         </CardContent>
