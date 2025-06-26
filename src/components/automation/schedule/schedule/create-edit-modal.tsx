@@ -79,11 +79,11 @@ interface ScheduleData {
 }
 
 interface CreateEditModalProps {
-  isOpen: boolean
-  onClose: (shouldRefresh?: boolean) => void
-  mode: 'create' | 'edit'
-  editingSchedule?: ScheduleData | null
-  onSuccess?: (schedule?: { id: string; name: string }) => void
+  readonly isOpen: boolean
+  readonly onClose: (shouldRefresh?: boolean) => void
+  readonly mode: 'create' | 'edit'
+  readonly editingSchedule?: ScheduleData | null
+  readonly onSuccess?: (schedule?: { id: string, name: string }) => void
 }
 
 export function CreateEditModal({
@@ -181,10 +181,9 @@ export function CreateEditModal({
     // Generate cron expression or one-time execution date based on recurrence type
     switch (recurrence.type) {
       case RecurrenceType.Once:
-        if (recurrence.startDate && recurrence.startTime) {
-          const [hours, minutes] = recurrence.startTime.split(':')
+        if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
           const date = new Date(recurrence.startDate)
-          date.setHours(parseInt(hours), parseInt(minutes))
+          date.setHours(parseInt(recurrence.dailyHour), parseInt(recurrence.dailyMinute))
           oneTimeExecution = date.toISOString()
         }
         break

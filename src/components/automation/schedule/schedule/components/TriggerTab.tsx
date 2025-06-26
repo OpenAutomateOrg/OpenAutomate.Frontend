@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -156,15 +155,13 @@ function OnceConfiguration({
         setIsOpen={setStartDateOpen}
       />
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm">At</span>
-        <Input
-          type="time"
-          value={recurrence.startTime ?? '00:00'}
-          onChange={(e) => onUpdate({ startTime: e.target.value })}
-          className="w-32"
-        />
-      </div>
+      <TimeSelector
+        label="At:"
+        hour={recurrence.dailyHour ?? '09'}
+        minute={recurrence.dailyMinute ?? '00'}
+        onHourChange={(hour) => onUpdate({ dailyHour: hour })}
+        onMinuteChange={(minute) => onUpdate({ dailyMinute: minute })}
+      />
     </div>
   )
 }
