@@ -10,7 +10,7 @@ import {
   useMemo,
 } from 'react'
 import { authApi } from '@/lib/api/auth'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { User, UserProfile, LoginRequest, RegisterRequest, SystemRole, PermissionLevel } from '@/types/auth'
 import {
   getAuthToken,
@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const params = useParams()
 
   // Computed property for system admin status
   const isSystemAdmin = user?.systemRole === SystemRole.Admin
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     if (isSystemAdmin) return true
 
     // Get current tenant from URL if not provided
-    const currentTenant = tenant || window.location.pathname.split('/')[1]
+    const currentTenant = tenant || params.tenant
     if (!currentTenant) return false
 
     // Find the organization unit by slug
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
     // Check if user has required permission level or higher
     return resourcePermission.permission >= requiredPermission
-  }, [userProfile, isSystemAdmin])
+  }, [userProfile, isSystemAdmin, params.tenant])
 
   // Refresh token implementation
   const refreshToken = useCallback(async (): Promise<boolean> => {
