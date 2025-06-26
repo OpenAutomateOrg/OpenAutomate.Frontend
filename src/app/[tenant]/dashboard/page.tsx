@@ -1,4 +1,3 @@
-import { ChartAreaInteractive } from '@/components/layout/charts/chart-area-interactive'
 import { SectionCards } from '@/components/layout/section-cards'
 import { ChartPieLabel } from '@/components/layout/charts/chart-pie-label'
 import { StatisticalStatus } from '@/components/layout/statistical-status'
@@ -20,11 +19,6 @@ export default function DashBoard() {
           <div className="flex flex-col gap-2 min-w-0">
             <ChartPieLabel />
           </div>
-        </div>
-
-        {/* Bar & Area Chart Section */}
-        <div className="rounded-xl min-w-0 ">
-          <ChartAreaInteractive />
         </div>
       </div>
     </div>
