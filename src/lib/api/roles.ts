@@ -54,7 +54,7 @@ export interface AssignAuthorityDto {
  */
 const getTenantSlug = (): string => {
   if (typeof window === 'undefined') return ''
-  
+
   const path = window.location.pathname
   const segments = path.split('/').filter(Boolean)
   return segments.length > 0 ? segments[0] : ''
@@ -98,7 +98,7 @@ export const rolesApi = {
       {
         method: 'POST',
       },
-      roleData
+      roleData,
     )
   },
 
@@ -112,7 +112,7 @@ export const rolesApi = {
       {
         method: 'PUT',
       },
-      roleData
+      roleData,
     )
   },
 
@@ -144,7 +144,7 @@ export const rolesApi = {
       {
         method: 'POST',
       },
-      { authorityId }
+      { authorityId },
     )
   },
 
@@ -195,4 +195,4 @@ export const getPermissionDescription = (level: number): string => {
  */
 export const isValidPermissionLevel = (level: number): boolean => {
   return level >= PermissionLevels.NO_ACCESS && level <= PermissionLevels.DELETE
-} 
+}

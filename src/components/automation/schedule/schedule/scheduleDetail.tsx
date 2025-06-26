@@ -62,7 +62,9 @@ export default function ScheduleDetail({ id }: ScheduleDetailProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <DetailBlock label="Name">{schedule.name}</DetailBlock>
-              <DetailBlock label="Description">{schedule.description || 'No description'}</DetailBlock>
+              <DetailBlock label="Description">
+                {schedule.description || 'No description'}
+              </DetailBlock>
               <DetailBlock label="Package">{schedule.automationPackageName || 'N/A'}</DetailBlock>
             </div>
             <div className="space-y-4">

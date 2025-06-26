@@ -58,24 +58,24 @@ export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = String(row.getValue('status'));
+      const status = String(row.getValue('status'))
 
       // Define status badge styling based on the status value
-      let statusClass = '';
+      let statusClass = ''
       switch (status) {
         case 'Connected':
         case 'Available':
-          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-          break;
+          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          break
         case 'Busy':
-          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-          break;
+          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+          break
         case 'Disconnected':
         case 'Offline':
-          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-          break;
+          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+          break
         default:
-          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
       }
 
       return (
@@ -84,43 +84,45 @@ export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[
             {status}
           </span>
         </div>
-      );
+      )
     },
   },
   {
     accessorKey: 'lastConnected',
-    header: ({ column }: { column: Column<AgentRow> }) => <DataTableColumnHeader column={column} title="Last Connected" />,
+    header: ({ column }: { column: Column<AgentRow> }) => (
+      <DataTableColumnHeader column={column} title="Last Connected" />
+    ),
     cell: ({ row }: { row: Row<AgentRow> }) => {
       // Get the value and convert it to a string to ensure it's safe for display
-      const rawValue = row.getValue('lastConnected');
-      let lastConnected = '';
+      const rawValue = row.getValue('lastConnected')
+      let lastConnected = ''
       if (typeof rawValue === 'string') {
-        lastConnected = rawValue;
+        lastConnected = rawValue
       } else if (rawValue !== null && rawValue !== undefined) {
-        lastConnected = String(rawValue);
+        lastConnected = String(rawValue)
       }
 
       // Format the date if it's a valid date string
-      let formattedDate = 'Never';
+      let formattedDate = 'Never'
       try {
         if (lastConnected && lastConnected !== 'null' && lastConnected !== 'undefined') {
-          const date = new Date(lastConnected);
+          const date = new Date(lastConnected)
           if (!isNaN(date.getTime())) {
             formattedDate = new Intl.DateTimeFormat('en-US', {
               dateStyle: 'medium',
-              timeStyle: 'short'
-            }).format(date);
+              timeStyle: 'short',
+            }).format(date)
           }
         }
       } catch (error) {
-        console.error('Error formatting date:', error);
+        console.error('Error formatting date:', error)
       }
 
       return (
         <div className="flex items-center">
           <span>{formattedDate}</span>
         </div>
-      );
+      )
     },
   },
 ]

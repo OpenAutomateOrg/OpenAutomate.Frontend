@@ -2,7 +2,14 @@
 
 import { Row } from '@tanstack/react-table'
 import { MoreHorizontal, Trash, Loader2, X, UserCheck } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogClose } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog'
 import { deleteOrganizationUnitUser } from '@/lib/api/organization-unit-user'
 import React, { useState } from 'react'
 import { useToast } from '@/components/ui/use-toast'
@@ -68,15 +75,22 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[160px]">
-          <DropdownMenuItem onClick={() => setSetRoleOpen(true)} className="flex items-center gap-2">
-            <span className="min-w-[1.25rem] flex justify-center"><UserCheck className="w-4 h-4 text-foreground" /></span>
+          <DropdownMenuItem
+            onClick={() => setSetRoleOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <span className="min-w-[1.25rem] flex justify-center">
+              <UserCheck className="w-4 h-4 text-foreground" />
+            </span>
             <span>Set Role</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className="flex items-center gap-2 text-destructive focus:text-destructive"
             onClick={() => setOpen(true)}
           >
-            <span className="min-w-[1.25rem] flex justify-center"><Trash className="w-4 h-4 text-destructive" aria-hidden="true" /></span>
+            <span className="min-w-[1.25rem] flex justify-center">
+              <Trash className="w-4 h-4 text-destructive" aria-hidden="true" />
+            </span>
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -88,7 +102,7 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
         email={row.original.email}
       />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent onInteractOutside={e => e.preventDefault()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -96,13 +110,11 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <div>Are you sure you want to delete this user <b>{row.original.email}</b>?</div>
+          <div>
+            Are you sure you want to delete this user <b>{row.original.email}</b>?
+          </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={deleting}
-            >
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={deleting}>
               Cancel
             </Button>
             <Button

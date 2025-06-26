@@ -64,20 +64,22 @@ export function LoginForm() {
   })
 
   // Get form methods to use in effect
-  const { getValues, setValue } = form;
+  const { getValues, setValue } = form
 
   // Show expired token message or verification message if needed
   React.useEffect(() => {
     if (isExpired) {
       setError('Your session has expired. Please sign in again.')
     }
-    
+
     // If coming back from verification page or with needVerification flag
     if (needVerification && emailParam) {
       setUnverifiedEmail(emailParam)
       setIsEmailVerificationError(true)
-      setError('Please verify your email address before logging in. Check your inbox for a verification link or request a new one.')
-      
+      setError(
+        'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
+      )
+
       // Pre-fill the email field if it wasn't set in the defaultValues
       if (getValues('email') !== emailParam) {
         setValue('email', emailParam)
@@ -109,34 +111,36 @@ export function LoginForm() {
         router.push('/tenant-selector') // Default redirect to tenant selector
       }
     } catch (error: unknown) {
-      let errorMessage = 'Login failed. Please try again.';
+      let errorMessage = 'Login failed. Please try again.'
 
       if (typeof error === 'object' && error !== null) {
-        const axiosError = error as { response?: { data?: { message?: string, code?: string } }, message?: string };
-        errorMessage =
-          axiosError.response?.data?.message ??
-          axiosError.message ??
-          errorMessage;
-        
+        const axiosError = error as {
+          response?: { data?: { message?: string; code?: string } }
+          message?: string
+        }
+        errorMessage = axiosError.response?.data?.message ?? axiosError.message ?? errorMessage
+
         // Check if this is an email verification error
         if (
-          errorMessage.toLowerCase().includes('verify') || 
+          errorMessage.toLowerCase().includes('verify') ||
           errorMessage.toLowerCase().includes('verification') ||
           errorMessage.toLowerCase().includes('email not verified') ||
           axiosError.response?.data?.code === 'EMAIL_NOT_VERIFIED'
         ) {
           // Set the unverified email and show verification error
-          setUnverifiedEmail(data.email);
-          setIsEmailVerificationError(true);
-          setError('Please verify your email address before logging in. Check your inbox for a verification link or request a new one.');
-          return;
+          setUnverifiedEmail(data.email)
+          setIsEmailVerificationError(true)
+          setError(
+            'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
+          )
+          return
         }
       }
-      
+
       // Reset verification error state for other errors
-      setIsEmailVerificationError(false);
-      setUnverifiedEmail(null);
-      setError(errorMessage);
+      setIsEmailVerificationError(false)
+      setUnverifiedEmail(null)
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -152,7 +156,7 @@ export function LoginForm() {
           <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
         </div>
       )}
-      
+
       {/* Show resend verification button if this is an email verification error */}
       {isEmailVerificationError && unverifiedEmail && (
         <EmailVerificationAlert email={unverifiedEmail} />
@@ -186,7 +190,6 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-
                 </div>
                 <FormControl>
                   <Input
@@ -226,7 +229,6 @@ export function LoginForm() {
               </FormItem>
             )}
           />
-
 
           <Button
             type="submit"

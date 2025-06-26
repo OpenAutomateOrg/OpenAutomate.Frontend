@@ -140,7 +140,7 @@ export function DataTableToolbar<TData>({
                   )}
                 </div>
               </SelectTrigger>
-                                              <SelectContent>
+              <SelectContent>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -150,11 +150,13 @@ export function DataTableToolbar<TData>({
             </Select>
           </div>
         )}
-        
+
         {/* Total Count Display */}
         {totalCount > 0 && (
           <div className="text-sm font-medium ml-2">
-            <span>Total: {totalCount} package{totalCount !== 1 ? 's' : ''}</span>
+            <span>
+              Total: {totalCount} package{totalCount !== 1 ? 's' : ''}
+            </span>
           </div>
         )}
 

@@ -18,7 +18,7 @@ import {
   RecurrenceType,
   getRecurrenceTypeDisplayName,
   enableSchedule,
-  disableSchedule
+  disableSchedule,
 } from '@/lib/api/schedules'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
@@ -97,9 +97,11 @@ export default function ScheduleInterface() {
 
     // Always enforce a valid page size, defaulting to 10
     const pageSize = size ? Math.max(1, parseInt(size)) : 10
-    
-    console.log(`Initializing pagination from URL: page=${page}, size=${size}, pageSize=${pageSize}`)
-    
+
+    console.log(
+      `Initializing pagination from URL: page=${page}, size=${size}, pageSize=${pageSize}`,
+    )
+
     return {
       pageIndex: page ? Math.max(0, parseInt(page) - 1) : 0,
       pageSize: pageSize,
@@ -168,26 +170,29 @@ export default function ScheduleInterface() {
 
   // SWR for schedules data with OData query
   const queryParams = getODataQueryParams()
-  const swrKey = useMemo(() => swrKeys.schedulesWithOData(queryParams as Record<string, unknown>), 
-    [queryParams]);
-
-  const { data: schedulesResponse, error: schedulesError, isLoading, mutate: mutateSchedules } = useSWR(
-    swrKey,
-    () => getSchedulesWithOData(queryParams),
-    {
-      dedupingInterval: 0, // Disable deduping to ensure fresh data on pagination change
-      revalidateOnFocus: false, // Prevent auto revalidation on window focus
-      revalidateIfStale: true, // Allow revalidation when data is stale
-      keepPreviousData: false, // Don't keep previous data when fetching new data
-    }
+  const swrKey = useMemo(
+    () => swrKeys.schedulesWithOData(queryParams as Record<string, unknown>),
+    [queryParams],
   )
+
+  const {
+    data: schedulesResponse,
+    error: schedulesError,
+    isLoading,
+    mutate: mutateSchedules,
+  } = useSWR(swrKey, () => getSchedulesWithOData(queryParams), {
+    dedupingInterval: 0, // Disable deduping to ensure fresh data on pagination change
+    revalidateOnFocus: false, // Prevent auto revalidation on window focus
+    revalidateIfStale: true, // Allow revalidation when data is stale
+    keepPreviousData: false, // Don't keep previous data when fetching new data
+  })
 
   // Fallback to regular schedules API if OData fails or returns empty data
   const { data: fallbackSchedules, mutate: mutateFallbackSchedules } = useSWR(
     schedulesResponse?.value?.length === 0 || schedulesError ? swrKeys.schedules() : null,
-    getAllSchedules
+    getAllSchedules,
   )
-  
+
   // Combined loading state
   const isDataLoading = isLoading || (schedulesError && !fallbackSchedules)
 
@@ -195,23 +200,25 @@ export default function ScheduleInterface() {
   const schedules = useMemo(() => {
     // Use fallback data if OData response is empty
     if (fallbackSchedules && (!schedulesResponse?.value || schedulesResponse.value.length === 0)) {
-      console.log('Using fallback data with pagination:', pagination);
-      
+      console.log('Using fallback data with pagination:', pagination)
+
       // Apply manual filtering for fallback data
       let filteredData = fallbackSchedules
-      
+
       // Apply search filtering if search value exists
       if (searchValue) {
-        filteredData = filteredData.filter(schedule => {
-          const nameMatch = schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase());
-          return nameMatch;
+        filteredData = filteredData.filter((schedule) => {
+          const nameMatch =
+            schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase())
+          return nameMatch
         })
       }
-      
+
       // Apply status filter if exists
-      const statusFilter = columnFilters.find(filter => filter.id === 'isEnabled')?.value as string
+      const statusFilter = columnFilters.find((filter) => filter.id === 'isEnabled')
+        ?.value as string
       if (statusFilter && statusFilter !== 'all') {
-        filteredData = filteredData.filter(schedule => {
+        filteredData = filteredData.filter((schedule) => {
           if (statusFilter === 'enabled') return schedule.isEnabled
           if (statusFilter === 'disabled') return !schedule.isEnabled
           return true
@@ -219,81 +226,91 @@ export default function ScheduleInterface() {
       }
 
       // Apply recurrence type filter if exists
-      const typeFilter = columnFilters.find(filter => filter.id === 'recurrenceType')?.value as string
+      const typeFilter = columnFilters.find((filter) => filter.id === 'recurrenceType')
+        ?.value as string
       if (typeFilter && typeFilter !== 'all') {
-        filteredData = filteredData.filter(schedule => schedule.recurrenceType === typeFilter)
+        filteredData = filteredData.filter((schedule) => schedule.recurrenceType === typeFilter)
       }
-      
+
       // Store filtered data length for later use in useEffect
-      const filteredLength = filteredData.length;
-      
+      const filteredLength = filteredData.length
+
       // Apply pagination manually for fallback data
       const start = pagination.pageIndex * pagination.pageSize
       const end = start + pagination.pageSize
-      
-      console.log(`Slicing fallback data from ${start} to ${end} out of ${filteredData.length} items`);
-      
+
+      console.log(
+        `Slicing fallback data from ${start} to ${end} out of ${filteredData.length} items`,
+      )
+
       const paginatedData = filteredData.slice(start, end)
-      console.log(`Returning ${paginatedData.length} items from fallback data`);
-      
+      console.log(`Returning ${paginatedData.length} items from fallback data`)
+
       // Set totalCount outside of useMemo to avoid circular dependency
       if (totalCount !== filteredLength) {
         // Queue an update for the next render cycle
         setTimeout(() => {
-          setTotalCount(filteredLength);
-          totalCountRef.current = filteredLength;
-        }, 0);
+          setTotalCount(filteredLength)
+          totalCountRef.current = filteredLength
+        }, 0)
       }
-      
+
       return paginatedData
     }
-    
+
     // Otherwise use OData response
     if (!schedulesResponse?.value) {
-      console.log('No data available from OData or fallback');
+      console.log('No data available from OData or fallback')
       return []
     }
-    
-    console.log(`Returning ${schedulesResponse.value.length} items from OData response`);
+
+    console.log(`Returning ${schedulesResponse.value.length} items from OData response`)
     return schedulesResponse.value
-  }, [schedulesResponse, fallbackSchedules, searchValue, columnFilters, pagination, totalCount]);
+  }, [schedulesResponse, fallbackSchedules, searchValue, columnFilters, pagination, totalCount])
 
   // Helper function to handle estimated count from response
-  const handleEstimatedCount = useCallback((responseValue: ScheduleResponseDto[]) => {
-    const minCount = pagination.pageIndex * pagination.pageSize + responseValue.length
+  const handleEstimatedCount = useCallback(
+    (responseValue: ScheduleResponseDto[]) => {
+      const minCount = pagination.pageIndex * pagination.pageSize + responseValue.length
 
-    // Only update if the new minimum count is higher than current
-    if (minCount > totalCountRef.current) {
-      setTotalCount(minCount)
-      totalCountRef.current = minCount
-    }
+      // Only update if the new minimum count is higher than current
+      if (minCount > totalCountRef.current) {
+        setTotalCount(minCount)
+        totalCountRef.current = minCount
+      }
 
-    // If we got a full page on first page, assume there might be more
-    const isFullFirstPage = responseValue.length === pagination.pageSize && pagination.pageIndex === 0
-    if (isFullFirstPage) {
-      setTotalCount(minCount + 1) // Indicate there might be more
-      totalCountRef.current = minCount + 1
-    }
+      // If we got a full page on first page, assume there might be more
+      const isFullFirstPage =
+        responseValue.length === pagination.pageSize && pagination.pageIndex === 0
+      if (isFullFirstPage) {
+        setTotalCount(minCount + 1) // Indicate there might be more
+        totalCountRef.current = minCount + 1
+      }
 
-    setHasExactCount(false)
-  }, [pagination.pageIndex, pagination.pageSize])
+      setHasExactCount(false)
+    },
+    [pagination.pageIndex, pagination.pageSize],
+  )
 
   // Helper function to handle OData response count
-  const handleODataResponse = useCallback((response: ODataResponse<ScheduleResponseDto>) => {
-    console.log('OData response received:', response)
+  const handleODataResponse = useCallback(
+    (response: ODataResponse<ScheduleResponseDto>) => {
+      console.log('OData response received:', response)
 
-    // Handle exact count from OData
-    if (typeof response['@odata.count'] === 'number') {
-      setTotalCount(response['@odata.count'])
-      totalCountRef.current = response['@odata.count']
-      setHasExactCount(true)
-      return
-    }
+      // Handle exact count from OData
+      if (typeof response['@odata.count'] === 'number') {
+        setTotalCount(response['@odata.count'])
+        totalCountRef.current = response['@odata.count']
+        setHasExactCount(true)
+        return
+      }
 
-    if (Array.isArray(response.value)) {
-      handleEstimatedCount(response.value)
-    }
-  }, [handleEstimatedCount])
+      if (Array.isArray(response.value)) {
+        handleEstimatedCount(response.value)
+      }
+    },
+    [handleEstimatedCount],
+  )
 
   // Helper function to handle fallback schedules count
   const handleFallbackCount = useCallback(() => {
@@ -304,16 +321,17 @@ export default function ScheduleInterface() {
 
     // Apply search filtering
     if (searchValue) {
-      filteredCount = fallbackSchedules.filter(schedule => {
-        const nameMatch = schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase())
+      filteredCount = fallbackSchedules.filter((schedule) => {
+        const nameMatch =
+          schedule.name && schedule.name.toLowerCase().includes(searchValue.toLowerCase())
         return nameMatch
       }).length
     }
 
     // Apply status filter
-    const statusFilter = columnFilters.find(filter => filter.id === 'isEnabled')?.value as string
+    const statusFilter = columnFilters.find((filter) => filter.id === 'isEnabled')?.value as string
     if (statusFilter && statusFilter !== 'all') {
-      filteredCount = fallbackSchedules.filter(schedule => {
+      filteredCount = fallbackSchedules.filter((schedule) => {
         if (statusFilter === 'enabled') return schedule.isEnabled
         if (statusFilter === 'disabled') return !schedule.isEnabled
         return true
@@ -339,7 +357,9 @@ export default function ScheduleInterface() {
   useEffect(() => {
     if (schedulesResponse?.value) {
       const isEmptyPageBeyondFirst =
-        schedulesResponse.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+        schedulesResponse.value.length === 0 &&
+        totalCountRef.current > 0 &&
+        pagination.pageIndex > 0
 
       if (isEmptyPageBeyondFirst) {
         const calculatedPageCount = Math.max(
@@ -353,7 +373,14 @@ export default function ScheduleInterface() {
         }
       }
     }
-  }, [schedulesResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+  }, [
+    schedulesResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
 
   // Initialize URL with default params if needed
   useEffect(() => {
@@ -376,17 +403,17 @@ export default function ScheduleInterface() {
   useEffect(() => {
     const page = searchParams.get('page')
     const size = searchParams.get('size')
-    
+
     if (page && size) {
       const pageIndex = Math.max(0, parseInt(page) - 1)
       const pageSize = parseInt(size)
-      
+
       // Only update if different to avoid infinite loops
       if (pageIndex !== pagination.pageIndex || pageSize !== pagination.pageSize) {
         console.log(`URL changed: page=${page}, size=${size}. Updating pagination state.`)
         setPagination({
           pageIndex,
-          pageSize
+          pageSize,
         })
       }
     }
@@ -428,39 +455,39 @@ export default function ScheduleInterface() {
   }, [hasExactCount, schedules.length, pagination.pageSize])
 
   // ✅ Create columns with proper handlers
-  const columns = useMemo(() => createScheduleColumns({
-    onDeleted: () => {
-      mutateSchedules()
-      mutateFallbackSchedules()
-    },
-    onToggleEnabled: async (schedule: ScheduleResponseDto) => {
-      try {
-        const updatedSchedule = schedule.isEnabled 
-          ? await disableSchedule(schedule.id)
-          : await enableSchedule(schedule.id)
-        
-        // Show success toast with subtle feedback
-        toast({
-          title: `Schedule ${updatedSchedule.isEnabled ? 'Enabled' : 'Disabled'}`,
-          description: `"${schedule.name}" is now ${updatedSchedule.isEnabled ? 'active' : 'inactive'}.`,
-          duration: 3000, // Show for 3 seconds
-        })
-        
-        // Force immediate refresh of both data sources to ensure UI updates
-        console.log('Refreshing both data sources after toggle...')
-        await Promise.all([
-          mutateSchedules(),
+  const columns = useMemo(
+    () =>
+      createScheduleColumns({
+        onDeleted: () => {
+          mutateSchedules()
           mutateFallbackSchedules()
-        ])
-        console.log('Data refresh completed')
-        
-      } catch (error) {
-        console.error('Toggle enable failed:', error)
-        toast(createErrorToast(error))
-        throw error // Re-throw to let the component handle the optimistic update reversion
-      }
-    }
-  }), [mutateSchedules, mutateFallbackSchedules, toast])
+        },
+        onToggleEnabled: async (schedule: ScheduleResponseDto) => {
+          try {
+            const updatedSchedule = schedule.isEnabled
+              ? await disableSchedule(schedule.id)
+              : await enableSchedule(schedule.id)
+
+            // Show success toast with subtle feedback
+            toast({
+              title: `Schedule ${updatedSchedule.isEnabled ? 'Enabled' : 'Disabled'}`,
+              description: `"${schedule.name}" is now ${updatedSchedule.isEnabled ? 'active' : 'inactive'}.`,
+              duration: 3000, // Show for 3 seconds
+            })
+
+            // Force immediate refresh of both data sources to ensure UI updates
+            console.log('Refreshing both data sources after toggle...')
+            await Promise.all([mutateSchedules(), mutateFallbackSchedules()])
+            console.log('Data refresh completed')
+          } catch (error) {
+            console.error('Toggle enable failed:', error)
+            toast(createErrorToast(error))
+            throw error // Re-throw to let the component handle the optimistic update reversion
+          }
+        },
+      }),
+    [mutateSchedules, mutateFallbackSchedules, toast],
+  )
 
   const table = useReactTable({
     data: schedules,
@@ -498,13 +525,13 @@ export default function ScheduleInterface() {
       console.log('Pagination change triggered')
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       console.log('Current pagination:', pagination, 'New pagination:', newPagination)
-      
+
       setPagination(newPagination)
       updateUrl(pathname, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
-      
+
       console.log('Forcing data reload for pagination change')
       mutateSchedules()
     },
@@ -539,7 +566,7 @@ export default function ScheduleInterface() {
             search: value || null,
             page: '1', // Reset to first page when filter changes
           })
-          
+
           // Force reload data when search changes
           mutateSchedules()
         }
@@ -547,7 +574,7 @@ export default function ScheduleInterface() {
         setIsPending(false)
       }, 500)
     },
-    [table, updateUrl, pathname, mutateSchedules]
+    [table, updateUrl, pathname, mutateSchedules],
   )
 
   // Handle status filter change
@@ -563,11 +590,11 @@ export default function ScheduleInterface() {
           status: filterValue || null,
           page: '1', // Reset to page 1 when filter changes
         })
-        
+
         mutateSchedules()
       }
     },
-    [table, updateUrl, pathname, mutateSchedules]
+    [table, updateUrl, pathname, mutateSchedules],
   )
 
   // Handle recurrence type filter change
@@ -583,11 +610,11 @@ export default function ScheduleInterface() {
           type: filterValue || null,
           page: '1', // Reset to page 1 when filter changes
         })
-        
+
         mutateSchedules()
       }
     },
-    [table, updateUrl, pathname, mutateSchedules]
+    [table, updateUrl, pathname, mutateSchedules],
   )
 
   // Clean up timeouts on unmount
@@ -601,7 +628,7 @@ export default function ScheduleInterface() {
   useEffect(() => {
     if (schedulesError) {
       console.error('Failed to load schedules:', schedulesError)
-      
+
       // Only show toast if fallback also failed
       if (!fallbackSchedules) {
         toast({
@@ -613,45 +640,48 @@ export default function ScheduleInterface() {
     }
   }, [schedulesError, fallbackSchedules, toast])
 
-  const handleCreateSuccess = useCallback((newSchedule?: { id: string, name: string }) => {
-    // ✅ Following React guideline: API calls in event handlers, not effects
+  const handleCreateSuccess = useCallback(
+    (newSchedule?: { id: string; name: string }) => {
+      // ✅ Following React guideline: API calls in event handlers, not effects
 
-    if (newSchedule) {
-      // ✅ Optimistic update: immediately add the new schedule to the UI
-      mutateSchedules((currentData) => {
-        if (!currentData) return currentData
+      if (newSchedule) {
+        // ✅ Optimistic update: immediately add the new schedule to the UI
+        mutateSchedules((currentData) => {
+          if (!currentData) return currentData
 
-        // For OData response structure
-        if ('value' in currentData && Array.isArray(currentData.value)) {
-          const newScheduleDto: ScheduleResponseDto = {
-            id: newSchedule.id,
-            name: newSchedule.name,
-            description: '',
-            isEnabled: true,
-            recurrenceType: RecurrenceType.Daily,
-            timeZoneId: 'UTC',
-            automationPackageId: '',
-            botAgentId: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+          // For OData response structure
+          if ('value' in currentData && Array.isArray(currentData.value)) {
+            const newScheduleDto: ScheduleResponseDto = {
+              id: newSchedule.id,
+              name: newSchedule.name,
+              description: '',
+              isEnabled: true,
+              recurrenceType: RecurrenceType.Daily,
+              timeZoneId: 'UTC',
+              automationPackageId: '',
+              botAgentId: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+
+            return {
+              ...currentData,
+              value: [newScheduleDto, ...currentData.value],
+              '@odata.count': (currentData['@odata.count'] || 0) + 1,
+            }
           }
 
-          return {
-            ...currentData,
-            value: [newScheduleDto, ...currentData.value],
-            '@odata.count': (currentData['@odata.count'] || 0) + 1
-          }
-        }
+          return currentData
+        }, false) // false = don't revalidate immediately
+      }
 
-        return currentData
-      }, false) // false = don't revalidate immediately
-    }
-
-    // ✅ Schedule debounced refresh to ensure we get the latest data from server
-    setTimeout(() => {
-      mutateSchedules()
-    }, 2000) // 2 second delay to allow server processing
-   }, [mutateSchedules])
+      // ✅ Schedule debounced refresh to ensure we get the latest data from server
+      setTimeout(() => {
+        mutateSchedules()
+      }, 2000) // 2 second delay to allow server processing
+    },
+    [mutateSchedules],
+  )
 
   const handleCreateClick = () => {
     setEditingSchedule(null)
@@ -660,7 +690,9 @@ export default function ScheduleInterface() {
 
   const handleRowClick = (row: ScheduleResponseDto) => {
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/schedules/${row.id}` : `/${tenant}/automation/schedule/${row.id}`
+    const route = isAdmin
+      ? `/admin/schedules/${row.id}`
+      : `/${tenant}/automation/schedule/${row.id}`
     router.push(route)
   }
 
@@ -679,9 +711,9 @@ export default function ScheduleInterface() {
   ]
 
   // Recurrence type filter options
-  const recurrenceTypeOptions = Object.values(RecurrenceType).map(type => ({
+  const recurrenceTypeOptions = Object.values(RecurrenceType).map((type) => ({
     value: type,
-    label: getRecurrenceTypeDisplayName(type)
+    label: getRecurrenceTypeDisplayName(type),
   }))
 
   return (
@@ -697,19 +729,18 @@ export default function ScheduleInterface() {
                 </span>
               </div>
             )}
-            <Button
-              onClick={handleCreateClick}
-              className="flex items-center justify-center"
-            >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <Button onClick={handleCreateClick} className="flex items-center justify-center">
+              <PlusCircle className="mr-2 h-4 w-4" />
               Create Schedule
-          </Button>
+            </Button>
           </div>
         </div>
 
         {schedulesError && !fallbackSchedules && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">Failed to load schedules. Please try again.</p>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load schedules. Please try again.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => mutateSchedules()}>
               Retry
             </Button>
@@ -749,16 +780,16 @@ export default function ScheduleInterface() {
           isUnknownTotalCount={isUnknownTotalCount}
           onPageChange={(page: number) => {
             console.log(`Page change requested to page ${page}`)
-            
+
             // Update pagination state
-            setPagination(prev => ({
+            setPagination((prev) => ({
               ...prev,
-              pageIndex: page - 1
+              pageIndex: page - 1,
             }))
-            
+
             // Update URL
             updateUrl(pathname, { page: page.toString() })
-            
+
             // Force immediate data reload with new pagination
             console.log('Reloading data after page change')
             setTimeout(() => {

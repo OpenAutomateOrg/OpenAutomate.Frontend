@@ -145,13 +145,18 @@ export default function AssetInterface() {
       params.$filter = filters.join(' and ')
     }
 
-    return params  }, [pagination, sorting, columnFilters])
+    return params
+  }, [pagination, sorting, columnFilters])
 
   // ✅ SWR for assets data - following guideline #8: use framework-level loaders
   const queryParams = getODataQueryParams()
-  const { data: assetsResponse, error: assetsError, isLoading, mutate: mutateAssets } = useSWR(
-    swrKeys.assetsWithOData(queryParams as Record<string, unknown>),
-    () => getAssetsWithOData(queryParams)
+  const {
+    data: assetsResponse,
+    error: assetsError,
+    isLoading,
+    mutate: mutateAssets,
+  } = useSWR(swrKeys.assetsWithOData(queryParams as Record<string, unknown>), () =>
+    getAssetsWithOData(queryParams),
   )
 
   // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
@@ -193,7 +198,8 @@ export default function AssetInterface() {
         description: 'Failed to load assets. Please try again.',
         variant: 'destructive',
       })
-    }  }, [assetsError, toast])
+    }
+  }, [assetsError, toast])
 
   // ✅ Update total count when data changes (following guideline #1: derive data during render)
   // Client-only: Requires state updates for pagination
@@ -260,7 +266,8 @@ export default function AssetInterface() {
           variant: 'destructive',
         })
       }
-    },    [toast],
+    },
+    [toast],
   )
 
   // ✅ Handle empty page edge case (following guideline #1: derive data during render)
@@ -279,7 +286,14 @@ export default function AssetInterface() {
         }
       }
     }
-  }, [assetsResponse, pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname])
+  }, [
+    assetsResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
 
   // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
   const refreshAssets = useCallback(async () => {
@@ -434,7 +448,9 @@ export default function AssetInterface() {
 
         {assetsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">Failed to load assets. Please try again.</p>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load assets. Please try again.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => mutateAssets()}>
               Retry
             </Button>

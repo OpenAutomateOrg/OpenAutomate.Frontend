@@ -54,13 +54,13 @@ flowchart TD
 
 ### **Step 2: Choose the Right Pattern**
 
-| Scenario | Pattern | Example |
-|----------|---------|---------|
-| **API Data Fetching** | SWR | User lists, executions, roles |
-| **Form State** | useState + dynamic key | Create/edit modals |
-| **UI State** | useState | Modal open/close, tabs |
-| **Computed Values** | useMemo | Filtered lists, calculations |
-| **Event Handlers** | useCallback | Click handlers, form submissions |
+| Scenario              | Pattern                | Example                          |
+| --------------------- | ---------------------- | -------------------------------- |
+| **API Data Fetching** | SWR                    | User lists, executions, roles    |
+| **Form State**        | useState + dynamic key | Create/edit modals               |
+| **UI State**          | useState               | Modal open/close, tabs           |
+| **Computed Values**   | useMemo                | Filtered lists, calculations     |
+| **Event Handlers**    | useCallback            | Click handlers, form submissions |
 
 ---
 
@@ -85,8 +85,8 @@ export function UsersList() {
   )
 
   // ✅ Transform data during render (Guideline #1)
-  const activeUsers = useMemo(() => 
-    users?.filter(user => user.isActive) ?? [], 
+  const activeUsers = useMemo(() =>
+    users?.filter(user => user.isActive) ?? [],
     [users]
   )
 
@@ -162,7 +162,7 @@ export function UsersPage() {
   return (
     <>
       <UsersList onEdit={setEditingUser} />
-      
+
       {/* ✅ Dynamic key resets component state */}
       <CreateEditUserModal
         key={editingUser?.id ?? 'new'}
@@ -182,9 +182,9 @@ export function CreateEditUserModal({ editingUser, isOpen, onClose }) {
   // ✅ Initialize state based on props (reset via key)
   const [name, setName] = useState(editingUser?.name ?? '')
   const [email, setEmail] = useState(editingUser?.email ?? '')
-  
+
   // ✅ No useEffect needed for state reset!
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* Form content */}
@@ -227,12 +227,12 @@ export function ProductsList() {
   // ✅ Derive filtered data during render
   const filteredProducts = useMemo(() => {
     if (!products) return []
-    
+
     return products
-      .filter(product => 
+      .filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      .filter(product => 
+      .filter(product =>
         category === 'all' || product.category === category
       )
   }, [products, searchTerm, category])
@@ -246,7 +246,7 @@ export function ProductsList() {
   return (
     <div>
       <SearchInput value={searchTerm} onChange={setSearchTerm} />
-      <CategoryFilter 
+      <CategoryFilter
         categories={availableCategories}
         selected={category}
         onChange={setCategory}
@@ -268,8 +268,8 @@ export function ProductsList() {
 
   // ❌ Effect only for setState
   useEffect(() => {
-    const filtered = products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = products.filter((product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     setFilteredProducts(filtered)
   }, [products, searchTerm])
@@ -283,6 +283,7 @@ export function ProductsList() {
 ### **When to Use SWR**
 
 ✅ **Always use SWR for:**
+
 - API data fetching
 - Server state management
 - Data that needs caching
@@ -337,12 +338,12 @@ When adding new API endpoints, update the SWR keys:
 // src/lib/swr-config.ts
 export const swrKeys = {
   // Existing keys...
-  
+
   // ✅ Add your new keys here
   users: () => ['users'] as const,
   userById: (id: string) => ['users', id] as const,
   userRoles: (userId: string) => ['users', userId, 'roles'] as const,
-  
+
   // For filtered/parameterized data
   usersByRole: (role: string) => ['users', 'by-role', role] as const,
 }
@@ -363,9 +364,9 @@ export function UsersPage() {
     <div className="flex">
       <UsersList onSelect={setSelectedUserId} />
       {selectedUserId && (
-        <UserDetail 
+        <UserDetail
           key={selectedUserId} // ✅ Reset detail when user changes
-          userId={selectedUserId} 
+          userId={selectedUserId}
         />
       )}
     </div>
@@ -476,12 +477,14 @@ export function NotificationsList() {
 When reviewing new features, check for:
 
 #### **✅ SWR Usage**
+
 - [ ] Uses SWR for all API data fetching
 - [ ] Uses existing SWR keys or adds new ones properly
 - [ ] Handles loading and error states
 - [ ] Uses `mutate()` for cache invalidation
 
 #### **✅ useEffect Compliance**
+
 - [ ] No setState-only effects
 - [ ] Data transformation in render/useMemo, not useEffect
 - [ ] Error handling in dedicated effects
@@ -489,12 +492,14 @@ When reviewing new features, check for:
 - [ ] SSR documentation for client-only effects
 
 #### **✅ Component Patterns**
+
 - [ ] Dynamic keys for form/modal state reset
 - [ ] Event handlers for user actions
 - [ ] Proper dependency arrays
 - [ ] No suppressed ESLint warnings
 
 #### **✅ Performance**
+
 - [ ] useMemo for expensive calculations
 - [ ] useCallback for stable function references
 - [ ] Conditional SWR fetching when appropriate
@@ -516,7 +521,7 @@ useEffect(() => {
 
 // ❌ Review comment: "Move data transformation to useMemo"
 useEffect(() => {
-  const filtered = data.filter(item => item.active)
+  const filtered = data.filter((item) => item.active)
   setFilteredData(filtered)
 }, [data])
 
@@ -549,7 +554,7 @@ interface MyListComponentProps {
 
 export function MyListComponent({ }: MyListComponentProps) {
   const { toast } = useToast()
-  
+
   // ✅ SWR for data fetching
   const { data: items, error, isLoading, mutate } = useSWR(
     swrKeys.myItems(),
@@ -604,7 +609,7 @@ export function MyListComponent({ }: MyListComponentProps) {
     <div>
       <SearchInput value={searchTerm} onChange={setSearchTerm} />
       <CreateButton onClick={handleCreate} />
-      
+
       <div className="grid gap-4">
         {filteredItems.map(item => (
           <ItemCard
@@ -792,7 +797,7 @@ const handleClick = () => {
 // ✅ Solution
 const handleClick = () => {
   setTimeout(() => {
-    setCount(prev => prev + 1) // Always current
+    setCount((prev) => prev + 1) // Always current
   }, 1000)
 }
 ```
@@ -808,21 +813,20 @@ const { data } = useSWR('users', getUsers) // Static key
 // ✅ Solution
 const { data } = useSWR(
   swrKeys.usersByStatus(status), // Dynamic key
-  () => getUsers(status)
+  () => getUsers(status),
 )
 ```
 
 ### **Performance Tips**
 
 1. **Use conditional SWR fetching**
+
    ```typescript
-   const { data } = useSWR(
-     shouldFetch ? swrKeys.data() : null,
-     fetcher
-   )
+   const { data } = useSWR(shouldFetch ? swrKeys.data() : null, fetcher)
    ```
 
 2. **Memoize expensive calculations**
+
    ```typescript
    const expensiveValue = useMemo(() => {
      return heavyCalculation(data)
@@ -830,13 +834,13 @@ const { data } = useSWR(
    ```
 
 3. **Debounce search inputs**
+
    ```typescript
    const [searchTerm, setSearchTerm] = useState('')
    const debouncedSearch = useDebounce(searchTerm, 300)
 
-   const { data } = useSWR(
-     debouncedSearch ? swrKeys.search(debouncedSearch) : null,
-     () => searchApi(debouncedSearch)
+   const { data } = useSWR(debouncedSearch ? swrKeys.search(debouncedSearch) : null, () =>
+     searchApi(debouncedSearch),
    )
    ```
 
@@ -862,6 +866,7 @@ Add these rules to catch common issues:
 Before submitting your PR, ensure:
 
 ### **✅ Code Quality**
+
 - [ ] No ESLint warnings or errors
 - [ ] All useEffect hooks have proper dependencies
 - [ ] No setState-only effects
@@ -870,18 +875,21 @@ Before submitting your PR, ensure:
 - [ ] Loading states handled
 
 ### **✅ Performance**
+
 - [ ] useMemo used for expensive calculations
 - [ ] useCallback used for stable function references
 - [ ] Conditional SWR fetching where appropriate
 - [ ] No unnecessary re-renders
 
 ### **✅ User Experience**
+
 - [ ] Loading states provide feedback
 - [ ] Error messages are user-friendly
 - [ ] Forms reset properly between create/edit
 - [ ] Data refreshes after mutations
 
 ### **✅ Documentation**
+
 - [ ] Complex logic is commented
 - [ ] SSR effects are documented
 - [ ] Component props are typed
@@ -892,16 +900,19 @@ Before submitting your PR, ensure:
 ## 📚 Additional Resources
 
 ### **Official Documentation**
+
 - [SWR Documentation](https://swr.vercel.app/)
 - [React useEffect Guide](https://react.dev/reference/react/useEffect)
 - [React Performance](https://react.dev/learn/render-and-commit)
 
 ### **Team Resources**
+
 - [Project useEffect Optimization Documentation](./React-useEffect-Optimization-Documentation.md)
 - [Code Review Guidelines](../CODE_REVIEW.md)
 - [API Documentation](../API.md)
 
 ### **VS Code Extensions**
+
 - ES7+ React/Redux/React-Native snippets
 - React Developer Tools
 - TypeScript Importer

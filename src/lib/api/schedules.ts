@@ -51,7 +51,7 @@ export enum RecurrenceType {
   Daily = 'Daily',
   Weekly = 'Weekly',
   Monthly = 'Monthly',
-  Advanced = 'Advanced'
+  Advanced = 'Advanced',
 }
 
 export interface ODataQueryOptions {
@@ -111,13 +111,14 @@ function processODataResponse<T>(response: unknown): ODataResponse<T> {
   if (!response || typeof response !== 'object') {
     return { value: [] }
   }
-  
+
   const result = response as Record<string, unknown>
-  
+
   return {
-    value: Array.isArray(result.value) ? result.value as T[] : [],
+    value: Array.isArray(result.value) ? (result.value as T[]) : [],
     '@odata.count': typeof result['@odata.count'] === 'number' ? result['@odata.count'] : undefined,
-    '@odata.nextLink': typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
+    '@odata.nextLink':
+      typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
   }
 }
 
@@ -130,7 +131,7 @@ export const createSchedule = async (data: CreateScheduleDto): Promise<ScheduleR
   const tenant = getCurrentTenant()
   const response = await api.post<ScheduleResponseDto, CreateScheduleDto>(
     `${tenant}/api/schedules`,
-    data
+    data,
   )
   return response
 }
@@ -156,19 +157,19 @@ export const getSchedulesWithOData = async (
   options?: ODataQueryOptions,
 ): Promise<ODataResponse<ScheduleResponseDto>> => {
   const tenant = getCurrentTenant()
-  
+
   // Add strict enforcement of pagination parameters
   const safeOptions = { ...options }
   if (safeOptions.$top === undefined || safeOptions.$top <= 0) {
     safeOptions.$top = 10 // Default to 10 items if not specified
   }
-  
+
   // Add cache busting parameter for pagination requests
   const timestamp = new Date().getTime()
-  
+
   const queryString = buildODataQueryString(safeOptions)
   let endpoint = `${tenant}/odata/Schedules`
-  
+
   // Add the query string with cache busting
   if (queryString) {
     endpoint += `?${queryString}&_t=${timestamp}`
@@ -177,22 +178,26 @@ export const getSchedulesWithOData = async (
   }
 
   console.log(`Fetching schedules with endpoint: ${endpoint}`)
-  console.log(`Page: ${safeOptions.$skip ? safeOptions.$skip / safeOptions.$top + 1 : 1}, Size: ${safeOptions.$top}`)
+  console.log(
+    `Page: ${safeOptions.$skip ? safeOptions.$skip / safeOptions.$top + 1 : 1}, Size: ${safeOptions.$top}`,
+  )
 
   try {
     const response = await api.get<unknown>(endpoint)
-    
+
     // Process the response to ensure consistent structure
     const processedResponse = processODataResponse<ScheduleResponseDto>(response)
-    
+
     // Strictly enforce the requested page size
     if (safeOptions.$top && processedResponse.value.length > safeOptions.$top) {
-      console.warn(`OData returned ${processedResponse.value.length} items but only ${safeOptions.$top} were requested. Trimming results.`)
+      console.warn(
+        `OData returned ${processedResponse.value.length} items but only ${safeOptions.$top} were requested. Trimming results.`,
+      )
       processedResponse.value = processedResponse.value.slice(0, safeOptions.$top)
     }
-    
+
     console.log(`Received ${processedResponse.value.length} schedules from OData`)
-    
+
     return processedResponse
   } catch (error) {
     console.error('Error fetching schedules with OData:', error)
@@ -220,12 +225,12 @@ export const getScheduleById = async (id: string): Promise<ScheduleResponseDto> 
  */
 export const updateSchedule = async (
   id: string,
-  data: UpdateScheduleDto
+  data: UpdateScheduleDto,
 ): Promise<ScheduleResponseDto> => {
   const tenant = getCurrentTenant()
   const response = await api.put<ScheduleResponseDto, UpdateScheduleDto>(
     `${tenant}/api/schedules/${id}`,
-    data
+    data,
   )
   return response
 }
@@ -263,11 +268,11 @@ export const disableSchedule = async (id: string): Promise<ScheduleResponseDto> 
  */
 export const formatNextRunTime = (nextRunTime?: string): string => {
   if (!nextRunTime) return 'Not scheduled'
-  
+
   try {
     const date = new Date(nextRunTime)
     if (isNaN(date.getTime())) return 'Invalid date'
-    
+
     return new Intl.DateTimeFormat('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
@@ -306,7 +311,7 @@ export const getRecurrenceTypeDisplayName = (type: RecurrenceType): string => {
  */
 export const validateCronExpression = (expression: string): boolean => {
   if (!expression) return false
-  
+
   // Basic validation: should have 5 or 6 parts separated by spaces
   const parts = expression.trim().split(/\s+/)
   return parts.length >= 5 && parts.length <= 6
@@ -315,18 +320,16 @@ export const validateCronExpression = (expression: string): boolean => {
 /**
  * Convert form data to create/update DTO
  */
-export const convertFormDataToDto = (
-  formData: {
-    name: string
-    description?: string
-    recurrenceType: RecurrenceType
-    timeZoneId?: string
-    automationPackageId: string
-    botAgentId: string
-    oneTimeExecution?: string
-    cronExpression?: string
-  }
-): CreateScheduleDto => {
+export const convertFormDataToDto = (formData: {
+  name: string
+  description?: string
+  recurrenceType: RecurrenceType
+  timeZoneId?: string
+  automationPackageId: string
+  botAgentId: string
+  oneTimeExecution?: string
+  cronExpression?: string
+}): CreateScheduleDto => {
   const baseDto = {
     name: formData.name,
     description: formData.description,
@@ -354,4 +357,4 @@ export const convertFormDataToDto = (
   // For other types, we might need to generate cron expressions
   // This can be implemented based on the UI requirements
   return baseDto
-} 
+}

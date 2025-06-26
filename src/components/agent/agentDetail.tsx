@@ -39,10 +39,11 @@ export default function AgentDetail({ id }: AgentDetailProps) {
   const { toast } = useToast()
 
   // ✅ SWR for agent data - following guideline #8: use framework-level loaders
-  const { data: agentData, error: agentError, isLoading: loading } = useSWR(
-    id ? swrKeys.agentById(id) : null,
-    () => getBotAgentById(id)
-  )
+  const {
+    data: agentData,
+    error: agentError,
+    isLoading: loading,
+  } = useSWR(id ? swrKeys.agentById(id) : null, () => getBotAgentById(id))
 
   // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
   const agent = useMemo(() => {

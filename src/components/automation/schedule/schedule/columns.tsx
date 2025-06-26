@@ -9,7 +9,12 @@ import { Switch } from '@/components/ui/switch'
 import { Loader2 } from 'lucide-react'
 
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import { ScheduleResponseDto, RecurrenceType, getRecurrenceTypeDisplayName, formatNextRunTime } from '@/lib/api/schedules'
+import {
+  ScheduleResponseDto,
+  RecurrenceType,
+  getRecurrenceTypeDisplayName,
+  formatNextRunTime,
+} from '@/lib/api/schedules'
 import DataTableRowAction from './data-table-row-actions'
 
 interface CreateScheduleColumnsProps {
@@ -18,10 +23,10 @@ interface CreateScheduleColumnsProps {
 }
 
 // Enhanced Switch component with loading state
-const EnhancedSwitch = ({ 
-  schedule, 
-  onToggleEnabled 
-}: { 
+const EnhancedSwitch = ({
+  schedule,
+  onToggleEnabled,
+}: {
   schedule: ScheduleResponseDto
   onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
 }) => {
@@ -30,7 +35,9 @@ const EnhancedSwitch = ({
   const handleToggle = async () => {
     if (!onToggleEnabled || isToggling) return
 
-    console.log(`Toggling schedule ${schedule.name} from ${schedule.isEnabled} to ${!schedule.isEnabled}`)
+    console.log(
+      `Toggling schedule ${schedule.name} from ${schedule.isEnabled} to ${!schedule.isEnabled}`,
+    )
     setIsToggling(true)
 
     try {
@@ -67,9 +74,9 @@ const EnhancedSwitch = ({
   )
 }
 
-export const createScheduleColumns = ({ 
+export const createScheduleColumns = ({
   onDeleted,
-  onToggleEnabled 
+  onToggleEnabled,
 }: CreateScheduleColumnsProps = {}): ColumnDef<ScheduleResponseDto>[] => [
   {
     id: 'select',
@@ -113,8 +120,8 @@ export const createScheduleColumns = ({
     id: 'actions',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
     cell: ({ row }) => (
-      <DataTableRowAction 
-        schedule={row.original} 
+      <DataTableRowAction
+        schedule={row.original}
         onDeleted={onDeleted}
         onToggleEnabled={onToggleEnabled}
       />
@@ -142,12 +149,7 @@ export const createScheduleColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const schedule = row.original
-      return (
-        <EnhancedSwitch 
-          schedule={schedule}
-          onToggleEnabled={onToggleEnabled}
-        />
-      )
+      return <EnhancedSwitch schedule={schedule} onToggleEnabled={onToggleEnabled} />
     },
   },
   {
@@ -157,9 +159,7 @@ export const createScheduleColumns = ({
       const recurrenceType = row.getValue('recurrenceType') as RecurrenceType
       return (
         <div className="flex items-center">
-          <Badge variant="outline">
-            {getRecurrenceTypeDisplayName(recurrenceType)}
-          </Badge>
+          <Badge variant="outline">{getRecurrenceTypeDisplayName(recurrenceType)}</Badge>
         </div>
       )
     },
@@ -199,9 +199,7 @@ export const createScheduleColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Timezone" />,
     cell: ({ row }) => (
       <div className="flex items-center">
-        <span className="text-sm text-muted-foreground">
-          {row.getValue('timeZoneId') || 'UTC'}
-        </span>
+        <span className="text-sm text-muted-foreground">{row.getValue('timeZoneId') || 'UTC'}</span>
       </div>
     ),
   },
@@ -228,17 +226,15 @@ export const createScheduleColumns = ({
     cell: ({ row }) => {
       const cronExpression = row.getValue('cronExpression') as string | undefined
       const recurrenceType = row.original.recurrenceType
-      
+
       if (recurrenceType === RecurrenceType.Advanced && cronExpression) {
         return (
           <div className="flex items-center">
-            <code className="text-xs bg-muted px-2 py-1 rounded">
-              {cronExpression}
-            </code>
+            <code className="text-xs bg-muted px-2 py-1 rounded">{cronExpression}</code>
           </div>
         )
       }
-      
+
       return <span className="text-sm text-muted-foreground">-</span>
     },
   },

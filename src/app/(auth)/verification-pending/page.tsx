@@ -54,11 +54,11 @@ function VerificationPendingContent() {
         message: 'Please check your inbox for the verification link.',
       })
     } catch (error: unknown) {
-      console.error('Failed to resend verification email:', error);
-      
+      console.error('Failed to resend verification email:', error)
+
       // Extract error message using shared utility
-      const errorMessage = extractErrorMessage(error);
-      
+      const errorMessage = extractErrorMessage(error)
+
       setAlert({
         type: 'error',
         title: 'Failed to resend email',

@@ -71,7 +71,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
         }
 
         await createAutomationPackage(packageData)
-        
+
         // Success toast
         toast({
           title: 'Success',
@@ -97,7 +97,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
           description: description.trim() || undefined,
           version: version.trim() || undefined,
         })
-        
+
         // Success toast
         toast({
           title: 'Success',
@@ -111,11 +111,11 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       onSuccess?.()
     } catch (err) {
       console.error('Error creating package:', err)
-      
+
       // Extract user-friendly error message
       const errorMessage = extractErrorMessage(err)
       setError(errorMessage)
-      
+
       // Show error toast
       toast(createErrorToast(err))
     } finally {
@@ -139,9 +139,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] p-6">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? 'Edit Package' : 'Create New Automation Package'}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Package' : 'Create New Automation Package'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -171,19 +169,19 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               {/* File Upload Section */}
               <div className="space-y-2">
                 <Label htmlFor="file-upload">Package File</Label>
-          <label
-            htmlFor="file-upload"
+                <label
+                  htmlFor="file-upload"
                   className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="h-8 w-8 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500">
                       {file ? file.name : 'Click to select a bot package file (.zip)'}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       ZIP files containing bot.py are supported
-              </p>
-            </div>
+                    </p>
+                  </div>
                   <input
                     id="file-upload"
                     type="file"
@@ -191,7 +189,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                     className="hidden"
                     onChange={handleFileChange}
                   />
-          </label>
+                </label>
               </div>
 
               {/* Optional Override Fields */}
@@ -199,7 +197,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                 <p className="text-sm text-gray-600">
                   Optional: Override metadata extracted from the package file
                 </p>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Package Name (optional)</Label>
@@ -220,7 +218,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Description (optional)</Label>
                   <Textarea
@@ -247,7 +245,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="manual-description">Description</Label>
                   <Textarea

@@ -3,11 +3,16 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { AutomationPackageResponseDto, PackageVersionResponseDto } from '@/lib/api/automation-packages'
+import {
+  AutomationPackageResponseDto,
+  PackageVersionResponseDto,
+} from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
 
-export const createPackageColumns = (onRefresh?: () => void): ColumnDef<AutomationPackageResponseDto>[] => [
+export const createPackageColumns = (
+  onRefresh?: () => void,
+): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -63,16 +68,19 @@ export const createPackageColumns = (onRefresh?: () => void): ColumnDef<Automati
     header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Version" />,
     cell: ({ row }) => {
       const versions = row.getValue('versions') as PackageVersionResponseDto[]
-      const latestVersion = versions && versions.length > 0 
-        ? [...versions].sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0]
-        : null
-      
+      const latestVersion =
+        versions && versions.length > 0
+          ? [...versions].sort(
+              (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+            )[0]
+          : null
+
       return (
-      <div className="flex items-center">
+        <div className="flex items-center">
           <Badge variant="secondary">
             {latestVersion ? latestVersion.versionNumber : 'No versions'}
           </Badge>
-      </div>
+        </div>
       )
     },
     enableSorting: false,
@@ -84,11 +92,11 @@ export const createPackageColumns = (onRefresh?: () => void): ColumnDef<Automati
     cell: ({ row }) => {
       const versions = row.getValue('versions') as PackageVersionResponseDto[]
       const count = versions ? versions.length : 0
-      
+
       return (
-      <div className="flex items-center">
+        <div className="flex items-center">
           <span>{count}</span>
-      </div>
+        </div>
       )
     },
     enableSorting: false,
@@ -98,17 +106,19 @@ export const createPackageColumns = (onRefresh?: () => void): ColumnDef<Automati
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean
-      
+
       return (
-      <div className="flex items-center">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            isActive 
-              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
-          }`}>
+        <div className="flex items-center">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              isActive
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+            }`}
+          >
             {isActive ? 'Active' : 'Inactive'}
           </span>
-      </div>
+        </div>
       )
     },
   },
@@ -117,19 +127,19 @@ export const createPackageColumns = (onRefresh?: () => void): ColumnDef<Automati
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
       // Format the date using Intl.DateTimeFormat for consistent display
-      let formattedDate = '';
+      let formattedDate = ''
       try {
-        const date = new Date(row.getValue('createdAt') as string);
+        const date = new Date(row.getValue('createdAt') as string)
         if (!isNaN(date.getTime())) {
           formattedDate = new Intl.DateTimeFormat('en-US', {
             dateStyle: 'medium',
-          }).format(date);
+          }).format(date)
         }
       } catch (error) {
-        console.error('Error formatting date:', error);
-        formattedDate = 'Invalid date';
+        console.error('Error formatting date:', error)
+        formattedDate = 'Invalid date'
       }
-      
+
       return (
         <div className="flex items-center">
           <span>{formattedDate}</span>

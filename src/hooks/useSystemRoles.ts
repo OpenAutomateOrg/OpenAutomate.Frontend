@@ -84,10 +84,10 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
     data: adminUsers,
     error: adminError,
     isLoading: loadingAdmins,
-    mutate: mutateAdmins
+    mutate: mutateAdmins,
   } = useSWR(
     isSystemAdmin && options.fetchAdmins ? swrKeys.usersByRole(SystemRole.Admin.toString()) : null,
-    () => systemRolesApi.getUsersByRole(SystemRole.Admin)
+    () => systemRolesApi.getUsersByRole(SystemRole.Admin),
   )
 
   // ✅ SWR for standard users
@@ -95,10 +95,12 @@ export function useSystemRoles(options: UseSystemRolesOptions = {}): UseSystemRo
     data: standardUsers,
     error: standardUserError,
     isLoading: loadingStandardUsers,
-    mutate: mutateStandardUsers
+    mutate: mutateStandardUsers,
   } = useSWR(
-    isSystemAdmin && options.fetchStandardUsers ? swrKeys.usersByRole(SystemRole.User.toString()) : null,
-    () => systemRolesApi.getUsersByRole(SystemRole.User)
+    isSystemAdmin && options.fetchStandardUsers
+      ? swrKeys.usersByRole(SystemRole.User.toString())
+      : null,
+    () => systemRolesApi.getUsersByRole(SystemRole.User),
   )
 
   // UI state for role changes
