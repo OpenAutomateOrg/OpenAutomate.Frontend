@@ -4,6 +4,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   User,
+  UserProfile,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
@@ -15,6 +16,7 @@ const endpoints = {
   login: 'api/authen/login',
   register: 'api/authen/register',
   user: 'api/authen/user',
+  profile: 'api/account/profile',
   refreshToken: 'api/authen/refresh-token',
   revokeToken: 'api/authen/revoke-token',
   forgotPassword: 'api/authen/forgot-password',
@@ -129,6 +131,15 @@ export const authApi = {
    */
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get<User>(endpoints.user)
+    return response
+  },
+
+  /**
+   * Get the complete user profile with permissions across all organization units
+   * @returns Complete user profile with permissions
+   */
+  getUserProfile: async (): Promise<UserProfile> => {
+    const response = await api.get<UserProfile>(endpoints.profile)
     return response
   },
 
