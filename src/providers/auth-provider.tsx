@@ -55,6 +55,18 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   // Computed property for system admin status
   const isSystemAdmin = user?.systemRole === SystemRole.Admin
 
+  // Helper function to fetch and update user profile
+  const fetchAndUpdateUserProfile = useCallback(async (context: string = 'profile fetch'): Promise<void> => {
+    try {
+      const profile = await authApi.getUserProfile()
+      setUserProfile(profile)
+      logger.success(`User profile loaded successfully during ${context}`)
+    } catch (profileError) {
+      logger.warning(`Failed to load user profile during ${context}:`, profileError)
+      // Don't throw error to avoid breaking the calling flow
+    }
+  }, [])
+
   // Helper function to check permissions for a specific resource and tenant
   const hasPermission = useCallback((resource: string, requiredPermission: PermissionLevel, tenant?: string): boolean => {
     if (!userProfile) return false
@@ -95,20 +107,15 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         systemRole: response.systemRole || SystemRole.User,
       }
 
-              // Update in storage and local state
-        setStoredUser(userToSet)
-        setUser(userToSet)
+      // Update in storage and local state
+      setStoredUser(userToSet)
+      setUser(userToSet)
 
-        // Fetch complete user profile with permissions after refresh
-        try {
-          const profile = await authApi.getUserProfile()
-          setUserProfile(profile)
-        } catch (profileError) {
-          logger.warning('Failed to load user profile during refresh:', profileError)
-        }
+      // Fetch complete user profile with permissions after refresh
+      await fetchAndUpdateUserProfile('token refresh')
 
-        logger.success('Token refreshed successfully')
-        return true
+      logger.success('Token refreshed successfully')
+      return true
     } catch (err) {
       logger.error('Token refresh failed:', err)
       // Clear auth data on refresh failure
@@ -117,7 +124,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       setUserProfile(null)
       return false
     }
-  }, [])
+  }, [fetchAndUpdateUserProfile])
 
   // Set up token refresh on interval and tab focus
   useEffect(() => {
@@ -189,13 +196,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
             logger.success('User data refreshed from API')
 
             // Also fetch the complete profile with permissions
-            try {
-              const profile = await authApi.getUserProfile()
-              setUserProfile(profile)
-              logger.success('User profile refreshed from API')
-            } catch (profileErr) {
-              logger.warning('Failed to refresh user profile:', profileErr)
-            }
+            await fetchAndUpdateUserProfile('initialization')
           } catch (err) {
             logger.warning('Failed to get current user, attempting token refresh', err)
             // If fetching current user fails, try to refresh the token
@@ -219,12 +220,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
               setUser(userToSet)
 
               // Fetch complete user profile with permissions
-              try {
-                const profile = await authApi.getUserProfile()
-                setUserProfile(profile)
-              } catch (profileError) {
-                logger.warning('Failed to load user profile during init refresh:', profileError)
-              }
+              await fetchAndUpdateUserProfile('initialization token refresh')
 
               logger.success('Token refreshed successfully during init')
             } catch (refreshErr) {
@@ -275,14 +271,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setUser(userData)
 
         // Fetch complete user profile with permissions after login
-        try {
-          const profile = await authApi.getUserProfile()
-          setUserProfile(profile)
-          logger.success('User profile loaded with permissions')
-        } catch (profileError) {
-          logger.warning('Failed to load user profile, permissions may be limited:', profileError)
-          // Don't fail login if profile fetch fails
-        }
+        await fetchAndUpdateUserProfile('login')
 
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
@@ -309,7 +298,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [router],
+    [router, fetchAndUpdateUserProfile],
   )
 
   // Register function
