@@ -1,25 +1,19 @@
 'use client'
 
-import { PlusCircle, Search } from 'lucide-react'
+import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { CreateEditModal } from './create-edit-modal'
 import { useRouter } from 'next/navigation'
 import { rolesApi } from '@/lib/api/roles'
 import { useToast } from '@/components/ui/use-toast'
-import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
+import { DataTable } from '@/components/layout/table/data-table'
+import { columns } from './columns'
+import { RolesDataTableToolbar } from './data-table-toolbar'
+import { Pagination } from '@/components/ui/pagination'
+import type { ColumnDef, Row } from '@tanstack/react-table'
+import DataTableRowAction from './data-table-row-actions'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
 
 export interface RolesRow {
   id: string
@@ -34,42 +28,125 @@ export interface RolesRow {
   }[]
 }
 
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(handler)
+  }, [value, delay])
+  return debouncedValue
+}
+
 export default function RolesInterface() {
   const router = useRouter()
   const { toast } = useToast()
 
-  // SWR for data fetching - replaces manual state management
-  const { data: roles, error, isLoading, mutate } = useSWR(
-    swrKeys.roles(),
-    rolesApi.getAllRoles
-  )
+  // ✅ Filter state management (following useEffect compliance guide)
+  const [searchName, setSearchName] = useState('')
+  const [searchDescription, setSearchDescription] = useState('')
+  const [searchResource, setSearchResource] = useState('')
+  const [filterSystemRoles, setFilterSystemRoles] = useState<string>('ALL')
 
-  // UI state management
+  // ✅ UI state management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<RolesRow | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
 
-  // Transform data during render (following guideline #1: prefer deriving data during render)
-  const data = useMemo(() => {
-    if (!roles) return []
+  // ✅ Pagination state
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
 
-    // Transform backend data to match our schema
-    return roles.map(role => ({
-      id: role.id,
-      name: role.name,
-      description: role.description,
-      isSystemAuthority: role.isSystemAuthority,
-      createdAt: role.createdAt,
-      updatedAt: role.updatedAt,
-      permissions: role.permissions?.map(p => ({
-        resourceName: p.resourceName,
-        permission: p.permission,
-      }))
-    }))
-  }, [roles])
+  // Refs for tracking total count
+  const totalCountRef = useRef<number>(0)
+  const [hasExactCount, setHasExactCount] = useState(false)
 
-  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
-  // Client-only: Requires toast notifications
+  // ✅ Debounced filter values (following guideline #1: prefer deriving data during render)
+  const debouncedName = useDebounce(searchName, 400)
+  const debouncedDescription = useDebounce(searchDescription, 400)
+  const debouncedResource = useDebounce(searchResource, 400)
+
+  // ✅ Get available resources for filtering options
+  const { data: availableResources } = useSWR('available-resources', rolesApi.getAvailableResources)
+
+  const resourceOptions = useMemo(() => {
+    if (!availableResources) return []
+    return [...new Set(availableResources.map((r) => r.resourceName))]
+  }, [availableResources])
+
+  // ✅ Build OData options for SWR key
+  const odataOptions = {
+    $filter:
+      [
+        debouncedName ? `contains(tolower(name),'${debouncedName.toLowerCase()}')` : undefined,
+        debouncedDescription
+          ? `contains(tolower(description),'${debouncedDescription.toLowerCase()}')`
+          : undefined,
+        debouncedResource
+          ? `permissions/any(p: contains(tolower(p/resourceName),'${debouncedResource.toLowerCase()}'))`
+          : undefined,
+        filterSystemRoles !== 'ALL'
+          ? `isSystemAuthority eq ${filterSystemRoles === 'SYSTEM' ? 'true' : 'false'}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(' and ') || undefined,
+    $top: pageSize,
+    $skip: pageIndex * pageSize,
+    $count: true,
+  }
+
+  // ✅ SWR for roles data (following guideline #8: use framework-level loaders)
+  const {
+    data: rolesResponse,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(['roles-with-odata', odataOptions], () => rolesApi.getRolesWithOData(odataOptions), {
+    keepPreviousData: true,
+  })
+
+  const roles = rolesResponse?.value ?? []
+  const totalCount = rolesResponse?.['@odata.count'] ?? roles.length
+
+  // ✅ Update total count based on OData response (following guideline #2: no setState-only effects)
+  useEffect(() => {
+    if (rolesResponse) {
+      if (typeof rolesResponse['@odata.count'] === 'number') {
+        totalCountRef.current = rolesResponse['@odata.count']
+        setHasExactCount(true)
+      } else {
+        // If no @odata.count, use length as minimum count
+        const minCount = pageIndex * pageSize + roles.length
+        if (minCount > totalCountRef.current) {
+          totalCountRef.current = minCount
+        }
+
+        // If we have a full page and we're on the first page, assume there's at least one more
+        const isFullFirstPage = roles.length === pageSize && pageIndex === 0
+        if (isFullFirstPage) {
+          totalCountRef.current = minCount + 1
+        }
+
+        setHasExactCount(false)
+      }
+    }
+  }, [rolesResponse, pageIndex, pageSize, roles.length])
+
+  // ✅ Calculate page count with better edge case handling (following guideline #1: derive during render)
+  const totalPages = useMemo(() => {
+    const calculatedCount = Math.max(1, Math.ceil(totalCount / pageSize))
+    const hasMorePages = roles.length === pageSize && totalCount <= pageSize * (pageIndex + 1)
+    const minValidPageCount = pageIndex + 1
+
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pageIndex + 2)
+    }
+    return Math.max(minValidPageCount, calculatedCount)
+  }, [totalCount, pageSize, pageIndex, roles.length])
+
+  const isUnknownTotalCount = !hasExactCount && roles.length === pageSize
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
   useEffect(() => {
     if (error) {
       console.error('Failed to load roles:', error)
@@ -81,30 +158,37 @@ export default function RolesInterface() {
     }
   }, [error, toast])
 
-  // Filter data based on search term
-  const filteredData = data.filter(role =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.description.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // ✅ Map API role to table row (following guideline #1: derive during render)
+  function mapRoleToRolesRow(role: any): RolesRow {
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      isSystemAuthority: role.isSystemAuthority,
+      createdAt: role.createdAt,
+      updatedAt: role.updatedAt,
+      permissions: role.permissions?.map((p: any) => ({
+        resourceName: p.resourceName,
+        permission: p.permission,
+      })),
+    }
+  }
 
-  // Handle row click for viewing role details
+  // ✅ Event handlers for user actions (following guideline #3)
   const handleRowClick = (row: RolesRow) => {
     router.push(`roles/${row.id}`)
   }
 
-  // Handle create role
   const handleCreateRole = () => {
     setEditingRole(null)
     setIsCreateModalOpen(true)
   }
 
-  // Handle edit role
   const handleEditRole = (role: RolesRow) => {
     setEditingRole(role)
     setIsCreateModalOpen(true)
   }
 
-  // Handle delete role
   const handleDeleteRole = async (roleId: string) => {
     try {
       await rolesApi.deleteRole(roleId)
@@ -112,8 +196,7 @@ export default function RolesInterface() {
         title: 'Success',
         description: 'Role deleted successfully.',
       })
-      // Reload data using SWR's mutate
-      await mutate()
+      await mutate() // ✅ Refresh cache
     } catch (error) {
       console.error('Failed to delete role:', error)
       toast({
@@ -124,7 +207,6 @@ export default function RolesInterface() {
     }
   }
 
-  // Handle modal close and reload data
   const handleModalClose = async (shouldReload = false) => {
     setIsCreateModalOpen(false)
     setEditingRole(null)
@@ -133,6 +215,25 @@ export default function RolesInterface() {
       await mutate()
     }
   }
+
+  const handleResetFilters = () => {
+    setSearchName('')
+    setSearchDescription('')
+    setSearchResource('')
+    setFilterSystemRoles('ALL')
+  }
+
+  // ✅ Fix for TypeScript warning about row prop
+  const columnsWithAction: ColumnDef<RolesRow>[] = columns.map((col) =>
+    col.id === 'actions'
+      ? {
+          ...col,
+          cell: ({ row }: { row: Row<RolesRow> }) => (
+            <DataTableRowAction row={row} onEdit={handleEditRole} onDelete={handleDeleteRole} />
+          ),
+        }
+      : col,
+  )
 
   return (
     <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
@@ -144,133 +245,69 @@ export default function RolesInterface() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
+          {totalCount > 0 && (
+            <div className="text-sm text-muted-foreground">
+              <span>
+                Total: {totalCount} role{totalCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
           <Button onClick={handleCreateRole} className="h-8 px-2 lg:px-3">
-              <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Create Role
-            </Button>
-          </div>
-      </div>
-
-      {/* Search */}
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search roles..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
+          </Button>
         </div>
       </div>
-      
-      {/* Table */}
-      <div className="rounded-md border relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+
+      <div className="flex flex-col gap-4 w-full">
+        <RolesDataTableToolbar
+          searchName={searchName}
+          setSearchName={setSearchName}
+          searchDescription={searchDescription}
+          setSearchDescription={setSearchDescription}
+          searchResource={searchResource}
+          filterSystemRoles={filterSystemRoles}
+          setFilterSystemRoles={setFilterSystemRoles}
+          loading={isLoading}
+          onReset={handleResetFilters}
+        />
+
+        <DataTable
+          columns={columnsWithAction}
+          data={roles.map(mapRoleToRolesRow)}
+          isLoading={isLoading}
+          totalCount={totalCount}
+          onRowClick={handleRowClick}
+        />
+
+        <Pagination
+          currentPage={pageIndex + 1}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          isUnknownTotalCount={isUnknownTotalCount}
+          onPageChange={(page) => setPageIndex(page - 1)}
+          onPageSizeChange={setPageSize}
+        />
+
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+            <p className="text-red-800 dark:text-red-300">Failed to load roles</p>
+            <Button variant="outline" className="mt-2" onClick={() => mutate()}>
+              Retry
+            </Button>
           </div>
         )}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead className="w-[120px]">Created</TableHead>
-              <TableHead className="w-[70px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length > 0 ? (
-              filteredData.map((role) => (
-                <TableRow
-                  key={role.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleRowClick(role)}
-                >
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{role.name}</span>
-                      {role.isSystemAuthority && (
-                        <Badge variant="secondary" className="text-xs">
-                          System
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[300px]">
-                      <span className="text-sm text-muted-foreground">
-                        {role.description || 'No description'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {role.permissions && role.permissions.length > 0 ? (
-                        role.permissions.slice(0, 3).map((perm) => (
-                          <Badge key={perm.resourceName} variant="outline" className="text-xs">
-                            {perm.resourceName}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No permissions</span>
-                      )}
-                      {role.permissions && role.permissions.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{role.permissions.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {format(new Date(role.createdAt), 'MMM dd, yyyy')}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditRole(role)
-                        }}
-                        disabled={role.isSystemAuthority}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteRole(role.id)
-                        }}
-                        disabled={role.isSystemAuthority}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  {isLoading ? 'Loading...' : 'No roles found.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+
+        {!isLoading && roles.length === 0 && !error && (
+          <div className="text-center py-10 text-muted-foreground">
+            <p>No roles found.</p>
+          </div>
+        )}
       </div>
 
       <CreateEditModal
-        key={editingRole?.id ?? 'new'} // Dynamic key to reset component state
+        key={editingRole?.id ?? 'new'} // ✅ Dynamic key to reset component state
         isOpen={isCreateModalOpen}
         onClose={handleModalClose}
         editingRole={editingRole}

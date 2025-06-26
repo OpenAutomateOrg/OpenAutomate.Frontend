@@ -49,6 +49,22 @@ export interface AssignAuthorityDto {
   authorityId: string
 }
 
+// OData support for roles (client-side pagination)
+export interface ODataQueryOptions {
+  $filter?: string
+  $orderby?: string
+  $top?: number
+  $skip?: number
+  $select?: string
+  $count?: boolean
+  $expand?: string
+}
+
+export interface ODataResponse<T> {
+  value: T[]
+  '@odata.count'?: number
+}
+
 /**
  * Get tenant slug from URL path
  */
@@ -78,6 +94,41 @@ export const rolesApi = {
   getAllRoles: async (): Promise<RoleWithPermissionsDto[]> => {
     const tenant = getTenantSlug()
     return fetchApi<RoleWithPermissionsDto[]>(`${tenant}/api/author/authorities`)
+  },
+
+  /**
+   * Get roles with OData-style filtering and pagination (client-side)
+   */
+  getRolesWithOData: async (options?: ODataQueryOptions): Promise<ODataResponse<RoleWithPermissionsDto>> => {
+    const allRoles = await rolesApi.getAllRoles()
+    
+    let filteredRoles = [...allRoles]
+    
+    // Apply filtering
+    if (options?.$filter) {
+      filteredRoles = applyRoleFilters(filteredRoles, options.$filter)
+    }
+    
+    // Apply ordering
+    if (options?.$orderby) {
+      filteredRoles = applySorting(filteredRoles, options.$orderby)
+    }
+    
+    const totalCount = filteredRoles.length
+    
+    // Apply pagination
+    if (options?.$skip) {
+      filteredRoles = filteredRoles.slice(options.$skip)
+    }
+    
+    if (options?.$top) {
+      filteredRoles = filteredRoles.slice(0, options.$top)
+    }
+    
+    return {
+      value: filteredRoles,
+      '@odata.count': options?.$count ? totalCount : undefined
+    }
   },
 
   /**
@@ -195,4 +246,128 @@ export const getPermissionDescription = (level: number): string => {
  */
 export const isValidPermissionLevel = (level: number): boolean => {
   return level >= PermissionLevels.NO_ACCESS && level <= PermissionLevels.DELETE
+}
+
+/**
+ * Helper functions for client-side OData filtering
+ */
+function applyRoleFilters(roles: RoleWithPermissionsDto[], filterString: string): RoleWithPermissionsDto[] {
+  if (!filterString) return roles
+  
+  // Simple parsing for common filter patterns
+  // This supports basic contains, eq, and boolean filters
+  const filters = parseFilterString(filterString)
+  
+  return roles.filter(role => {
+    return filters.every(filter => {
+      switch (filter.field) {
+        case 'name':
+          if (filter.operation === 'contains') {
+            return role.name.toLowerCase().includes(filter.value.toLowerCase())
+          } else if (filter.operation === 'eq') {
+            return role.name.toLowerCase() === filter.value.toLowerCase()
+          }
+          break
+        case 'description':
+          if (filter.operation === 'contains') {
+            return role.description.toLowerCase().includes(filter.value.toLowerCase())
+          } else if (filter.operation === 'eq') {
+            return role.description.toLowerCase() === filter.value.toLowerCase()
+          }
+          break
+        case 'isSystemAuthority':
+          if (filter.operation === 'eq') {
+            return role.isSystemAuthority === (filter.value === 'true')
+          }
+          break
+        case 'resourceName':
+          if (filter.operation === 'any') {
+            return role.permissions?.some(p => 
+              p.resourceName.toLowerCase().includes(filter.value.toLowerCase())
+            ) ?? false
+          }
+          break
+      }
+      return true
+    })
+  })
+}
+
+function parseFilterString(filterString: string): Array<{field: string, operation: string, value: string}> {
+  const filters: Array<{field: string, operation: string, value: string}> = []
+  
+  // Split by 'and' and parse each part
+  const parts = filterString.split(' and ')
+  
+  for (const part of parts) {
+    const trimmed = part.trim()
+    
+    // Parse contains(tolower(field),'value')
+    const containsMatch = trimmed.match(/contains\(tolower\((\w+)\),'(.+?)'\)/)
+    if (containsMatch) {
+      filters.push({
+        field: containsMatch[1],
+        operation: 'contains',
+        value: containsMatch[2]
+      })
+      continue
+    }
+    
+    // Parse field eq 'value' or field eq true/false
+    const eqMatch = trimmed.match(/(\w+)\s+eq\s+(?:'(.+?)'|(\w+))/)
+    if (eqMatch) {
+      filters.push({
+        field: eqMatch[1],
+        operation: 'eq',
+        value: eqMatch[2] || eqMatch[3]
+      })
+      continue
+    }
+    
+    // Parse permissions/any(p: condition)
+    const anyMatch = trimmed.match(/(\w+)\/any\([^:]+:\s*(.+)\)/)
+    if (anyMatch) {
+      const nestedCondition = anyMatch[2]
+      const nestedContains = nestedCondition.match(/contains\(tolower\([^)]+\),'(.+?)'\)/)
+      if (nestedContains) {
+        filters.push({
+          field: 'resourceName', // We'll handle this specially
+          operation: 'any',
+          value: nestedContains[1]
+        })
+      }
+    }
+  }
+  
+  return filters
+}
+
+function applySorting(roles: RoleWithPermissionsDto[], orderBy: string): RoleWithPermissionsDto[] {
+  const [field, direction = 'asc'] = orderBy.split(' ')
+  
+  return [...roles].sort((a, b) => {
+    let aValue: any
+    let bValue: any
+    
+    switch (field) {
+      case 'name':
+        aValue = a.name
+        bValue = b.name
+        break
+      case 'description':
+        aValue = a.description
+        bValue = b.description
+        break
+      case 'createdAt':
+        aValue = new Date(a.createdAt)
+        bValue = new Date(b.createdAt)
+        break
+      default:
+        return 0
+    }
+    
+    if (aValue < bValue) return direction === 'asc' ? -1 : 1
+    if (aValue > bValue) return direction === 'asc' ? 1 : -1
+    return 0
+  })
 } 

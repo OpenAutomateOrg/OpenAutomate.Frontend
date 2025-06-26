@@ -1,132 +1,186 @@
 'use client'
 
-import { Table } from '@tanstack/react-table'
-import { X, Search, Loader2 } from 'lucide-react'
-import { useRef, useEffect } from 'react'
-
-import { Button } from '@/components/ui/button'
+import { X, Search, Filter } from 'lucide-react'
+import React, { useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
-import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
-
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>
-  statuses: { value: string; label: string }[] // Options for Status filter
-  onSearch?: (value: string) => void
-  onStatusChange?: (value: string) => void
-  searchValue?: string
-  isFiltering?: boolean
-  isPending?: boolean
+interface RolesDataTableToolbarProps {
+  readonly searchName: string
+  readonly setSearchName: (v: string) => void
+  readonly searchDescription: string
+  readonly setSearchDescription: (v: string) => void
+  readonly searchResource: string
+  readonly filterSystemRoles: string
+  readonly setFilterSystemRoles: (v: string) => void
+  readonly loading?: boolean
+  readonly onReset: () => void
 }
 
-export function DataTableToolbar<TData>({
-  table,
-  onSearch,
-  searchValue = '',
-  isFiltering = false,
-  isPending = false,
-}: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+export function RolesDataTableToolbar({
+  searchName,
+  setSearchName,
+  searchDescription,
+  setSearchDescription,
+  searchResource,
+  filterSystemRoles,
+  setFilterSystemRoles,
+  loading = false,
+  onReset,
+}: RolesDataTableToolbarProps) {
+  const activeFilterCount = [
+    searchName,
+    searchDescription,
+    searchResource,
+    filterSystemRoles !== 'ALL' ? filterSystemRoles : '',
+  ].filter(Boolean).length
 
-  // Get active filter count
-  const activeFilterCount = table.getState().columnFilters.length
+  const isFiltered = activeFilterCount > 0
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const descriptionInputRef = useRef<HTMLInputElement>(null)
+  const nameCursorRef = useRef<number | null>(null)
+  const descriptionCursorRef = useRef<number | null>(null)
 
-  // Create a ref for the search input to preserve focus
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const lastCursorPositionRef = useRef<number | null>(null)
-
-  // Preserve the cursor position when the component re-renders
   useEffect(() => {
-    // Only restore focus if we were previously focused
     if (
-      document.activeElement !== searchInputRef.current &&
-      lastCursorPositionRef.current !== null
+      document.activeElement !== nameInputRef.current &&
+      nameCursorRef.current !== null &&
+      nameInputRef.current
     ) {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus()
-        if (lastCursorPositionRef.current !== null) {
-          searchInputRef.current.setSelectionRange(
-            lastCursorPositionRef.current,
-            lastCursorPositionRef.current,
-          )
-        }
-      }
+      nameInputRef.current.focus()
+      nameInputRef.current.setSelectionRange(nameCursorRef.current, nameCursorRef.current)
     }
-  }, [isPending, isFiltering])
-
-  const handleFilterChange = (value: string) => {
-    // Save cursor position before potential re-render
-    if (searchInputRef.current) {
-      lastCursorPositionRef.current = searchInputRef.current.selectionStart
+    if (
+      document.activeElement !== descriptionInputRef.current &&
+      descriptionCursorRef.current !== null &&
+      descriptionInputRef.current
+    ) {
+      descriptionInputRef.current.focus()
+      descriptionInputRef.current.setSelectionRange(
+        descriptionCursorRef.current,
+        descriptionCursorRef.current,
+      )
     }
-
-    // If external search handler is provided, call it
-    if (onSearch) {
-      onSearch(value)
-    } else {
-      // Fallback to direct filter setting if no external handler
-      table.getColumn('name')?.setFilterValue(value)
-    }
-  }
+  }, [loading])
 
   return (
-    <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
-      <div className="flex flex-1 items-center space-x-2">
-        <div className="relative w-full md:w-auto md:flex-1 max-w-md">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-
-          <Input
-            ref={searchInputRef}
-            placeholder="Search "
-            value={searchValue}
-            onChange={(event) => handleFilterChange(event.target.value)}
-            className="h-10 pl-8 w-full pr-8"
-            disabled={isFiltering}
-            onFocus={() => {
-              // Save cursor position when input is focused
-              if (searchInputRef.current) {
-                lastCursorPositionRef.current = searchInputRef.current.selectionStart
-              }
-            }}
+    <div className="flex flex-wrap items-center gap-2 mb-2">
+      {/* Name filter */}
+      <div className="relative w-56">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          ref={nameInputRef}
+          placeholder="Search by name"
+          value={searchName}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            nameCursorRef.current = e.target.selectionStart
+            setSearchName(e.target.value)
+          }}
+          className="pl-8 pr-8"
+          disabled={loading}
+          onFocus={(e) => {
+            nameCursorRef.current = e.target.selectionStart
+          }}
+        />
+        {searchName && (
+          <X
+            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+            onClick={() => setSearchName('')}
           />
-
-          {isFiltering && (
-            <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-primary" />
-          )}
-
-          {!isFiltering && searchValue !== '' && (
-            <X
-              className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
-              onClick={() => handleFilterChange('')}
-            />
-          )}
-        </div>
-
-        {/* Active Filter Count Badge */}
-        {activeFilterCount > 0 && (
-          <Badge variant="secondary" className="rounded-sm px-1">
-            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
-          </Badge>
-        )}
-
-        {/* Reset Filters Button */}
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              table.resetColumnFilters()
-              if (onSearch) onSearch('')
-            }}
-            className="h-8 px-2 lg:px-3"
-            disabled={isFiltering}
-          >
-            Reset
-            <X className="ml-2 h-4 w-4" />
-          </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+
+      {/* Description filter */}
+      <div className="relative w-56">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          ref={descriptionInputRef}
+          placeholder="Search By Description"
+          value={searchDescription}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            descriptionCursorRef.current = e.target.selectionStart
+            setSearchDescription(e.target.value)
+          }}
+          className="pl-8 pr-8"
+          disabled={loading}
+          onFocus={(e) => {
+            descriptionCursorRef.current = e.target.selectionStart
+          }}
+        />
+        {searchDescription && (
+          <X
+            className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
+            onClick={() => setSearchDescription('')}
+          />
+        )}
+      </div>
+
+      {/* System Role filter - single select */}
+      <div className="relative w-48">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Select
+                value={filterSystemRoles}
+                onValueChange={setFilterSystemRoles}
+                disabled={loading}
+              >
+                <SelectTrigger className="pl-8 max-w-[180px] truncate">
+                  <div className="flex items-center min-w-0">
+                    <Filter className="mr-2 h-4 w-4 shrink-0" />
+                    <span
+                      className="truncate"
+                      title={
+                        filterSystemRoles !== 'ALL'
+                          ? filterSystemRoles === 'SYSTEM'
+                            ? 'System Roles'
+                            : 'Custom Roles'
+                          : 'All Roles'
+                      }
+                    >
+                      <SelectValue placeholder="All Roles" />
+                    </span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Roles</SelectItem>
+                  <SelectItem value="SYSTEM">System Roles</SelectItem>
+                  <SelectItem value="CUSTOM">Custom Roles</SelectItem>
+                </SelectContent>
+              </Select>
+            </TooltipTrigger>
+            <TooltipContent>
+              {filterSystemRoles !== 'ALL'
+                ? filterSystemRoles === 'SYSTEM'
+                  ? 'System Roles'
+                  : 'Custom Roles'
+                : 'All Roles'}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {activeFilterCount > 0 && (
+        <Badge variant="secondary" className="rounded-sm px-1">
+          {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+        </Badge>
+      )}
+
+      {isFiltered && (
+        <Button variant="ghost" onClick={onReset} className="h-8 px-2 lg:px-3" disabled={loading}>
+          Reset
+          <X className="ml-2 h-4 w-4" />
+        </Button>
+      )}
     </div>
   )
 }

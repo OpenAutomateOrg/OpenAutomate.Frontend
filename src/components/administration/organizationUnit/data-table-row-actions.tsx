@@ -1,7 +1,7 @@
 'use client'
 
 import { Row } from '@tanstack/react-table'
-import { MoreHorizontal, Edit, Trash2, Users, Eye } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -15,35 +15,15 @@ import type { OrganizationUnitRow } from './organizationUnit'
 
 interface DataTableRowActionsProps {
   row: Row<OrganizationUnitRow>
-  onEdit?: (unit: OrganizationUnitRow) => void
-  onDelete?: (unitId: string) => void
-  onViewUsers?: (unitId: string) => void
 }
 
-export default function DataTableRowAction({
-  row,
-  onEdit,
-  onDelete,
-  onViewUsers,
-}: DataTableRowActionsProps) {
-  const unit = row.original
-
+export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
   const handleEdit = () => {
-    onEdit?.(unit)
+    console.log('Edit asset:', row.original)
   }
 
   const handleDelete = () => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${unit.name}"? This action cannot be undone.`,
-      )
-    ) {
-      onDelete?.(unit.id)
-    }
-  }
-
-  const handleViewUsers = () => {
-    onViewUsers?.(unit.id)
+    console.log('Delete asset:', row.original)
   }
 
   return (
@@ -54,24 +34,10 @@ export default function DataTableRowAction({
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[180px]">
-        <DropdownMenuItem onClick={() => console.log('View details for:', unit.name)}>
-          <Eye className="mr-2 h-4 w-4" />
-          View Details
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleViewUsers}>
-          <Users className="mr-2 h-4 w-4" />
-          Manage Users
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
