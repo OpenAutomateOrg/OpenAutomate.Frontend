@@ -31,12 +31,14 @@ interface DataTableRowActionsProps {
   readonly schedule: ScheduleResponseDto
   readonly onDeleted?: () => void
   readonly onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
+  readonly onEdit?: () => void
 }
 
 export default function DataTableRowAction({
   schedule,
   onDeleted,
   onToggleEnabled,
+  onEdit
 }: DataTableRowActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -44,12 +46,7 @@ export default function DataTableRowAction({
   const { toast } = useToast()
 
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    console.log('Edit schedule:', schedule)
-    toast({
-      title: 'Edit Schedule',
-      description: 'Edit functionality will be implemented with the create/edit modal.',
-    })
+    if (onEdit) onEdit()
   }
 
   const handleDelete = async () => {

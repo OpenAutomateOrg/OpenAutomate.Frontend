@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import {
   Dialog,
@@ -143,6 +143,72 @@ export function CreateEditModal({
       ],
     },
   })
+
+  // Reset formData khi chuyển giữa create/edit hoặc editingSchedule thay đổi
+  useEffect(() => {
+    if (mode === 'edit' && editingSchedule) {
+      setFormData({
+        name: editingSchedule.name ?? '',
+        packageId: editingSchedule.packageId ?? '',
+        packageVersion: editingSchedule.packageVersion ?? 'latest',
+        agentId: editingSchedule.agentId ?? '',
+        timezone: editingSchedule.timezone ?? 'Asia/Ho_Chi_Minh',
+        recurrence: {
+          type: (editingSchedule.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
+          value: editingSchedule.recurrence?.value ?? '1',
+          startDate: editingSchedule.recurrence?.startDate ?? new Date(),
+          endDate: editingSchedule.recurrence?.endDate,
+          startTime: editingSchedule.recurrence?.startTime ?? '09:00',
+          dailyHour: editingSchedule.recurrence?.dailyHour ?? '09',
+          dailyMinute: editingSchedule.recurrence?.dailyMinute ?? '00',
+          weeklyHour: editingSchedule.recurrence?.weeklyHour ?? '09',
+          weeklyMinute: editingSchedule.recurrence?.weeklyMinute ?? '00',
+          selectedDays: editingSchedule.recurrence?.selectedDays ?? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          monthlyHour: editingSchedule.recurrence?.monthlyHour ?? '09',
+          monthlyMinute: editingSchedule.recurrence?.monthlyMinute ?? '00',
+          monthlyOnType: editingSchedule.recurrence?.monthlyOnType ?? 'day',
+          selectedDay: editingSchedule.recurrence?.selectedDay ?? '1',
+          selectedOrdinal: editingSchedule.recurrence?.selectedOrdinal ?? '1st',
+          selectedWeekday: editingSchedule.recurrence?.selectedWeekday ?? 'Monday',
+          selectedMonths: editingSchedule.recurrence?.selectedMonths ?? [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December',
+          ],
+        },
+      })
+    }
+    if (mode === 'create') {
+      setFormData({
+        name: '',
+        packageId: '',
+        packageVersion: 'latest',
+        agentId: '',
+        timezone: 'Asia/Ho_Chi_Minh',
+        recurrence: {
+          type: RecurrenceType.Daily,
+          value: '1',
+          startDate: new Date(),
+          endDate: undefined,
+          startTime: '09:00',
+          dailyHour: '09',
+          dailyMinute: '00',
+          weeklyHour: '09',
+          weeklyMinute: '00',
+          selectedDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          monthlyHour: '09',
+          monthlyMinute: '00',
+          monthlyOnType: 'day',
+          selectedDay: '1',
+          selectedOrdinal: '1st',
+          selectedWeekday: 'Monday',
+          selectedMonths: [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December',
+          ],
+        },
+      })
+    }
+  }, [editingSchedule, mode, isOpen])
 
   const updateFormData = (updates: Partial<ScheduleFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }))

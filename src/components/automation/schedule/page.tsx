@@ -40,6 +40,77 @@ import {
   PaginationState,
 } from '@tanstack/react-table'
 
+import type { ScheduleFormData } from './schedule/create-edit-modal'
+
+// Định nghĩa local ScheduleData đúng chuẩn modal
+interface ScheduleData {
+  id?: string
+  name?: string
+  packageId?: string
+  packageVersion?: string
+  agentId?: string
+  timezone?: string
+  recurrence?: Partial<ScheduleFormData['recurrence']>
+}
+
+function parseCronExpression(cron: string, recurrenceType: RecurrenceType): Partial<ScheduleData['recurrence']> {
+  if (!cron) return {}
+  const parts = cron.split(' ')
+  if (recurrenceType === RecurrenceType.Daily && parts.length >= 3) {
+    return {
+      dailyHour: parts[2],
+      dailyMinute: parts[1],
+    }
+  }
+  if (recurrenceType === RecurrenceType.Weekly && parts.length >= 6) {
+    return {
+      weeklyHour: parts[2],
+      weeklyMinute: parts[1],
+      selectedDays: parts[5].split(',').map((num: string) => {
+        const map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        return map[parseInt(num)]
+      }),
+    }
+  }
+  // ... add more if needed
+  return {}
+}
+
+function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): ScheduleData {
+  const recurrenceType = apiSchedule.recurrenceType as RecurrenceType
+  let recurrence: Partial<ScheduleData['recurrence']> = { type: recurrenceType }
+  if (recurrenceType === RecurrenceType.Once && apiSchedule.oneTimeExecution) {
+    const date = new Date(apiSchedule.oneTimeExecution)
+    recurrence = {
+      ...recurrence,
+      startDate: date,
+      startTime: date.toISOString().substring(11, 16),
+    }
+  } else if (recurrenceType === RecurrenceType.Daily && apiSchedule.cronExpression) {
+    recurrence = {
+      ...recurrence,
+      ...parseCronExpression(apiSchedule.cronExpression, RecurrenceType.Daily),
+      startDate: new Date(apiSchedule.createdAt),
+    }
+  } else if (recurrenceType === RecurrenceType.Weekly && apiSchedule.cronExpression) {
+    recurrence = {
+      ...recurrence,
+      ...parseCronExpression(apiSchedule.cronExpression, RecurrenceType.Weekly),
+      startDate: new Date(apiSchedule.createdAt),
+    }
+  }
+  // ... handle Monthly, Hourly, Minutes, etc. as needed
+  return {
+    id: apiSchedule.id,
+    name: apiSchedule.name,
+    packageId: apiSchedule.automationPackageId,
+    packageVersion: 'latest',
+    agentId: apiSchedule.botAgentId,
+    timezone: apiSchedule.timeZoneId,
+    recurrence,
+  }
+}
+
 export default function ScheduleInterface() {
   const router = useRouter()
   const pathname = usePathname()
@@ -49,7 +120,7 @@ export default function ScheduleInterface() {
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [editingSchedule, setEditingSchedule] = useState<ScheduleResponseDto | null>(null)
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleData | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -485,6 +556,10 @@ export default function ScheduleInterface() {
             throw error // Re-throw to let the component handle the optimistic update reversion
           }
         },
+        onEdit: async (schedule: ScheduleResponseDto) => {
+          setEditingSchedule(mapApiScheduleToEditingSchedule(schedule))
+          setIsCreateModalOpen(true)
+        }
       }),
     [mutateSchedules, mutateFallbackSchedules, toast],
   )
