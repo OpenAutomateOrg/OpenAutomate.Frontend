@@ -183,7 +183,7 @@ export function CreateEditModal({
       case RecurrenceType.Once:
         if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
           const date = new Date(recurrence.startDate)
-          date.setHours(parseInt(recurrence.dailyHour), parseInt(recurrence.dailyMinute))
+          date.setHours(parseInt(recurrence.dailyHour, 10), parseInt(recurrence.dailyMinute, 10))
           oneTimeExecution = date.toISOString()
         }
         break
