@@ -11,7 +11,12 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { createBotAgent, type BotAgentResponseDto, updateBotAgent, getBotAgentById } from '@/lib/api/bot-agents'
+import {
+  createBotAgent,
+  type BotAgentResponseDto,
+  updateBotAgent,
+  getBotAgentById,
+} from '@/lib/api/bot-agents'
 import { Label } from '@/components/ui/label'
 
 interface ItemModalProps {
@@ -42,7 +47,10 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
 
   const validateForm = () => {
     if (isEditing) {
-      if ((name === agent?.name || !name.trim()) && (machineName === agent?.machineName || !machineName.trim())) {
+      if (
+        (name === agent?.name || !name.trim()) &&
+        (machineName === agent?.machineName || !machineName.trim())
+      ) {
         setError('Please change at least one field to update.')
         return false
       }
@@ -99,7 +107,7 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
         }
         updated = await updateBotAgent(agent!.id, {
           name: name !== agent!.name ? name : undefined,
-          machineName: machineName !== agent!.machineName ? machineName : undefined
+          machineName: machineName !== agent!.machineName ? machineName : undefined,
         })
       } else {
         updated = await createBotAgent({ name, machineName })
@@ -132,9 +140,16 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] p-0 max-h-[85vh] flex flex-col" onInteractOutside={e => e.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-[500px] p-0 max-h-[85vh] flex flex-col"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="flex items-center gap-2 p-6 pb-2 border-b">
-          {isEditing ? <Edit className="w-5 h-5 text-primary" /> : <PlusCircle className="w-5 h-5 text-primary" />}
+          {isEditing ? (
+            <Edit className="w-5 h-5 text-primary" />
+          ) : (
+            <PlusCircle className="w-5 h-5 text-primary" />
+          )}
           <DialogTitle className="text-xl font-bold">
             {isEditing ? 'Edit Agent' : 'Create a new Agent'}
           </DialogTitle>
@@ -153,15 +168,18 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20 mb-2"
                 autoComplete="off"
                 spellCheck="false"
-                onFocus={e => {
+                onFocus={(e) => {
                   setTimeout(() => {
-                    const len = e.target.value.length;
-                    e.target.setSelectionRange(len, len);
-                  }, 0);
+                    const len = e.target.value.length
+                    e.target.setSelectionRange(len, len)
+                  }, 0)
                 }}
               />
               {error && error.includes('Name') && (
-                <div className="flex items-center gap-1 text-red-500 text-sm mt-1"><AlertCircle className="w-4 h-4" />{error}</div>
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
               )}
             </div>
             <div>
@@ -171,18 +189,24 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
               <Input
                 id="machine-name"
                 value={machineName}
-                onChange={e => setMachineName(e.target.value)}
+                onChange={(e) => setMachineName(e.target.value)}
                 disabled={isLoading}
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20 mt-2"
                 autoComplete="off"
                 spellCheck="false"
               />
               {error && error.includes('Machine') && (
-                <div className="flex items-center gap-1 text-red-500 text-sm mt-1"><AlertCircle className="w-4 h-4" />{error}</div>
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
               )}
             </div>
             {error && !error.includes('Name') && !error.includes('Machine') && (
-              <div className="flex items-center gap-1 text-red-500 text-sm mt-1"><AlertCircle className="w-4 h-4" />{error}</div>
+              <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                <AlertCircle className="w-4 h-4" />
+                {error}
+              </div>
             )}
           </form>
         ) : (
@@ -220,7 +244,12 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
           </div>
         )}
         <DialogFooter className="p-6 pt-4 border-t bg-background z-10 flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose} disabled={isLoading} className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="flex items-center gap-1"
+          >
             <X className="w-4 h-4" /> {createdAgent ? 'Close' : 'Cancel'}
           </Button>
           {!createdAgent && (

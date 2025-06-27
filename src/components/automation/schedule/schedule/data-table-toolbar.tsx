@@ -104,7 +104,7 @@ export function DataTableToolbar<TData>({
               onClick={handleSearchClear}
               className="absolute right-1 h-6 w-6 p-0 hover:bg-transparent"
             >
-                             <X className="h-3 w-3" />
+              <X className="h-3 w-3" />
               <span className="sr-only">Clear search</span>
             </Button>
           )}
@@ -166,11 +166,7 @@ export function DataTableToolbar<TData>({
 
         {/* Clear Filters Button */}
         {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={handleClearFilters}
-            className="h-8 px-2 lg:px-3"
-          >
+          <Button variant="ghost" onClick={handleClearFilters} className="h-8 px-2 lg:px-3">
             Reset
             <X className="ml-2 h-4 w-4" />
           </Button>

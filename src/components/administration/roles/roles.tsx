@@ -42,11 +42,16 @@ export default function RolesInterface() {
   const router = useRouter()
   const { toast } = useToast()
 
+
   // ✅ Filter state management (following useEffect compliance guide)
   const [searchName, setSearchName] = useState('')
   const [searchDescription, setSearchDescription] = useState('')
   const [searchResource, setSearchResource] = useState('')
   const [filterSystemRoles, setFilterSystemRoles] = useState<string>('ALL')
+
+  // SWR for data fetching - replaces manual state management
+  const { data: roles, error, isLoading, mutate } = useSWR(swrKeys.roles(), rolesApi.getAllRoles)
+
 
   // ✅ UI state management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -55,6 +60,7 @@ export default function RolesInterface() {
   // ✅ Pagination state
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+
 
   // Refs for tracking total count
   const totalCountRef = useRef<number>(0)
@@ -144,6 +150,22 @@ export default function RolesInterface() {
     return Math.max(minValidPageCount, calculatedCount)
   }, [totalCount, pageSize, pageIndex, roles.length])
 
+    // Transform backend data to match our schema
+    return roles.map((role) => ({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      isSystemAuthority: role.isSystemAuthority,
+      createdAt: role.createdAt,
+      updatedAt: role.updatedAt,
+      permissions: role.permissions?.map((p) => ({
+        resourceName: p.resourceName,
+        permission: p.permission,
+      })),
+    }))
+  }, [roles])
+
+
   const isUnknownTotalCount = !hasExactCount && roles.length === pageSize
 
   // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
@@ -157,6 +179,7 @@ export default function RolesInterface() {
       })
     }
   }, [error, toast])
+
 
   // ✅ Map API role to table row (following guideline #1: derive during render)
   function mapRoleToRolesRow(role: any): RolesRow {
@@ -173,6 +196,14 @@ export default function RolesInterface() {
       })),
     }
   }
+
+  // Filter data based on search term
+  const filteredData = data.filter(
+    (role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
 
   // ✅ Event handlers for user actions (following guideline #3)
   const handleRowClick = (row: RolesRow) => {
@@ -302,6 +333,7 @@ export default function RolesInterface() {
         {!isLoading && roles.length === 0 && !error && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No roles found.</p>
+
           </div>
         )}
       </div>

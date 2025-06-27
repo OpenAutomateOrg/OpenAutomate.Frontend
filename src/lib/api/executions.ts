@@ -84,24 +84,27 @@ function processODataResponse<T>(response: unknown): ODataResponse<T> {
   if (!response || typeof response !== 'object') {
     return { value: [] }
   }
-  
+
   const result = response as Record<string, unknown>
-  
+
   return {
-    value: Array.isArray(result.value) ? result.value as T[] : [],
+    value: Array.isArray(result.value) ? (result.value as T[]) : [],
     '@odata.count': typeof result['@odata.count'] === 'number' ? result['@odata.count'] : undefined,
-    '@odata.nextLink': typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
+    '@odata.nextLink':
+      typeof result['@odata.nextLink'] === 'string' ? result['@odata.nextLink'] : undefined,
   }
 }
 
 /**
  * Trigger a new execution
  */
-export const triggerExecution = async (data: TriggerExecutionDto): Promise<ExecutionResponseDto> => {
+export const triggerExecution = async (
+  data: TriggerExecutionDto,
+): Promise<ExecutionResponseDto> => {
   const tenant = getCurrentTenant()
   const response = await api.post<ExecutionResponseDto, TriggerExecutionDto>(
     `${tenant}/api/executions/trigger`,
-    data
+    data,
   )
   return response
 }
@@ -127,43 +130,47 @@ export const getExecutionsWithOData = async (
   options?: ODataQueryOptions,
 ): Promise<ODataResponse<ExecutionResponseDto>> => {
   const tenant = getCurrentTenant()
-  
+
   // Add strict enforcement of pagination parameters
-  const safeOptions = { ...options };
+  const safeOptions = { ...options }
   if (safeOptions.$top === undefined || safeOptions.$top <= 0) {
-    safeOptions.$top = 10; // Default to 10 items if not specified
-  }
-  
-  // Add cache busting parameter for pagination requests
-  const timestamp = new Date().getTime();
-  
-  const queryString = buildODataQueryString(safeOptions);
-  let endpoint = `${tenant}/odata/Executions`;
-  
-  // Add the query string with cache busting
-  if (queryString) {
-    endpoint += `?${queryString}&_t=${timestamp}`;
-  } else {
-    endpoint += `?_t=${timestamp}`;
+    safeOptions.$top = 10 // Default to 10 items if not specified
   }
 
-  console.log(`Fetching executions with endpoint: ${endpoint}`);
-  console.log(`Page: ${safeOptions.$skip ? safeOptions.$skip / safeOptions.$top + 1 : 1}, Size: ${safeOptions.$top}`);
+  // Add cache busting parameter for pagination requests
+  const timestamp = new Date().getTime()
+
+  const queryString = buildODataQueryString(safeOptions)
+  let endpoint = `${tenant}/odata/Executions`
+
+  // Add the query string with cache busting
+  if (queryString) {
+    endpoint += `?${queryString}&_t=${timestamp}`
+  } else {
+    endpoint += `?_t=${timestamp}`
+  }
+
+  console.log(`Fetching executions with endpoint: ${endpoint}`)
+  console.log(
+    `Page: ${safeOptions.$skip ? safeOptions.$skip / safeOptions.$top + 1 : 1}, Size: ${safeOptions.$top}`,
+  )
 
   try {
     const response = await api.get<unknown>(endpoint)
-    
+
     // Process the response to ensure consistent structure
     const processedResponse = processODataResponse<ExecutionResponseDto>(response)
-    
+
     // Strictly enforce the requested page size
     if (safeOptions.$top && processedResponse.value.length > safeOptions.$top) {
-      console.warn(`OData returned ${processedResponse.value.length} items but only ${safeOptions.$top} were requested. Trimming results.`)
+      console.warn(
+        `OData returned ${processedResponse.value.length} items but only ${safeOptions.$top} were requested. Trimming results.`,
+      )
       processedResponse.value = processedResponse.value.slice(0, safeOptions.$top)
     }
-    
-    console.log(`Received ${processedResponse.value.length} executions from OData`);
-    
+
+    console.log(`Received ${processedResponse.value.length} executions from OData`)
+
     return processedResponse
   } catch (error) {
     console.error('Error fetching executions with OData:', error)
@@ -198,12 +205,12 @@ export const getExecutionById = async (id: string): Promise<ExecutionResponseDto
  */
 export const updateExecutionStatus = async (
   id: string,
-  data: UpdateExecutionStatusDto
+  data: UpdateExecutionStatusDto,
 ): Promise<ExecutionResponseDto> => {
   const tenant = getCurrentTenant()
   const response = await api.put<ExecutionResponseDto, UpdateExecutionStatusDto>(
     `${tenant}/api/executions/${id}/status`,
-    data
+    data,
   )
   return response
 }
@@ -222,7 +229,9 @@ export const cancelExecution = async (id: string): Promise<ExecutionResponseDto>
  */
 export const getExecutionLogDownloadUrl = async (id: string): Promise<{ downloadUrl: string }> => {
   const tenant = getCurrentTenant()
-  const response = await api.get<{ downloadUrl: string }>(`${tenant}/api/executions/${id}/logs/download`)
+  const response = await api.get<{ downloadUrl: string }>(
+    `${tenant}/api/executions/${id}/logs/download`,
+  )
   return response
 }
 
@@ -233,41 +242,41 @@ export const downloadExecutionLogs = async (id: string, fileName?: string): Prom
   try {
     // Get the pre-signed download URL
     const { downloadUrl } = await getExecutionLogDownloadUrl(id)
-    
+
     const finalFileName = fileName || `execution_${id}_logs.log`
-    
+
     // Try to fetch the file as blob first for better download control
     try {
       const response = await fetch(downloadUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/octet-stream',
+          Accept: 'application/octet-stream',
         },
       })
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       const blob = await response.blob()
-      
+
       // Create a blob URL and trigger download
       const blobUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
       link.download = finalFileName
       link.style.display = 'none'
-      
+
       // Append to body, click, and remove
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      
+
       // Clean up the blob URL
       window.URL.revokeObjectURL(blobUrl)
     } catch (fetchError) {
       console.warn('Fetch method failed, falling back to direct link:', fetchError)
-      
+
       // Fallback to direct link method
       const link = document.createElement('a')
       link.href = downloadUrl
@@ -275,7 +284,7 @@ export const downloadExecutionLogs = async (id: string, fileName?: string): Prom
       link.target = '_blank' // Ensure it doesn't navigate in the same tab
       link.rel = 'noopener noreferrer'
       link.style.display = 'none'
-      
+
       // Append to body, click, and remove
       document.body.appendChild(link)
       link.click()
@@ -285,4 +294,4 @@ export const downloadExecutionLogs = async (id: string, fileName?: string): Prom
     console.error('Error downloading execution logs:', error)
     throw error
   }
-} 
+}

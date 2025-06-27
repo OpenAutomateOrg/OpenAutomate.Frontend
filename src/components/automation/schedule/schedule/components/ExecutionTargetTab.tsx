@@ -15,7 +15,7 @@ interface Agent {
   status: string
   description?: string
 }
- 
+
 interface ExecutionTargetTabProps {
   selectedAgentId?: string
   onAgentSelect?: (agentId: string) => void
@@ -25,26 +25,25 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
   const [searchTerm, setSearchTerm] = useState('')
 
   // ✅ SWR for agent data fetching
-  const { data: agents = [], error, isLoading } = useSWR(
-    swrKeys.agents(),
-    getAllBotAgents
-  )
+  const { data: agents = [], error, isLoading } = useSWR(swrKeys.agents(), getAllBotAgents)
 
   // ✅ Filter out disconnected agents and derive filtered agents during render
   const availableAgents = useMemo(() => {
     // First filter out disconnected/offline agents
-    const connectedAgents = agents.filter((agent: Agent) => 
-      agent.status && 
-      agent.status.toLowerCase() !== 'disconnected' && 
-      agent.status.toLowerCase() !== 'offline'
+    const connectedAgents = agents.filter(
+      (agent: Agent) =>
+        agent.status &&
+        agent.status.toLowerCase() !== 'disconnected' &&
+        agent.status.toLowerCase() !== 'offline',
     )
 
     // Then apply search filter
     if (!searchTerm) return connectedAgents
-    
-    return connectedAgents.filter((agent: Agent) =>
-      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agent.machineName?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return connectedAgents.filter(
+      (agent: Agent) =>
+        agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.machineName?.toLowerCase().includes(searchTerm.toLowerCase()),
     )
   }, [agents, searchTerm])
 
@@ -56,11 +55,19 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
         return { variant: 'default' as const, icon: Wifi, className: 'bg-green-100 text-green-700' }
       case 'busy':
       case 'running':
-        return { variant: 'secondary' as const, icon: Server, className: 'bg-yellow-100 text-yellow-700' }
+        return {
+          variant: 'secondary' as const,
+          icon: Server,
+          className: 'bg-yellow-100 text-yellow-700',
+        }
       case 'offline':
       case 'disconnected':
       default:
-        return { variant: 'destructive' as const, icon: WifiOff, className: 'bg-red-100 text-red-700' }
+        return {
+          variant: 'destructive' as const,
+          icon: WifiOff,
+          className: 'bg-red-100 text-red-700',
+        }
     }
   }
 
@@ -140,11 +147,11 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
         <div className="max-h-64 overflow-y-auto">
           {availableAgents.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              {searchTerm ? 'No available agents found matching your search.' : 'No available agents found.'}
+              {searchTerm
+                ? 'No available agents found matching your search.'
+                : 'No available agents found.'}
               {agents.length > 0 && (
-                <div className="text-xs mt-1">
-                  Only connected agents are shown for selection.
-                </div>
+                <div className="text-xs mt-1">Only connected agents are shown for selection.</div>
               )}
             </div>
           ) : (
@@ -162,11 +169,11 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
                   onClick={() => handleAgentSelect(agent.id)}
                 >
                   <div className="col-span-1 flex items-center">
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      isSelected 
-                        ? 'border-primary bg-primary' 
-                        : 'border-muted-foreground'
-                    }`}>
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'
+                      }`}
+                    >
                       {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
                     </div>
                   </div>
@@ -201,18 +208,17 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
           <div className="p-3 bg-primary/5 rounded-md border border-primary/20">
             {(() => {
               const selectedAgent = agents.find((a: Agent) => a.id === selectedAgentId)
-              if (!selectedAgent) return <div className="text-sm text-muted-foreground">Agent not found</div>
-              
+              if (!selectedAgent)
+                return <div className="text-sm text-muted-foreground">Agent not found</div>
+
               const statusBadge = getStatusBadge(selectedAgent.status)
               const StatusIcon = statusBadge.icon
-              
+
               return (
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{selectedAgent.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedAgent.machineName}
-                    </div>
+                    <div className="text-sm text-muted-foreground">{selectedAgent.machineName}</div>
                   </div>
                   <Badge variant={statusBadge.variant} className={statusBadge.className}>
                     <StatusIcon className="w-3 h-3 mr-1" />
@@ -227,7 +233,8 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
 
       {/* Help Text */}
       <div className="text-xs text-muted-foreground">
-        Only connected agents are available for selection. Click an agent to select it for schedule execution.
+        Only connected agents are available for selection. Click an agent to select it for schedule
+        execution.
       </div>
     </div>
   )

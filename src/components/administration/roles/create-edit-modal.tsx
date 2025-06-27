@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Trash2 } from 'lucide-react'
@@ -28,7 +28,7 @@ import {
   getPermissionDescription,
   isValidPermissionLevel,
   type CreateRoleDto,
-  type UpdateRoleDto
+  type UpdateRoleDto,
 } from '@/lib/api/roles'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
@@ -55,9 +55,13 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   const [isLoading, setIsLoading] = useState(false)
 
   // ✅ SWR for available resources - following guideline #8: use framework-level loaders
-  const { data: availableResources, error: resourcesError, isLoading: loadingResources } = useSWR(
+  const {
+    data: availableResources,
+    error: resourcesError,
+    isLoading: loadingResources,
+  } = useSWR(
     isOpen ? swrKeys.availableResources() : null, // Only fetch when modal is open
-    rolesApi.getAvailableResources
+    rolesApi.getAvailableResources,
   )
 
   // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
@@ -73,8 +77,6 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }, [resourcesError, toast])
 
-
-
   // ✅ Initialize form state directly from props (following guideline #4: use dynamic key to reset state)
   // Note: Parent component uses dynamic key: key={editingRole?.id ?? 'new'}
   // This ensures component remounts and state resets when switching between create/edit modes
@@ -84,12 +86,12 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     // ✅ Lazy initial state to avoid dependency on memoized value
     if (!editingRole?.permissions || !availableResources) return []
 
-    return editingRole.permissions.map(p => {
-      const resource = availableResources.find(r => r.resourceName === p.resourceName)
+    return editingRole.permissions.map((p) => {
+      const resource = availableResources.find((r) => r.resourceName === p.resourceName)
       return {
         resourceName: p.resourceName,
         permission: p.permission,
-        displayName: resource?.displayName ?? p.resourceName
+        displayName: resource?.displayName ?? p.resourceName,
       }
     })
   })
@@ -115,13 +117,13 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
 
     // Check if resource already has permission
-    const existingIndex = resourcePermissions.findIndex(p => p.resourceName === selectedResource)
-    const resource = availableResources?.find(r => r.resourceName === selectedResource)
+    const existingIndex = resourcePermissions.findIndex((p) => p.resourceName === selectedResource)
+    const resource = availableResources?.find((r) => r.resourceName === selectedResource)
 
     const newPermission: ResourcePermission = {
       resourceName: selectedResource,
       permission,
-      displayName: resource?.displayName ?? selectedResource
+      displayName: resource?.displayName ?? selectedResource,
     }
 
     if (existingIndex >= 0) {
@@ -140,7 +142,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   }
 
   const handleRemoveResourcePermission = (resourceName: string) => {
-    setResourcePermissions(prev => prev.filter(p => p.resourceName !== resourceName))
+    setResourcePermissions((prev) => prev.filter((p) => p.resourceName !== resourceName))
   }
   // Helper function to validate form data
   const validateForm = (): string | null => {
@@ -179,10 +181,10 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     const roleData = {
       name: roleName.trim(),
       description: roleDescription.trim(),
-      resourcePermissions: resourcePermissions.map(p => ({
+      resourcePermissions: resourcePermissions.map((p) => ({
         resourceName: p.resourceName,
-        permission: p.permission
-      }))
+        permission: p.permission,
+      })),
     }
 
     if (editingRole) {
@@ -204,7 +206,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     const validationError = validateForm()
     if (validationError) {
       toast({
@@ -216,13 +218,13 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
 
     setIsLoading(true)
-    
+
     try {
       await saveRole()
       onClose(true) // Reload data
     } catch (error: unknown) {
       console.error('Failed to save role:', error)
-      
+
       toast({
         title: editingRole ? 'Update Failed' : 'Creation Failed',
         description: getErrorMessage(error),
@@ -233,18 +235,17 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }
 
-  const availableResourcesForSelection = availableResources?.filter(
-    resource => !resourcePermissions.some(p => p.resourceName === resource.resourceName)
-  ) ?? []
+  const availableResourcesForSelection =
+    availableResources?.filter(
+      (resource) => !resourcePermissions.some((p) => p.resourceName === resource.resourceName),
+    ) ?? []
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>
-              {editingRole ? 'Edit Role' : 'Create New Role'}
-            </DialogTitle>
+            <DialogTitle>{editingRole ? 'Edit Role' : 'Create New Role'}</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -259,9 +260,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                 maxLength={50}
                 required
               />
-              <div className="text-xs text-muted-foreground">
-                {roleName.length}/50 characters
-              </div>
+              <div className="text-xs text-muted-foreground">{roleName.length}/50 characters</div>
             </div>
 
             {/* Role Description */}
@@ -283,7 +282,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
             {/* Resource Permissions */}
             <div className="grid gap-4">
               <Label>Resource Permissions</Label>
-              
+
               {/* Add Resource Permission */}
               <div className="grid grid-cols-3 gap-2">
                 <div>
@@ -293,7 +292,9 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                     </SelectTrigger>
                     <SelectContent>
                       {loadingResources ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                        <SelectItem value="loading" disabled>
+                          Loading...
+                        </SelectItem>
                       ) : (
                         availableResourcesForSelection.map((resource) => (
                           <SelectItem key={resource.resourceName} value={resource.resourceName}>
@@ -304,7 +305,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Select value={selectedPermission} onValueChange={setSelectedPermission}>
                     <SelectTrigger>
@@ -316,7 +317,8 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                       </SelectItem>
                       <SelectItem value={PermissionLevels.VIEW.toString()}>
                         {getPermissionDescription(PermissionLevels.VIEW)}
-                      </SelectItem>                      <SelectItem value={PermissionLevels.CREATE.toString()}>
+                      </SelectItem>{' '}
+                      <SelectItem value={PermissionLevels.CREATE.toString()}>
                         {getPermissionDescription(PermissionLevels.CREATE)}
                       </SelectItem>
                       <SelectItem value={PermissionLevels.UPDATE.toString()}>
@@ -328,7 +330,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <Button
                   type="button"
                   onClick={handleAddResourcePermission}
@@ -369,7 +371,8 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg border-dashed">
-                    No permissions assigned. Add permissions above to define what this role can access.
+                    No permissions assigned. Add permissions above to define what this role can
+                    access.
                   </div>
                 )}
               </div>
@@ -381,7 +384,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || loadingResources}>
-              {isLoading ? 'Saving...' : (editingRole ? 'Update Role' : 'Create Role')}
+              {isLoading ? 'Saving...' : editingRole ? 'Update Role' : 'Create Role'}
             </Button>
           </DialogFooter>
         </form>

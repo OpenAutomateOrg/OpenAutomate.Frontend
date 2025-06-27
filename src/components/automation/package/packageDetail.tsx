@@ -10,16 +10,16 @@ import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { swrKeys, createSWRErrorMessage } from '@/lib/swr-config'
 import { useParams, useRouter } from 'next/navigation'
-import { 
-  Download, 
-  Upload, 
-  Trash2, 
-  Calendar, 
-  Package, 
-  FileText, 
+import {
+  Download,
+  Upload,
+  Trash2,
+  Calendar,
+  Package,
+  FileText,
   HardDrive,
   Loader2,
-  ArrowLeft 
+  ArrowLeft,
 } from 'lucide-react'
 import {
   PackageVersionResponseDto,
@@ -37,9 +37,13 @@ export default function PackageDetail() {
   const packageId = params.id as string
 
   // ✅ SWR for data fetching - following guideline #8: use framework-level loaders
-  const { data: packageData, error, isLoading, mutate } = useSWR(
-    packageId ? swrKeys.packageById(packageId) : null,
-    () => getAutomationPackageById(packageId)
+  const {
+    data: packageData,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(packageId ? swrKeys.packageById(packageId) : null, () =>
+    getAutomationPackageById(packageId),
   )
 
   // UI state
@@ -62,10 +66,10 @@ export default function PackageDetail() {
     try {
       setDownloadingVersion(version.versionNumber)
       const response = await getPackageDownloadUrl(packageId, version.versionNumber)
-      
+
       // Open download URL in new tab
       window.open(response.downloadUrl, '_blank')
-      
+
       // Success toast
       toast({
         title: 'Download Started',
@@ -108,15 +112,15 @@ export default function PackageDetail() {
 
     try {
       await deleteAutomationPackage(packageId)
-      
+
       // Success toast
       toast({
         title: 'Package Deleted',
         description: `Package "${packageData?.name}" has been deleted successfully`,
         variant: 'default',
       })
-      
-    router.back()
+
+      router.back()
     } catch (err) {
       console.error('Error deleting package:', err)
       toast(createErrorToast(err))
@@ -154,12 +158,7 @@ export default function PackageDetail() {
         <Alert className="max-w-md">
           <AlertDescription>
             {createSWRErrorMessage(error) ?? 'Package not found'}
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              onClick={() => mutate()}
-            >
+            <Button variant="outline" size="sm" className="ml-2" onClick={() => mutate()}>
               Retry
             </Button>
           </AlertDescription>
@@ -175,12 +174,7 @@ export default function PackageDetail() {
         <Alert className="max-w-md">
           <AlertDescription>
             Package not found
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              onClick={() => mutate()}
-            >
+            <Button variant="outline" size="sm" className="ml-2" onClick={() => mutate()}>
               Retry
             </Button>
           </AlertDescription>
@@ -190,7 +184,7 @@ export default function PackageDetail() {
   }
 
   const sortedVersions = [...packageData.versions].sort(
-    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
   )
 
   return (
@@ -218,8 +212,6 @@ export default function PackageDetail() {
         </div>
       </div>
 
-
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Package Info */}
         <div className="lg:col-span-1">
@@ -229,7 +221,7 @@ export default function PackageDetail() {
                 <Package className="h-5 w-5 mr-2" />
                 Package Information
               </CardTitle>
-        </CardHeader>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Name</label>
@@ -249,16 +241,16 @@ export default function PackageDetail() {
               <div>
                 <label className="text-sm font-medium">Total Versions</label>
                 <p className="text-sm text-muted-foreground">{packageData.versions.length}</p>
-            </div>
+              </div>
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Badge variant={packageData.isActive ? 'default' : 'secondary'}>
                   {packageData.isActive ? 'Active' : 'Inactive'}
                 </Badge>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Versions List */}
         <div className="lg:col-span-2">
@@ -291,16 +283,12 @@ export default function PackageDetail() {
                               <Badge variant={index === 0 ? 'default' : 'secondary'}>
                                 v{version.versionNumber}
                               </Badge>
-                              {index === 0 && (
-                                <Badge variant="outline">Latest</Badge>
-                              )}
+                              {index === 0 && <Badge variant="outline">Latest</Badge>}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {version.fileName}
-                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">{version.fileName}</p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-4">
                           <div className="text-right text-sm">
                             <div className="flex items-center text-muted-foreground">
@@ -312,7 +300,7 @@ export default function PackageDetail() {
                               {formatDate(version.uploadedAt)}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <Button
                               size="sm"

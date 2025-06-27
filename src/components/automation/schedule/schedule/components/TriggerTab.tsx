@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -52,9 +51,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         </label>
         <Select
           value={recurrence.type}
-          onValueChange={(value: RecurrenceType) =>
-            onUpdate({ type: value })
-          }
+          onValueChange={(value: RecurrenceType) => onUpdate({ type: value })}
         >
           <SelectTrigger>
             <SelectValue />
@@ -114,7 +111,8 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {(recurrence.type === RecurrenceType.Minutes || recurrence.type === RecurrenceType.Hourly) && (
+      {(recurrence.type === RecurrenceType.Minutes ||
+        recurrence.type === RecurrenceType.Hourly) && (
         <RecurringConfiguration
           recurrence={recurrence}
           onUpdate={onUpdate}
@@ -157,15 +155,13 @@ function OnceConfiguration({
         setIsOpen={setStartDateOpen}
       />
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm">At</span>
-        <Input
-          type="time"
-          value={recurrence.startTime ?? '00:00'}
-          onChange={(e) => onUpdate({ startTime: e.target.value })}
-          className="w-32"
-        />
-      </div>
+      <TimeSelector
+        label="At:"
+        hour={recurrence.dailyHour ?? '09'}
+        minute={recurrence.dailyMinute ?? '00'}
+        onHourChange={(hour) => onUpdate({ dailyHour: hour })}
+        onMinuteChange={(minute) => onUpdate({ dailyMinute: minute })}
+      />
     </div>
   )
 }
@@ -368,7 +364,9 @@ function RecurringConfiguration({
             <SelectItem value="30">30</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm">{recurrence.type === RecurrenceType.Hourly ? 'Hours' : 'minute(s)'}</span>
+        <span className="text-sm">
+          {recurrence.type === RecurrenceType.Hourly ? 'Hours' : 'minute(s)'}
+        </span>
       </div>
     </div>
   )

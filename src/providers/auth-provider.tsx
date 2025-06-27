@@ -243,7 +243,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     }
 
     initAuth()
-  }, []) // ✅ No dependencies to prevent infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // ✅ No dependencies to prevent infinite loop during initialization
 
   // Login function
   const login = useCallback(

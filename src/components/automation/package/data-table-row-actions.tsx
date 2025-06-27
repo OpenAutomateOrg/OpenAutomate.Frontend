@@ -3,7 +3,13 @@
 import React, { useState } from 'react'
 import { Row } from '@tanstack/react-table'
 import { MoreHorizontal, Download, Pencil, Trash } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -32,7 +38,7 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
     if (e) e.stopPropagation()
     // Implement edit functionality
     toast({
-      title: "Edit package",
+      title: 'Edit package',
       description: `Editing package: ${row.original.name}`,
     })
   }
@@ -47,7 +53,7 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
     try {
       // Implement delete functionality
       toast({
-        title: "Package deleted",
+        title: 'Package deleted',
         description: `Package ${row.original.name} has been deleted.`,
       })
       setShowConfirm(false)
@@ -71,10 +77,10 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
     const versions = row.original.versions
     if (versions && versions.length > 0) {
       const latestVersion = versions.sort(
-        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
       )[0]
       toast({
-        title: "Downloading package",
+        title: 'Downloading package',
         description: `Downloading package: ${row.original.name} version: ${latestVersion.versionNumber}`,
       })
     } else {
@@ -92,7 +98,7 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]" onClick={e => e.stopPropagation()}>
+        <DropdownMenuContent align="end" className="w-[160px]" onClick={(e) => e.stopPropagation()}>
           <DropdownMenuItem onClick={handleDownload}>
             <Download className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <span>Download</span>
@@ -102,7 +108,10 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleDelete}>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={handleDelete}
+          >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
             <span>Delete</span>
           </DropdownMenuItem>
@@ -111,27 +120,44 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
 
       {/* Confirm Delete Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent onInteractOutside={e => e.preventDefault()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <div>Are you sure you want to delete package <b>{row.original.name}</b>?</div>
+          <div>
+            Are you sure you want to delete package <b>{row.original.name}</b>?
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>Cancel</Button>
-            <Button variant="destructive" className="text-white dark:text-neutral-900" onClick={confirmDelete} disabled={isDeleting}>Delete</Button>
+            <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="text-white dark:text-neutral-900"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Error Dialog */}
       <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={e => e.preventDefault()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Error</DialogTitle>
           </DialogHeader>
           <div>{errorMsg}</div>
           <DialogFooter>
-            <Button variant="destructive" className="text-white dark:text-neutral-900" onClick={() => setShowError(false)}>OK</Button>
+            <Button
+              variant="destructive"
+              className="text-white dark:text-neutral-900"
+              onClick={() => setShowError(false)}
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
