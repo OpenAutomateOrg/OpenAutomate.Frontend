@@ -53,53 +53,8 @@ interface ScheduleData {
   recurrence?: Partial<ScheduleFormData['recurrence']>
 }
 
-function parseCronExpression(cron: string, recurrenceType: RecurrenceType): Partial<ScheduleData['recurrence']> {
-  if (!cron) return {}
-  const parts = cron.split(' ')
-  if (recurrenceType === RecurrenceType.Daily && parts.length >= 3) {
-    return {
-      dailyHour: parts[2],
-      dailyMinute: parts[1],
-    }
-  }
-  if (recurrenceType === RecurrenceType.Weekly && parts.length >= 6) {
-    return {
-      weeklyHour: parts[2],
-      weeklyMinute: parts[1],
-      selectedDays: parts[5].split(',').map((num: string) => {
-        const map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-        return map[parseInt(num)]
-      }),
-    }
-  }
-  // ... add more if needed
-  return {}
-}
-
 function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): ScheduleData {
   const recurrenceType = apiSchedule.recurrenceType as RecurrenceType
-  let recurrence: Partial<ScheduleData['recurrence']> = { type: recurrenceType }
-  if (recurrenceType === RecurrenceType.Once && apiSchedule.oneTimeExecution) {
-    const date = new Date(apiSchedule.oneTimeExecution)
-    recurrence = {
-      ...recurrence,
-      startDate: date,
-      startTime: date.toISOString().substring(11, 16),
-    }
-  } else if (recurrenceType === RecurrenceType.Daily && apiSchedule.cronExpression) {
-    recurrence = {
-      ...recurrence,
-      ...parseCronExpression(apiSchedule.cronExpression, RecurrenceType.Daily),
-      startDate: new Date(apiSchedule.createdAt),
-    }
-  } else if (recurrenceType === RecurrenceType.Weekly && apiSchedule.cronExpression) {
-    recurrence = {
-      ...recurrence,
-      ...parseCronExpression(apiSchedule.cronExpression, RecurrenceType.Weekly),
-      startDate: new Date(apiSchedule.createdAt),
-    }
-  }
-  // ... handle Monthly, Hourly, Minutes, etc. as needed
   return {
     id: apiSchedule.id,
     name: apiSchedule.name,
@@ -107,7 +62,7 @@ function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): Sche
     packageVersion: 'latest',
     agentId: apiSchedule.botAgentId,
     timezone: apiSchedule.timeZoneId,
-    recurrence,
+    recurrence: { type: recurrenceType },
   }
 }
 
