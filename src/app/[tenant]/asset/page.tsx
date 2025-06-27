@@ -2,11 +2,12 @@ import AssetInterface from '@/components/asset/asset'
 import { PermissionRouteGuard } from '@/components/auth/permission-route-guard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PermissionLevel } from '@/types/auth'
+import { Resources } from '@/lib/constants/resources'
 
 export default function Page() {
   return (
     <PermissionRouteGuard 
-      resource="AssetResource" 
+      resource={Resources.ASSET} 
       requiredPermission={PermissionLevel.View}
       loadingComponent={
         <div className="flex flex-1 flex-col gap-4 p-4">

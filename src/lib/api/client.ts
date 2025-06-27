@@ -132,9 +132,9 @@ const refreshToken = async (): Promise<string | null> => {
   isRefreshing = true
 
   try {
-    const response = await fetchApi<{ token: string }>('api/authen/refresh-token', {
+    const response = await fetchApi<{ token: string }>('api/auth/refresh-token', {
       method: 'POST',
-      credentials: 'include', // Include cookies for the refresh token
+      credentials: 'include', // Include cookies for refresh token
     })
 
     const newToken = response.token
