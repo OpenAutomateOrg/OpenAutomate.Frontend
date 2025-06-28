@@ -42,7 +42,6 @@ import {
 
 import type { ScheduleFormData } from './schedule/create-edit-modal'
 
-// Định nghĩa local ScheduleData đúng chuẩn modal
 interface ScheduleData {
   id?: string
   name?: string

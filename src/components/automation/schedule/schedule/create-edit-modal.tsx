@@ -142,7 +142,6 @@ export function CreateEditModal({
     },
   })
 
-  // Reset formData khi chuyển giữa create/edit hoặc editingSchedule thay đổi
   useEffect(() => {
     if (mode === 'edit' && editingSchedule) {
       const rec = editingSchedule.recurrence ?? {}

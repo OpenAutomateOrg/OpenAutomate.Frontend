@@ -109,11 +109,6 @@ export function DataTableToolbar<TData>({
           )}
         </div>
 
-        {/* Status Filter */}
-        {/* Đã xóa filter Status */}
-        {/* Recurrence Type Filter */}
-        {/* Đã xóa filter Recurrence */}
-        {/* Alternative Status Filter using Select */}
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Status:</p>
           <Select onValueChange={handleStatusFilterChange} defaultValue="all">
