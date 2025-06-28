@@ -5,7 +5,6 @@ import { Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
-import { DataTableFacetedFilter } from '@/components/layout/table/data-table-faceted-filter'
 import { Loader2, Search, X } from 'lucide-react'
 import {
   Select,
@@ -111,23 +110,9 @@ export function DataTableToolbar<TData>({
         </div>
 
         {/* Status Filter */}
-        {table.getColumn('isEnabled') && (
-          <DataTableFacetedFilter
-            column={table.getColumn('isEnabled')}
-            title="Status"
-            options={statuses}
-          />
-        )}
-
+        {/* Đã xóa filter Status */}
         {/* Recurrence Type Filter */}
-        {table.getColumn('recurrenceType') && (
-          <DataTableFacetedFilter
-            column={table.getColumn('recurrenceType')}
-            title="Recurrence"
-            options={recurrenceTypes}
-          />
-        )}
-
+        {/* Đã xóa filter Recurrence */}
         {/* Alternative Status Filter using Select */}
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Status:</p>
@@ -145,7 +130,6 @@ export function DataTableToolbar<TData>({
             </SelectContent>
           </Select>
         </div>
-
         {/* Alternative Recurrence Type Filter using Select */}
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Type:</p>
@@ -163,7 +147,6 @@ export function DataTableToolbar<TData>({
             </SelectContent>
           </Select>
         </div>
-
         {/* Clear Filters Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={handleClearFilters} className="h-8 px-2 lg:px-3">
