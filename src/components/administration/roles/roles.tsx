@@ -1,33 +1,44 @@
 'use client'
 
-import { PlusCircle, Search } from 'lucide-react'
+import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useEffect, useMemo } from 'react'
+import { createRolesColumns } from './columns'
+import { DataTable } from '@/components/layout/table/data-table'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from './create-edit-modal'
-import { useRouter } from 'next/navigation'
-import { rolesApi } from '@/lib/api/roles'
-import { useToast } from '@/components/ui/use-toast'
-import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
+import { z } from 'zod'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { DataTableToolbar } from './data-table-toolbar'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  PaginationState,
+} from '@tanstack/react-table'
+import { rolesApi } from '@/lib/api/roles'
+import { useUrlParams } from '@/hooks/use-url-params'
+import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
-export interface RolesRow {
-  id: string
-  name: string
-  description: string
-  isSystemAuthority: boolean
-  createdAt: string
-  updatedAt?: string
+export const rolesSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  isSystemAuthority: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string().optional(),
+})
+
+export type RolesRow = z.infer<typeof rolesSchema> & {
   permissions?: {
     resourceName: string
     permission: number
@@ -36,22 +47,78 @@ export interface RolesRow {
 
 export default function RolesInterface() {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { updateUrl } = useUrlParams()
   const { toast } = useToast()
 
-  // SWR for data fetching - replaces manual state management
-  const { data: roles, error, isLoading, mutate } = useSWR(swrKeys.roles(), rolesApi.getAllRoles)
-
-  // UI state management
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  // UI State management
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<RolesRow | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [rowSelection, setRowSelection] = useState({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [totalCount, setTotalCount] = useState<number>(0)
+  const [isPending, setIsPending] = useState(false)
+  const [isChangingPageSize, setIsChangingPageSize] = useState(false)
 
-  // Transform data during render (following guideline #1: prefer deriving data during render)
-  const data = useMemo(() => {
+
+  // Create refs for debouncing
+  const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
+  const shouldInitializeUrl = useRef(true)
+
+  // Initialize state from URL params
+  const initColumnFilters = (): ColumnFiltersState => {
+    const filters: ColumnFiltersState = []
+
+    const nameFilter = searchParams.get('name')
+    if (nameFilter) filters.push({ id: 'name', value: nameFilter })
+
+    return filters
+  }
+
+  const initSorting = (): SortingState => {
+    const sort = searchParams.get('sort')
+    const order = searchParams.get('order')
+
+    if (sort && (order === 'asc' || order === 'desc')) {
+      return [{ id: sort, desc: order === 'desc' }]
+    }
+
+    return []
+  }
+
+  const initPagination = (): PaginationState => {
+    const page = searchParams.get('page')
+    const size = searchParams.get('size')
+
+    return {
+      pageIndex: page ? Math.max(0, parseInt(page) - 1) : 0,
+      pageSize: size ? parseInt(size) : 10,
+    }
+  }
+
+  // State from URL
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initColumnFilters)
+  const [sorting, setSorting] = useState<SortingState>(initSorting)
+  const [pagination, setPagination] = useState<PaginationState>(initPagination)
+
+  // UI state for search input
+  const [searchValue, setSearchValue] = useState<string>(searchParams.get('name') ?? '')
+
+  // ✅ SWR for roles data - following guideline #8: use framework-level loaders
+  const {
+    data: roles,
+    error: rolesError,
+    isLoading,
+    mutate: mutateRoles,
+  } = useSWR(swrKeys.roles(), rolesApi.getAllRoles)
+
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const rolesData = useMemo(() => {
     if (!roles) return []
 
     // Transform backend data to match our schema
-    return roles.map((role) => ({
+    let transformedRoles = roles.map((role) => ({
       id: role.id,
       name: role.name,
       description: role.description,
@@ -63,216 +130,292 @@ export default function RolesInterface() {
         permission: p.permission,
       })),
     }))
-  }, [roles])
 
-  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
-  // Client-only: Requires toast notifications
+    // Apply client-side filtering for search
+    if (columnFilters.length > 0) {
+      const nameFilter = columnFilters.find((filter) => filter.id === 'name')
+      if (nameFilter && nameFilter.value) {
+        const searchTerm = (nameFilter.value as string).toLowerCase()
+        transformedRoles = transformedRoles.filter(
+          (role) =>
+            role.name.toLowerCase().includes(searchTerm) ||
+            role.description.toLowerCase().includes(searchTerm),
+        )
+      }
+    }
+
+    // Apply client-side sorting
+    if (sorting.length > 0) {
+      const sort = sorting[0]
+      transformedRoles.sort((a, b) => {
+        const aValue = a[sort.id as keyof typeof a]
+        const bValue = b[sort.id as keyof typeof b]
+
+        // Handle undefined values
+        if (aValue === undefined && bValue === undefined) return 0
+        if (aValue === undefined) return sort.desc ? 1 : -1
+        if (bValue === undefined) return sort.desc ? -1 : 1
+
+        if (aValue < bValue) return sort.desc ? 1 : -1
+        if (aValue > bValue) return sort.desc ? -1 : 1
+        return 0
+      })
+    }
+
+    return transformedRoles
+  }, [roles, columnFilters, sorting])
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
   useEffect(() => {
-    if (error) {
-      console.error('Failed to load roles:', error)
+    if (rolesError) {
+      console.error('Failed to load roles:', rolesError)
       toast({
         title: 'Error',
         description: 'Failed to load roles. Please try again.',
         variant: 'destructive',
       })
     }
-  }, [error, toast])
+  }, [rolesError, toast])
 
-  // Filter data based on search term
-  const filteredData = data.filter(
-    (role) =>
-      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.description.toLowerCase().includes(searchTerm.toLowerCase()),
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (rolesData) {
+      setTotalCount(rolesData.length)
+    }
+  }, [rolesData])
+
+  // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
+  const refreshRoles = useCallback(async () => {
+    setIsPending(false)
+    setIsChangingPageSize(false)
+    await mutateRoles()
+  }, [mutateRoles])
+
+  // Initialize URL with default params if needed
+  useEffect(() => {
+    if (shouldInitializeUrl.current) {
+      shouldInitializeUrl.current = false
+
+      const page = searchParams.get('page')
+      const size = searchParams.get('size')
+
+      if (!page || !size) {
+        updateUrl(pathname, {
+          page: page ?? '1',
+          size: size ?? '10',
+        })
+      }
+    }
+  }, [searchParams, updateUrl, pathname])
+
+  // Calculate page count
+  const pageCount = useMemo(() => {
+    return Math.max(1, Math.ceil(totalCount / pagination.pageSize))
+  }, [totalCount, pagination.pageSize])
+
+  // Setup table instance
+  const table = useReactTable({
+    data: rolesData,
+    columns: createRolesColumns(refreshRoles),
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      columnFilters,
+      pagination,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' ? updater(sorting) : updater
+      setSorting(newSorting)
+      if (newSorting.length > 0) {
+        updateUrl(pathname, {
+          sort: newSorting[0].id,
+          order: newSorting[0].desc ? 'desc' : 'asc',
+          page: '1', // Reset to first page when sorting changes
+        })
+      } else {
+        updateUrl(pathname, {
+          sort: null,
+          order: null,
+          page: '1',
+        })
+      }
+    },
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: (updater) => {
+      const newPagination = typeof updater === 'function' ? updater(pagination) : updater
+      setPagination(newPagination)
+      updateUrl(pathname, {
+        page: (newPagination.pageIndex + 1).toString(),
+        size: newPagination.pageSize.toString(),
+      })
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    manualPagination: true,
+    pageCount,
+    manualSorting: true,
+    manualFiltering: true,
+    getRowId: (row) => row.id,
+  })
+
+  // Implement search with debounce
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      setIsPending(true)
+
+      if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
+
+      searchDebounceTimeout.current = setTimeout(() => {
+        const nameFilter = table.getColumn('name')
+
+        if (nameFilter) {
+          nameFilter.setFilterValue(value)
+
+          updateUrl(pathname, {
+            name: value || null,
+            page: '1', // Reset to first page when filter changes
+          })
+        }
+
+        setIsPending(false)
+      }, 500)
+    },
+    [table, updateUrl, pathname],
   )
 
-  // Handle row click for viewing role details
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
+    }
+  }, [])
+
+  // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
+  const handleRoleCreated = () => mutateRoles()
+
   const handleRowClick = (row: RolesRow) => {
     router.push(`roles/${row.id}`)
   }
 
-  // Handle create role
   const handleCreateRole = () => {
     setEditingRole(null)
-    setIsCreateModalOpen(true)
-  }
-
-  // Handle edit role
-  const handleEditRole = (role: RolesRow) => {
-    setEditingRole(role)
-    setIsCreateModalOpen(true)
-  }
-
-  // Handle delete role
-  const handleDeleteRole = async (roleId: string) => {
-    try {
-      await rolesApi.deleteRole(roleId)
-      toast({
-        title: 'Success',
-        description: 'Role deleted successfully.',
-      })
-      // Reload data using SWR's mutate
-      await mutate()
-    } catch (error) {
-      console.error('Failed to delete role:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to delete role. Please try again.',
-        variant: 'destructive',
-      })
-    }
-  }
-
-  // Handle modal close and reload data
-  const handleModalClose = async (shouldReload = false) => {
-    setIsCreateModalOpen(false)
-    setEditingRole(null)
-
-    if (shouldReload) {
-      await mutate()
-    }
+    setIsModalOpen(true)
   }
 
   return (
-    <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Roles Management</h2>
-          <p className="text-muted-foreground">
-            Manage user roles and permissions within your organization.
-          </p>
+    <>
+      <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Roles</h2>
+            <p className="text-muted-foreground">
+              Manage user roles and permissions within your organization.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            {totalCount > 0 && (
+              <div className="text-sm text-muted-foreground">
+                <span>
+                  Total: {totalCount} role{totalCount !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+            <Button
+              onClick={handleCreateRole}
+              className="flex items-center justify-center"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Role
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button onClick={handleCreateRole} className="h-8 px-2 lg:px-3">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Role
-          </Button>
-        </div>
-      </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search roles..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-md border relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        {rolesError && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load roles. Please try again.
+            </p>
+            <Button variant="outline" className="mt-2" onClick={() => mutateRoles()}>
+              Retry
+            </Button>
           </div>
         )}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead className="w-[120px]">Created</TableHead>
-              <TableHead className="w-[70px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length > 0 ? (
-              filteredData.map((role) => (
-                <TableRow
-                  key={role.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleRowClick(role)}
-                >
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{role.name}</span>
-                      {role.isSystemAuthority && (
-                        <Badge variant="secondary" className="text-xs">
-                          System
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[300px]">
-                      <span className="text-sm text-muted-foreground">
-                        {role.description || 'No description'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {role.permissions && role.permissions.length > 0 ? (
-                        role.permissions.slice(0, 3).map((perm) => (
-                          <Badge key={perm.resourceName} variant="outline" className="text-xs">
-                            {perm.resourceName}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No permissions</span>
-                      )}
-                      {role.permissions && role.permissions.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{role.permissions.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {format(new Date(role.createdAt), 'MMM dd, yyyy')}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditRole(role)
-                        }}
-                        disabled={role.isSystemAuthority}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteRole(role.id)
-                        }}
-                        disabled={role.isSystemAuthority}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  {isLoading ? 'Loading...' : 'No roles found.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+
+        <DataTableToolbar
+          table={table}
+          onSearch={handleSearch}
+          searchValue={searchValue}
+          isFiltering={isLoading}
+          isPending={isPending}
+        />
+
+        <DataTable
+          data={rolesData}
+          columns={createRolesColumns(refreshRoles)}
+          table={table}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          totalCount={totalCount}
+        />
+
+        <Pagination
+          currentPage={pagination.pageIndex + 1}
+          pageSize={pagination.pageSize}
+          totalCount={totalCount}
+          totalPages={pageCount}
+          isLoading={isLoading}
+          isChangingPageSize={isChangingPageSize}
+          isUnknownTotalCount={false}
+          onPageChange={(page: number) => {
+            setPagination({ ...pagination, pageIndex: page - 1 })
+            updateUrl(pathname, { page: page.toString() })
+          }}
+          onPageSizeChange={(size: number) => {
+            setIsChangingPageSize(true)
+            const currentStartRow = pagination.pageIndex * pagination.pageSize
+            const newPageIndex = Math.floor(currentStartRow / size)
+
+            setPagination({
+              pageSize: size,
+              pageIndex: newPageIndex,
+            })
+
+            updateUrl(pathname, {
+              size: size.toString(),
+              page: (newPageIndex + 1).toString(),
+            })
+          }}
+        />
+
+        {!isLoading && rolesData.length === 0 && !rolesError && (
+          <div className="text-center py-10 text-muted-foreground">
+            <p>No roles found. Create your first role to get started.</p>
+          </div>
+        )}
       </div>
 
       <CreateEditModal
         key={editingRole?.id ?? 'new'} // Dynamic key to reset component state
-        isOpen={isCreateModalOpen}
-        onClose={handleModalClose}
+        isOpen={isModalOpen}
+        onClose={(shouldReload) => {
+          setIsModalOpen(false)
+          setEditingRole(null)
+          if (shouldReload) {
+            handleRoleCreated()
+          }
+        }}
         editingRole={editingRole}
       />
-    </div>
+    </>
   )
 }

@@ -7,14 +7,11 @@ import { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
-
 import { Badge } from '@/components/ui/badge'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
-  statuses: { value: string; label: string }[] // Options for Status filter
   onSearch?: (value: string) => void
-  onStatusChange?: (value: string) => void
   searchValue?: string
   isFiltering?: boolean
   isPending?: boolean
@@ -78,7 +75,7 @@ export function DataTableToolbar<TData>({
 
           <Input
             ref={searchInputRef}
-            placeholder="Search "
+            placeholder="Search roles..."
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 w-full pr-8"

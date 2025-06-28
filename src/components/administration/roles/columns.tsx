@@ -9,7 +9,7 @@ import type { RolesRow } from './roles'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<RolesRow>[] = [
+export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -34,6 +34,11 @@ export const columns: ColumnDef<RolesRow>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    id: 'actions',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
   },
   {
     accessorKey: 'name',
@@ -101,9 +106,5 @@ export const columns: ColumnDef<RolesRow>[] = [
         return <div className="text-sm text-muted-foreground">Invalid date</div>
       }
     },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => <DataTableRowAction row={row} />,
   },
 ]
