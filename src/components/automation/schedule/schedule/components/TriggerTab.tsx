@@ -141,9 +141,19 @@ interface ConfigurationProps {
 function OnceConfiguration({
   recurrence,
   onUpdate,
+  startDateOpen,
+  setStartDateOpen,
 }: ConfigurationProps) {
   return (
     <div className="space-y-4">
+      <DatePicker
+        label="Start Date"
+        required
+        date={recurrence.startDate}
+        onDateChange={(date) => onUpdate({ startDate: date })}
+        isOpen={startDateOpen}
+        setIsOpen={setStartDateOpen}
+      />
       <TimeSelector
         label="At:"
         hour={recurrence.dailyHour ?? '09'}
@@ -163,7 +173,7 @@ function DailyConfiguration({
     <div className="space-y-4">
       <TimeSelector
         label="At:"
-        hour={recurrence.dailyHour ?? '00'}
+        hour={recurrence.dailyHour ?? '09'}
         minute={recurrence.dailyMinute ?? '00'}
         onHourChange={(hour) => onUpdate({ dailyHour: hour })}
         onMinuteChange={(minute) => onUpdate({ dailyMinute: minute })}
@@ -308,7 +318,7 @@ function DatePicker({
               return date < min
             }}
             onSelect={(date) => {
-              onDateChange(date)
+              onDateChange(date || undefined)
               setIsOpen(false)
             }}
           />

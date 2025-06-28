@@ -63,6 +63,7 @@ export interface ScheduleFormData {
     selectedOrdinal?: string
     selectedWeekday?: string
     selectedMonths?: string[]
+    startDate?: Date
   }
 }
 
@@ -74,6 +75,7 @@ interface ScheduleData {
   agentId?: string
   timezone?: string
   recurrence?: Partial<ScheduleFormData['recurrence']>
+  oneTimeExecution?: string
 }
 
 interface CreateEditModalProps {
@@ -143,6 +145,26 @@ export function CreateEditModal({
   // Reset formData khi chuyển giữa create/edit hoặc editingSchedule thay đổi
   useEffect(() => {
     if (mode === 'edit' && editingSchedule) {
+      const rec = editingSchedule.recurrence ?? {}
+      let startDate: Date | undefined = undefined
+      let dailyHour = rec.dailyHour ?? '09'
+      let dailyMinute = rec.dailyMinute ?? '00'
+
+      if (rec.type === RecurrenceType.Once && editingSchedule.oneTimeExecution) {
+        try {
+          const dateObj = new Date(editingSchedule.oneTimeExecution)
+
+          // Create a new date with just the date part (no time)
+          startDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate())
+
+          // Extract time parts for the time selectors - use local time
+          dailyHour = dateObj.getHours().toString().padStart(2, '0')
+          dailyMinute = dateObj.getMinutes().toString().padStart(2, '0')
+        } catch (e) {
+          console.error("Failed to parse date:", e)
+        }
+      }
+
       setFormData({
         name: editingSchedule.name ?? '',
         packageId: editingSchedule.packageId ?? '',
@@ -150,21 +172,22 @@ export function CreateEditModal({
         agentId: editingSchedule.agentId ?? '',
         timezone: editingSchedule.timezone ?? 'Asia/Ho_Chi_Minh',
         recurrence: {
-          type: (editingSchedule.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
-          value: editingSchedule.recurrence?.value ?? '1',
-          startTime: editingSchedule.recurrence?.startTime ?? '09:00',
-          dailyHour: editingSchedule.recurrence?.dailyHour ?? '09',
-          dailyMinute: editingSchedule.recurrence?.dailyMinute ?? '00',
-          weeklyHour: editingSchedule.recurrence?.weeklyHour ?? '09',
-          weeklyMinute: editingSchedule.recurrence?.weeklyMinute ?? '00',
-          selectedDays: editingSchedule.recurrence?.selectedDays ?? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          monthlyHour: editingSchedule.recurrence?.monthlyHour ?? '09',
-          monthlyMinute: editingSchedule.recurrence?.monthlyMinute ?? '00',
-          monthlyOnType: editingSchedule.recurrence?.monthlyOnType ?? 'day',
-          selectedDay: editingSchedule.recurrence?.selectedDay ?? '1',
-          selectedOrdinal: editingSchedule.recurrence?.selectedOrdinal ?? '1st',
-          selectedWeekday: editingSchedule.recurrence?.selectedWeekday ?? 'Monday',
-          selectedMonths: editingSchedule.recurrence?.selectedMonths ?? [
+          type: (rec.type as RecurrenceType) ?? RecurrenceType.Daily,
+          value: rec.value ?? '1',
+          startDate,
+          dailyHour,
+          dailyMinute,
+          startTime: `${dailyHour}:${dailyMinute}`,
+          weeklyHour: rec.weeklyHour ?? '09',
+          weeklyMinute: rec.weeklyMinute ?? '00',
+          selectedDays: rec.selectedDays ?? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          monthlyHour: rec.monthlyHour ?? '09',
+          monthlyMinute: rec.monthlyMinute ?? '00',
+          monthlyOnType: rec.monthlyOnType ?? 'day',
+          selectedDay: rec.selectedDay ?? '1',
+          selectedOrdinal: rec.selectedOrdinal ?? '1st',
+          selectedWeekday: rec.selectedWeekday ?? 'Monday',
+          selectedMonths: rec.selectedMonths ?? [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December',
           ],
@@ -226,23 +249,32 @@ export function CreateEditModal({
     if (!formData.timezone) {
       return { isValid: false, error: 'Timezone selection is required' }
     }
+
+    // Add validation for Once recurrence type
+    if (formData.recurrence.type === RecurrenceType.Once) {
+      if (!formData.recurrence.startDate) {
+        return { isValid: false, error: 'Please select a date for one-time schedule' }
+      }
+      if (!formData.recurrence.dailyHour || !formData.recurrence.dailyMinute) {
+        return { isValid: false, error: 'Please select a time for one-time schedule' }
+      }
+    }
+
     return { isValid: true }
   }
 
   const convertToApiDto = (): CreateScheduleDto => {
     const { recurrence } = formData
-
-    // Convert form data to API DTO format
     let cronExpression: string | undefined
     let oneTimeExecution: string | undefined
-
-    // Generate cron expression or one-time execution date based on recurrence type
     switch (recurrence.type) {
       case RecurrenceType.Once:
-        if (recurrence.startTime && recurrence.dailyHour && recurrence.dailyMinute) {
-          const date = new Date(recurrence.startTime)
-          date.setHours(parseInt(recurrence.dailyHour, 10), parseInt(recurrence.dailyMinute, 10))
+        if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
+          const date = new Date(recurrence.startDate)
+          date.setHours(parseInt(recurrence.dailyHour, 10), parseInt(recurrence.dailyMinute, 10), 0, 0)
           oneTimeExecution = date.toISOString()
+        } else {
+          throw new Error('Please select both date and time for one-time schedule')
         }
         break
       case RecurrenceType.Daily:

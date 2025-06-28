@@ -51,11 +51,14 @@ interface ScheduleData {
   agentId?: string
   timezone?: string
   recurrence?: Partial<ScheduleFormData['recurrence']>
+  oneTimeExecution?: string
 }
 
 function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): ScheduleData {
   const recurrenceType = apiSchedule.recurrenceType as RecurrenceType
-  return {
+
+  // Create basic schedule data
+  const scheduleData: ScheduleData = {
     id: apiSchedule.id,
     name: apiSchedule.name,
     packageId: apiSchedule.automationPackageId,
@@ -64,6 +67,13 @@ function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): Sche
     timezone: apiSchedule.timeZoneId,
     recurrence: { type: recurrenceType },
   }
+
+  // For "Once" type, include the oneTimeExecution value
+  if (recurrenceType === RecurrenceType.Once && apiSchedule.oneTimeExecution) {
+    scheduleData.oneTimeExecution = apiSchedule.oneTimeExecution;
+  }
+
+  return scheduleData;
 }
 
 export default function ScheduleInterface() {
