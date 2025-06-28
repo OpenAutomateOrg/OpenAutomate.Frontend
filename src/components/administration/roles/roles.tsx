@@ -58,7 +58,6 @@ export default function RolesInterface() {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
-  const totalCountRef = useRef<number>(0)
   const [isPending, setIsPending] = useState(false)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
 
@@ -183,7 +182,6 @@ export default function RolesInterface() {
   useEffect(() => {
     if (rolesData) {
       setTotalCount(rolesData.length)
-      totalCountRef.current = rolesData.length
     }
   }, [rolesData])
 
