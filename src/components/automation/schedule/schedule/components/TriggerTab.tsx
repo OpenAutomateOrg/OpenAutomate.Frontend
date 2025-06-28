@@ -113,15 +113,15 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
 
       {(recurrence.type === RecurrenceType.Minutes ||
         recurrence.type === RecurrenceType.Hourly) && (
-        <RecurringConfiguration
-          recurrence={recurrence}
-          onUpdate={onUpdate}
-          startDateOpen={startDateOpen}
-          setStartDateOpen={setStartDateOpen}
-          endDateOpen={endDateOpen}
-          setEndDateOpen={setEndDateOpen}
-        />
-      )}
+          <RecurringConfiguration
+            recurrence={recurrence}
+            onUpdate={onUpdate}
+            startDateOpen={startDateOpen}
+            setStartDateOpen={setStartDateOpen}
+            endDateOpen={endDateOpen}
+            setEndDateOpen={setEndDateOpen}
+          />
+        )}
     </div>
   )
 }
@@ -141,20 +141,9 @@ interface ConfigurationProps {
 function OnceConfiguration({
   recurrence,
   onUpdate,
-  startDateOpen,
-  setStartDateOpen,
 }: ConfigurationProps) {
   return (
     <div className="space-y-4">
-      <DatePicker
-        label="Start Date"
-        required
-        date={recurrence.startDate}
-        onDateChange={(date) => onUpdate({ startDate: date })}
-        isOpen={startDateOpen}
-        setIsOpen={setStartDateOpen}
-      />
-
       <TimeSelector
         label="At:"
         hour={recurrence.dailyHour ?? '09'}
@@ -168,34 +157,10 @@ function OnceConfiguration({
 
 function DailyConfiguration({
   recurrence,
-  onUpdate,
-  startDateOpen,
-  setStartDateOpen,
-  endDateOpen,
-  setEndDateOpen,
+  onUpdate
 }: ConfigurationProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <DatePicker
-          label="Start Date"
-          required
-          date={recurrence.startDate}
-          onDateChange={(date) => onUpdate({ startDate: date })}
-          isOpen={startDateOpen}
-          setIsOpen={setStartDateOpen}
-        />
-
-        <DatePicker
-          label="End Date"
-          date={recurrence.endDate}
-          onDateChange={(date) => onUpdate({ endDate: date })}
-          isOpen={endDateOpen!}
-          setIsOpen={setEndDateOpen!}
-          minDate={recurrence.startDate}
-        />
-      </div>
-
       <TimeSelector
         label="At:"
         hour={recurrence.dailyHour ?? '00'}
@@ -210,37 +175,13 @@ function DailyConfiguration({
 function WeeklyConfiguration({
   recurrence,
   onUpdate,
-  updateDaySelection,
-  startDateOpen,
-  setStartDateOpen,
-  endDateOpen,
-  setEndDateOpen,
+  updateDaySelection
 }: ConfigurationProps) {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const selectedDays = recurrence.selectedDays ?? []
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <DatePicker
-          label="Start Date"
-          required
-          date={recurrence.startDate}
-          onDateChange={(date) => onUpdate({ startDate: date })}
-          isOpen={startDateOpen}
-          setIsOpen={setStartDateOpen}
-        />
-
-        <DatePicker
-          label="End Date"
-          date={recurrence.endDate}
-          onDateChange={(date) => onUpdate({ endDate: date })}
-          isOpen={endDateOpen!}
-          setIsOpen={setEndDateOpen!}
-          minDate={recurrence.startDate}
-        />
-      </div>
-
       <TimeSelector
         label="Every day at:"
         hour={recurrence.weeklyHour ?? '17'}
@@ -257,11 +198,7 @@ function WeeklyConfiguration({
 function MonthlyConfiguration({
   recurrence,
   onUpdate,
-  updateMonthSelection,
-  startDateOpen,
-  setStartDateOpen,
-  endDateOpen,
-  setEndDateOpen,
+  updateMonthSelection
 }: ConfigurationProps) {
   const months = [
     'January',
@@ -281,26 +218,6 @@ function MonthlyConfiguration({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <DatePicker
-          label="Start Date"
-          required
-          date={recurrence.startDate}
-          onDateChange={(date) => onUpdate({ startDate: date })}
-          isOpen={startDateOpen}
-          setIsOpen={setStartDateOpen}
-        />
-
-        <DatePicker
-          label="End Date"
-          date={recurrence.endDate}
-          onDateChange={(date) => onUpdate({ endDate: date })}
-          isOpen={endDateOpen!}
-          setIsOpen={setEndDateOpen!}
-          minDate={recurrence.startDate}
-        />
-      </div>
-
       <TimeSelector
         label="At:"
         hour={recurrence.monthlyHour ?? '00'}
@@ -322,34 +239,10 @@ function MonthlyConfiguration({
 
 function RecurringConfiguration({
   recurrence,
-  onUpdate,
-  startDateOpen,
-  setStartDateOpen,
-  endDateOpen,
-  setEndDateOpen,
+  onUpdate
 }: ConfigurationProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <DatePicker
-          label="Start Date"
-          required
-          date={recurrence.startDate}
-          onDateChange={(date) => onUpdate({ startDate: date })}
-          isOpen={startDateOpen}
-          setIsOpen={setStartDateOpen}
-        />
-
-        <DatePicker
-          label="End Date"
-          date={recurrence.endDate}
-          onDateChange={(date) => onUpdate({ endDate: date })}
-          isOpen={endDateOpen!}
-          setIsOpen={setEndDateOpen!}
-          minDate={recurrence.startDate}
-        />
-      </div>
-
       <div className="flex items-center gap-2">
         <span className="text-sm">Every</span>
         <Select value={recurrence.value} onValueChange={(value) => onUpdate({ value })}>

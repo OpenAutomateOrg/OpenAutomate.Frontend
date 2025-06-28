@@ -50,8 +50,6 @@ export interface ScheduleFormData {
   recurrence: {
     type: RecurrenceType
     value: string
-    startDate?: Date
-    endDate?: Date
     startTime?: string
     dailyHour?: string
     dailyMinute?: string
@@ -107,8 +105,6 @@ export function CreateEditModal({
     recurrence: {
       type: (editingSchedule?.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
       value: editingSchedule?.recurrence?.value ?? '1',
-      startDate: editingSchedule?.recurrence?.startDate ?? new Date(),
-      endDate: editingSchedule?.recurrence?.endDate,
       startTime: editingSchedule?.recurrence?.startTime ?? '09:00',
       dailyHour: editingSchedule?.recurrence?.dailyHour ?? '09',
       dailyMinute: editingSchedule?.recurrence?.dailyMinute ?? '00',
@@ -156,8 +152,6 @@ export function CreateEditModal({
         recurrence: {
           type: (editingSchedule.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
           value: editingSchedule.recurrence?.value ?? '1',
-          startDate: editingSchedule.recurrence?.startDate ?? new Date(),
-          endDate: editingSchedule.recurrence?.endDate,
           startTime: editingSchedule.recurrence?.startTime ?? '09:00',
           dailyHour: editingSchedule.recurrence?.dailyHour ?? '09',
           dailyMinute: editingSchedule.recurrence?.dailyMinute ?? '00',
@@ -187,8 +181,6 @@ export function CreateEditModal({
         recurrence: {
           type: RecurrenceType.Daily,
           value: '1',
-          startDate: new Date(),
-          endDate: undefined,
           startTime: '09:00',
           dailyHour: '09',
           dailyMinute: '00',
@@ -247,8 +239,8 @@ export function CreateEditModal({
     // Generate cron expression or one-time execution date based on recurrence type
     switch (recurrence.type) {
       case RecurrenceType.Once:
-        if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
-          const date = new Date(recurrence.startDate)
+        if (recurrence.startTime && recurrence.dailyHour && recurrence.dailyMinute) {
+          const date = new Date(recurrence.startTime)
           date.setHours(parseInt(recurrence.dailyHour, 10), parseInt(recurrence.dailyMinute, 10))
           oneTimeExecution = date.toISOString()
         }
