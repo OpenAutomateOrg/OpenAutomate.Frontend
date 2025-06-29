@@ -53,10 +53,64 @@ interface ScheduleData {
   oneTimeExecution?: string
 }
 
+function parseWeeklyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  const days = parts[5]?.split(',').map(num => {
+    const map: Record<string, string> = {
+      '0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday'
+    }
+    return map[num]
+  }).filter(Boolean)
+  return { weeklyHour: hour, weeklyMinute: minute, selectedDays: days }
+}
+
+function parseMonthlyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  const day = parts[3]
+  return { monthlyHour: hour, monthlyMinute: minute, monthlyOnType: 'day' as const, selectedDay: day }
+}
+
+function parseHourlyCron(cron: string) {
+  const parts = cron.split(' ')
+  const value = parts[2].startsWith('*/') ? parts[2].replace('*/', '') : '1'
+  return { value }
+}
+
+function parseMinutesCron(cron: string) {
+  const parts = cron.split(' ')
+  const value = parts[1].startsWith('*/') ? parts[1].replace('*/', '') : '1'
+  return { value }
+}
+
+function parseDailyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  return { dailyHour: hour, dailyMinute: minute }
+}
+
 function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): ScheduleData {
   const recurrenceType = apiSchedule.recurrenceType as RecurrenceType
+  let recurrence: Partial<ScheduleFormData['recurrence']> = { type: recurrenceType }
 
-  // Create basic schedule data
+  if (apiSchedule.cronExpression) {
+    if (recurrenceType === RecurrenceType.Daily) {
+      recurrence = { ...recurrence, ...parseDailyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Weekly) {
+      recurrence = { ...recurrence, ...parseWeeklyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Monthly) {
+      recurrence = { ...recurrence, ...parseMonthlyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Hourly) {
+      recurrence = { ...recurrence, ...parseHourlyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Minutes) {
+      recurrence = { ...recurrence, ...parseMinutesCron(apiSchedule.cronExpression) }
+    }
+  }
+
   const scheduleData: ScheduleData = {
     id: apiSchedule.id,
     name: apiSchedule.name,
@@ -64,15 +118,14 @@ function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): Sche
     packageVersion: 'latest',
     agentId: apiSchedule.botAgentId,
     timezone: apiSchedule.timeZoneId,
-    recurrence: { type: recurrenceType },
+    recurrence,
   }
 
-  // For "Once" type, include the oneTimeExecution value
   if (recurrenceType === RecurrenceType.Once && apiSchedule.oneTimeExecution) {
-    scheduleData.oneTimeExecution = apiSchedule.oneTimeExecution;
+    scheduleData.oneTimeExecution = apiSchedule.oneTimeExecution
   }
 
-  return scheduleData;
+  return scheduleData
 }
 
 export default function ScheduleInterface() {

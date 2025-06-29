@@ -114,7 +114,7 @@ export default function DataTableRowAction({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          align="end"
+          align="start"
           className="w-[180px]"
           onClick={stopPropagation}
           onPointerDown={stopPropagation}
