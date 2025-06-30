@@ -5,10 +5,13 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { SystemAdminUserNav } from '@/components/system-admin/system-admin-user-nav'
 import { useSidebar } from '@/components/ui/sidebar'
+import { useAuth } from '@/providers/auth-provider'
 
 export function SystemAdminHeader() {
   const { toggleSidebar } = useSidebar()
+  const { user } = useAuth()
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b bg-muted/50">
@@ -22,8 +25,10 @@ export function SystemAdminHeader() {
             OpenAutomate
           </Link>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
+          <Separator orientation="vertical" className="h-4" />
+          <SystemAdminUserNav user={user} />
         </div>
       </div>
     </header>
