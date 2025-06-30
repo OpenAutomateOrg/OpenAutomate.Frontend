@@ -11,7 +11,14 @@ import {
 } from 'react'
 import { authApi } from '@/lib/api/auth'
 import { useRouter, useParams } from 'next/navigation'
-import { User, UserProfile, LoginRequest, RegisterRequest, SystemRole, PermissionLevel } from '@/types/auth'
+import {
+  User,
+  UserProfile,
+  LoginRequest,
+  RegisterRequest,
+  SystemRole,
+  PermissionLevel,
+} from '@/types/auth'
 import {
   getAuthToken,
   setAuthToken,
@@ -53,42 +60,55 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const params = useParams()
 
   // Computed property for system admin status
-  const isSystemAdmin = user?.systemRole === SystemRole.Admin
+  // Handle both string and numeric systemRole values from API
+  const isSystemAdmin = useMemo(() => {
+    if (!user) return false
+    return (
+      user.systemRole === SystemRole.Admin ||
+      (typeof user.systemRole === 'string' && user.systemRole === 'Admin')
+    )
+  }, [user])
 
   // Helper function to fetch and update user profile
-  const fetchAndUpdateUserProfile = useCallback(async (context: string = 'profile fetch'): Promise<void> => {
-    try {
-      const profile = await authApi.getUserProfile()
-      setUserProfile(profile)
-      logger.success(`User profile loaded successfully during ${context}`)
-    } catch (profileError) {
-      logger.warning(`Failed to load user profile during ${context}:`, profileError)
-      // Don't throw error to avoid breaking the calling flow
-    }
-  }, [])
+  const fetchAndUpdateUserProfile = useCallback(
+    async (context: string = 'profile fetch'): Promise<void> => {
+      try {
+        const profile = await authApi.getUserProfile()
+        setUserProfile(profile)
+        logger.success(`User profile loaded successfully during ${context}`)
+      } catch (profileError) {
+        logger.warning(`Failed to load user profile during ${context}:`, profileError)
+        // Don't throw error to avoid breaking the calling flow
+      }
+    },
+    [],
+  )
 
   // Helper function to check permissions for a specific resource and tenant
-  const hasPermission = useCallback((resource: string, requiredPermission: PermissionLevel, tenant?: string): boolean => {
-    if (!userProfile) return false
+  const hasPermission = useCallback(
+    (resource: string, requiredPermission: PermissionLevel, tenant?: string): boolean => {
+      if (!userProfile) return false
 
-    // System admins have all permissions
-    if (isSystemAdmin) return true
+      // System admins have all permissions
+      if (isSystemAdmin) return true
 
-    // Get current tenant from URL if not provided
-    const currentTenant = tenant || params.tenant
-    if (!currentTenant) return false
+      // Get current tenant from URL if not provided
+      const currentTenant = tenant || params.tenant
+      if (!currentTenant) return false
 
-    // Find the organization unit by slug
-    const orgUnit = userProfile.organizationUnits.find(ou => ou.slug === currentTenant)
-    if (!orgUnit) return false
+      // Find the organization unit by slug
+      const orgUnit = userProfile.organizationUnits.find((ou) => ou.slug === currentTenant)
+      if (!orgUnit) return false
 
-    // Find the resource permission
-    const resourcePermission = orgUnit.permissions.find(p => p.resourceName === resource)
-    if (!resourcePermission) return false
+      // Find the resource permission
+      const resourcePermission = orgUnit.permissions.find((p) => p.resourceName === resource)
+      if (!resourcePermission) return false
 
-    // Check if user has required permission level or higher
-    return resourcePermission.permission >= requiredPermission
-  }, [userProfile, isSystemAdmin, params.tenant])
+      // Check if user has required permission level or higher
+      return resourcePermission.permission >= requiredPermission
+    },
+    [userProfile, isSystemAdmin, params.tenant],
+  )
 
   // Refresh token implementation
   const refreshToken = useCallback(async (): Promise<boolean> => {
@@ -99,12 +119,20 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       setAuthToken(response.token)
 
       // Update user if it exists in the response
-      const userToSet = response.user || {
+      let userToSet = response.user || {
         id: response.id,
         email: response.email,
         firstName: response.firstName,
         lastName: response.lastName,
         systemRole: response.systemRole || SystemRole.User,
+      }
+
+      // Normalize systemRole if it comes as string from API
+      if (typeof userToSet.systemRole === 'string') {
+        userToSet = {
+          ...userToSet,
+          systemRole: userToSet.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
+        }
       }
 
       // Update in storage and local state
@@ -191,7 +219,16 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
           // After setting user from storage, attempt to get fresh user data
           try {
-            const currentUser = await authApi.getCurrentUser()
+            let currentUser = await authApi.getCurrentUser()
+
+            // Normalize systemRole if it comes as string from API
+            if (typeof currentUser.systemRole === 'string') {
+              currentUser = {
+                ...currentUser,
+                systemRole: currentUser.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
+              }
+            }
+
             setUser(currentUser)
             logger.success('User data refreshed from API')
 
@@ -207,12 +244,20 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
               setAuthToken(response.token)
 
               // Update user if it exists in the response
-              const userToSet = response.user || {
+              let userToSet = response.user || {
                 id: response.id,
                 email: response.email,
                 firstName: response.firstName,
                 lastName: response.lastName,
                 systemRole: response.systemRole || SystemRole.User,
+              }
+
+              // Normalize systemRole if it comes as string from API
+              if (typeof userToSet.systemRole === 'string') {
+                userToSet = {
+                  ...userToSet,
+                  systemRole: userToSet.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
+                }
               }
 
               // Update in storage and local state
@@ -259,12 +304,20 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setAuthToken(response.token)
 
         // Use user from response or create from response fields
-        const userData = response.user || {
+        let userData = response.user || {
           id: response.id,
           email: response.email,
           firstName: response.firstName,
           lastName: response.lastName,
           systemRole: response.systemRole || SystemRole.User,
+        }
+
+        // Normalize systemRole if it comes as string from API
+        if (typeof userData.systemRole === 'string') {
+          userData = {
+            ...userData,
+            systemRole: userData.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
+          }
         }
 
         // Update in storage and local state
@@ -277,9 +330,13 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
 
-        // Always redirect to organization selector first
-        // This lets the user choose which tenant to access
-        router.push(config.paths.defaultRedirect)
+        // Check if user is a system admin and redirect accordingly
+        if (userData.systemRole === SystemRole.Admin) {
+          router.push('/system-admin')
+        } else {
+          // Regular users go to organization selector to choose tenant
+          router.push(config.paths.defaultRedirect)
+        }
 
         return userData
       } catch (err: unknown) {
@@ -383,7 +440,19 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           hasPermission,
           error,
         }),
-        [user, userProfile, isLoading, isSystemAdmin, login, register, logout, refreshToken, updateUser, hasPermission, error],
+        [
+          user,
+          userProfile,
+          isLoading,
+          isSystemAdmin,
+          login,
+          register,
+          logout,
+          refreshToken,
+          updateUser,
+          hasPermission,
+          error,
+        ],
       )}
     >
       {children}

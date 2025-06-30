@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
 import { config } from '@/lib/config'
 import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
+import { SystemRole } from '@/types/auth'
 
 // Form validation schema
 const formSchema = z.object({
@@ -93,23 +94,28 @@ export function LoginForm() {
     setError(null)
 
     try {
-      await login({
+      const user = await login({
         email: data.email,
         password: data.password,
       })
 
-      // If this login is from an invitation, redirect to the invitation page
-      if (isInvitation) {
+      // Only handle special invitation redirects - auth provider handles all other redirects
+      if (isInvitation && returnUrl) {
         router.push(returnUrl)
         return
       }
 
-      // Normal redirect if not from invitation
-      if (returnUrl && !isInvitation) {
+      // Handle return URL for non-invitation cases only if user is not system admin
+      // System admins should always go to /system-admin regardless of returnUrl
+      // Handle string systemRole values from API
+      const isAdmin =
+        user?.systemRole === SystemRole.Admin ||
+        (typeof user?.systemRole === 'string' && user.systemRole === 'Admin')
+      if (user && !isAdmin && returnUrl && !isInvitation) {
         router.push(returnUrl)
-      } else {
-        router.push('/tenant-selector') // Default redirect to tenant selector
       }
+
+      // For all other cases (including system admins), let the auth provider handle the redirect
     } catch (error: unknown) {
       let errorMessage = 'Login failed. Please try again.'
 

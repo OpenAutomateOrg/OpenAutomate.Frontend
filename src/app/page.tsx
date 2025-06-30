@@ -7,18 +7,24 @@ import { config } from '@/lib/config'
 
 export default function LandingPage() {
   const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, isSystemAdmin } = useAuth()
+
   useEffect(() => {
-    // If the user is already authenticated, redirect them to organization selector
+    // If the user is already authenticated, redirect based on their role
+    // System admins go to system-admin, regular users go to tenant selector
     // Otherwise, redirect to login page
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push(config.paths.defaultRedirect)
+        if (isSystemAdmin) {
+          router.push('/system-admin')
+        } else {
+          router.push(config.paths.defaultRedirect)
+        }
       } else {
         router.push(config.paths.auth.login)
       }
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, isSystemAdmin, router])
 
   // Display a minimal loading screen while redirecting
   return (
