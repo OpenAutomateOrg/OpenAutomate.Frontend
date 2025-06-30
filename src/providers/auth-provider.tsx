@@ -110,16 +110,25 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     [userProfile, isSystemAdmin, params.tenant],
   )
 
-  // Refresh token implementation
-  const refreshToken = useCallback(async (): Promise<boolean> => {
-    try {
-      const response = await authApi.refreshToken()
+  // Helper function to normalize system role from API response
+  const normalizeSystemRole = useCallback((systemRole: string | SystemRole): SystemRole => {
+    if (typeof systemRole === 'string') {
+      return systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User
+    }
+    return systemRole || SystemRole.User
+  }, [])
 
-      // Update token in storage
-      setAuthToken(response.token)
-
-      // Update user if it exists in the response
-      let userToSet = response.user || {
+  // Helper function to create user object from API response
+  const createUserFromResponse = useCallback(
+    (response: {
+      user?: User
+      id: string
+      email: string
+      firstName: string
+      lastName: string
+      systemRole?: string | SystemRole
+    }): User => {
+      const userData = response.user || {
         id: response.id,
         email: response.email,
         firstName: response.firstName,
@@ -127,32 +136,99 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         systemRole: response.systemRole || SystemRole.User,
       }
 
-      // Normalize systemRole if it comes as string from API
-      if (typeof userToSet.systemRole === 'string') {
-        userToSet = {
-          ...userToSet,
-          systemRole: userToSet.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
-        }
+      return {
+        ...userData,
+        systemRole: normalizeSystemRole(userData.systemRole),
+      }
+    },
+    [normalizeSystemRole],
+  )
+
+  // Helper function to handle user data update
+  const updateUserData = useCallback(
+    async (user: User, context: string) => {
+      setStoredUser(user)
+      setUser(user)
+      await fetchAndUpdateUserProfile(context)
+    },
+    [fetchAndUpdateUserProfile],
+  )
+
+  // Helper function to clear authentication state
+  const clearAuthState = useCallback(() => {
+    clearAuthData()
+    setUser(null)
+    setUserProfile(null)
+  }, [])
+
+  // Helper function to refresh user data from API
+  const refreshUserFromAPI = useCallback(async () => {
+    try {
+      const currentUser = await authApi.getCurrentUser()
+      const normalizedUser = {
+        ...currentUser,
+        systemRole: normalizeSystemRole(currentUser.systemRole),
       }
 
-      // Update in storage and local state
-      setStoredUser(userToSet)
-      setUser(userToSet)
+      setUser(normalizedUser)
+      logger.success('User data refreshed from API')
+      await fetchAndUpdateUserProfile('initialization')
+    } catch (err) {
+      logger.warning('Failed to get current user, attempting token refresh', err)
+      throw err // Re-throw to trigger token refresh fallback
+    }
+  }, [normalizeSystemRole, fetchAndUpdateUserProfile])
 
-      // Fetch complete user profile with permissions after refresh
-      await fetchAndUpdateUserProfile('token refresh')
+  // Helper function to handle token refresh during initialization
+  const handleInitTokenRefresh = useCallback(async () => {
+    try {
+      const response = await authApi.refreshToken()
+      setAuthToken(response.token)
+
+      const userToSet = createUserFromResponse(response)
+      await updateUserData(userToSet, 'initialization token refresh')
+
+      logger.success('Token refreshed successfully during init')
+    } catch (refreshErr) {
+      logger.error('Token refresh failed during init:', refreshErr)
+      clearAuthState()
+    }
+  }, [createUserFromResponse, updateUserData, clearAuthState])
+
+  // Helper function to handle stored user initialization
+  const initializeFromStoredData = useCallback(
+    async (userData: User) => {
+      setUser(userData)
+      logger.log('User restored from storage', 'info', userData)
+
+      try {
+        await refreshUserFromAPI()
+      } catch {
+        // If API refresh fails, try token refresh
+        await handleInitTokenRefresh()
+      }
+    },
+    [refreshUserFromAPI, handleInitTokenRefresh],
+  )
+
+  // Refresh token implementation
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await authApi.refreshToken()
+      setAuthToken(response.token)
+
+      const userToSet = createUserFromResponse(response)
+      await updateUserData(userToSet, 'token refresh')
 
       logger.success('Token refreshed successfully')
       return true
     } catch (err) {
       logger.error('Token refresh failed:', err)
       // Clear auth data on refresh failure
-      clearAuthData()
-      setUser(null)
-      setUserProfile(null)
+      clearAuthState()
       return false
     }
-  }, [fetchAndUpdateUserProfile])
+  }, [createUserFromResponse, updateUserData, clearAuthState])
 
   // Set up token refresh on interval and tab focus
   useEffect(() => {
@@ -213,75 +289,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         const userData = getUser()
 
         if (token && userData) {
-          // If token and user exist, set user state
-          setUser(userData)
-          logger.log('User restored from storage', 'info', userData)
-
-          // After setting user from storage, attempt to get fresh user data
-          try {
-            let currentUser = await authApi.getCurrentUser()
-
-            // Normalize systemRole if it comes as string from API
-            if (typeof currentUser.systemRole === 'string') {
-              currentUser = {
-                ...currentUser,
-                systemRole: currentUser.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
-              }
-            }
-
-            setUser(currentUser)
-            logger.success('User data refreshed from API')
-
-            // Also fetch the complete profile with permissions
-            await fetchAndUpdateUserProfile('initialization')
-          } catch (err) {
-            logger.warning('Failed to get current user, attempting token refresh', err)
-            // If fetching current user fails, try to refresh the token
-            try {
-              const response = await authApi.refreshToken()
-
-              // Update token in storage
-              setAuthToken(response.token)
-
-              // Update user if it exists in the response
-              let userToSet = response.user || {
-                id: response.id,
-                email: response.email,
-                firstName: response.firstName,
-                lastName: response.lastName,
-                systemRole: response.systemRole || SystemRole.User,
-              }
-
-              // Normalize systemRole if it comes as string from API
-              if (typeof userToSet.systemRole === 'string') {
-                userToSet = {
-                  ...userToSet,
-                  systemRole: userToSet.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
-                }
-              }
-
-              // Update in storage and local state
-              setStoredUser(userToSet)
-              setUser(userToSet)
-
-              // Fetch complete user profile with permissions
-              await fetchAndUpdateUserProfile('initialization token refresh')
-
-              logger.success('Token refreshed successfully during init')
-            } catch (refreshErr) {
-              logger.error('Token refresh failed during init:', refreshErr)
-              clearAuthData()
-              setUser(null)
-              setUserProfile(null)
-            }
-          }
+          await initializeFromStoredData(userData)
         }
       } catch (err) {
         logger.error('Authentication initialization failed:', err)
         // Clear tokens if initialization fails
-        clearAuthData()
-        setUser(null)
-        setUserProfile(null)
+        clearAuthState()
       } finally {
         setIsLoading(false)
       }
@@ -303,29 +316,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         // Store token and user
         setAuthToken(response.token)
 
-        // Use user from response or create from response fields
-        let userData = response.user || {
-          id: response.id,
-          email: response.email,
-          firstName: response.firstName,
-          lastName: response.lastName,
-          systemRole: response.systemRole || SystemRole.User,
-        }
-
-        // Normalize systemRole if it comes as string from API
-        if (typeof userData.systemRole === 'string') {
-          userData = {
-            ...userData,
-            systemRole: userData.systemRole === 'Admin' ? SystemRole.Admin : SystemRole.User,
-          }
-        }
-
-        // Update in storage and local state
-        setStoredUser(userData)
-        setUser(userData)
-
-        // Fetch complete user profile with permissions after login
-        await fetchAndUpdateUserProfile('login')
+        const userData = createUserFromResponse(response)
+        await updateUserData(userData, 'login')
 
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
@@ -356,7 +348,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [router, fetchAndUpdateUserProfile],
+    [router, createUserFromResponse, updateUserData],
   )
 
   // Register function
@@ -402,13 +394,11 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       logger.error('Logout error:', err)
     } finally {
       // Clear user and tokens
-      clearAuthData()
-      setUser(null)
-      setUserProfile(null)
+      clearAuthState()
       router.push('/login')
       setIsLoading(false)
     }
-  }, [router])
+  }, [router, clearAuthState])
 
   // Update user function
   const updateUser = useCallback(
