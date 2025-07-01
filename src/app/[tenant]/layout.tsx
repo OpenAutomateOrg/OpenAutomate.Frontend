@@ -7,7 +7,7 @@ import { TenantGuard } from '@/components/auth/tenant-guard'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <TenantGuard>
-      <div className="[--header-height:calc(theme(spacing.14))]">
+      <div className=" [--header-height:calc(theme(spacing.14))] dark:bg-black/60">
         <SidebarProvider className="flex flex-col">
           <SiteHeader />
           <div className="flex flex-1">

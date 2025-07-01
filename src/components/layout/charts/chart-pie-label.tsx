@@ -99,7 +99,7 @@ export function ChartPieLabel() {
     totalExecutions > 0 ? ((completedPercentage / totalExecutions) * 100).toFixed(1) : '0'
 
   return (
-    <div className="  grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card ">
+    <div className="  grid grid-cols-1 gap-4 *:data-[slot=card]:border-orange-600/70 dark:*:data-[slot=card]:bg-black/30">
       <Card className="flex flex-col  h-full flex-1">
         <CardHeader className="items-center pb-0">
           <CardTitle>Execution Status</CardTitle>

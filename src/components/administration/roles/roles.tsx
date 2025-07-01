@@ -61,7 +61,6 @@ export default function RolesInterface() {
   const [isPending, setIsPending] = useState(false)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
 
-
   // Create refs for debouncing
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
   const shouldInitializeUrl = useRef(true)
@@ -330,10 +329,7 @@ export default function RolesInterface() {
                 </span>
               </div>
             )}
-            <Button
-              onClick={handleCreateRole}
-              className="flex items-center justify-center"
-            >
+            <Button onClick={handleCreateRole} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Role
             </Button>

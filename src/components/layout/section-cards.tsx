@@ -43,7 +43,7 @@ export function SectionCards() {
   const totalPackages = packagesResponse?.['@odata.count'] ?? 0
 
   return (
-    <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-5 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card ">
+    <div className=" *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-5 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white  dark:*:data-[slot=card]:bg-black/30 *:data-[slot=card]:border-orange-600/70 ">
       <Card className="@container/card">
         <CardHeader className="relative">
           <CardTitle>Users</CardTitle>

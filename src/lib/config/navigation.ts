@@ -1,4 +1,18 @@
-import { type LucideIcon, House, Cog, Bot, FileKey2, Settings2, Users, ShieldAlert, LifeBuoy, Send, Command, Sparkles, Building2 } from 'lucide-react'
+import {
+  type LucideIcon,
+  House,
+  Cog,
+  Bot,
+  FileKey2,
+  Settings2,
+  Users,
+  ShieldAlert,
+  LifeBuoy,
+  Send,
+  Command,
+  Sparkles,
+  Building2,
+} from 'lucide-react'
 import { Resources, Permissions } from '@/lib/constants/resources'
 
 /**
@@ -50,7 +64,9 @@ export interface UserNavigationItem {
  * Common navigation items for all users with tenant context
  * Each item specifies the minimum permission required to view it
  */
-export const createCommonNavItems = (createTenantUrl: (path: string) => string): NavigationItem[] => [
+export const createCommonNavItems = (
+  createTenantUrl: (path: string) => string,
+): NavigationItem[] => [
   {
     title: 'Home',
     url: createTenantUrl('/dashboard'),
@@ -67,24 +83,24 @@ export const createCommonNavItems = (createTenantUrl: (path: string) => string):
         url: createTenantUrl('/automation/executions'),
         permission: {
           resource: Resources.EXECUTION,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
       {
         title: 'Schedule',
         url: createTenantUrl('/automation/schedule'),
         permission: {
           resource: Resources.SCHEDULE,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
       {
         title: 'Package',
         url: createTenantUrl('/automation/package'),
         permission: {
           resource: Resources.PACKAGE,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
     ],
   },
@@ -94,7 +110,7 @@ export const createCommonNavItems = (createTenantUrl: (path: string) => string):
     icon: Bot,
     permission: {
       resource: Resources.AGENT,
-      level: Permissions.VIEW
+      level: Permissions.VIEW,
     },
     items: [
       {
@@ -102,8 +118,8 @@ export const createCommonNavItems = (createTenantUrl: (path: string) => string):
         url: createTenantUrl('/agent'),
         permission: {
           resource: Resources.AGENT,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
     ],
   },
@@ -113,15 +129,15 @@ export const createCommonNavItems = (createTenantUrl: (path: string) => string):
     icon: FileKey2,
     permission: {
       resource: Resources.ASSET,
-      level: Permissions.VIEW
-    }
+      level: Permissions.VIEW,
+    },
   },
   {
     title: 'Administration',
     icon: Settings2,
     permission: {
       resource: Resources.ORGANIZATION_UNIT,
-      level: Permissions.VIEW
+      level: Permissions.VIEW,
     },
     items: [
       {
@@ -129,24 +145,24 @@ export const createCommonNavItems = (createTenantUrl: (path: string) => string):
         url: createTenantUrl('/administration/users'),
         permission: {
           resource: Resources.USER,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
       {
         title: 'Roles',
         url: createTenantUrl('/administration/roles'),
         permission: {
           resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.VIEW
-        }
+          level: Permissions.VIEW,
+        },
       },
       {
         title: 'Organization Unit',
         url: createTenantUrl('/administration/organizationUnit'),
         permission: {
           resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.UPDATE
-        }
+          level: Permissions.UPDATE,
+        },
       },
     ],
   },
@@ -241,7 +257,7 @@ export const createOrganizationData = (orgName?: string): OrganizationItem[] => 
  */
 export const filterNavigationByPermissions = (
   items: NavigationItem[],
-  hasPermission: (resource: string, level: number) => boolean
+  hasPermission: (resource: string, level: number) => boolean,
 ): NavigationItem[] => {
   return items.reduce<NavigationItem[]>((filteredItems, item) => {
     // Check if user has permission to view this item
@@ -252,10 +268,10 @@ export const filterNavigationByPermissions = (
     // If item has children, filter them recursively
     const filteredItem = { ...item }
     if (item.items) {
-      const filteredChildren = item.items.filter(child => {
+      const filteredChildren = item.items.filter((child) => {
         return !child.permission || hasPermission(child.permission.resource, child.permission.level)
       })
-      
+
       // Only include parent if it has accessible children or if it has its own URL
       if (filteredChildren.length > 0 || item.url) {
         filteredItem.items = filteredChildren
@@ -268,4 +284,4 @@ export const filterNavigationByPermissions = (
     filteredItems.push(filteredItem)
     return filteredItems
   }, [])
-} 
+}

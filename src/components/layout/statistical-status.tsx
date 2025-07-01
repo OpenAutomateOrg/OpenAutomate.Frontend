@@ -72,7 +72,7 @@ export function StatisticalStatus() {
   }, [executionsResponse])
 
   return (
-    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card">
+    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white *:data-[slot=card]:border-orange-600/70 dark:*:data-[slot=card]:bg-black/30">
       <Card className="flex flex-col h-full flex-1">
         <CardHeader className="items-center pb-4">
           <CardTitle className="flex items-center justify-between text-lg font-medium w-full">
