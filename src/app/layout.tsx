@@ -9,6 +9,7 @@ import { ToastProvider } from '@/components/ui/toast-provider'
 import { LocaleProvider } from '@/providers/locale-provider'
 import { SWRProvider } from '@/providers/swr-provider'
 
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
