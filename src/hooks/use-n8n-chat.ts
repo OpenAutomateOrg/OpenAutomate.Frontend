@@ -40,27 +40,20 @@ export function useN8nChat() {
   // ✅ Derive chat configuration based on user context
   const getChatConfig = useCallback((): ChatConfig => {
     // Default webhook URL from environment
-    const defaultWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || ''
-    
-    // Get current JWT token
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const defaultWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ?? ''
+
+    // Get current JWT token for authentication
     const authToken = getAuthToken()
-    
+
     // Determine if chat should be enabled
     const shouldEnable = isEnabled && Boolean(defaultWebhookUrl) && isAuthenticated
 
     // Custom configuration based on user/context
-    const title = user?.firstName 
-      ? `Hi ${user.firstName}! 👋` 
+    const title = user?.firstName
+      ? `Hi ${user.firstName}! 👋`
       : 'OpenAutomate Support'
-    
-    const subtitle = 'How can we help you today?'
 
-    // Determine user name for headers
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const fullUserName = user?.firstName && user?.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user?.firstName || user?.email || 'User'
+    const subtitle = 'How can we help you today?'
 
     return {
       webhookUrl: defaultWebhookUrl,
@@ -71,6 +64,18 @@ export function useN8nChat() {
         height: '600px',
         title,
         subtitle,
+        // Webhook configuration with authentication headers
+        webhookConfig: authToken ? {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+            'X-User-Email': user?.email ?? '',
+            'X-User-Name': user?.firstName && user?.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user?.firstName ?? user?.email ?? 'User'
+          }
+        } : undefined
       },
     }
   }, [isEnabled, isAuthenticated, user])

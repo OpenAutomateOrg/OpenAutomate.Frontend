@@ -47,7 +47,7 @@ const isExpectedSignalRError = (message: string): boolean => {
 // Helper function to retry connection after timeout
 const retryConnectionAfterDelay = (connection: HubConnection) => {
   console.debug('[SignalR] Attempting to reconnect after delay...')
-  connection.start().catch((reconnectError: Error | unknown) => {
+  connection.start().catch((reconnectError: unknown) => {
     const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error'
     console.debug('[SignalR] Reconnection attempt also failed:', errorMessage)
   })
@@ -58,7 +58,7 @@ const startSignalRConnection = async (connection: HubConnection) => {
   try {
     await connection.start()
     console.debug('[SignalR] Connected successfully')
-  } catch (err: Error | unknown) {
+  } catch (err: unknown) {
     if (err instanceof Error && err.message && isExpectedSignalRError(err.message)) {
       console.debug('[SignalR] Expected connection issue (suppressed):', err.message)
 
@@ -139,6 +139,64 @@ const createSignalRConnection = async (tenant: string): Promise<HubConnection | 
   return connection
 }
 
+// Helper to normalize status update from SignalR
+const normalizeStatusUpdate = (update: {
+  botAgentId?: string
+  BotAgentId?: string
+  botAgentName?: string
+  BotAgentName?: string
+  status?: string
+  Status?: string
+  executionId?: string
+  ExecutionId?: string
+  timestamp?: string
+  Timestamp?: string
+  lastHeartbeat?: string
+  LastHeartbeat?: string
+}): AgentStatusUpdate => ({
+  botAgentId: update.botAgentId ?? update.BotAgentId ?? '',
+  botAgentName: update.botAgentName ?? update.BotAgentName ?? '',
+  status: update.status ?? update.Status ?? '',
+  executionId: update.executionId ?? update.ExecutionId,
+  timestamp: update.timestamp ?? update.Timestamp ?? new Date().toISOString(),
+  lastHeartbeat: update.lastHeartbeat ?? update.LastHeartbeat,
+})
+
+// Helper to handle connection close events
+const handleConnectionClose = (error?: Error) => {
+  if (error) {
+    if (error.message && isExpectedSignalRError(error.message)) {
+      console.debug('[SignalR] Connection issue - will automatically reconnect if possible')
+    } else {
+      console.error('[SignalR] Connection closed with error:', error)
+    }
+  }
+}
+
+// Helper to setup connection event handlers
+const setupConnectionHandlers = (
+  connection: HubConnection,
+  setAgentStatuses: React.Dispatch<React.SetStateAction<Record<string, AgentStatusUpdate>>>,
+  onStatusUpdate?: (update: AgentStatusUpdate) => void
+) => {
+  connection.onclose(handleConnectionClose)
+
+  connection.on('BotStatusUpdate', (update) => {
+    const normalized = normalizeStatusUpdate(update)
+    console.debug('[SignalR] BotStatusUpdate received:', normalized)
+    setAgentStatuses((prev) => ({ ...prev, [normalized.botAgentId]: normalized }))
+    if (onStatusUpdate) onStatusUpdate(normalized)
+  })
+
+  connection.onreconnecting((error) => {
+    console.debug('[SignalR] Attempting to reconnect...', error?.message)
+  })
+
+  connection.onreconnected((connectionId) => {
+    console.debug('[SignalR] Reconnected successfully with ID:', connectionId)
+  })
+}
+
 export function useAgentStatus(
   tenant: string,
   onStatusUpdate?: (update: AgentStatusUpdate) => void,
@@ -156,61 +214,7 @@ export function useAgentStatus(
         return
       }
 
-      // Register handler for connection closed events
-      connection.onclose((error) => {
-        if (error) {
-          // Filter out expected SignalR errors from the console
-          if (error.message && isExpectedSignalRError(error.message)) {
-            // Silently handle expected errors - this is expected behavior
-            console.debug('[SignalR] Connection issue - will automatically reconnect if possible')
-          } else {
-            // Log other errors normally
-            console.error('[SignalR] Connection closed with error:', error)
-          }
-        }
-      })
-
-      connection.on(
-        'BotStatusUpdate',
-        (update: {
-          botAgentId?: string
-          BotAgentId?: string
-          botAgentName?: string
-          BotAgentName?: string
-          status?: string
-          Status?: string
-          executionId?: string
-          ExecutionId?: string
-          timestamp?: string
-          Timestamp?: string
-          lastHeartbeat?: string
-          LastHeartbeat?: string
-        }) => {
-          // Normalize keys to camelCase
-          const normalized: AgentStatusUpdate = {
-            botAgentId: update.botAgentId ?? update.BotAgentId ?? '',
-            botAgentName: update.botAgentName ?? update.BotAgentName ?? '',
-            status: update.status ?? update.Status ?? '',
-            executionId: update.executionId ?? update.ExecutionId,
-            timestamp: update.timestamp ?? update.Timestamp ?? new Date().toISOString(),
-            lastHeartbeat: update.lastHeartbeat ?? update.LastHeartbeat,
-          }
-          console.debug('[SignalR] BotStatusUpdate received:', normalized)
-          setAgentStatuses((prev) => ({ ...prev, [normalized.botAgentId]: normalized }))
-          if (onStatusUpdate) onStatusUpdate(normalized)
-        },
-      )
-
-      // Register reconnection handlers for better error visibility
-      connection.onreconnecting((error) => {
-        console.debug('[SignalR] Attempting to reconnect...', error?.message)
-      })
-
-      connection.onreconnected((connectionId) => {
-        console.debug('[SignalR] Reconnected successfully with ID:', connectionId)
-      })
-
-      // Start the connection
+      setupConnectionHandlers(connection, setAgentStatuses, onStatusUpdate)
       await startSignalRConnection(connection)
       connectionRef.current = connection
     }
@@ -220,7 +224,6 @@ export function useAgentStatus(
     return () => {
       if (connectionRef.current) {
         connectionRef.current.stop().catch((err) => {
-          // Silently handle stop errors
           console.debug('[SignalR] Error during connection stop:', err?.message)
         })
       }

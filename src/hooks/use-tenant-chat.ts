@@ -65,11 +65,11 @@ export function useTenantChat() {
   // ✅ Derive chat configuration based on tenant and user context
   const getChatConfig = useCallback((): TenantChatConfig => {
     // Default webhook URL from environment
-    const baseWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || ''
-    
-    // Get current JWT token
+    const baseWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ?? ''
+
+    // Get current JWT token for authentication
     const authToken = getAuthToken()
-    
+
     // Only enable chat when:
     // 1. Chat is enabled
     // 2. Webhook URL is configured
@@ -78,16 +78,10 @@ export function useTenantChat() {
     const shouldEnable = isEnabled && Boolean(baseWebhookUrl) && isAuthenticated && Boolean(currentTenant)
 
     // Determine user name for personalization
-    const userName = user?.firstName || 'there'
-    const fullUserName = user?.firstName && user?.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user?.firstName || user?.email || 'User'
-
-    // Business-specific messages and configuration
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tenantDisplayName = currentTenant
-      ? currentTenant.charAt(0).toUpperCase() + currentTenant.slice(1).replace(/-/g, ' ')
-      : 'OpenAutomate'
+    const userName = user?.firstName ?? 'there'
+    const fullUserName = user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.firstName ?? user?.email ?? 'User'
 
     return {
       webhookUrl: baseWebhookUrl,
@@ -136,7 +130,17 @@ export function useTenantChat() {
             inputPlaceholder: 'Ask automation, or anything else...',
             closeButtonTooltip: 'Close chat'
           }
-        }
+        },
+
+        // Webhook configuration with authentication headers
+        webhookConfig: authToken ? {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+            'X-Tenant': currentTenant ?? '',
+          }
+        } : undefined
       },
     }
   }, [isEnabled, isAuthenticated, user, currentTenant])

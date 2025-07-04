@@ -6,6 +6,15 @@ import { useTheme } from 'next-themes'
 // Import n8n chat styles
 import '@n8n/chat/style.css'
 
+// Interface for n8n webhook payload
+interface WebhookPayload {
+  chatInput?: string
+  message?: string
+  sessionId?: string
+  action?: string
+  [key: string]: unknown
+}
+
 interface N8nChatProps {
   /**
    * The webhook URL for the n8n chat workflow
@@ -55,6 +64,72 @@ interface N8nChatProps {
   }
 }
 
+// Helper to safely convert input to string
+const getUrlString = (input: RequestInfo | URL): string => {
+  if (typeof input === 'string') return input
+  if (input instanceof URL) return input.toString()
+  return input.url || ''
+}
+
+// Helper to create modified payload with context
+const createModifiedPayload = (
+  originalPayload: WebhookPayload,
+  tenantSlug: string,
+  authToken: string
+) => {
+  const originalChatInput = originalPayload.chatInput ?? originalPayload.message ?? ''
+
+  const contextInfo = []
+  if (tenantSlug) contextInfo.push(`[tenant: ${tenantSlug}]`)
+  if (authToken) contextInfo.push(`[token: ${authToken}]`)
+
+  const modifiedChatInput = contextInfo.length > 0
+    ? `${originalChatInput} ${contextInfo.join(' ')}`
+    : originalChatInput
+
+  return {
+    sessionId: originalPayload.sessionId,
+    action: originalPayload.action ?? 'sendMessage',
+    chatInput: modifiedChatInput
+  }
+}
+
+// Helper to handle webhook request with typing indicators
+const handleWebhookRequest = async (
+  originalFetch: typeof fetch,
+  input: RequestInfo | URL,
+  init: RequestInit,
+  originalPayload: WebhookPayload,
+  context: {
+    tenantSlug: string
+    authToken: string
+    onTypingStart?: () => void
+    onTypingEnd?: () => void
+  }
+) => {
+  const originalChatInput = originalPayload.chatInput ?? originalPayload.message ?? ''
+
+  // Show typing indicator when sending a message
+  if (context.onTypingStart && originalChatInput.trim()) {
+    context.onTypingStart()
+  }
+
+  const cleanPayload = createModifiedPayload(originalPayload, context.tenantSlug, context.authToken)
+  const modifiedOptions = {
+    ...init,
+    body: JSON.stringify(cleanPayload)
+  }
+
+  try {
+    const response = await originalFetch(input, modifiedOptions)
+    if (context.onTypingEnd) context.onTypingEnd()
+    return response
+  } catch (error) {
+    if (context.onTypingEnd) context.onTypingEnd()
+    throw error
+  }
+}
+
 // Create a custom webhook endpoint that appends tenant and token to chatInput
 // and manages typing indicator state
 const createCustomWebhookEndpoint = async (
@@ -64,64 +139,33 @@ const createCustomWebhookEndpoint = async (
   onTypingStart?: () => void,
   onTypingEnd?: () => void
 ): Promise<(() => void) | null> => {
-  if (typeof window !== 'undefined') {
-    const originalFetch = window.fetch
-    const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const urlString = input.toString()
-      if (urlString === originalWebhookUrl && init?.method === 'POST') {
-        try {
-          const originalPayload = JSON.parse(init.body as string)
-          const originalChatInput = originalPayload.chatInput ?? originalPayload.message ?? ''
+  if (typeof window === 'undefined') return null
 
-          // Show typing indicator when sending a message
-          if (onTypingStart && originalChatInput.trim()) {
-            onTypingStart()
-          }
+  const originalFetch = window.fetch
+  const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const urlString = getUrlString(input)
 
-          // Append context
-          const contextInfo = []
-          if (tenantSlug) contextInfo.push(`[tenant: ${tenantSlug}]`)
-          if (authToken) contextInfo.push(`[token: ${authToken}]`)
-          const modifiedChatInput = contextInfo.length > 0
-            ? `${originalChatInput} ${contextInfo.join(' ')}`
-            : originalChatInput
-          const cleanPayload = {
-            sessionId: originalPayload.sessionId,
-            action: originalPayload.action ?? 'sendMessage',
-            chatInput: modifiedChatInput
-          }
-          const modifiedOptions = {
-            ...init,
-            body: JSON.stringify(cleanPayload)
-          }
-
-          // Make the request and handle typing indicator
-          try {
-            const response = await originalFetch(input, modifiedOptions)
-            // Hide typing indicator when response is received
-            if (onTypingEnd) {
-              onTypingEnd()
-            }
-            return response
-          } catch (error) {
-            // Hide typing indicator on error
-            if (onTypingEnd) {
-              onTypingEnd()
-            }
-            throw error
-          }
-        } catch {
-          return originalFetch(input, init)
-        }
+    if (urlString === originalWebhookUrl && init?.method === 'POST') {
+      try {
+        const originalPayload = JSON.parse(init.body as string)
+        return await handleWebhookRequest(
+          originalFetch,
+          input,
+          init,
+          originalPayload,
+          { tenantSlug, authToken, onTypingStart, onTypingEnd }
+        )
+      } catch {
+        return originalFetch(input, init)
       }
-      return originalFetch(input, init)
     }
-    window.fetch = customFetch
-    return () => {
-      window.fetch = originalFetch
-    }
+    return originalFetch(input, init)
   }
-  return null
+
+  window.fetch = customFetch
+  return () => {
+    window.fetch = originalFetch
+  }
 }
 
 export function N8nChat({
@@ -190,19 +234,18 @@ export function N8nChat({
         }
 
         // Create the chat instance with filtered payload
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const chatInstance = createChat({
+        createChat({
           webhookUrl,
           // n8n specific configuration options
-          mode: chatConfig.mode || 'window',
-          chatInputKey: chatConfig.chatInputKey || 'chatInput',
-          chatSessionKey: chatConfig.chatSessionKey || 'sessionId',
+          mode: chatConfig.mode ?? 'window',
+          chatInputKey: chatConfig.chatInputKey ?? 'chatInput',
+          chatSessionKey: chatConfig.chatSessionKey ?? 'sessionId',
           loadPreviousSession: chatConfig.loadPreviousSession !== false,
-          metadata: chatConfig.metadata || {},
+          metadata: chatConfig.metadata ?? {},
           showWelcomeScreen: chatConfig.showWelcomeScreen !== false,
           defaultLanguage: 'en',
-          initialMessages: chatConfig.initialMessages || [],
-          i18n: chatConfig.i18n || {},
+          initialMessages: chatConfig.initialMessages ?? [],
+          i18n: chatConfig.i18n ?? {},
         })
 
         // Mark as loaded
@@ -435,11 +478,25 @@ export function N8nChat({
   }
 
   if (error) {
-    // Optional: You can render an error state or just return null
+    // In development, show error state; in production, return null
     if (process.env.NODE_ENV === 'development') {
       console.warn('N8n Chat Error:', error)
+      return (
+        <div className="fixed bottom-4 right-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          Chat Error: {error}
+        </div>
+      )
     }
     return null
+  }
+
+  // In development, show loading state when chat is initializing
+  if (process.env.NODE_ENV === 'development' && !isChatLoaded) {
+    return (
+      <div className="fixed bottom-4 right-4 p-2 bg-blue-100 border border-blue-400 text-blue-700 rounded text-sm">
+        Initializing chat...
+      </div>
+    )
   }
 
   return null
