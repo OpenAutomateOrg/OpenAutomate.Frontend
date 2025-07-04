@@ -33,7 +33,7 @@ export interface TenantChatConfig {
     chatInputKey?: string
     chatSessionKey?: string
     loadPreviousSession?: boolean
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
     showWelcomeScreen?: boolean
     defaultLanguage?: string
     initialMessages?: string[]
@@ -84,7 +84,8 @@ export function useTenantChat() {
       : user?.firstName || user?.email || 'User'
 
     // Business-specific messages and configuration
-    const tenantDisplayName = currentTenant 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const tenantDisplayName = currentTenant
       ? currentTenant.charAt(0).toUpperCase() + currentTenant.slice(1).replace(/-/g, ' ')
       : 'OpenAutomate'
 

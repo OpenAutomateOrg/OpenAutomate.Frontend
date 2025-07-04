@@ -166,7 +166,7 @@ export function ChatSettings() {
           <div className="space-y-2">
             <h4 className="font-medium">4. Test Integration</h4>
             <p className="text-sm text-muted-foreground">
-              Use the "Test Chat" button above to verify the integration is working.
+              Use the &quot;Test Chat&quot; button above to verify the integration is working.
             </p>
           </div>
         </CardContent>

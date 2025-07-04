@@ -43,6 +43,7 @@ export function useN8nChat() {
     const defaultWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || ''
     
     // Get current JWT token
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const authToken = getAuthToken()
     
     // Determine if chat should be enabled
@@ -56,8 +57,9 @@ export function useN8nChat() {
     const subtitle = 'How can we help you today?'
 
     // Determine user name for headers
-    const fullUserName = user?.firstName && user?.lastName 
-      ? `${user.firstName} ${user.lastName}` 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fullUserName = user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
       : user?.firstName || user?.email || 'User'
 
     return {
