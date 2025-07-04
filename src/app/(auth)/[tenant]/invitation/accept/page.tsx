@@ -131,7 +131,7 @@ export default function AcceptInvitationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
-  const tenant = params.tenant as string
+  const tenant = params?.tenant as string
   const token = searchParams.get('token')
   const { isAuthenticated, user, logout } = useAuth()
   const [status, setStatus] = useState<InvitationStatus>('loading')
