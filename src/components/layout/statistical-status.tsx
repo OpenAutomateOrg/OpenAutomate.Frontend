@@ -72,7 +72,7 @@ export function StatisticalStatus() {
   }, [executionsResponse])
 
   return (
-    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white *:data-[slot=card]:border-orange-600/70 dark:*:data-[slot=card]:bg-black/30">
+    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white   dark:*:data-[slot=card]:bg-neutral-900">
       <Card className="flex flex-col h-full flex-1">
         <CardHeader className="items-center pb-4">
           <CardTitle className="flex items-center justify-between text-lg font-medium w-full">
@@ -80,17 +80,15 @@ export function StatisticalStatus() {
             <Info className="w-5 h-5 text-muted-foreground" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 pb-4">
+        <CardContent className="flex-1 pb-4 ">
           <div className="grid grid-cols-2 gap-3">
             {jobStatuses.map((status) => (
               <Card
                 key={status.label}
-                className="border-0 shadow-sm hover:shadow-md transition-shadow duration-200"
+                className={`border-0 shadow-sm hover:shadow-md transition-shadow duration-200 ${getStatusColor(status.label)}`}
               >
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-3">
-                  <div
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${getStatusColor(status.label)}`}
-                  >
+                  <div className="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ">
                     {status.label}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
