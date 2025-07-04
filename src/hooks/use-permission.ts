@@ -17,7 +17,7 @@ export function usePermission() {
   const checkPermission = (
     resource: string,
     requiredPermission: PermissionLevel,
-    tenant?: string
+    tenant?: string,
   ): boolean => {
     // While loading, assume no permission (prevents flash of content)
     if (isLoading || !userProfile) {
@@ -36,16 +36,16 @@ export function usePermission() {
   /**
    * Convenience methods for common permission checks
    */
-  const canView = (resource: string, tenant?: string) => 
+  const canView = (resource: string, tenant?: string) =>
     checkPermission(resource, PermissionLevel.View, tenant)
 
-  const canCreate = (resource: string, tenant?: string) => 
+  const canCreate = (resource: string, tenant?: string) =>
     checkPermission(resource, PermissionLevel.Create, tenant)
 
-  const canUpdate = (resource: string, tenant?: string) => 
+  const canUpdate = (resource: string, tenant?: string) =>
     checkPermission(resource, PermissionLevel.Update, tenant)
 
-  const canDelete = (resource: string, tenant?: string) => 
+  const canDelete = (resource: string, tenant?: string) =>
     checkPermission(resource, PermissionLevel.Delete, tenant)
 
   /**
@@ -134,7 +134,7 @@ export function usePermission() {
 export function useFeatureAccess(
   resource: string,
   requiredPermission: PermissionLevel,
-  tenant?: string
+  tenant?: string,
 ): {
   hasAccess: boolean
   isLoading: boolean
@@ -147,4 +147,4 @@ export function useFeatureAccess(
     isLoading,
     isSystemAdmin,
   }
-} 
+}

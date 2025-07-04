@@ -140,7 +140,7 @@ export function DataTable<TData, TValue>({
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
           </div>
         )}
-        <Table>
+        <Table className="dark:bg-neutral-900">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
               <TableRow key={headerGroup.id}>
@@ -162,7 +162,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
+                  className={onRowClick ? 'cursor-pointer hover:bg-muted/50 ' : ''}
                   onClick={(e) => onRowClick && handleRowClick(e, row.original)}
                 >
                   {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {

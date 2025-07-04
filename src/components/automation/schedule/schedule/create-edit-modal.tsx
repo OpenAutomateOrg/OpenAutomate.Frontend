@@ -83,7 +83,7 @@ interface CreateEditModalProps {
   readonly onClose: (shouldRefresh?: boolean) => void
   readonly mode: 'create' | 'edit'
   readonly editingSchedule?: ScheduleData | null
-  readonly onSuccess?: (schedule?: { id: string, name: string }) => void
+  readonly onSuccess?: (schedule?: { id: string; name: string }) => void
 }
 
 export function CreateEditModal({

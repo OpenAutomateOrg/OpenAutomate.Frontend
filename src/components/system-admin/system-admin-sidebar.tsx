@@ -68,7 +68,7 @@ export function SystemAdminSidebar({ ...props }: React.ComponentProps<typeof Sid
                 <SidebarMenuButton asChild isActive={isActive}>
                   <Link
                     href={item.url}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors text-sidebar-foreground"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:-accent hover:text-sidebar-accent-foreground transition-colors text-sidebar-foreground"
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.title}</span>

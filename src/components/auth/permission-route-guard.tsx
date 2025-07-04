@@ -36,11 +36,11 @@ interface PermissionRouteGuardProps {
 
 /**
  * Route guard component that checks user permissions before rendering protected content
- * 
+ *
  * This component uses the user's profile permissions to determine if they can access
  * a specific resource within the current tenant. If access is denied, the user is
  * redirected to a safe page.
- * 
+ *
  * @example
  * ```tsx
  * <PermissionRouteGuard resource="AssetResource" requiredPermission={1}>
@@ -58,7 +58,7 @@ export function PermissionRouteGuard({
   const { userProfile, isLoading, isSystemAdmin, hasPermission } = useAuth()
   const router = useRouter()
   const params = useParams()
-  
+
   // Get current tenant from URL params
   const tenant = params.tenant as string
 
@@ -79,7 +79,17 @@ export function PermissionRouteGuard({
       router.replace(fallbackPath)
       return
     }
-  }, [isLoading, isSystemAdmin, userProfile, hasPermission, resource, requiredPermission, tenant, router, redirectPath])
+  }, [
+    isLoading,
+    isSystemAdmin,
+    userProfile,
+    hasPermission,
+    resource,
+    requiredPermission,
+    tenant,
+    router,
+    redirectPath,
+  ])
 
   // Show loading while auth is initializing
   if (isLoading) {
@@ -103,4 +113,4 @@ export function PermissionRouteGuard({
 
   // Don't render anything while redirecting
   return null
-} 
+}
