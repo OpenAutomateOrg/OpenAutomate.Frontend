@@ -1,109 +1,116 @@
 'use client'
 
-import { TrendingDownIcon, TrendingUpIcon } from 'lucide-react'
-
-import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { useLocale } from '@/providers/locale-provider'
+import { getBotAgentsWithOData } from '@/lib/api/bot-agents'
+import { getOrganizationUnitUsersWithOData } from '@/lib/api/organization-unit-user'
+import { getAssetsWithOData } from '@/lib/api/assets'
+import { getSchedulesWithOData } from '@/lib/api/schedules'
+import { getAutomationPackagesWithOData } from '@/lib/api/automation-packages'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
 
 export function SectionCards() {
-  const { t } = useLocale()
+  // const { t } = useLocale()
+
+  // API calls to get counts for each card
+  const { data: usersResponse } = useSWR(swrKeys.organizationUnits(), () =>
+    getOrganizationUnitUsersWithOData({ $count: true, $top: 1 }),
+  )
+
+  const { data: agentsResponse } = useSWR(swrKeys.agentsWithOData({ $count: true, $top: 1 }), () =>
+    getBotAgentsWithOData({ $count: true, $top: 1 }),
+  )
+
+  const { data: assetsResponse } = useSWR(swrKeys.assetsWithOData({ $count: true, $top: 1 }), () =>
+    getAssetsWithOData({ $count: true, $top: 1 }),
+  )
+
+  const { data: schedulesResponse } = useSWR(
+    swrKeys.schedulesWithOData({ $count: true, $top: 1 }),
+    () => getSchedulesWithOData({ $count: true, $top: 1 }),
+  )
+
+  const { data: packagesResponse } = useSWR(
+    swrKeys.packagesWithOData({ $count: true, $top: 1 }),
+    () => getAutomationPackagesWithOData({ $count: true, $top: 1 }),
+  )
+
+  // Extract counts from responses
+  const totalUsers = usersResponse?.['@odata.count'] ?? 0
+  const totalAgents = agentsResponse?.['@odata.count'] ?? 0
+  const totalAssets = assetsResponse?.['@odata.count'] ?? 0
+  const totalSchedules = schedulesResponse?.['@odata.count'] ?? 0
+  const totalPackages = packagesResponse?.['@odata.count'] ?? 0
 
   return (
-    <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-orange-600/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card ">
+    <div className=" *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-5 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white  dark:*:data-[slot=card]:bg-neutral-900 ">
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>{t('sectionCard.user')}</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            $1,250.00
-          </CardTitle>
-          <div className="absolute right-4 top-4">
-            <Badge
-              variant="outline"
-              className="flex gap-1 rounded-lg text-xs border-orange-600 text-orange-600"
-            >
-              <TrendingUpIcon className="size-3 text-orange-600" />
-              +12.5%
-            </Badge>
+          <CardTitle>Users</CardTitle>
+          <div className="flex justify-end">
+            <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
+              {totalUsers.toLocaleString()}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-orange-600">
-            Trending up this month <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Visitors for the last 6 months</div>
+          <div className="text-muted-foreground"> Total organization users</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>{t('sectionCard.schedules')}</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            1,234
-          </CardTitle>
-          <div className="absolute right-4 top-4">
-            <Badge
-              variant="outline"
-              className="flex gap-1 rounded-lg text-xs border-orange-600 text-orange-600"
-            >
-              <TrendingDownIcon className="size-3 text-orange-600" />
-              -20%
-            </Badge>
+          <CardTitle>Agents</CardTitle>
+          <div className="flex justify-end">
+            <CardDescription className="@[250px]/card:text-3xl text-orange-600  text-2xl font-semibold tabular-nums">
+              {totalAgents.toLocaleString()}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-orange-600">
-            Down 20% this period <TrendingDownIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Acquisition needs attention</div>
+          <div className="text-muted-foreground"> Total active agents</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>{t('sectionCard.assets')}</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            45,678
-          </CardTitle>
-          <div className="absolute right-4 top-4">
-            <Badge
-              variant="outline"
-              className="flex gap-1 rounded-lg text-xs border-orange-600 text-orange-600"
-            >
-              <TrendingUpIcon className="size-3 text-orange-600" />
-              +12.5%
-            </Badge>
+          <CardTitle>Assets</CardTitle>
+          <div className="flex justify-end">
+            <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
+              {totalAssets.toLocaleString()}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-orange-600">
-            Strong user retention <TrendingUpIcon className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
+          <div className="text-muted-foreground">Resources under control</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardDescription>{t('sectionCard.agent')}</CardDescription>
-          <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
-            4.5%
-          </CardTitle>
-          <div className="absolute right-4 top-4">
-            <Badge
-              variant="outline"
-              className="flex gap-1 rounded-lg text-xs border-orange-600 text-orange-600"
-            >
-              <TrendingUpIcon className="size-3 text-orange-600" />
-              +4.5%
-            </Badge>
+          <CardTitle>Schedules</CardTitle>
+          <div className="flex justify-end">
+            <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
+              {totalSchedules.toLocaleString()}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-orange-600">
-            Steady performance <TrendingUpIcon className="size-4" />
+          <div className="text-muted-foreground">Scheduled tasks</div>
+        </CardFooter>
+      </Card>
+
+      <Card className="@container/card">
+        <CardHeader className="relative">
+          <CardTitle>Packages</CardTitle>
+          <div className="flex justify-end">
+            <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
+              {totalPackages.toLocaleString()}
+            </CardDescription>
           </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1 text-sm">
+          <div className="text-muted-foreground">Automation packages</div>
         </CardFooter>
       </Card>
     </div>

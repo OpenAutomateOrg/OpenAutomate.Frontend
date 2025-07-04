@@ -3,12 +3,7 @@
 import * as React from 'react'
 import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-} from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 
 import { NavMain } from './nav-main'
 import { NavOrganization } from './nav-organization'
@@ -41,11 +36,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       if (!tenant) return path
       return `/${tenant}${path}`
     },
-    [tenant]
+    [tenant],
   )
 
   /**
-   * Organization data 
+   * Organization data
    */
   const organizationData = createOrganizationData('OpenAutomate')
 
@@ -102,7 +97,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
    */
   if (!userProfile && !isSystemAdmin) {
     return (
-      <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
+      <Sidebar
+        className=" top-(--header-height) h-[calc(100svh-var(--header-height))]! dark:bg-black/60"
+        {...props}
+      >
         <SidebarHeader>
           <NavOrganization organizations={organizationData} />
         </SidebarHeader>
@@ -119,22 +117,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
+    <Sidebar
+      className=" top-(--header-height) h-[calc(100svh-var(--header-height))]! dark:bg-black/60"
+      {...props}
+    >
       <SidebarHeader>
         <NavOrganization organizations={organizationData} />
       </SidebarHeader>
       <SidebarContent>
         {/* Main navigation with role-based items and permission filtering */}
         <RoleBasedContent
-          adminContent={
-            <NavMain items={[...navigationItems.common, ...navigationItems.admin]} />
-          }
-          userContent={
-            <NavMain items={[...navigationItems.common, ...navigationItems.user]} />
-          }
-          fallback={
-            <NavMain items={navigationItems.common} />
-          }
+          adminContent={<NavMain items={[...navigationItems.common, ...navigationItems.admin]} />}
+          userContent={<NavMain items={[...navigationItems.common, ...navigationItems.user]} />}
+          fallback={<NavMain items={navigationItems.common} />}
         />
 
         <NavSecondary items={secondaryNavItems} className="mt-auto" />

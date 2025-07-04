@@ -38,21 +38,21 @@ interface PermissionWrapperProps {
 
 /**
  * Component that conditionally renders content based on user permissions
- * 
+ *
  * This component uses the user's profile permissions to determine if they can
  * access a specific resource within the current (or specified) tenant.
- * 
+ *
  * @example
  * ```tsx
  * <PermissionWrapper resource="Asset" requiredPermission={PermissionLevel.Create}>
  *   <Button>Create Asset</Button>
  * </PermissionWrapper>
  * ```
- * 
+ *
  * @example
  * ```tsx
- * <PermissionWrapper 
- *   resource="Asset" 
+ * <PermissionWrapper
+ *   resource="Asset"
  *   requiredPermission={PermissionLevel.View}
  *   fallback={<div>No access to assets</div>}
  * >
@@ -96,11 +96,11 @@ export function PermissionWrapper({
 
 /**
  * Hook version for conditional rendering in components
- * 
+ *
  * @example
  * ```tsx
  * const canCreateAssets = usePermission('Asset', PermissionLevel.Create)
- * 
+ *
  * return (
  *   <div>
  *     {canCreateAssets && <Button>Create Asset</Button>}
@@ -109,9 +109,9 @@ export function PermissionWrapper({
  * ```
  */
 export function usePermission(
-  resource: string, 
-  requiredPermission: PermissionLevel, 
-  tenant?: string
+  resource: string,
+  requiredPermission: PermissionLevel,
+  tenant?: string,
 ): boolean {
   const { userProfile, isLoading, isSystemAdmin, hasPermission } = useAuth()
 
@@ -127,4 +127,4 @@ export function usePermission(
 
   // Check permission
   return hasPermission(resource, requiredPermission, tenant)
-} 
+}

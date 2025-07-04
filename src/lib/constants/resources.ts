@@ -63,9 +63,9 @@ export const getResourceDisplayName = (resource: string): string => {
     [Resources.USER]: 'Users',
     [Resources.ORGANIZATION_UNIT]: 'Organization Unit',
   }
-  
+
   return displayNames[resource] || resource
 }
 
-export type ResourceType = typeof Resources[keyof typeof Resources]
-export type PermissionLevel = typeof Permissions[keyof typeof Permissions] 
+export type ResourceType = (typeof Resources)[keyof typeof Resources]
+export type PermissionLevel = (typeof Permissions)[keyof typeof Permissions]

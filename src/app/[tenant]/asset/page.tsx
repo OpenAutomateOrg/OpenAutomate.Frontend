@@ -6,8 +6,8 @@ import { Resources } from '@/lib/constants/resources'
 
 export default function Page() {
   return (
-    <PermissionRouteGuard 
-      resource={Resources.ASSET} 
+    <PermissionRouteGuard
+      resource={Resources.ASSET}
       requiredPermission={PermissionLevel.View}
       loadingComponent={
         <div className="flex flex-1 flex-col gap-4 p-4">
