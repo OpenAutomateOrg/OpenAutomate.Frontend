@@ -135,7 +135,7 @@ export function N8nChat({
   const { theme } = useTheme()
   const [isChatLoaded, setIsChatLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [fetchCleanup, setFetchCleanup] = useState<(() => void) | null>(null)
+
   const [isTyping, setIsTyping] = useState(false)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -187,7 +187,6 @@ export function N8nChat({
         )
         if (fetchCleanupFn) {
           currentFetchCleanup = fetchCleanupFn
-          setFetchCleanup(() => fetchCleanupFn)
         }
 
         // Create the chat instance with filtered payload

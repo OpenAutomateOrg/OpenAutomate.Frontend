@@ -18,8 +18,8 @@ export function ChatDemo() {
         <CardHeader>
           <CardTitle>Chat Typing Indicator Demo</CardTitle>
           <CardDescription>
-            Test the chat typing indicator functionality. When you send a message, 
-            you should see a "Assistant is typing..." indicator with animated dots 
+            Test the chat typing indicator functionality. When you send a message,
+            you should see a &ldquo;Assistant is typing...&rdquo; indicator with animated dots
             while waiting for the response.
           </CardDescription>
         </CardHeader>
@@ -39,7 +39,7 @@ export function ChatDemo() {
               <li>Make sure the chat widget is visible (orange chat button in bottom-right)</li>
               <li>Click the chat button to open the chat window</li>
               <li>Type a message and press Enter or click Send</li>
-              <li>You should see "Assistant is typing..." with animated dots</li>
+              <li>You should see &ldquo;Assistant is typing...&rdquo; with animated dots</li>
               <li>The indicator will disappear when the response arrives or after 30 seconds</li>
             </ol>
           </div>
