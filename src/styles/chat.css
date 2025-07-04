@@ -1,0 +1,258 @@
+/**
+ * N8n Chat Customization for OpenAutomate
+ *
+ * Enhanced styling to match OpenAutomate platform design with orange headers,
+ * clean borders, and improved visual integration.
+ */
+
+:root {
+  /* Primary brand colors - using OpenAutomate orange theme */
+  --chat--color-primary: oklch(0.6641 0.2155 46.96); /* OpenAutomate orange */
+  --chat--color-primary-shade-50: oklch(0.7041 0.2055 46.96); /* Lighter orange */
+  --chat--color-primary-shade-100: oklch(0.7441 0.1855 46.96); /* Even lighter orange */
+  --chat--color-secondary: oklch(0.6 0.118 184.704); /* Complementary blue */
+
+  /* Base colors */
+  --chat--color-white: oklch(1 0 0);
+  --chat--color-light: oklch(0.984 0.003 247.858);
+  --chat--color-light-shade-50: oklch(0.968 0.007 247.896);
+  --chat--color-light-shade-100: oklch(0.929 0.013 255.508);
+  --chat--color-medium: oklch(0.704 0.04 256.788);
+  --chat--color-dark: oklch(0.129 0.042 264.695);
+  --chat--color-disabled: oklch(0.554 0.046 257.417);
+  --chat--color-typing: oklch(0.279 0.041 260.031);
+
+  /* Layout */
+  --chat--spacing: 0.75rem; /* Reduced spacing for more compact design */
+  --chat--border-radius: 0.625rem; /* Matching --radius from globals.css */
+  --chat--transition-duration: 0.2s; /* Slightly slower for smoother feel */
+
+  /* Window sizing - more compact and modern */
+  --chat--window--width: 380px; /* Slightly smaller for better fit */
+  --chat--window--height: 580px; /* Slightly smaller for better fit */
+
+  /* Header styling - Orange theme with no borders */
+  --chat--header-height: 60px; /* Fixed smaller height */
+  --chat--header--padding: 0.75rem 1rem; /* Reduced padding for smaller header */
+  --chat--header--background: var(--chat--color-primary); /* Orange background */
+  --chat--header--color: var(--chat--color-white); /* White text on orange */
+  --chat--header--border-top: none; /* No border */
+  --chat--header--border-bottom: none; /* No border */
+  --chat--heading--font-size: 1.125rem; /* Smaller heading */
+  --chat--subtitle--font-size: 0.8rem; /* Smaller subtitle */
+  --chat--subtitle--line-height: 1.4; /* Tighter line height */
+
+  /* Message input - cleaner styling */
+  --chat--textarea--height: 48px; /* Slightly smaller */
+  --chat--textarea--border: none; /* No border for cleaner look */
+  --chat--textarea--border-radius: 8px; /* Rounded corners */
+  --chat--textarea--background: var(--chat--color-light);
+  --chat--textarea--focus-border: 2px solid var(--chat--color-primary);
+
+  /* Message styling - improved readability */
+  --chat--message--font-size: 0.875rem;
+  --chat--message--padding: 0.75rem 1rem; /* Better padding */
+  --chat--message--border-radius: 12px; /* More rounded for modern look */
+  --chat--message-line-height: 1.5; /* Better readability */
+  --chat--message--margin: 0.5rem 0; /* Spacing between messages */
+
+  /* Bot messages - clean white background */
+  --chat--message--bot--background: var(--chat--color-white);
+  --chat--message--bot--color: var(--chat--color-dark);
+  --chat--message--bot--border: none; /* No border for cleaner look */
+  --chat--message--bot--shadow: 0 1px 3px oklch(0 0 0 / 8%); /* Subtle shadow */
+
+  /* User messages - orange theme */
+  --chat--message--user--background: var(--chat--color-primary);
+  --chat--message--user--color: var(--chat--color-white);
+  --chat--message--user--border: none;
+  --chat--message--user--shadow: 0 1px 3px oklch(0 0 0 / 12%); /* Slightly stronger shadow */
+
+  /* Code blocks - subtle background */
+  --chat--message--pre--background: oklch(0.968 0.007 247.896);
+  --chat--message--pre--border: none;
+  --chat--message--pre--border-radius: 6px;
+
+  /* Toggle button - enhanced orange styling */
+  --chat--toggle--background: var(--chat--color-primary);
+  --chat--toggle--hover--background: var(--chat--color-primary-shade-50);
+  --chat--toggle--active--background: var(--chat--color-primary-shade-100);
+  --chat--toggle--color: var(--chat--color-white);
+  --chat--toggle--size: 60px; /* Slightly smaller */
+  --chat--toggle--border-radius: 50%;
+  --chat--toggle--box-shadow: 0 4px 16px oklch(0.6641 0.2155 46.96 / 25%); /* Orange shadow */
+  --chat--toggle--border: none; /* No border */
+
+  /* Position */
+  --chat--toggle--bottom: 24px; /* Slightly more spacing */
+  --chat--toggle--right: 24px;
+}
+
+/* Dark theme overrides - maintaining orange header theme */
+.dark {
+  --chat--color-white: oklch(0.208 0.042 265.755);
+  --chat--color-light: oklch(0.279 0.041 260.031);
+  --chat--color-light-shade-50: oklch(0.208 0.042 265.755);
+  --chat--color-light-shade-100: oklch(1 0 0 / 15%);
+  --chat--color-dark: oklch(0.984 0.003 247.858);
+
+  /* Dark theme header - keep orange but slightly darker */
+  --chat--header--background: oklch(0.6241 0.2155 46.96); /* Darker orange for dark theme */
+  --chat--header--color: var(--chat--color-white); /* White text */
+  --chat--header--border-bottom: none; /* No border */
+
+  /* Dark theme messages */
+  --chat--message--bot--background: oklch(0.279 0.041 260.031);
+  --chat--message--bot--color: var(--chat--color-dark);
+  --chat--message--bot--border: none; /* No border */
+  --chat--message--bot--shadow: 0 1px 3px oklch(0 0 0 / 20%); /* Stronger shadow for dark theme */
+
+  /* Dark theme input */
+  --chat--textarea--background: oklch(0.279 0.041 260.031);
+  --chat--textarea--color: var(--chat--color-dark);
+
+  /* Dark theme code blocks */
+  --chat--message--pre--background: oklch(1 0 0 / 8%);
+}
+
+/* Enhanced customizations for better platform integration */
+.n8n-chat {
+  font-family: inherit;
+  --font-family: inherit; /* Ensure n8n uses platform font */
+}
+
+.n8n-chat * {
+  box-sizing: border-box;
+}
+
+/* Ensure proper z-index for chat widget */
+.n8n-chat__container {
+  z-index: 9999;
+}
+
+/* Enhanced header styling - remove borders and improve spacing */
+.n8n-chat__header {
+  border: none !important;
+  border-radius: var(--chat--border-radius) var(--chat--border-radius) 0 0 !important;
+  box-shadow: none !important;
+  min-height: var(--chat--header-height) !important;
+  max-height: var(--chat--header-height) !important;
+}
+
+/* Message container improvements */
+.n8n-chat__messages {
+  border: none !important;
+  background: var(--chat--color-light) !important;
+}
+
+/* Input area improvements */
+.n8n-chat__input {
+  border: none !important;
+  border-top: 1px solid var(--chat--color-light-shade-100) !important;
+}
+
+/* Custom animations - smoother and more modern */
+@keyframes chatFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.n8n-chat__window {
+  animation: chatFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none !important;
+  box-shadow: 0 10px 40px oklch(0 0 0 / 15%), 0 4px 16px oklch(0 0 0 / 10%) !important;
+  border-radius: var(--chat--border-radius) !important;
+  overflow: hidden !important;
+}
+
+/* Toggle button enhancements */
+.n8n-chat__toggle {
+  border: none !important;
+  transition: all var(--chat--transition-duration) cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.n8n-chat__toggle:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Message styling improvements */
+.n8n-chat__message {
+  border: none !important;
+  margin: 0.5rem 0 !important;
+}
+
+.n8n-chat__message--bot {
+  box-shadow: var(--chat--message--bot--shadow) !important;
+}
+
+.n8n-chat__message--user {
+  box-shadow: var(--chat--message--user--shadow) !important;
+}
+
+/* Input styling improvements */
+.n8n-chat__input textarea {
+  border: var(--chat--textarea--border) !important;
+  border-radius: var(--chat--textarea--border-radius) !important;
+  background: var(--chat--textarea--background) !important;
+  transition: border-color var(--chat--transition-duration) ease !important;
+}
+
+.n8n-chat__input textarea:focus {
+  border: var(--chat--textarea--focus-border) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px oklch(0.6641 0.2155 46.96 / 10%) !important;
+}
+
+/* Send button styling */
+.n8n-chat__send-button {
+  background: var(--chat--color-primary) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  transition: all var(--chat--transition-duration) ease !important;
+}
+
+.n8n-chat__send-button:hover {
+  background: var(--chat--color-primary-shade-50) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Scrollbar styling for better integration */
+.n8n-chat__messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.n8n-chat__messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.n8n-chat__messages::-webkit-scrollbar-thumb {
+  background: var(--chat--color-medium);
+  border-radius: 3px;
+}
+
+.n8n-chat__messages::-webkit-scrollbar-thumb:hover {
+  background: var(--chat--color-primary);
+}
+
+/* Responsive adjustments - improved mobile experience */
+@media (max-width: 768px) {
+  :root {
+    --chat--window--width: calc(100vw - 16px);
+    --chat--window--height: calc(100vh - 32px);
+    --chat--toggle--size: 56px;
+    --chat--toggle--bottom: 20px;
+    --chat--toggle--right: 20px;
+    --chat--header-height: 56px; /* Smaller header on mobile */
+  }
+
+  .n8n-chat__window {
+    margin: 8px !important;
+    border-radius: 12px !important;
+  }
+}
