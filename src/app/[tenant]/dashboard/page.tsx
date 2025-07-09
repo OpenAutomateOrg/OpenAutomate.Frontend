@@ -1,4 +1,4 @@
-import { SectionCards } from '@/components/layout/section-cards'
+import { SectionCards } from '@/components/layout/sectionCard/section-cards'
 import { ChartPieLabel } from '@/components/layout/charts/chart-pie-label'
 import { StatisticalStatus } from '@/components/layout/statistical-status'
 
