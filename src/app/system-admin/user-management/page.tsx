@@ -9,6 +9,7 @@ import { DataTable } from '@/components/layout/table/data-table'
 import { userColumns } from './columns'
 import { DataTableToolbar } from './data-table-toolbar'
 import { Pagination } from '@/components/ui/pagination'
+import { SystemRole, User } from '@/types/auth'
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,6 +23,13 @@ import {
   VisibilityState,
   PaginationState,
 } from '@tanstack/react-table'
+
+// Utility function to check if user is admin (handles both string and enum values)
+const isUserAdmin = (user: User): boolean => {
+  const role = user.systemRole
+  // SystemRole.Admin = 1, SystemRole.User = 0
+  return role === 'Admin' || role === SystemRole.Admin
+}
 
 export default function UserManagementPage() {
   // State for filtering and pagination
@@ -60,7 +68,7 @@ export default function UserManagementPage() {
     // Role filter
     if (roleFilter) {
       filtered = filtered.filter(user => {
-        const isAdmin = user.systemRole === 'Admin'
+        const isAdmin = isUserAdmin(user)
         return roleFilter === 'Admin' ? isAdmin : !isAdmin
       })
     }

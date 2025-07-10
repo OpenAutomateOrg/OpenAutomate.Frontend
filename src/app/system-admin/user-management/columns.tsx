@@ -79,8 +79,8 @@ export const userColumns: ColumnDef<User>[] = [
     accessorKey: 'systemRole',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
     cell: ({ row }) => {
-      const role = row.getValue('systemRole')
-      // Handle both string and numeric role values
+      const role = row.getValue('systemRole') as string | number
+      // Handle both string and numeric role values safely
       const isAdmin = role === 'Admin' || role === 1
 
       return <div>{isAdmin ? 'Admin' : 'User'}</div>

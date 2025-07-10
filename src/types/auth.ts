@@ -47,7 +47,7 @@ export interface User {
   email: string
   firstName: string
   lastName: string
-  systemRole: string;
+  systemRole: SystemRole | string
   isEmailVerified?: boolean
   lastLogin?: string
 }
