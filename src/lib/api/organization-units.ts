@@ -44,13 +44,4 @@ export const organizationUnitApi = {
     const response = await api.post<OrganizationUnit>('/api/ou/create', data)
     return response
   },
-
-  /**
-   * Get all organization units (system admin access)
-   * @returns Promise with array of all organization units
-   */
-  getAllOrganizationUnits: async (): Promise<OrganizationUnit[]> => {
-    const response = await api.get<OrganizationUnit[]>('/api/admin/organization-unit/get-all')
-    return response
-  },
 }

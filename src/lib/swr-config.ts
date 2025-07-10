@@ -71,6 +71,7 @@ export const swrKeys = {
   adminUsers: () => ['system-roles', 'admin'] as const,
   standardUsers: () => ['system-roles', 'user'] as const,
   usersByRole: (role: string) => ['system-roles', 'users', role] as const,
+  adminAllOrganizationUnits: () => ['system-roles', 'organization-units'] as const,
 
   // Schedules
   schedules: () => ['schedules'] as const,
