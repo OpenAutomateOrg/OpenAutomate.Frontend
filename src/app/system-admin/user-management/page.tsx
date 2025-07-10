@@ -1,292 +1,258 @@
 'use client'
 
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useMemo, useCallback } from 'react'
+import useSWR from 'swr'
+import { adminApi } from '@/lib/api/admin'
+import { DataTable } from '@/components/layout/table/data-table'
+import { userColumns } from './columns'
+import { DataTableToolbar } from './data-table-toolbar'
+import { Pagination } from '@/components/ui/pagination'
+import { SystemRole, User } from '@/types/auth'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Search, Filter, MoreHorizontal, Edit, Trash2, UserPlus } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  PaginationState,
+} from '@tanstack/react-table'
 
-const users = [
-  {
-    id: 1,
-    name: 'Anatoliy Belik',
-    email: 'anatoliy.belik@company.com',
-    avatar: '/avatars/01.png',
-    jobTitle: 'Head of Design',
-    department: 'Product',
-    site: 'Stockholm',
-    salary: '$1,350',
-    startDate: 'Mar 13, 2023',
-    lifecycle: 'Hired',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'Ksenia Bator',
-    email: 'ksenia.bator@company.com',
-    avatar: '/avatars/02.png',
-    jobTitle: 'Fullstack Engineer',
-    department: 'Engineering',
-    site: 'Miami',
-    salary: '$1,500',
-    startDate: 'Oct 13, 2023',
-    lifecycle: 'Hired',
-    status: 'Invited',
-  },
-  {
-    id: 3,
-    name: 'Marcus Johnson',
-    email: 'marcus.johnson@company.com',
-    avatar: '/avatars/03.png',
-    jobTitle: 'Product Manager',
-    department: 'Product',
-    site: 'New York',
-    salary: '$2,100',
-    startDate: 'Jan 8, 2023',
-    lifecycle: 'Hired',
-    status: 'Active',
-  },
-  {
-    id: 4,
-    name: 'Sarah Wilson',
-    email: 'sarah.wilson@company.com',
-    avatar: '/avatars/04.png',
-    jobTitle: 'UX Designer',
-    department: 'Design',
-    site: 'London',
-    salary: '$1,200',
-    startDate: 'Jun 20, 2023',
-    lifecycle: 'Hired',
-    status: 'Inactive',
-  },
-  {
-    id: 5,
-    name: 'David Chen',
-    email: 'david.chen@company.com',
-    avatar: '/avatars/05.png',
-    jobTitle: 'DevOps Engineer',
-    department: 'Engineering',
-    site: 'San Francisco',
-    salary: '$1,800',
-    startDate: 'Aug 15, 2023',
-    lifecycle: 'Hired',
-    status: 'Active',
-  },
-]
-
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'Active':
-      return (
-        <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
-          Active
-        </Badge>
-      )
-    case 'Invited':
-      return (
-        <Badge variant="default" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-          Invited
-        </Badge>
-      )
-    case 'Inactive':
-      return <Badge variant="secondary">Inactive</Badge>
-    default:
-      return <Badge variant="outline">{status}</Badge>
-  }
+// Utility function to check if user is admin (handles both string and enum values)
+const isUserAdmin = (user: User): boolean => {
+  const role = user.systemRole
+  // SystemRole.Admin = 1, SystemRole.User = 0
+  return role === 'Admin' || role === SystemRole.Admin
 }
 
 export default function UserManagementPage() {
+  // State for filtering and pagination
+  const [searchValue, setSearchValue] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+
+  // Fetch all users (system admin)
+  const { data: users, error, isLoading, mutate } = useSWR(
+    ['system-admin-all-users'],
+    () => adminApi.getAllUsers()
+  )
+
+  // Filter users based on search and role filter
+  const filteredUsers = useMemo(() => {
+    if (!users) return []
+
+    let filtered = users
+
+    // Search filter
+    if (searchValue) {
+      filtered = filtered.filter(user =>
+        user.firstName?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.lastName?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchValue.toLowerCase())
+      )
+    }
+
+    // Role filter
+    if (roleFilter) {
+      filtered = filtered.filter(user => {
+        const isAdmin = isUserAdmin(user)
+        return roleFilter === 'Admin' ? isAdmin : !isAdmin
+      })
+    }
+
+    return filtered
+  }, [users, searchValue, roleFilter])
+
+  // Setup table instance
+  const table = useReactTable({
+    data: filteredUsers,
+    columns: userColumns,
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      columnFilters,
+      pagination,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    manualPagination: false,
+  })
+
+  // Calculate total count for pagination
+  const totalCount = filteredUsers.length
+  const pageCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize))
+
+  // Handle search
+  const handleSearch = useCallback((value: string) => {
+    setSearchValue(value)
+    setPagination(prev => ({ ...prev, pageIndex: 0 })) // Reset to first page
+  }, [])
+
+  // Handle role filter
+  const handleRoleFilterChange = useCallback((value: string) => {
+    setRoleFilter(value)
+    setPagination(prev => ({ ...prev, pageIndex: 0 })) // Reset to first page
+  }, [])
+
+  // Role options for filter
+  const roleOptions = [
+    { value: 'Admin', label: 'Admin' },
+    { value: 'User', label: 'User' },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
+    <div className="h-full overflow-y-auto bg-background p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             User Management
           </h1>
           <p className="text-muted-foreground">Manage system users and their permissions</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 self-start sm:self-auto">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">2,847</div>
-            <p className="text-xs text-muted-foreground">+12.5% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">Active Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">2,234</div>
-            <p className="text-xs text-muted-foreground">+8.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">
-              Pending Invites
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">156</div>
-            <p className="text-xs text-muted-foreground">+3.2% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-card-foreground">
-              Inactive Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">457</div>
-            <p className="text-xs text-muted-foreground">-2.1% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Stats Cards */}
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">Total Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-card-foreground">2,847</div>
+              <p className="text-xs text-muted-foreground">+12.5% from last month</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">Active Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-card-foreground">2,234</div>
+              <p className="text-xs text-muted-foreground">+8.1% from last month</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Pending Invites
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-card-foreground">156</div>
+              <p className="text-xs text-muted-foreground">+3.2% from last month</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Inactive Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-card-foreground">457</div>
+              <p className="text-xs text-muted-foreground">-2.1% from last month</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Filters and Search */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-card-foreground">People</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            A list of all users in your system including their name, title, email and role.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search users..." className="pl-8" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Select>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  <SelectItem value="product">Product</SelectItem>
-                  <SelectItem value="engineering">Engineering</SelectItem>
-                  <SelectItem value="design">Design</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="invited">Invited</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+        {/* Error display */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load users. Please try again.
+            </p>
+            <Button variant="outline" className="mt-2" onClick={() => mutate()}>
+              Retry
+            </Button>
           </div>
+        )}
 
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px] min-w-[250px]">Name</TableHead>
-                  <TableHead className="min-w-[120px]">Job title</TableHead>
-                  <TableHead className="min-w-[100px]">Department</TableHead>
-                  <TableHead className="min-w-[80px]">Site</TableHead>
-                  <TableHead className="min-w-[80px]">Salary</TableHead>
-                  <TableHead className="min-w-[100px]">Start date</TableHead>
-                  <TableHead className="min-w-[80px]">Status</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>
-                            {user.name
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{user.jobTitle}</TableCell>
-                    <TableCell className="text-sm">{user.department}</TableCell>
-                    <TableCell className="text-sm">{user.site}</TableCell>
-                    <TableCell className="text-sm font-medium">{user.salary}</TableCell>
-                    <TableCell className="text-sm">{user.startDate}</TableCell>
-                    <TableCell>{getStatusBadge(user.status)}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit user
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete user
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Users Table Section */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-xl font-bold tracking-tight">Users</CardTitle>
+                {totalCount > 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Total: {totalCount} user{totalCount !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <DataTableToolbar
+              table={table}
+              roles={roleOptions}
+              onSearch={handleSearch}
+              onRoleChange={handleRoleFilterChange}
+              searchValue={searchValue}
+              isFiltering={isLoading}
+              isPending={false}
+            />
+
+            <DataTable
+              columns={userColumns}
+              data={filteredUsers}
+              table={table}
+              isLoading={isLoading}
+              totalCount={totalCount}
+            />
+
+            <Pagination
+              currentPage={pagination.pageIndex + 1}
+              pageSize={pagination.pageSize}
+              totalCount={totalCount}
+              totalPages={pageCount}
+              isLoading={isLoading}
+              isChangingPageSize={false}
+              isUnknownTotalCount={false}
+              onPageChange={(page: number) => {
+                setPagination({ ...pagination, pageIndex: page - 1 })
+              }}
+              onPageSizeChange={(size: number) => {
+                const currentStartRow = pagination.pageIndex * pagination.pageSize
+                const newPageIndex = Math.floor(currentStartRow / size)
+                setPagination({
+                  pageSize: size,
+                  pageIndex: newPageIndex,
+                })
+              }}
+            />
+
+            {!isLoading && filteredUsers.length === 0 && !error && (
+              <div className="text-center py-10 text-muted-foreground">
+                <p>No users found. {searchValue || roleFilter ? 'Try adjusting your filters.' : 'Create your first user to get started.'}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
