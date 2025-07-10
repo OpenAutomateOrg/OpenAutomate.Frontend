@@ -10,7 +10,6 @@ import { CreateEditModal } from './create-edit-modal'
 
 import { useRouter } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
-import { organizationUnitApi } from '@/lib/api/organization-units'
 import type { OrganizationUnit } from '@/types/organization'
 
 import {
@@ -25,6 +24,7 @@ import {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
+import { adminApi } from '@/lib/api/admin'
 
 export default function OrganizationUnitAdminInterface() {
   const router = useRouter()
@@ -43,7 +43,7 @@ export default function OrganizationUnitAdminInterface() {
       try {
         setLoading(true)
         setError(null)
-        const organizationUnits = await organizationUnitApi.getAllOrganizationUnits()
+        const organizationUnits = await adminApi.getAllOrganizationUnits()
         setData(organizationUnits)
       } catch (err) {
         setError('Failed to fetch organization units')

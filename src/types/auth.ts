@@ -50,6 +50,7 @@ export interface User {
   systemRole: SystemRole | string
   isEmailVerified?: boolean
   lastLogin?: string
+  createdAt?: string
 }
 
 /**
