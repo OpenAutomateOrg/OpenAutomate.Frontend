@@ -37,7 +37,7 @@ interface N8nChatProps {
     height?: string
     title?: string
     subtitle?: string
-    
+
     // n8n chat specific options
     mode?: 'window' | 'fullscreen'
     chatInputKey?: string
@@ -47,15 +47,18 @@ interface N8nChatProps {
     showWelcomeScreen?: boolean
     defaultLanguage?: string
     initialMessages?: string[]
-    i18n?: Record<string, {
-      [message: string]: string
-      title: string
-      subtitle: string
-      footer: string
-      getStarted: string
-      inputPlaceholder: string
-      closeButtonTooltip: string
-    }>
+    i18n?: Record<
+      string,
+      {
+        [message: string]: string
+        title: string
+        subtitle: string
+        footer: string
+        getStarted: string
+        inputPlaceholder: string
+        closeButtonTooltip: string
+      }
+    >
     // Webhook configuration for custom payload
     webhookConfig?: {
       method?: 'POST' | 'GET'
@@ -75,7 +78,7 @@ const getUrlString = (input: RequestInfo | URL): string => {
 const createModifiedPayload = (
   originalPayload: WebhookPayload,
   tenantSlug: string,
-  authToken: string
+  authToken: string,
 ) => {
   const originalChatInput = originalPayload.chatInput ?? originalPayload.message ?? ''
 
@@ -83,14 +86,13 @@ const createModifiedPayload = (
   if (tenantSlug) contextInfo.push(`[tenant: ${tenantSlug}]`)
   if (authToken) contextInfo.push(`[token: ${authToken}]`)
 
-  const modifiedChatInput = contextInfo.length > 0
-    ? `${originalChatInput} ${contextInfo.join(' ')}`
-    : originalChatInput
+  const modifiedChatInput =
+    contextInfo.length > 0 ? `${originalChatInput} ${contextInfo.join(' ')}` : originalChatInput
 
   return {
     sessionId: originalPayload.sessionId,
     action: originalPayload.action ?? 'sendMessage',
-    chatInput: modifiedChatInput
+    chatInput: modifiedChatInput,
   }
 }
 
@@ -105,7 +107,7 @@ const handleWebhookRequest = async (
     authToken: string
     onTypingStart?: () => void
     onTypingEnd?: () => void
-  }
+  },
 ) => {
   const originalChatInput = originalPayload.chatInput ?? originalPayload.message ?? ''
 
@@ -117,7 +119,7 @@ const handleWebhookRequest = async (
   const cleanPayload = createModifiedPayload(originalPayload, context.tenantSlug, context.authToken)
   const modifiedOptions = {
     ...init,
-    body: JSON.stringify(cleanPayload)
+    body: JSON.stringify(cleanPayload),
   }
 
   try {
@@ -137,7 +139,7 @@ const createCustomWebhookEndpoint = async (
   tenantSlug: string,
   authToken: string,
   onTypingStart?: () => void,
-  onTypingEnd?: () => void
+  onTypingEnd?: () => void,
 ): Promise<(() => void) | null> => {
   if (typeof window === 'undefined') return null
 
@@ -148,13 +150,12 @@ const createCustomWebhookEndpoint = async (
     if (urlString === originalWebhookUrl && init?.method === 'POST') {
       try {
         const originalPayload = JSON.parse(init.body as string)
-        return await handleWebhookRequest(
-          originalFetch,
-          input,
-          init,
-          originalPayload,
-          { tenantSlug, authToken, onTypingStart, onTypingEnd }
-        )
+        return await handleWebhookRequest(originalFetch, input, init, originalPayload, {
+          tenantSlug,
+          authToken,
+          onTypingStart,
+          onTypingEnd,
+        })
       } catch {
         return originalFetch(input, init)
       }
@@ -227,7 +228,7 @@ export function N8nChat({
           tenantSlug ?? '',
           jwtToken ?? '',
           handleTypingStart,
-          handleTypingEnd
+          handleTypingEnd,
         )
         if (fetchCleanupFn) {
           currentFetchCleanup = fetchCleanupFn
@@ -291,7 +292,9 @@ export function N8nChat({
 
     const injectTypingIndicator = () => {
       // Find the chat messages container
-      const chatContainer = document.querySelector('.n8n-chat .chat-messages, .n8n-chat [class*="messages"], .n8n-chat [class*="conversation"]')
+      const chatContainer = document.querySelector(
+        '.n8n-chat .chat-messages, .n8n-chat [class*="messages"], .n8n-chat [class*="conversation"]',
+      )
       if (!chatContainer) return
 
       // Check if typing indicator already exists
@@ -422,7 +425,7 @@ export function N8nChat({
 
     // Apply theme-specific CSS variables
     const root = document.documentElement
-    
+
     if (theme === 'dark') {
       // Dark theme variables - enhanced orange theme for dark mode
       root.style.setProperty('--chat--color-primary', 'oklch(0.6641 0.2155 46.96)') // OpenAutomate orange
@@ -500,4 +503,4 @@ export function N8nChat({
   }
 
   return null
-} 
+}
