@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '../styles/chat.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -80,11 +81,11 @@
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
+  --background: oklch(0, 0, 0);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
+  --card: oklch(20.5% 0 0);
   --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
+  --popover: oklch(20.5% 0 0);
   --popover-foreground: oklch(0.984 0.003 247.858);
   --primary: oklch(0.7 0.2 40);
   --primary-foreground: oklch(0.208 0.042 265.755);
@@ -105,7 +106,7 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.208 0.042 265.755);
   --orange-600: oklch(0.6641 0.2155 46.96);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0, 0, 0);
   --sidebar-primary: oklch(0.7 0.2 40);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
   --sidebar-accent: oklch(0.279 0.041 260.031);
@@ -118,6 +119,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -127,4 +129,29 @@
   .container {
     @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
   }
+
+  /* React Day Picker dropdown dark mode fix */
+  .rdp-dropdown select {
+    @apply bg-popover text-popover-foreground border-input;
+  }
+
+  .dark .rdp-dropdown select {
+    @apply bg-popover text-popover-foreground border-input;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease;
 }

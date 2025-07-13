@@ -1,6 +1,6 @@
 'use client'
 
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -18,16 +18,29 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { type LucideIcon } from 'lucide-react'
+import Link from 'next/link'
 
-export function NavUser({
-  user,
-}: {
+interface UserProps {
   user: {
     name: string
     email: string
     avatar: string
   }
-}) {
+}
+interface NavUserItem {
+  title: string
+  url: string
+  icon?: LucideIcon
+}
+
+interface NavUserProps {
+  navUser: {
+    management: NavUserItem[]
+    logout: NavUserItem
+  }
+}
+export function NavUser({ user, navUser }: UserProps & NavUserProps) {
   const { isMobile } = useSidebar()
 
   return (
@@ -37,7 +50,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
+              className="data-[state=open]:-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
@@ -70,31 +83,28 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade account
-              </DropdownMenuItem>
+              {navUser.management.map((management: NavUserItem) => (
+                <DropdownMenuItem key={management.title}>
+                  <Link key={management.title} href={management.url}>
+                    <div className="flex align-center items-center gap-2">
+                      {management.icon && <management.icon />}
+                      {management.title}
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Setting
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+                <Link href={navUser.logout.url}>
+                  <div className="flex align-center items-center gap-2">
+                    {navUser.logout.icon && <navUser.logout.icon />}
+                    <span>{navUser.logout.title}</span>
+                  </div>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
-              Log out
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

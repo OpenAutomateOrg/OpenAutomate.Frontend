@@ -17,14 +17,70 @@ export enum SystemRole {
   Admin = 1,
 }
 
+/**
+ * Permission levels for resources within an organization unit
+ */
+export enum PermissionLevel {
+  /**
+   * View access - read only
+   */
+  View = 1,
+
+  /**
+   * Create access - can create new resources
+   */
+  Create = 2,
+
+  /**
+   * Update access - can modify existing resources (includes Execute for automations)
+   */
+  Update = 3,
+
+  /**
+   * Delete access - full administrative access including deletion
+   */
+  Delete = 4,
+}
+
 export interface User {
   id: string
   email: string
   firstName: string
   lastName: string
-  systemRole: SystemRole
+  systemRole: SystemRole | string
   isEmailVerified?: boolean
   lastLogin?: string
+  createdAt?: string
+}
+
+/**
+ * Resource permission for a specific resource within an organization unit
+ */
+export interface ResourcePermission {
+  resourceName: string
+  permission: PermissionLevel
+}
+
+/**
+ * Organization unit with user's permissions within it
+ */
+export interface OrganizationUnitPermissions {
+  id: string
+  name: string
+  slug: string
+  permissions: ResourcePermission[]
+}
+
+/**
+ * Complete user profile with permissions across all organization units
+ */
+export interface UserProfile {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  systemRole: SystemRole
+  organizationUnits: OrganizationUnitPermissions[]
 }
 
 export interface LoginRequest {
@@ -75,6 +131,10 @@ export interface ResetPasswordRequest {
   confirmPassword: string
 }
 
+export interface ChangeUserNameRequest {
+  firstName: string
+  lastName: string
+}
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string

@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -19,8 +20,8 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { config } from '@/lib/config'
+import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
 
 // Form validation schema
 const formSchema = z.object({
@@ -37,30 +38,54 @@ export function LoginForm() {
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, error: authError } = useAuth()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
+  const [isEmailVerificationError, setIsEmailVerificationError] = React.useState<boolean>(false)
 
   // Check for return URL or expired token
-  const returnUrl = searchParams?.get('returnUrl') ?? config.paths.auth.organizationSelector
-  const isExpired = searchParams?.get('expired') === 'true'
+  const returnUrl = searchParams.get('returnUrl') ?? config.paths.auth.organizationSelector
+  const isExpired = searchParams.get('expired') === 'true'
+  const needVerification = searchParams.get('needVerification') === 'true'
+  const emailParam = searchParams.get('email')
 
-  // Show expired token message if needed
-  React.useEffect(() => {
-    if (isExpired) {
-      setError('Your session has expired. Please sign in again.')
-    }
-  }, [isExpired])
+  // Check if this is coming from an invitation
+  const isInvitation = returnUrl?.includes('/invitation/accept')
 
   // Initialize form
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: emailParam || '',
       password: '',
       rememberMe: false,
     },
   })
+
+  // Get form methods to use in effect
+  const { getValues, setValue } = form
+
+  // Show expired token message or verification message if needed
+  React.useEffect(() => {
+    if (isExpired) {
+      setError('Your session has expired. Please sign in again.')
+    }
+
+    // If coming back from verification page or with needVerification flag
+    if (needVerification && emailParam) {
+      setUnverifiedEmail(emailParam)
+      setIsEmailVerificationError(true)
+      setError(
+        'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
+      )
+
+      // Pre-fill the email field if it wasn't set in the defaultValues
+      if (getValues('email') !== emailParam) {
+        setValue('email', emailParam)
+      }
+    }
+  }, [isExpired, needVerification, emailParam, getValues, setValue])
 
   // Form submit handler
   async function onSubmit(data: FormData) {
@@ -71,12 +96,51 @@ export function LoginForm() {
       await login({
         email: data.email,
         password: data.password,
-        rememberMe: data.rememberMe,
       })
-      router.push(returnUrl)
-    } catch (err: unknown) {
-      console.error('Login failed', err)
-      setError(err instanceof Error ? err.message : (authError ?? 'Invalid email or password'))
+
+      // If this login is from an invitation, redirect to the invitation page
+      if (isInvitation) {
+        router.push(returnUrl)
+        return
+      }
+
+      // Normal redirect if not from invitation
+      if (returnUrl && !isInvitation) {
+        router.push(returnUrl)
+      } else {
+        router.push('/tenant-selector') // Default redirect to tenant selector
+      }
+    } catch (error: unknown) {
+      let errorMessage = 'Login failed. Please try again.'
+
+      if (typeof error === 'object' && error !== null) {
+        const axiosError = error as {
+          response?: { data?: { message?: string; code?: string } }
+          message?: string
+        }
+        errorMessage = axiosError.response?.data?.message ?? axiosError.message ?? errorMessage
+
+        // Check if this is an email verification error
+        if (
+          errorMessage.toLowerCase().includes('verify') ||
+          errorMessage.toLowerCase().includes('verification') ||
+          errorMessage.toLowerCase().includes('email not verified') ||
+          axiosError.response?.data?.code === 'EMAIL_NOT_VERIFIED'
+        ) {
+          // Set the unverified email and show verification error
+          setUnverifiedEmail(data.email)
+          setIsEmailVerificationError(true)
+          setError(
+            'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
+          )
+          return
+        }
+      }
+
+      // Reset verification error state for other errors
+      setIsEmailVerificationError(false)
+      setUnverifiedEmail(null)
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -85,10 +149,17 @@ export function LoginForm() {
   return (
     <div className="grid gap-6">
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-3 p-4 mb-2 rounded-lg border border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-950 shadow-sm fade-in">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300">
+            <AlertCircle className="w-6 h-6" />
+          </span>
+          <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
+        </div>
+      )}
+
+      {/* Show resend verification button if this is an email verification error */}
+      {isEmailVerificationError && unverifiedEmail && (
+        <EmailVerificationAlert email={unverifiedEmail} />
       )}
 
       <Form {...form}>
@@ -117,7 +188,9 @@ export function LoginForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+                </div>
                 <FormControl>
                   <Input
                     type="password"
@@ -144,8 +217,14 @@ export function LoginForm() {
                     disabled={isLoading}
                   />
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Remember me</FormLabel>
+                <div className="flex justify-between w-full items-center">
+                  <FormLabel className="text-sm">Remember me</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-orange-600 hover:text-orange-700"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </FormItem>
             )}

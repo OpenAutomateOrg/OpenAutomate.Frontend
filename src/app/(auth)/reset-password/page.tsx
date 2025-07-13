@@ -25,19 +25,19 @@ function ResetPasswordFormLoading() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function ResetPasswordPage(props: any) {
   // Extract searchParams từ props
-  const searchParams = props.searchParams || {};
-  
+  const searchParams = props.searchParams || {}
+
   // Get token and email from search params to pass down to the form
-  const token = searchParams.token || '';
-  const email = searchParams.email || '';
-  
+  const token = searchParams.token || ''
+  const email = searchParams.email || ''
+
   // For debugging in server logs
   if (token) {
-    console.log('Reset page received token length:', token.length);
+    console.log('Reset page received token length:', token.length)
   }
-  
+
   if (email) {
-    console.log('Reset page received email:', email);
+    console.log('Reset page received email:', email)
   }
 
   return (
@@ -46,10 +46,10 @@ export default function ResetPasswordPage(props: any) {
       <div className="container flex-1 flex items-center justify-center py-12">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight text-orange-600">Reset Password</h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your new password below
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-orange-600">
+              Reset Password
+            </h1>
+            <p className="text-sm text-muted-foreground">Enter your new password below</p>
           </div>
           <Suspense fallback={<ResetPasswordFormLoading />}>
             <ResetPasswordForm />
@@ -67,4 +67,4 @@ export default function ResetPasswordPage(props: any) {
       </div>
     </>
   )
-} 
+}

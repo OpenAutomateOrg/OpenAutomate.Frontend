@@ -1,14 +1,13 @@
 'use client'
 
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Column, Row } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
-
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-// import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
+import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<AgentRow>[] = [
+export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -34,7 +33,8 @@ export const columns: ColumnDef<AgentRow>[] = [
   },
   {
     id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
   },
   {
     accessorKey: 'name',
@@ -58,65 +58,71 @@ export const columns: ColumnDef<AgentRow>[] = [
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = String(row.getValue('status'));
-      
+      const status = String(row.getValue('status'))
+
       // Define status badge styling based on the status value
-      let statusClass = '';
+      let statusClass = ''
       switch (status) {
         case 'Connected':
         case 'Available':
-          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-          break;
+          statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          break
         case 'Busy':
-          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-          break;
+          statusClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+          break
         case 'Disconnected':
         case 'Offline':
-          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-          break;
+          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+          break
         default:
-          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+          statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
       }
-      
+
       return (
         <div className="flex items-center">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
             {status}
           </span>
         </div>
-      );
+      )
     },
   },
   {
     accessorKey: 'lastConnected',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Connected" />,
-    cell: ({ row }) => {
+    header: ({ column }: { column: Column<AgentRow> }) => (
+      <DataTableColumnHeader column={column} title="Last Connected" />
+    ),
+    cell: ({ row }: { row: Row<AgentRow> }) => {
       // Get the value and convert it to a string to ensure it's safe for display
-      const rawValue = row.getValue('lastConnected');
-      const lastConnected = typeof rawValue === 'string' ? rawValue : 
-                           (rawValue === null || rawValue === undefined) ? '' : String(rawValue);
-      
+      const rawValue = row.getValue('lastConnected')
+      let lastConnected = ''
+      if (typeof rawValue === 'string') {
+        lastConnected = rawValue
+      } else if (rawValue !== null && rawValue !== undefined) {
+        lastConnected = String(rawValue)
+      }
+
       // Format the date if it's a valid date string
-      let formattedDate = 'Never';
+      let formattedDate = 'Never'
       try {
         if (lastConnected && lastConnected !== 'null' && lastConnected !== 'undefined') {
-          const date = new Date(lastConnected);
+          const date = new Date(lastConnected)
           if (!isNaN(date.getTime())) {
             formattedDate = new Intl.DateTimeFormat('en-US', {
               dateStyle: 'medium',
-              timeStyle: 'short'
-            }).format(date);
+              timeStyle: 'short',
+            }).format(date)
           }
         }
       } catch (error) {
-        console.error('Error formatting date:', error);
+        console.error('Error formatting date:', error)
       }
-      
+
       return (
         <div className="flex items-center">
           <span>{formattedDate}</span>
         </div>
-      );
+      )
     },
   },
 ]

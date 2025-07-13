@@ -8,11 +8,23 @@ import { SystemRole, User } from '@/types/auth'
 
 /**
  * Gets a user-friendly display name for a system role
- * @param role The system role enum value
+ * @param role The system role - can be enum value or string from API
  * @returns A readable string representation of the role
  */
-const getSystemRoleName = (role: SystemRole): string => {
-  return SystemRole[role] || 'Unknown'
+const getSystemRoleName = (role: SystemRole | string | undefined): string => {
+  if (role === undefined) return 'Unknown'
+
+  // Handle string values from API
+  if (typeof role === 'string') {
+    return role === 'Admin' ? 'Admin' : role === 'User' ? 'User' : role
+  }
+
+  // Handle enum values (numbers)
+  if (typeof role === 'number') {
+    return role === SystemRole.Admin ? 'Admin' : role === SystemRole.User ? 'User' : 'Unknown'
+  }
+
+  return 'Unknown'
 }
 
 /**

@@ -25,7 +25,6 @@ function TabsWithParams({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-
   // Handle URL parameter sync if enabled
   const handleValueChange = React.useCallback(
     (newValue: string) => {
@@ -35,7 +34,7 @@ function TabsWithParams({
 
       if (useUrlParams) {
         // Create new URLSearchParams with current params
-        const params = new URLSearchParams(searchParams?.toString() || "")
+        const params = new URLSearchParams(searchParams.toString())
 
         // Update the tab parameter
         params.set(paramName, newValue)
@@ -44,11 +43,11 @@ function TabsWithParams({
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
       }
     },
-    [controlledOnValueChange, useUrlParams, paramName, router, pathname, searchParams],
+    [controlledOnValueChange, useUrlParams, paramName, pathname, searchParams, router],
   )
 
   // Get value from URL if enabled
-  const urlValue = useUrlParams ? searchParams?.get(paramName) || undefined : undefined
+  const urlValue = useUrlParams ? searchParams.get(paramName) || undefined : undefined
   const value = urlValue || controlledValue
 
   return (

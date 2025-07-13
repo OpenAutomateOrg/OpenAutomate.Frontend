@@ -29,11 +29,11 @@ function TenantSelectorContent() {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Get the force parameter from URL, default to true to prevent auto-redirect
-  const forceStay = searchParams?.get('force') !== 'false'
+  const forceStay = searchParams.get('force') !== 'false'
+  const unauthorized = searchParams.get('unauthorized') === 'true'
 
   // Also store a state of the force parameter to prevent flickers
   const [shouldStayOnPage, setShouldStayOnPage] = useState(true)
-
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -45,7 +45,6 @@ function TenantSelectorContent() {
   useEffect(() => {
     setShouldStayOnPage(forceStay)
   }, [forceStay])
-
   // If user belongs to only one organization, auto-redirect to it
   // unless the force parameter is set to keep them on this page
   useEffect(() => {
@@ -57,8 +56,7 @@ function TenantSelectorContent() {
     if (!isLoading && !shouldStayOnPage && organizationUnits.length === 1) {
       selectOrganizationUnit(organizationUnits[0].slug)
     }
-  }, [isLoading, organizationUnits, selectOrganizationUnit, shouldStayOnPage])
-
+  }, [isLoading, organizationUnits, shouldStayOnPage, selectOrganizationUnit])
   // Setup visibility change listener for refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -136,6 +134,14 @@ function TenantSelectorContent() {
             <p className="text-muted-foreground">{user?.email}</p>
           </div>
         </div>
+
+        {/* Unauthorized access warning */}
+        {unauthorized && (
+          <div className="mb-4 p-4 bg-destructive/10 rounded-md text-destructive text-center">
+            <p className="font-medium">Access Denied</p>
+            <p className="text-sm">You do not have permission to access that organization unit.</p>
+          </div>
+        )}
 
         {/* Header with refresh button */}
         <div className="flex justify-between items-center mb-4">

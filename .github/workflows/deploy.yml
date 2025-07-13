@@ -1,0 +1,65 @@
+name: Deploy OpenAutomate Frontend
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: 'src/**, public/**, package.json, package-lock.json, next.config.ts, tsconfig.json, postcss.config.mjs, components.json, eslint.config.mjs, ecosystem.config.js'
+          target: '/var/www/openautomate/frontend'
+
+      - name: Build and restart frontend
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/openautomate/frontend
+
+            # Install dependencies (handle lock file sync issues)
+            # First try npm install to sync lock file, then clean install
+            npm install --legacy-peer-deps
+
+            # Clean up any existing environment files
+            rm -f .env .env.local
+
+            # Copy production environment file to .env for build process
+            if [ -f .env.production ]; then
+              cp .env.production .env
+              echo "Using .env.production for build"
+            else
+              echo "Warning: .env.production not found"
+            fi
+
+            # Build with production environment variables (use direct next build to avoid cross-env issues)
+            NODE_ENV=production npx next build
+
+            # Check if build was successful
+            if [ $? -eq 0 ]; then
+              echo "Build successful, proceeding with deployment"
+
+              # Clean up .env after build (keep .env.production for runtime)
+              rm -f .env
+
+              # Start/restart the application using ecosystem config
+              pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+            else
+              echo "Build failed, not restarting application"
+              rm -f .env
+              exit 1
+            fi

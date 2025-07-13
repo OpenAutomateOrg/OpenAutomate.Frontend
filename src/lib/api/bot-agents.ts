@@ -31,10 +31,15 @@ export interface ODataResponse<T> {
   '@odata.nextLink'?: string
 }
 
+export interface UpdateBotAgentDto {
+  name?: string
+  machineName?: string
+}
+
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
   if (typeof window !== 'undefined') {
-    const path = window.location.pathname?.split('/')
+    const path = window.location.pathname.split('/')
     // URL format: /[tenant]/...
     if (path.length > 1 && path[1]) {
       return path[1]
@@ -48,7 +53,10 @@ const getCurrentTenant = (): string => {
  */
 export const createBotAgent = async (data: CreateBotAgentDto): Promise<BotAgentResponseDto> => {
   const tenant = getCurrentTenant()
-  const response = await api.post<BotAgentResponseDto, CreateBotAgentDto>(`${tenant}/api/agents/create`, data)
+  const response = await api.post<BotAgentResponseDto, CreateBotAgentDto>(
+    `${tenant}/api/agents/create`,
+    data,
+  )
   return response
 }
 
@@ -73,13 +81,15 @@ export const getAllBotAgents = async (): Promise<BotAgentResponseDto[]> => {
 /**
  * Type guard for OData response
  */
-function isODataResponse(obj: unknown): obj is { value: BotAgentResponseDto[]; '@odata.count'?: number } {
+function isODataResponse(
+  obj: unknown,
+): obj is { value: BotAgentResponseDto[]; '@odata.count'?: number } {
   return (
     typeof obj === 'object' &&
     obj !== null &&
     'value' in obj &&
     Array.isArray((obj as { value?: unknown }).value)
-  );
+  )
 }
 
 /**
@@ -87,10 +97,10 @@ function isODataResponse(obj: unknown): obj is { value: BotAgentResponseDto[]; '
  */
 function buildODataQueryString(options?: ODataQueryOptions): string {
   const queryParams = new URLSearchParams()
-  
+
   // Always include count=true to get total count for pagination
   queryParams.append('$count', 'true')
-  
+
   if (options) {
     Object.entries(options).forEach(([key, value]) => {
       if (value !== undefined && value !== null && key !== '$count') {
@@ -99,7 +109,7 @@ function buildODataQueryString(options?: ODataQueryOptions): string {
       }
     })
   }
-  
+
   return queryParams.toString()
 }
 
@@ -111,28 +121,33 @@ function processODataResponse(response: unknown): ODataResponse<BotAgentResponse
   if (isODataResponse(response)) {
     // If value is an array, we have a valid response
     if (Array.isArray(response.value)) {
-      console.log(`Received ${response.value.length} items from OData. Total count: ${response['@odata.count']}`);
+      console.log(
+        `Received ${response.value.length} items from OData. Total count: ${response['@odata.count']}`,
+      )
       return {
         value: response.value,
-        '@odata.count': response['@odata.count'] !== undefined ? response['@odata.count'] : response.value.length
+        '@odata.count':
+          response['@odata.count'] !== undefined ? response['@odata.count'] : response.value.length,
       }
     }
   }
-  
+
   // Handle the case where the API returns an array directly
   if (Array.isArray(response)) {
     console.log('Converting array response to OData format')
     return {
       value: response as BotAgentResponseDto[],
-      '@odata.count': response.length
+      '@odata.count': response.length,
     }
   }
-  
+
   // If response is an object but doesn't have a value property
   if (typeof response === 'object' && response !== null) {
     // Try to find the most likely array property
-    const arrayProps = Object.keys(response).filter(key => Array.isArray((response as Record<string, unknown[]>)[key]))
-    
+    const arrayProps = Object.keys(response).filter((key) =>
+      Array.isArray((response as Record<string, unknown[]>)[key]),
+    )
+
     if (arrayProps.length > 0) {
       const arrayProp = arrayProps[0]
       console.log(`Found array property "${arrayProp}" in response`)
@@ -140,11 +155,11 @@ function processODataResponse(response: unknown): ODataResponse<BotAgentResponse
       const count = (response as Record<string, unknown>)['@odata.count']
       return {
         value: arr,
-        '@odata.count': typeof count === 'number' ? count : arr.length
+        '@odata.count': typeof count === 'number' ? count : arr.length,
       }
     }
   }
-  
+
   // Fallback to empty response
   console.warn('Could not parse OData response, returning empty result')
   return { value: [] }
@@ -153,14 +168,16 @@ function processODataResponse(response: unknown): ODataResponse<BotAgentResponse
 /**
  * Get bot agents with OData query capabilities (filtering, sorting, pagination)
  */
-export const getBotAgentsWithOData = async (options?: ODataQueryOptions): Promise<ODataResponse<BotAgentResponseDto>> => {
+export const getBotAgentsWithOData = async (
+  options?: ODataQueryOptions,
+): Promise<ODataResponse<BotAgentResponseDto>> => {
   const tenant = getCurrentTenant()
   const queryString = buildODataQueryString(options)
   let endpoint = `${tenant}/odata/BotAgents`
   if (queryString) {
     endpoint += `?${queryString}`
   }
-  
+
   console.log('OData query endpoint:', endpoint)
   try {
     const response = await api.get<unknown>(endpoint)
@@ -176,12 +193,15 @@ export const getBotAgentsWithOData = async (options?: ODataQueryOptions): Promis
 /**
  * Get a specific bot agent by ID with OData query options
  */
-export const getBotAgentByIdWithOData = async (id: string, options?: ODataQueryOptions): Promise<BotAgentResponseDto> => {
+export const getBotAgentByIdWithOData = async (
+  id: string,
+  options?: ODataQueryOptions,
+): Promise<BotAgentResponseDto> => {
   const tenant = getCurrentTenant()
-  
+
   // Build query string from options
   const queryParams = new URLSearchParams()
-  
+
   if (options) {
     Object.entries(options).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -189,10 +209,10 @@ export const getBotAgentByIdWithOData = async (id: string, options?: ODataQueryO
       }
     })
   }
-  
+
   const queryString = queryParams.toString()
   const endpoint = `${tenant}/odata/BotAgents(${id})${queryString ? `?${queryString}` : ''}`
-  
+
   const response = await api.get<BotAgentResponseDto>(endpoint)
   return response
 }
@@ -212,4 +232,27 @@ export const regenerateMachineKey = async (id: string): Promise<BotAgentResponse
 export const deactivateBotAgent = async (id: string): Promise<void> => {
   const tenant = getCurrentTenant()
   await api.post<void>(`${tenant}/api/agents/${id}/deactivate`)
-} 
+}
+
+/**
+ * Delete a bot agent by ID
+ */
+export const deleteBotAgent = async (id: string): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.delete<void>(`${tenant}/api/agents/${id}`)
+}
+
+/**
+ * Update a bot agent
+ */
+export const updateBotAgent = async (
+  id: string,
+  data: UpdateBotAgentDto,
+): Promise<BotAgentResponseDto> => {
+  const tenant = getCurrentTenant()
+  const response = await api.put<BotAgentResponseDto, UpdateBotAgentDto>(
+    `${tenant}/api/agents/${id}`,
+    data,
+  )
+  return response
+}

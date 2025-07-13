@@ -6,6 +6,9 @@ import { AuthProvider } from '@/providers/auth-provider'
 import { config } from '@/lib/config'
 import { Toaster } from '@/components/ui/toaster'
 import { ToastProvider } from '@/components/ui/toast-provider'
+import { LocaleProvider } from '@/providers/locale-provider'
+import { SWRProvider } from '@/providers/swr-provider'
+
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,23 +20,37 @@ export const metadata: Metadata = {
       name: 'OpenAutomate Team',
     },
   ],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  icons: {
+    icon: [
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <ToastProvider>
-          <AuthProvider>
-              <div className="min-h-screen flex flex-col antialiased bg-background">
-                {children}
-              </div>
-              <Toaster />
-          </AuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <LocaleProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+            <ToastProvider>
+              <SWRProvider>
+                <AuthProvider>
+                  <div className="min-h-screen flex flex-col antialiased bg-background">
+                    {children}
+                  </div>
+                  <Toaster />
+                </AuthProvider>
+              </SWRProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

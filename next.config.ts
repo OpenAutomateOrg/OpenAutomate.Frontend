@@ -1,13 +1,56 @@
 import type { NextConfig } from 'next'
 
-// Get the API URL from environment variable
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5252'
+// Frontend now makes direct API calls to NEXT_PUBLIC_API_URL
+// No proxy configuration needed for production scalability
 
 const nextConfig: NextConfig = {
   /* Public Website Configuration */
 
   // Disable dev indicators in development
   devIndicators: false,
+
+  // Webpack configuration for memory optimization
+  webpack: (config, { dev, isServer }) => {
+    // Memory optimization for development
+    if (dev) {
+      // Limit memory usage for webpack cache
+      config.cache = {
+        type: 'memory',
+        maxGenerations: 1,
+      }
+
+      // Optimize chunk splitting to reduce memory usage
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: -10,
+              chunks: 'all',
+            },
+          },
+        },
+      }
+    }
+
+    return config
+  },
+
+  // Experimental features for better memory management
+  experimental: {
+    // Reduce memory usage during development
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Enable webpack build worker for better memory management
+    webpackBuildWorker: true,
+  },
 
   // Configure headers for security
   async headers() {
@@ -38,52 +81,8 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Add headers for machine key preservation
-      {
-        source: '/:tenantSlug/hubs/:path*',
-        has: [
-          {
-            type: 'query',
-            key: 'machineKey'
-          }
-        ],
-        headers: [
-          {
-            key: 'X-Machine-Key-Auth',
-            value: 'true'
-          },
-          {
-            key: 'Connection',
-            value: 'keep-alive'
-          },
-          {
-            key: 'Keep-Alive', 
-            value: 'timeout=120'
-          },
-          {
-            key: 'Upgrade',
-            value: 'websocket'
-          }
-        ]
-      },
-      // Standard WebSocket headers for other connections
-      {
-        source: '/:tenantSlug/hubs/:path*',
-        headers: [
-          {
-            key: 'Connection',
-            value: 'keep-alive'
-          },
-          {
-            key: 'Keep-Alive', 
-            value: 'timeout=120'
-          },
-          {
-            key: 'Upgrade',
-            value: 'websocket'
-          }
-        ]
-      }
+      // REMOVED: Proxy-specific headers no longer needed
+      // Bot agents now connect directly to backend SignalR hubs
     ]
   },
 
@@ -95,57 +94,10 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
-  // Configure API and SignalR proxy rewrites
-  async rewrites() {
-    return [
-      {
-        source: '/:tenantSlug/hubs/:path*/negotiate',
-        destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
-        has: [
-          {
-            type: 'query',
-            key: 'machineKey',
-          }
-        ]
-      },
-      
-      // Second rule - machine key negotiation with param forwarded for SignalR
-      {
-        source: '/:tenantSlug/hubs/:path*/negotiate',
-        destination: `${API_URL}/:tenantSlug/hubs/:path*/negotiate`,
-      },
-      
-      // Third rule - direct agent connections (all hub connections with machineKey parameter)
-      {
-        source: '/:tenantSlug/hubs/:path*',
-        destination: `${API_URL}/:tenantSlug/hubs/:path*`,
-        has: [
-          {
-            type: 'query',
-            key: 'machineKey',
-          }
-        ]
-      },
-      
-      // Fourth rule - standard hub connections (without machineKey)
-      {
-        source: '/:tenantSlug/hubs/:path*',
-        destination: `${API_URL}/:tenantSlug/hubs/:path*`,
-      },
-      
-      // Rewrite OData API calls
-      {
-        source: '/:tenantSlug/odata/:path*',
-        destination: `${API_URL}/:tenantSlug/odata/:path*`,
-      },
-      
-      // Rewrite regular API calls
-      {
-        source: '/:tenantSlug/api/:path*',
-        destination: `${API_URL}/:tenantSlug/api/:path*`,
-      }
-    ]
-  },
+  // REMOVED: API and SignalR proxy rewrites for production scalability
+  // Frontend now makes direct calls to backend API
+  // Bot agents connect directly to backend SignalR hubs
+  // This eliminates the frontend as a proxy bottleneck
 }
 
 export default nextConfig

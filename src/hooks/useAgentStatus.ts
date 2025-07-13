@@ -1,14 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import { HubConnectionBuilder, HubConnection, LogLevel, HttpTransportType } from '@microsoft/signalr';
-import { getAuthToken } from '@/lib/auth/token-storage';
+import { useEffect, useRef, useState } from 'react'
+import {
+  HubConnectionBuilder,
+  HubConnection,
+  LogLevel,
+  HttpTransportType,
+} from '@microsoft/signalr'
+import { getAuthToken } from '@/lib/auth/token-storage'
 
 export interface AgentStatusUpdate {
-  botAgentId: string;
-  botAgentName: string;
-  status: string;
-  executionId?: string;
-  timestamp: string;
-  lastHeartbeat?: string;
+  botAgentId: string
+  botAgentName: string
+  status: string
+  executionId?: string
+  timestamp: string
+  lastHeartbeat?: string
+}
+
+interface DiscoveryResponse {
+  apiUrl: string
 }
 
 // Helper to determine if an error is an expected SignalR error
@@ -29,176 +38,197 @@ const isExpectedSignalRError = (message: string): boolean => {
     'Transport disconnected',
     'Response status code does not indicate success: 401',
     'Unauthorized',
-    'Cannot start a HubConnection'
-  ];
-  
-  return expectedErrors.some(errorText => message.includes(errorText));
-};
+    'Cannot start a HubConnection',
+  ]
+
+  return expectedErrors.some((errorText) => message.includes(errorText))
+}
 
 // Helper function to retry connection after timeout
 const retryConnectionAfterDelay = (connection: HubConnection) => {
-  console.debug('[SignalR] Attempting to reconnect after delay...');
-  connection.start().catch((reconnectError: Error | unknown) => {
-    const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error';
-    console.debug('[SignalR] Reconnection attempt also failed:', errorMessage);
-  });
-};
+  console.debug('[SignalR] Attempting to reconnect after delay...')
+  connection.start().catch((reconnectError: unknown) => {
+    const errorMessage = reconnectError instanceof Error ? reconnectError.message : 'Unknown error'
+    console.debug('[SignalR] Reconnection attempt also failed:', errorMessage)
+  })
+}
 
 // Helper to start a SignalR connection with error handling
 const startSignalRConnection = async (connection: HubConnection) => {
   try {
-    await connection.start();
-    console.debug('[SignalR] Connected successfully');
-  } catch (err: Error | unknown) {
+    await connection.start()
+    console.debug('[SignalR] Connected successfully')
+  } catch (err: unknown) {
     if (err instanceof Error && err.message && isExpectedSignalRError(err.message)) {
-      console.debug('[SignalR] Expected connection issue (suppressed):', err.message);
-      
+      console.debug('[SignalR] Expected connection issue (suppressed):', err.message)
+
       // For Vercel deployments, we might need to retry with different transport
-      setTimeout(() => retryConnectionAfterDelay(connection), 3000);
+      setTimeout(() => retryConnectionAfterDelay(connection), 3000)
     } else {
-      console.error('[SignalR] Connection Error:', err);
+      console.error('[SignalR] Connection Error:', err)
     }
   }
-};
+}
 
-// Helper to get machine key from storage
-const getMachineKey = (): string | null => {
+
+
+// Helper to discover backend API URL from frontend
+const discoverApiUrl = async (): Promise<string | null> => {
   try {
-    return localStorage.getItem('machine_key') || sessionStorage.getItem('machine_key') || null;
-  } catch {
-    // Silent fail if localStorage/sessionStorage is unavailable
-    return null;
+    const response = await fetch('/api/connection-info')
+    if (!response.ok) {
+      throw new Error(`Discovery failed: ${response.status}`)
+    }
+    const data: DiscoveryResponse = await response.json()
+    return data.apiUrl
+  } catch (error) {
+    console.error('[SignalR] Failed to discover API URL:', error)
+    return null
   }
-};
+}
 
-// Helper to create a SignalR hub connection
-const createSignalRConnection = (tenant: string): HubConnection => {
-  const hubUrl = `/${tenant}/hubs/botagent`;
-  
-  // Get the machine key if needed (for bot agent clients)
-  const machineKey = getMachineKey();
-  const authToken = getAuthToken();
-  
-  console.debug('[SignalR] Creating connection with', 
-    machineKey ? 'machineKey authentication' : 'token authentication');
-  
+// Helper to create a SignalR hub connection with direct backend connection
+const createSignalRConnection = async (tenant: string): Promise<HubConnection | null> => {
+  // Discover the backend API URL
+  const apiUrl = await discoverApiUrl()
+  if (!apiUrl) {
+    console.error('[SignalR] Cannot create connection: Failed to discover backend API URL')
+    return null
+  }
+
+  // Construct the direct hub URL to backend
+  const hubUrl = `${apiUrl.replace(/\/$/, '')}/${tenant}/hubs/botagent`
+
+  // Frontend users should use JWT authentication, not machine key
+  const authToken = getAuthToken()
+  if (!authToken) {
+    console.warn('[SignalR] No auth token available for SignalR connection')
+    return null
+  }
+
+  console.debug('[SignalR] Creating direct connection to backend hub:', hubUrl)
+
   // Configure options for the connection
   const connectionOptions = {
-    // If we have a machine key, don't use token authentication as it will conflict
-    accessTokenFactory: machineKey ? undefined : () => authToken || '',
-    
+    // Use JWT token for frontend user authentication
+    accessTokenFactory: () => authToken,
+
     // Support both WebSockets and Long Polling for maximum compatibility
     transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-    
-    // Always add headers for compatibility with different auth methods
+
+    // Add headers for authentication
     headers: {
-      // If we have a machine key, pass it as a header for secondary authentication
-      ...(machineKey ? { 'X-Machine-Key': machineKey } : {}),
-      
-      // Always include the authorization header if we have a token
-      ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+      Authorization: `Bearer ${authToken}`,
     },
-    
-    // Use specific query params for bot agents if available
-    ...(machineKey ? { 
-      queryString: `machineKey=${encodeURIComponent(machineKey)}` 
-    } : {})
-  };
-  
+  }
+
   const connection = new HubConnectionBuilder()
     .withUrl(hubUrl, connectionOptions)
     .configureLogging(LogLevel.Warning)
     .withAutomaticReconnect({
-      nextRetryDelayInMilliseconds: retryContext => {
+      nextRetryDelayInMilliseconds: (retryContext) => {
         // Custom retry policy with exponential backoff
-        const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 60000);
-        return delayMs;
-      }
+        const delayMs = Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 60000)
+        return delayMs
+      },
     })
     .withServerTimeout(120000) // 2 minute server timeout
     .withKeepAliveInterval(30000) // 30 second keep-alive
-    .build();
-  
-  return connection;
-};
+    .build()
+
+  return connection
+}
+
+// Helper to normalize status update from SignalR
+const normalizeStatusUpdate = (update: {
+  botAgentId?: string
+  BotAgentId?: string
+  botAgentName?: string
+  BotAgentName?: string
+  status?: string
+  Status?: string
+  executionId?: string
+  ExecutionId?: string
+  timestamp?: string
+  Timestamp?: string
+  lastHeartbeat?: string
+  LastHeartbeat?: string
+}): AgentStatusUpdate => ({
+  botAgentId: update.botAgentId ?? update.BotAgentId ?? '',
+  botAgentName: update.botAgentName ?? update.BotAgentName ?? '',
+  status: update.status ?? update.Status ?? '',
+  executionId: update.executionId ?? update.ExecutionId,
+  timestamp: update.timestamp ?? update.Timestamp ?? new Date().toISOString(),
+  lastHeartbeat: update.lastHeartbeat ?? update.LastHeartbeat,
+})
+
+// Helper to handle connection close events
+const handleConnectionClose = (error?: Error) => {
+  if (error) {
+    if (error.message && isExpectedSignalRError(error.message)) {
+      console.debug('[SignalR] Connection issue - will automatically reconnect if possible')
+    } else {
+      console.error('[SignalR] Connection closed with error:', error)
+    }
+  }
+}
+
+// Helper to setup connection event handlers
+const setupConnectionHandlers = (
+  connection: HubConnection,
+  setAgentStatuses: React.Dispatch<React.SetStateAction<Record<string, AgentStatusUpdate>>>,
+  onStatusUpdate?: (update: AgentStatusUpdate) => void
+) => {
+  connection.onclose(handleConnectionClose)
+
+  connection.on('BotStatusUpdate', (update) => {
+    const normalized = normalizeStatusUpdate(update)
+    console.debug('[SignalR] BotStatusUpdate received:', normalized)
+    setAgentStatuses((prev) => ({ ...prev, [normalized.botAgentId]: normalized }))
+    if (onStatusUpdate) onStatusUpdate(normalized)
+  })
+
+  connection.onreconnecting((error) => {
+    console.debug('[SignalR] Attempting to reconnect...', error?.message)
+  })
+
+  connection.onreconnected((connectionId) => {
+    console.debug('[SignalR] Reconnected successfully with ID:', connectionId)
+  })
+}
 
 export function useAgentStatus(
   tenant: string,
-  onStatusUpdate?: (update: AgentStatusUpdate) => void
+  onStatusUpdate?: (update: AgentStatusUpdate) => void,
 ) {
-  const [agentStatuses, setAgentStatuses] = useState<Record<string, AgentStatusUpdate>>({});
-  const connectionRef = useRef<HubConnection | null>(null);
+  const [agentStatuses, setAgentStatuses] = useState<Record<string, AgentStatusUpdate>>({})
+  const connectionRef = useRef<HubConnection | null>(null)
 
   useEffect(() => {
-    if (!tenant) return;
-    
-    const connection = createSignalRConnection(tenant);
-    
-    // Register handler for connection closed events
-    connection.onclose((error) => {
-      if (error) {
-        // Filter out expected SignalR errors from the console
-        if (error.message && isExpectedSignalRError(error.message)) {
-          // Silently handle expected errors - this is expected behavior
-          console.debug('[SignalR] Connection issue - will automatically reconnect if possible');
-        } else {
-          // Log other errors normally
-          console.error('[SignalR] Connection closed with error:', error);
-        }
+    if (!tenant) return
+
+    const initializeConnection = async () => {
+      const connection = await createSignalRConnection(tenant)
+      if (!connection) {
+        console.error('[SignalR] Failed to create connection')
+        return
       }
-    });
 
-    connection.on('BotStatusUpdate', (update: {
-      botAgentId?: string;
-      BotAgentId?: string;
-      botAgentName?: string;
-      BotAgentName?: string;
-      status?: string;
-      Status?: string;
-      executionId?: string;
-      ExecutionId?: string;
-      timestamp?: string;
-      Timestamp?: string;
-      lastHeartbeat?: string;
-      LastHeartbeat?: string;
-    }) => {
-      // Normalize keys to camelCase
-      const normalized: AgentStatusUpdate = {
-        botAgentId: update.botAgentId ?? update.BotAgentId ?? '',
-        botAgentName: update.botAgentName ?? update.BotAgentName ?? '',
-        status: update.status ?? update.Status ?? '',
-        executionId: update.executionId ?? update.ExecutionId,
-        timestamp: update.timestamp ?? update.Timestamp ?? new Date().toISOString(),
-        lastHeartbeat: update.lastHeartbeat ?? update.LastHeartbeat,
-      };
-      console.debug('[SignalR] BotStatusUpdate received:', normalized);
-      setAgentStatuses(prev => ({ ...prev, [normalized.botAgentId]: normalized }));
-      if (onStatusUpdate) onStatusUpdate(normalized);
-    });
+      setupConnectionHandlers(connection, setAgentStatuses, onStatusUpdate)
+      await startSignalRConnection(connection)
+      connectionRef.current = connection
+    }
 
-    // Register reconnection handlers for better error visibility
-    connection.onreconnecting(error => {
-      console.debug('[SignalR] Attempting to reconnect...', error?.message);
-    });
+    initializeConnection()
 
-    connection.onreconnected(connectionId => {
-      console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
-    });
-
-    connection.onreconnected(connectionId => {
-      console.debug('[SignalR] Reconnected successfully with ID:', connectionId);
-    });
-    // Start the connection
-    startSignalRConnection(connection);
-    connectionRef.current = connection;
-    
     return () => {
-      connection.stop().catch(err => {
-        // Silently handle stop errors
-        console.debug('[SignalR] Error during connection stop:', err?.message);
-      });
-    };
-  }, [tenant, onStatusUpdate]);
+      if (connectionRef.current) {
+        connectionRef.current.stop().catch((err) => {
+          console.debug('[SignalR] Error during connection stop:', err?.message)
+        })
+      }
+    }
+  }, [tenant, onStatusUpdate])
 
-  return agentStatuses;
-} 
+  return agentStatuses
+}

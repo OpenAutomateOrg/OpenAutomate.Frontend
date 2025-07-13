@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns } from './columns'
+import { createColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
@@ -23,9 +23,17 @@ import {
   PaginationState,
   ColumnFilter,
 } from '@tanstack/react-table'
-import { getAssetsWithOData, type ODataQueryOptions } from '@/lib/api/assets'
+import {
+  getAssetsWithOData,
+  type ODataQueryOptions,
+  getAssetDetail,
+  getAssetAgents,
+} from '@/lib/api/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/swr-config'
+import { useToast } from '@/components/ui/use-toast'
 
 export const assetSchema = z.object({
   id: z.string(),
@@ -36,88 +44,69 @@ export const assetSchema = z.object({
 })
 
 export type AssetRow = z.infer<typeof assetSchema>
-
-interface ODataResponse<T> {
-  '@odata.count'?: number;
-  value: T[];
-}
+export type AssetEditRow = AssetRow & { value?: string; agents?: { id: string; name: string }[] }
 
 export default function AssetInterface() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { updateUrl } = useUrlParams()
+  const { toast } = useToast()
+
+  // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [assets, setAssets] = useState<AssetRow[]>([])
   const [totalCount, setTotalCount] = useState<number>(0)
   const totalCountRef = useRef<number>(0)
-  const [isLoading, setIsLoading] = useState(false)
   const [isPending, setIsPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [isChangingPageSize, setIsChangingPageSize] = useState(false)
   const searchDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
-  const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   const [hasExactCount, setHasExactCount] = useState(false)
-  const getCalculatedPageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
+  const getCalculatedPageCount = (total: number, size: number) =>
+    Math.max(1, Math.ceil(total / size))
   const getMinimumValidPageCount = (currentPageIndex: number) => currentPageIndex + 1
   const initColumnFilters = (): ColumnFiltersState => {
     const filters: ColumnFiltersState = []
-    
-    const keyFilter = searchParams?.get('key')
+
+    const keyFilter = searchParams.get('key')
     if (keyFilter) filters.push({ id: 'key', value: keyFilter })
-    
-    const typeFilter = searchParams?.get('type')
+
+    const typeFilter = searchParams.get('type')
     if (typeFilter) filters.push({ id: 'type', value: typeFilter })
-    
+
     return filters
   }
 
   const initSorting = (): SortingState => {
-    const sort = searchParams?.get('sort')
-    const order = searchParams?.get('order')
-    
+    const sort = searchParams.get('sort')
+    const order = searchParams.get('order')
+
     if (sort && (order === 'asc' || order === 'desc')) {
       return [{ id: sort, desc: order === 'desc' }]
     }
-    
+
     return []
   }
 
   const initPagination = (): PaginationState => {
-    const pageParam = searchParams?.get('page')
-    const sizeParam = searchParams?.get('size')
-    
-    return {
-      pageIndex: pageParam ? Math.max(0, parseInt(pageParam) - 1) : 0,
-      pageSize: sizeParam ? parseInt(sizeParam) : 10,
-    }
+    const pageParam = searchParams.get('page')
+    const sizeParam = searchParams.get('size')
+
+    const pageIndex = pageParam ? Math.max(0, parseInt(pageParam, 10) - 1) : 0
+    const pageSize = sizeParam ? parseInt(sizeParam, 10) : 10
+
+    return { pageIndex, pageSize }
   }
 
   // State for search, filters, sorting, and pagination
-  const [searchValue, setSearchValue] = useState<string>(searchParams?.get('key') ?? '')
+  const [searchValue, setSearchValue] = useState<string>(searchParams.get('key') ?? '')
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initColumnFilters)
   const [sorting, setSorting] = useState<SortingState>(initSorting)
   const [pagination, setPagination] = useState<PaginationState>(initPagination)
 
-  // Calculate page count based on total count
-  const pageCount = useMemo(() => {
-    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize)
-    const hasMorePages = assets.length === pagination.pageSize && totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
-    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex)
-    if (hasMorePages) {
-      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2)
-    }
-    return Math.max(minValidPageCount, calculatedCount)
-  }, [pagination.pageSize, pagination.pageIndex, assets.length, totalCount])
-
-  const isUnknownTotalCount = useMemo(() => {
-    return !hasExactCount && assets.length === pagination.pageSize
-  }, [hasExactCount, assets.length, pagination.pageSize])
-
-  // Construct OData query parameters
+  // ✅ Construct OData query parameters (following guideline #1: derive data during render)
   const getODataQueryParams = useCallback((): ODataQueryOptions => {
     const params: ODataQueryOptions = {
       $count: true,
@@ -134,13 +123,13 @@ export default function AssetInterface() {
     const filters: string[] = []
 
     // Key filter
-    const keyFilter = columnFilters.find(filter => filter.id === 'key')
+    const keyFilter = columnFilters.find((filter) => filter.id === 'key')
     if (keyFilter?.value) {
       filters.push(`contains(tolower(key), '${(keyFilter.value as string).toLowerCase()}')`)
     }
 
     // Type filter
-    const typeFilter = columnFilters.find(filter => filter.id === 'type')
+    const typeFilter = columnFilters.find((filter) => filter.id === 'type')
     const enumMap: Record<string, string> = {
       '0': 'String',
       '1': 'Secret',
@@ -159,10 +148,169 @@ export default function AssetInterface() {
     return params
   }, [pagination, sorting, columnFilters])
 
+  // ✅ SWR for assets data - following guideline #8: use framework-level loaders
+  const queryParams = getODataQueryParams()
+  const {
+    data: assetsResponse,
+    error: assetsError,
+    isLoading,
+    mutate: mutateAssets,
+  } = useSWR(swrKeys.assetsWithOData(queryParams as Record<string, unknown>), () =>
+    getAssetsWithOData(queryParams),
+  )
+
+  // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
+  const assets = useMemo(() => {
+    if (!assetsResponse?.value) return []
+    return assetsResponse.value.map((asset: AssetRow) => ({
+      id: asset.id,
+      key: asset.key,
+      type: asset.type,
+      description: asset.description,
+      createdBy: asset.createdBy,
+    }))
+  }, [assetsResponse])
+
+  // Calculate page count based on total count
+  const pageCount = useMemo(() => {
+    const calculatedCount = getCalculatedPageCount(totalCount, pagination.pageSize)
+    const hasMorePages =
+      assets.length === pagination.pageSize &&
+      totalCount <= pagination.pageSize * (pagination.pageIndex + 1)
+    const minValidPageCount = getMinimumValidPageCount(pagination.pageIndex)
+    if (hasMorePages) {
+      return Math.max(minValidPageCount, calculatedCount, pagination.pageIndex + 2)
+    }
+    return Math.max(minValidPageCount, calculatedCount)
+  }, [pagination.pageSize, pagination.pageIndex, assets.length, totalCount])
+
+  const isUnknownTotalCount = useMemo(() => {
+    return !hasExactCount && assets.length === pagination.pageSize
+  }, [hasExactCount, assets.length, pagination.pageSize])
+
+  // ✅ Handle SWR errors (following guideline #3: error handling in dedicated effects)
+  // Client-only: Requires toast notifications for user feedback
+  useEffect(() => {
+    if (assetsError) {
+      console.error('Failed to load assets:', assetsError)
+      toast({
+        title: 'Error',
+        description: 'Failed to load assets. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }, [assetsError, toast])
+
+  // ✅ Update total count when data changes (following guideline #1: derive data during render)
+  // Client-only: Requires state updates for pagination
+  useEffect(() => {
+    if (!assetsResponse) return
+
+    const response = assetsResponse
+
+    // Handle exact count from OData
+    if (typeof response['@odata.count'] === 'number') {
+      setTotalCount(response['@odata.count'])
+      totalCountRef.current = response['@odata.count']
+      setHasExactCount(true)
+      return
+    }
+
+    if (!Array.isArray(response.value)) return
+
+    // When count isn't available, estimate from current page
+    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length
+
+    // Only update if the new minimum count is higher than current
+    if (minCount > totalCountRef.current) {
+      setTotalCount(minCount)
+      totalCountRef.current = minCount
+    }
+
+    // If we got a full page on first page, assume there might be more
+    const isFullFirstPage =
+      response.value.length === pagination.pageSize && pagination.pageIndex === 0
+    if (isFullFirstPage) {
+      setTotalCount(minCount + 1)
+      totalCountRef.current = minCount + 1
+    }
+
+    setHasExactCount(false)
+  }, [assetsResponse, pagination.pageIndex, pagination.pageSize])
+
+  const [selectedAsset, setSelectedAsset] = useState<AssetEditRow | null>(null)
+
+  const handleEditAsset = useCallback(
+    async (asset: AssetRow) => {
+      try {
+        const assetDetail = await getAssetDetail(asset.id)
+        const assetAgents = await getAssetAgents(asset.id)
+        const formattedAgents = assetAgents.map((agent) => ({
+          id: agent.id,
+          name: agent.name,
+        }))
+        const updatedAsset = {
+          ...asset,
+          type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
+          value: assetDetail.value ?? '',
+          agents: formattedAgents.length > 0 ? formattedAgents : [],
+        }
+        setSelectedAsset(updatedAsset)
+        setModalMode('edit')
+        setIsModalOpen(true)
+      } catch (error) {
+        console.error('Error preparing asset for edit:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load asset details for editing.',
+          variant: 'destructive',
+        })
+      }
+    },
+    [toast],
+  )
+
+  // ✅ Handle empty page edge case (following guideline #1: derive data during render)
+  useEffect(() => {
+    if (assetsResponse?.value) {
+      const isEmptyPageBeyondFirst =
+        assetsResponse.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0
+      if (isEmptyPageBeyondFirst) {
+        const calculatedPageCount = Math.max(
+          1,
+          Math.ceil(totalCountRef.current / pagination.pageSize),
+        )
+        if (pagination.pageIndex >= calculatedPageCount) {
+          setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+          updateUrl(pathname, { page: '1' })
+        }
+      }
+    }
+  }, [
+    assetsResponse,
+    pagination.pageIndex,
+    pagination.pageSize,
+    totalCountRef,
+    updateUrl,
+    pathname,
+  ])
+
+  // ✅ Refresh handler using SWR mutate (following guideline #8: use framework-level loaders)
+  const refreshAssets = useCallback(async () => {
+    setIsPending(false)
+    setIsChangingPageSize(false)
+    await mutateAssets()
+  }, [mutateAssets])
+
+  const tableColumns = useMemo(
+    () => createColumns(handleEditAsset, refreshAssets),
+    [handleEditAsset, refreshAssets],
+  )
+
   // Setup table instance
   const table = useReactTable({
     data: assets,
-    columns,
+    columns: tableColumns,
     state: {
       sorting,
       columnVisibility,
@@ -177,13 +325,13 @@ export default function AssetInterface() {
       setSorting(newSorting)
 
       if (newSorting.length > 0) {
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname, {
           sort: newSorting[0].id,
           order: newSorting[0].desc ? 'desc' : 'asc',
           page: '1', // Reset to first page when sorting changes
         })
       } else {
-        updateUrl(pathname || "" || "" || "" as string, {
+        updateUrl(pathname, {
           sort: null,
           order: null,
           page: '1',
@@ -196,7 +344,7 @@ export default function AssetInterface() {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
       setPagination(newPagination)
 
-      updateUrl(pathname || "" || "" || "" as string, {
+      updateUrl(pathname, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
@@ -222,126 +370,55 @@ export default function AssetInterface() {
   }
 
   // Handle search input changes
-  const handleSearch = useCallback((value: string) => {
-    setSearchValue(value)
-    setIsPending(true)
-    if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
-    searchDebounceTimeout.current = setTimeout(() => {
-      setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
-      // Always reset page to 1 when filter changes
-      updateUrl(pathname || "" || "" || "" as string, { key: value ?? null, page: '1' })
-      setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
-      setIsPending(false)
-    }, 500)
-  }, [updateUrl, pathname])
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      setIsPending(true)
+      if (searchDebounceTimeout.current) clearTimeout(searchDebounceTimeout.current)
+      searchDebounceTimeout.current = setTimeout(() => {
+        setColumnFilters((prev: ColumnFiltersState) => updateKeyFilter(prev, value))
+        // Always reset page to 1 when filter changes
+        updateUrl(pathname, { key: value ?? null, page: '1' })
+        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+        setIsPending(false)
+      }, 500)
+    },
+    [updateUrl, pathname],
+  )
 
   // Handle type filter changes
-  const handleTypeFilterChange = useCallback((value: string) => {
-    if (value === 'all') {
-      setColumnFilters((prev: ColumnFiltersState) => prev.filter((filter: ColumnFilter) => filter.id !== 'type'))
-    } else {
-      setColumnFilters((prev: ColumnFiltersState) => {
-        const newFilters = prev.filter((filter: ColumnFilter) => filter.id !== 'type')
-        newFilters.push({ id: 'type', value })
-        return newFilters
-      })
-    }
-    // Always reset page to 1 when filter changes
-    updateUrl(pathname || "" || "" || "" as string, {
-      type: value === 'all' ? null : value,
-      page: '1'
-    })
-    setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
-  }, [updateUrl, pathname])
-
-  const updateTotalCounts = useCallback((response: ODataResponse<AssetRow>) => {
-    if (typeof response['@odata.count'] === 'number') {
-      setTotalCount(response['@odata.count']);
-      totalCountRef.current = response['@odata.count'];
-      setHasExactCount(true);
-      return;
-    }
-    if (!Array.isArray(response.value)) return;
-    const minCount = pagination.pageIndex * pagination.pageSize + response.value.length;
-    if (minCount > totalCountRef.current) {
-      setTotalCount(minCount);
-      totalCountRef.current = minCount;
-    }
-    const isFullFirstPage = response.value.length === pagination.pageSize && pagination.pageIndex === 0;
-    if (isFullFirstPage) {
-      setTotalCount(minCount + 1);
-      totalCountRef.current = minCount + 1;
-    }
-    setHasExactCount(false);
-  }, [pagination.pageIndex, pagination.pageSize]);
-
-  const processAssetData = useCallback((response: ODataResponse<AssetRow>) => {
-    if (!Array.isArray(response.value)) {
-      setAssets([]);
-      return;
-    }
-    const formattedAssets = response.value.map((asset: AssetRow) => ({
-      id: asset.id,
-      key: asset.key,
-      type: asset.type,
-      description: asset.description,
-      createdBy: asset.createdBy,
-    }));
-    setAssets(formattedAssets || []);
-    // Handle empty page edge case
-    const isEmptyPageBeyondFirst = response.value.length === 0 && totalCountRef.current > 0 && pagination.pageIndex > 0;
-    if (isEmptyPageBeyondFirst) {
-      const calculatedPageCount = Math.max(1, Math.ceil(totalCountRef.current / pagination.pageSize));
-      if (pagination.pageIndex >= calculatedPageCount) {
-        setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }));
-        updateUrl(pathname || "" || "" || "" as string, { page: '1' });
+  const handleTypeFilterChange = useCallback(
+    (value: string) => {
+      if (value === 'all') {
+        setColumnFilters((prev: ColumnFiltersState) =>
+          prev.filter((filter: ColumnFilter) => filter.id !== 'type'),
+        )
+      } else {
+        setColumnFilters((prev: ColumnFiltersState) => {
+          const newFilters = prev.filter((filter: ColumnFilter) => filter.id !== 'type')
+          newFilters.push({ id: 'type', value })
+          return newFilters
+        })
       }
-    }
-  }, [pagination.pageIndex, pagination.pageSize, totalCountRef, updateUrl, pathname]);
+      // Always reset page to 1 when filter changes
+      updateUrl(pathname, {
+        type: value === 'all' ? null : value,
+        page: '1',
+      })
+      setPagination((prev: PaginationState) => ({ ...prev, pageIndex: 0 }))
+    },
+    [updateUrl, pathname],
+  )
 
-  // Fetch data with proper handling
-  const fetchAssets = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const queryParams = getODataQueryParams();
-      const response = await getAssetsWithOData(queryParams) as ODataResponse<AssetRow>;
-      updateTotalCounts(response);
-      processAssetData(response);
-    } catch {
-      setError('Failed to load assets. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setIsPending(false);
-      setIsChangingPageSize(false);
-    }
-  }, [getODataQueryParams, updateTotalCounts, processAssetData]);
-
-  // Fetch data when filters, sorting, or pagination change
-  useEffect(() => {
-    if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-    fetchTimeout.current = setTimeout(() => {
-      fetchAssets()
-    }, 100)
-    return () => {
-      if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
-    }
-  }, [fetchAssets, columnFilters, sorting, pagination])
-
-  // Simple handlers
-  const handleAssetCreated = () => fetchAssets()
+  // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
+  const handleAssetCreated = () => mutateAssets()
 
   const handleRowClick = (row: AssetRow) => {
-    const isAdmin = pathname?.startsWith('/admin')
-    const tenant = pathname?.split('/')[1]
+    const isAdmin = pathname.startsWith('/admin')
+    const tenant = pathname.split('/')[1]
     const route = isAdmin ? `/admin/asset/${row.id}` : `/${tenant}/asset/${row.id}`
     router.push(route)
   }
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
 
   return (
     <>
@@ -351,7 +428,9 @@ export default function AssetInterface() {
           <div className="flex items-center space-x-2">
             {totalCount > 0 && (
               <div className="text-sm text-muted-foreground">
-                <span>Total: {totalCount} asset{totalCount !== 1 ? 's' : ''}</span>
+                <span>
+                  Total: {totalCount} asset{totalCount !== 1 ? 's' : ''}
+                </span>
               </div>
             )}
             <Button
@@ -367,10 +446,12 @@ export default function AssetInterface() {
           </div>
         </div>
 
-        {error && (
+        {assetsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
-            <Button variant="outline" className="mt-2" onClick={fetchAssets}>
+            <p className="text-red-800 dark:text-red-300">
+              Failed to load assets. Please try again.
+            </p>
+            <Button variant="outline" className="mt-2" onClick={() => mutateAssets()}>
               Retry
             </Button>
           </div>
@@ -390,9 +471,12 @@ export default function AssetInterface() {
         />
 
         <DataTable
-          data={assets || []}
-          columns={columns}
-          onRowClick={handleRowClick}
+          data={assets ?? []}
+          columns={tableColumns}
+          onRowClick={(row) => {
+            if (isModalOpen) return
+            handleRowClick(row)
+          }}
           table={table}
           isLoading={isLoading}
           totalCount={totalCount}
@@ -409,7 +493,7 @@ export default function AssetInterface() {
           rowsLabel="assets"
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
-            updateUrl(pathname || "" || "" || "" as string, { page: page.toString() })
+            updateUrl(pathname, { page: page.toString() })
           }}
           onPageSizeChange={(size: number) => {
             setIsChangingPageSize(true)
@@ -417,16 +501,16 @@ export default function AssetInterface() {
             const newPageIndex = Math.floor(currentStartRow / size)
             setPagination({
               pageSize: size,
-              pageIndex: newPageIndex
+              pageIndex: newPageIndex,
             })
-            updateUrl(pathname || "" || "" || "" as string, {
+            updateUrl(pathname, {
               size: size.toString(),
-              page: (newPageIndex + 1).toString()
+              page: (newPageIndex + 1).toString(),
             })
           }}
         />
 
-        {!isLoading && assets.length === 0 && !error && (
+        {!isLoading && assets.length === 0 && !assetsError && (
           <div className="text-center py-10 text-muted-foreground">
             <p>No assets found. Create your first asset to get started.</p>
           </div>
@@ -435,10 +519,14 @@ export default function AssetInterface() {
 
       <CreateEditModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedAsset(null)
+        }}
         mode={modalMode}
         onCreated={handleAssetCreated}
         existingKeys={assets.map((item: AssetRow) => item.key)}
+        asset={selectedAsset}
       />
     </>
   )

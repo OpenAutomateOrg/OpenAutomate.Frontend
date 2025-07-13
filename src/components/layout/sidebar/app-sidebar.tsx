@@ -1,179 +1,80 @@
 'use client'
 
 import * as React from 'react'
-import {
-  Bot,
-  Cog,
-  LifeBuoy,
-  Send,
-  Settings2,
-  FileKey2,
-  House,
-  Building2,
-  Command,
-  Users,
-  ShieldAlert,
-} from 'lucide-react'
-
-import { NavMain } from '@/components/layout/sidebar/nav-main'
-import { NavSecondary } from '@/components/layout/sidebar/nav-secondary'
-import { NavUser } from '@/components/layout/sidebar/nav-user'
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
-import { NavOrganization } from '@/components/layout/sidebar/nav-organization'
-import { RoleBasedContent } from '@/components/auth/role-based-content'
+import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import { useOrganizationUnits } from '@/hooks/use-organization-units'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
+
+import { NavMain } from './nav-main'
+import { NavOrganization } from './nav-organization'
+import { NavSecondary } from './nav-secondary'
+import { NavUser } from './nav-user'
+import { RoleBasedContent } from '@/components/auth/role-based-content'
 import { useAuth } from '@/hooks/use-auth'
 
-// Map to associate organization name with an icon
-const organizationIcons: Record<string, typeof Building2> = {
-  default: Building2,
-}
+// Import navigation configuration
+import {
+  createCommonNavItems,
+  createUserNavItems,
+  adminNavItems,
+  secondaryNavItems,
+  createUserManagementItems,
+  createOrganizationData,
+  filterNavigationByPermissions,
+} from '@/lib/config/navigation'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, hasPermission, isSystemAdmin, userProfile } = useAuth()
   const params = useParams()
-  const tenantSlug = params?.tenant as string
-  const { organizationUnits } = useOrganizationUnits()
-  const { user } = useAuth()
+  const tenant = params.tenant as string
 
-  // Transform organization units to the format expected by NavOrganization
-  const organizationData = React.useMemo(() => {
-    return organizationUnits.map((org) => ({
-      name: org.name,
-      // Use org description or slug as additional info
-      plan: org.description || org.slug,
-      url: `/${org.slug}/dashboard`,
-      icon: organizationIcons[org.slug] || organizationIcons.default,
-      // Mark the current tenant
-      isActive: org.slug === tenantSlug,
-    }))
-  }, [organizationUnits, tenantSlug])
+  /**
+   * Helper to create tenant-aware URLs
+   */
+  const createTenantUrl = React.useCallback(
+    (path: string) => {
+      if (!tenant) return path
+      return `/${tenant}${path}`
+    },
+    [tenant],
+  )
 
-  // Function to create tenant-specific URLs
-  const createTenantUrl = (path: string) => {
-    if (!tenantSlug) return path
-    return `/${tenantSlug}${path}`
-  }
+  /**
+   * Organization data
+   */
+  const organizationData = createOrganizationData('OpenAutomate')
 
-  // Common navigation items for all users with tenant context
-  const commonNavItems = [
-    {
-      title: 'Home',
-      url: createTenantUrl('/dashboard'),
-      icon: House,
-      isActive: true,
-    },
-    {
-      title: 'Automation',
-      url: createTenantUrl('/automation/executions'),
-      icon: Cog,
-      items: [
-        {
-          title: 'Executions',
-          url: createTenantUrl('/automation/executions'),
-        },
-        {
-          title: 'Schedule',
-          url: createTenantUrl('/automation/schedule'),
-        },
-        {
-          title: 'Triggers',
-          url: createTenantUrl('/automation/triggers'),
-        },
-        {
-          title: 'Packages',
-          url: createTenantUrl('/automation/packages'),
-        },
-      ],
-    },
-    {
-      title: 'Agent',
-      url: createTenantUrl('/agent'),
-      icon: Bot,
-      items: [
-        {
-          title: 'Agent',
-          url: createTenantUrl('/agent'),
-        },
-        {
-          title: 'Agent Groups',
-          url: createTenantUrl('/agent/groups'),
-        },
-      ],
-    },
-    {
-      title: 'Asset',
-      url: createTenantUrl('/asset'),
-      icon: FileKey2,
-    },
-  ]
+  /**
+   * Filtered navigation items based on user permissions
+   */
+  const navigationItems = useMemo(() => {
+    if (!userProfile && !isSystemAdmin) {
+      // If no profile loaded yet, return empty navigation to prevent flash
+      return {
+        common: [],
+        user: [],
+        admin: [],
+      }
+    }
 
-  // Admin-only navigation items (system-level, not tenant-specific)
-  const adminNavItems = [
-    {
-      title: 'Administration',
-      url: '/adminitration/users',
-      icon: Settings2,
-      items: [
-        {
-          title: 'Users',
-          url: '/adminitration/users',
-        },
-        {
-          title: 'Roles',
-          url: '/adminitration/roles',
-        },
-        {
-          title: 'Organizations',
-          url: '/adminitration/Organizations',
-        },
-        {
-          title: 'Licenses',
-          url: '/adminitration/licenses',
-        },
-      ],
-    },
-    {
-      title: 'System Users',
-      url: '/admin/users',
-      icon: Users,
-    },
-    {
-      title: 'System Security',
-      url: '/admin/security',
-      icon: ShieldAlert,
-    },
-  ]
+    // Create base navigation items
+    const commonItems = createCommonNavItems(createTenantUrl)
+    const userItems = createUserNavItems(createTenantUrl)
 
-  // Standard user navigation items with tenant context
-  const userNavItems = [
-    {
-      title: 'Settings',
-      url: createTenantUrl('/settings'),
-      icon: Settings2,
-    },
-  ]
+    // Filter items based on permissions
+    const filteredCommon = filterNavigationByPermissions(commonItems, hasPermission)
+    const filteredUser = filterNavigationByPermissions(userItems, hasPermission)
 
-  // Secondary navigation items (support, feedback, etc.)
-  const secondaryNavItems = [
-    {
-      title: 'Support',
-      url: '#',
-      icon: LifeBuoy,
-    },
-    {
-      title: 'Feedback',
-      url: '#',
-      icon: Send,
-    },
-    {
-      title: 'Switch Organization',
-      url: '/tenant-selector',
-      icon: Command,
-    },
-  ]
+    return {
+      common: filteredCommon,
+      user: filteredUser,
+      admin: adminNavItems, // Admin items don't need filtering as they're only shown to system admins
+    }
+  }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin])
 
-  // User data from auth context
+  /**
+   * User data for the footer
+   */
   const userData = user
     ? {
         name: `${user.firstName} ${user.lastName}`.trim() || user.email,
@@ -186,23 +87,55 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         avatar: '/avatars/placeholder.png',
       }
 
+  /**
+   * User navigation items for profile management
+   */
+  const navUserItem = createUserManagementItems(createTenantUrl)
+
+  /**
+   * Show loading state while navigation is being determined
+   */
+  if (!userProfile && !isSystemAdmin) {
+    return (
+      <Sidebar
+        className=" top-(--header-height) h-[calc(100svh-var(--header-height))]! dark:bg-black/60"
+        {...props}
+      >
+        <SidebarHeader>
+          <NavOrganization organizations={organizationData} />
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-muted-foreground">Loading navigation...</div>
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={userData} navUser={navUserItem} />
+        </SidebarFooter>
+      </Sidebar>
+    )
+  }
+
   return (
-    <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!" {...props}>
+    <Sidebar
+      className=" top-(--header-height) h-[calc(100svh-var(--header-height))]! dark:bg-black/60"
+      {...props}
+    >
       <SidebarHeader>
         <NavOrganization organizations={organizationData} />
       </SidebarHeader>
       <SidebarContent>
-        {/* Main navigation with role-based items */}
+        {/* Main navigation with role-based items and permission filtering */}
         <RoleBasedContent
-          adminContent={<NavMain items={[...commonNavItems, ...adminNavItems]} />}
-          userContent={<NavMain items={[...commonNavItems, ...userNavItems]} />}
-          fallback={<NavMain items={commonNavItems} />}
+          adminContent={<NavMain items={[...navigationItems.common, ...navigationItems.admin]} />}
+          userContent={<NavMain items={[...navigationItems.common, ...navigationItems.user]} />}
+          fallback={<NavMain items={navigationItems.common} />}
         />
 
         <NavSecondary items={secondaryNavItems} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userData} />
+        <NavUser user={userData} navUser={navUserItem} />
       </SidebarFooter>
     </Sidebar>
   )

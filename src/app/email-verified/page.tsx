@@ -26,8 +26,8 @@ function EmailVerifiedContent() {
   const [loading, setLoading] = useState(true)
 
   // Get verification params
-  const success = searchParams?.get('success') === 'true'
-  const reason = searchParams?.get('reason')
+  const success = searchParams.get('success') === 'true'
+  const reason = searchParams.get('reason')
 
   useEffect(() => {
     // Simulate loading to ensure all params are processed

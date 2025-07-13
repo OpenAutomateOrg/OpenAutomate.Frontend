@@ -22,7 +22,7 @@ export function NavMain({
 }: {
   items: {
     title: string
-    url: string
+    url?: string
     icon: LucideIcon
     isActive?: boolean
     items?: {
@@ -42,7 +42,7 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                className="py-7 hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
+                className="py-7 hover:bg-orange-600/10 hover:text-orange-600 hover:outline  hover:outline-orange-600 transition-all duration-200"
                 tooltip={item.title}
               >
                 <Link href={item.url}>
