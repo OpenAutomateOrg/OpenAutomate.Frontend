@@ -79,11 +79,8 @@ export default function OrganizationUnitAdminInterface() {
   })
 
   const handleRowClick = (row: OrganizationUnit) => {
-    const pathname = window.location.pathname
-    const isSystemAdmin = pathname.startsWith('/system-admin')
-    const route = isSystemAdmin
-      ? `/system-admin/organizationUnit/${row.id}`
-      : `/[tenant]/organizationUnit/${row.id}`
+    const route = `/system-admin/org-unit-management/${row.id}`
+
     router.push(route)
   }
 
