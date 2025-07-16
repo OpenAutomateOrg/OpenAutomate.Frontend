@@ -64,4 +64,13 @@ export const adminApi = {
     const response = await api.get<OrganizationUnit[]>('/api/admin/organization-unit/get-all')
     return response
   },
+
+  /**
+   * Delete an organization unit (system admin access)
+   * @param id The ID of the organization unit to delete
+   * @returns Promise that resolves when deletion is complete
+   */
+  deleteOrganizationUnit: async (id: string): Promise<void> => {
+    await api.delete<void>(`/api/admin/organization-unit/${id}`)
+  },
 }
