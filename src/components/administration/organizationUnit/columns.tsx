@@ -4,31 +4,31 @@ import { ColumnDef } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
 
-import type { OrganizationUnitRow } from './organizationUnit'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
-export const columns: ColumnDef<OrganizationUnitRow>[] = [
+// Define a local type for organization unit rows (no 'any' allowed)
+export type OrganizationUnitTableRow = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
+export const columns: ColumnDef<OrganizationUnitTableRow>[] = [
   {
     id: 'select',
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value)
-        }
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
-        className="translate-y-[2px]"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
-        className="translate-y-[2px]"
       />
     ),
     enableSorting: false,

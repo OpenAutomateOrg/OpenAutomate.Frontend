@@ -162,7 +162,7 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
         variant: 'destructive',
       })
     }
-  }, [orgError])
+  }, [orgError, toast])
 
   const handleBack = () => {
     router.back()

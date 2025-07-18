@@ -11,10 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { OrganizationUnitRow } from './organizationUnit'
+import type { OrganizationUnitTableRow } from './columns';
 
 interface DataTableRowActionsProps {
-  row: Row<OrganizationUnitRow>
+  row: Row<OrganizationUnitTableRow>
 }
 
 export default function DataTableRowAction({ row }: DataTableRowActionsProps) {
