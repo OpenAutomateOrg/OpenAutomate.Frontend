@@ -106,9 +106,17 @@ export default function OrganizationUnitProfile() {
   };
 
   const handleAcceptNameChange = async () => {
+    if (!organizationUnitId) {
+      toast({
+        title: 'Error',
+        description: 'Organization unit ID is missing. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setPendingSave(true);
     try {
-      const updated = await organizationUnitApi.update(organizationUnitId!, {
+      const updated = await organizationUnitApi.update(organizationUnitId, {
         name: editedName,
         description: editedDescription,
       });
