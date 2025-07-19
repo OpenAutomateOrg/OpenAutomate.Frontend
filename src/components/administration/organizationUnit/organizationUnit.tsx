@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { organizationUnitApi } from '@/lib/api/organization-units';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -17,7 +17,6 @@ interface OrganizationUnit {
 
 export default function OrganizationUnitProfile() {
   const params = useParams();
-  const router = useRouter();
   const slug = params.tenant as string | undefined;
   const [organizationUnitId, setOrganizationUnitId] = useState<string | null>(null);
   const [organizationUnit, setOrganizationUnit] = useState<OrganizationUnit | null>(null);
@@ -120,7 +119,7 @@ export default function OrganizationUnitProfile() {
         title: 'Success',
         description: 'Organization unit information updated successfully',
       });
-      router.replace('/tenant-selector');
+      window.location.href = '/tenant-selector';
     } catch {
       toast({
         title: 'Error',
