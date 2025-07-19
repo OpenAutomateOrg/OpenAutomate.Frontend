@@ -31,7 +31,11 @@ export default function OrganizationUnitProfile() {
 
   // Step 1: Get OU id from slug
   useEffect(() => {
-    organizationUnitApi.getBySlug(slug || '')
+    if (!slug) {
+      setOrganizationUnitId(null);
+      return;
+    }
+    organizationUnitApi.getBySlug(slug)
       .then((ou) => {
         setOrganizationUnitId(ou.id);
       })
@@ -116,10 +120,7 @@ export default function OrganizationUnitProfile() {
         title: 'Success',
         description: 'Organization unit information updated successfully',
       });
-      router.push('/tenant-selector');
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
+      router.replace('/tenant-selector');
     } catch {
       toast({
         title: 'Error',
