@@ -120,7 +120,7 @@ export default function OrganizationUnitProfile() {
         title: 'Success',
         description: 'Organization unit information updated successfully',
       });
-      router.replace('/tenant-selector');
+      window.location.href = '/tenant-selector';
     } catch {
       toast({
         title: 'Error',
