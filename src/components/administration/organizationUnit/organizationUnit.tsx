@@ -1,308 +1,234 @@
 'use client'
 
-import { PlusCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { columns } from './columns'
+import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
+import { organizationUnitApi } from '@/lib/api/organization-units';
+import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Pencil } from 'lucide-react';
 
-import { DataTable } from '@/components/layout/table/data-table'
-import { useState } from 'react'
-import { CreateEditModal } from './create-edit-modal'
+interface OrganizationUnit {
+  id: string;
+  name: string;
+  description: string;
+}
 
-import { z } from 'zod'
-import { useRouter } from 'next/navigation'
-import { DataTableToolbar } from './data-table-toolbar'
+export default function OrganizationUnitProfile() {
+  const params = useParams();
+  const slug = params.tenant as string | undefined;
+  const [organizationUnitId, setOrganizationUnitId] = useState<string | null>(null);
+  const [organizationUnit, setOrganizationUnit] = useState<OrganizationUnit | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
+  const { toast } = useToast();
 
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-} from '@tanstack/react-table'
+  // Step 1: Get OU id from slug
+  useEffect(() => {
+    if (!slug) {
+      setOrganizationUnitId(null);
+      return;
+    }
+    organizationUnitApi.getBySlug(slug)
+      .then((ou) => {
+        setOrganizationUnitId(ou.id);
+      })
+      .catch(() => {
+        setOrganizationUnitId(null);
+      });
+  }, [slug]);
 
-export const organizationUnitSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: z.string(),
-  value: z.string(),
-  createdBy: z.string(),
-  label: z.string(),
-  status: z.string(),
-  workflow: z.string().optional(),
-  Version: z.string().optional(),
-  Agent: z.string().optional(),
-  'Agent Group': z.string().optional(),
-  State: z.string().optional(),
-  'Start Time': z.string().optional(),
-  'End Time': z.string().optional(),
-  Source: z.string().optional(),
-  Command: z.string().optional(),
-  Schedules: z.string().optional(),
-  'Task Id': z.string().optional(),
-  'Created Date': z.string().optional(),
-  'Created By': z.string().optional(),
-  agent: z.string().optional(),
-  agentGroup: z.string().optional(),
-  state: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  source: z.string().optional(),
-  command: z.string().optional(),
-  schedules: z.string().optional(),
-  taskId: z.string().optional(),
-  createdDate: z.string().optional(),
-})
+  // Step 2: Get OU info by id
+  useEffect(() => {
+    if (!organizationUnitId) return;
+    organizationUnitApi.getById(organizationUnitId)
+      .then((ou) => {
+        setOrganizationUnit(ou);
+        setEditedName(ou.name);
+        setEditedDescription(ou.description);
+      })
+      .catch(() => {
+        setOrganizationUnit(null);
+      });
+  }, [organizationUnitId]);
 
-export type OrganizationUnitRow = z.infer<typeof organizationUnitSchema>
+  const handleEdit = () => {
+    if (!organizationUnit) return;
+    setEditedName(organizationUnit.name);
+    setEditedDescription(organizationUnit.description);
+    setIsEditing(true);
+  };
 
-export default function OrganizationUnitInterface() {
-  const router = useRouter()
-  const initialData: OrganizationUnitRow[] = [
-    {
-      id: '1',
-      workflow: 'Daily Backup',
-      Version: 'v1.0',
-      Agent: 'Agent1',
-      'Agent Group': '',
-      State: 'Running',
-      'Start Time': '2024-06-01 08:00',
-      'End Time': '2024-06-01 09:00',
-      Source: 'System',
-      Command: 'backup.sh',
-      Schedules: 'Daily',
-      'Task Id': 'T001',
-      'Created Date': '2024-06-01',
-      'Created By': 'Alice Nguyen',
-      // legacy fields for compatibility
-      name: 'Daily Backup',
-      type: 'workflow',
-      value: 'v1.0',
-      createdBy: 'Alice Nguyen',
-      label: 'Agent1',
-      status: 'Running',
-      agent: 'Agent1',
-      agentGroup: '',
-      state: 'Running',
-      startTime: '2024-06-01 08:00',
-      endTime: '2024-06-01 09:00',
-      source: 'System',
-      command: 'backup.sh',
-      schedules: 'Daily',
-      taskId: 'T001',
-      createdDate: '2024-06-01',
-    },
-    {
-      id: '2',
-      workflow: 'Data Sync',
-      Version: 'v2.1',
-      Agent: 'Agent2',
-      'Agent Group': '',
-      State: 'Completed',
-      'Start Time': '2024-06-02 10:00',
-      'End Time': '2024-06-02 10:30',
-      Source: 'API',
-      Command: 'sync.sh',
-      Schedules: 'Weekly',
-      'Task Id': 'T002',
-      'Created Date': '2024-06-02',
-      'Created By': 'Bob Tran',
-      name: 'Data Sync',
-      type: 'workflow',
-      value: 'v2.1',
-      createdBy: 'Bob Tran',
-      label: '',
-      status: 'Completed',
-      agent: 'Agent2',
-      agentGroup: '',
-      state: 'Completed',
-      startTime: '2024-06-02 10:00',
-      endTime: '2024-06-02 10:30',
-      source: 'API',
-      command: 'sync.sh',
-      schedules: 'Weekly',
-      taskId: 'T002',
-      createdDate: '2024-06-02',
-    },
-    {
-      id: '3',
-      workflow: 'Report Generation',
-      Version: 'v1.2',
-      Agent: '',
-      'Agent Group': 'Agent Group A',
-      State: 'Failed',
-      'Start Time': '2024-06-03 07:00',
-      'End Time': '2024-06-03 07:15',
-      Source: 'User',
-      Command: 'report.sh',
-      Schedules: 'Monthly',
-      'Task Id': 'T003',
-      'Created Date': '2024-06-03',
-      'Created By': 'Charlie Le',
-      name: 'Report Generation',
-      type: 'workflow',
-      value: 'v1.2',
-      createdBy: 'Charlie Le',
-      label: '',
-      status: 'Failed',
-      agent: '',
-      agentGroup: 'Agent Group A',
-      state: 'Failed',
-      startTime: '2024-06-03 07:00',
-      endTime: '2024-06-03 07:15',
-      source: 'User',
-      command: 'report.sh',
-      schedules: 'Monthly',
-      taskId: 'T003',
-      createdDate: '2024-06-03',
-    },
-    {
-      id: '4',
-      workflow: 'User Import',
-      Version: 'v3.0',
-      Agent: 'Agent3',
-      'Agent Group': '',
-      State: 'Scheduled',
-      'Start Time': '2024-06-04 12:00',
-      'End Time': '',
-      Source: 'CSV',
-      Command: 'import.sh',
-      Schedules: 'Once',
-      'Task Id': 'T004',
-      'Created Date': '2024-06-04',
-      'Created By': 'Diana Pham',
-      name: 'User Import',
-      type: 'workflow',
-      value: 'v3.0',
-      createdBy: 'Diana Pham',
-      label: 'Agent3',
-      status: 'Scheduled',
-      agent: 'Agent3',
-      agentGroup: '',
-      state: 'Scheduled',
-      startTime: '2024-06-04 12:00',
-      endTime: '',
-      source: 'CSV',
-      command: 'import.sh',
-      schedules: 'Once',
-      taskId: 'T004',
-      createdDate: '2024-06-04',
-    },
-    {
-      id: '5',
-      workflow: 'System Cleanup',
-      Version: 'v2.0',
-      Agent: '',
-      'Agent Group': 'Agent Group B',
-      State: 'Running',
-      'Start Time': '2024-06-05 03:00',
-      'End Time': '',
-      Source: 'System',
-      Command: 'cleanup.sh',
-      Schedules: 'Weekly',
-      'Task Id': 'T005',
-      'Created Date': '2024-06-05',
-      'Created By': 'Evan Vo',
-      name: 'System Cleanup',
-      type: 'workflow',
-      value: 'v2.0',
-      createdBy: 'Evan Vo',
-      label: '',
-      status: 'Running',
-      agent: '',
-      agentGroup: 'Agent Group B',
-      state: 'Running',
-      startTime: '2024-06-05 03:00',
-      endTime: '',
-      source: 'System',
-      command: 'cleanup.sh',
-      schedules: 'Weekly',
-      taskId: 'T005',
-      createdDate: '2024-06-05',
-    },
-  ]
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
 
-  const [data] = useState<OrganizationUnitRow[]>(initialData)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = useState<SortingState>([])
+  const handleSave = async () => {
+    if (!editedName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Organization unit name cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!organizationUnitId) return;
+    if (organizationUnit && editedName.trim() !== organizationUnit.name) {
+      setShowNameChangeWarning(true);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const updated = await organizationUnitApi.update(organizationUnitId, {
+        name: editedName,
+        description: editedDescription,
+      });
+      setOrganizationUnit(updated);
+      setIsEditing(false);
+      toast({
+        title: 'Success',
+        description: 'Organization unit information updated successfully',
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Update failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  // Use the columns from the historical columns as default
-  // Dynamically select columns based on tab
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
-
-  const handleRowClick = (row: OrganizationUnitRow) => {
-    const pathname = window.location.pathname
-    const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin
-      ? `/admin/organizationUnit/${row.id}`
-      : `/[tenant]/organizationUnit/${row.id}`
-    router.push(route)
-  }
+  const handleAcceptNameChange = async () => {
+    if (!organizationUnitId) {
+      toast({
+        title: 'Error',
+        description: 'Organization unit ID is missing. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setPendingSave(true);
+    try {
+      const updated = await organizationUnitApi.update(organizationUnitId, {
+        name: editedName,
+        description: editedDescription,
+      });
+      setOrganizationUnit(updated);
+      setIsEditing(false);
+      setShowNameChangeWarning(false);
+      toast({
+        title: 'Success',
+        description: 'Organization unit information updated successfully',
+      });
+      window.location.href = '/tenant-selector';
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Update failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingSave(false);
+    }
+  };
 
   return (
-    <>
-      <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
-        <>
-          <div className="flex justify-end gap-2">
-            <Button
-              onClick={() => {
-                setIsModalOpen(true)
-              }}
-              className="flex items-center justify-center"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create
-            </Button>
+    <div className="flex justify-center pt-8">
+      <div className="w-full max-w-2xl">
+        <div className="bg-white rounded-2xl shadow border border-gray-200 px-8 py-7">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Organization Unit Information</h2>
+              <div className="text-sm text-gray-400">Details of your organization unit</div>
+            </div>
+            {!isEditing && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
+                onClick={handleEdit}
+              >
+                <Pencil className="h-4 w-4" />
+                Edit Profile
+              </Button>
+            )}
           </div>
-          <DataTableToolbar
-            table={table}
-            statuses={[
-              { value: 'Completed', label: 'Completed' },
-              { value: 'Failed', label: 'Failed' },
-            ]}
-          />
-          <DataTable
-            data={data.filter((d) => d.state === 'Completed' || d.state === 'Failed')}
-            columns={columns}
-            onRowClick={handleRowClick}
-            table={table}
-          />
-        </>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+              {isEditing ? (
+                <Input
+                  value={editedName}
+                  onChange={e => setEditedName(e.target.value)}
+                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  placeholder="Organization unit name"
+                />
+              ) : (
+                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">{organizationUnit?.name}</div>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+              {isEditing ? (
+                <Input
+                  value={editedDescription}
+                  onChange={e => setEditedDescription(e.target.value)}
+                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  placeholder="Organization unit description"
+                />
+              ) : (
+                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">
+                  {organizationUnit?.description || <span className="italic text-gray-400">No description</span>}
+                </div>
+              )}
+            </div>
+          </div>
+          {isEditing && (
+            <div className="flex justify-end gap-2 mt-8">
+              <Button variant="outline" onClick={handleCancel} disabled={isSaving} className="rounded-lg">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="rounded-lg bg-[#FF6A1A] text-white hover:bg-orange-500"
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
+        </div>
+        {/* Name change warning dialog */}
+        <Dialog open={showNameChangeWarning} onOpenChange={setShowNameChangeWarning}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Warning</DialogTitle>
+            </DialogHeader>
+            <div>
+              If you change the name, the tenant will also change, which will result in a changed URL and the Bot agent will be disconnected. Do you still want to proceed?
+            </div>
+            <DialogFooter className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowNameChangeWarning(false)} disabled={pendingSave}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAcceptNameChange}
+                disabled={pendingSave}
+                className="bg-[#FF6A1A] text-white hover:bg-orange-500"
+              >
+                Accept
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      <CreateEditModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-        }}
-      />
-    </>
-  )
+    </div>
+  );
 }
