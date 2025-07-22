@@ -287,13 +287,13 @@ export default function OrganizationUnitProfile() {
   return (
     <div className="flex justify-center pt-8">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-2xl shadow border border-gray-200 px-8 py-7">
+        <div className="bg-background rounded-2xl shadow border border-border px-8 py-7">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Organization Unit Information</h2>
-              <div className="text-sm text-gray-400">Details of your organization unit</div>
+              <h2 className="text-lg font-bold">Organization Unit Information</h2>
+              <div className="text-sm text-muted-foreground">Details of your organization unit</div>
             </div>
-            {!isEditing && (
+            {!isEditing && !showDeletionStatus && (
               <Button
                 variant="outline"
                 size="sm"
@@ -317,8 +317,8 @@ export default function OrganizationUnitProfile() {
           </div>
 
           {showDeletionStatus && (
-            <div className="flex items-center justify-between bg-orange-50 border border-orange-300 rounded-lg px-4 py-3 my-4">
-              <div className="text-orange-700 font-semibold">
+            <div className="flex items-center justify-between dark:bg-orange-950/50 bg-orange-50 border border-orange-300 dark:border-orange-800/50 rounded-lg px-4 py-3 my-4">
+              <div className="text-orange-700 dark:text-orange-400 font-semibold">
                 {(typeof countdown === 'number' && countdown > 0)
                   ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
                   : 'Deleting organization unit...'}
@@ -335,30 +335,30 @@ export default function OrganizationUnitProfile() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">Name</label>
               {isEditing ? (
                 <Input
                   value={editedName}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedName(e.target.value)}
-                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit name"
                 />
               ) : (
-                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">{organizationUnit?.name}</div>
+                <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">{organizationUnit?.name}</div>
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">Description</label>
               {isEditing ? (
                 <Input
                   value={editedDescription}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedDescription(e.target.value)}
-                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit description"
                 />
               ) : (
-                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">
-                  {organizationUnit?.description || <span className="italic text-gray-400">No description</span>}
+                <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">
+                  {organizationUnit?.description || <span className="italic text-muted-foreground">No description</span>}
                 </div>
               )}
             </div>
@@ -409,7 +409,7 @@ export default function OrganizationUnitProfile() {
               <DialogTitle>Confirm Deletion</DialogTitle>
             </DialogHeader>
             <div>
-              Are you sure you want to delete this organization unit? This action cannot be undone.
+              Are you sure you want to delete this organization unit? It will be deleted in 7 days.
             </div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
