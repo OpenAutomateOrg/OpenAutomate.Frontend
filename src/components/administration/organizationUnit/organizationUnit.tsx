@@ -18,6 +18,20 @@ interface OrganizationUnit {
   description: string;
 }
 
+interface DeletionStatusResponse {
+  isPendingDeletion: boolean;
+  scheduledDeletionAt: string;
+  daysUntilDeletion: number;
+  hoursUntilDeletion: number;
+  canCancel: boolean;
+}
+
+interface DeletionStatus {
+  isPendingDeletion: boolean;
+  remainingSeconds: number | null;
+  scheduledDeletionAt: string | null;
+}
+
 export default function OrganizationUnitProfile() {
   const params = useParams();
   const slug = params.tenant as string | undefined;
@@ -156,18 +170,23 @@ export default function OrganizationUnitProfile() {
 
       // Update status immediately and then every second
       const checkStatus = async () => {
-        const status = await organizationUnitApi.getDeletionStatus(organizationUnitId);
-        console.log('Checking status:', status);
-        await mutateDeletionStatus();
+        try {
+          const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
+          const status = result as unknown as DeletionStatusResponse;
+          console.log('Checking status:', status);
 
-        const response = status as any;
-        if (!response.isPendingDeletion) {
-          setTimeout(checkStatus, 1000);
+          if (status.isPendingDeletion) {
+            await mutateDeletionStatus();
+            setTimeout(checkStatus, 1000);
+          }
+        } catch (error) {
+          console.error('Error checking deletion status:', error);
         }
       };
 
-      // Start checking status
+      // Start checking status and trigger initial mutation
       checkStatus();
+      mutateDeletionStatus();
 
       toast({
         title: 'Deletion Requested',
@@ -211,30 +230,31 @@ export default function OrganizationUnitProfile() {
   };
 
   // Fetch deletion status from API
-  const fetchDeletionStatus = async (): Promise<{
-    isPendingDeletion: boolean;
-    remainingSeconds: number | null;
-    scheduledDeletionAt: string | null;
-  }> => {
+  const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
     if (!organizationUnitId) throw new Error('Missing ID');
     const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
-    console.log('API Response:', result); // Log for debugging
 
-    const now = new Date();
-    const scheduledTime = result.scheduledDeletionAt ? new Date(result.scheduledDeletionAt) : null;
-    const diffSeconds = scheduledTime
-      ? Math.max(0, Math.floor((scheduledTime.getTime() - now.getTime()) / 1000))
-      : null;
+    // Cast the result to get type checking
+    const status = result as unknown as DeletionStatusResponse;
+    console.log('API Response:', status);
 
-    // Log for debugging
-    console.log('API Response:', result);
+    // Convert total hours to days and remaining hours
+    const totalDays = Math.floor(status.hoursUntilDeletion / 24);
+    const remainingHours = status.hoursUntilDeletion % 24;
 
-    const response = result as any; // Type assertion to access API keys
+    // Calculate total seconds
+    const totalSeconds = (totalDays * 24 * 3600) + (remainingHours * 3600);
+
+    console.log('Calculated time:', {
+      totalDays,
+      remainingHours,
+      totalSeconds,
+    });
 
     return {
-      isPendingDeletion: response.isPendingDeletion,
-      remainingSeconds: diffSeconds,
-      scheduledDeletionAt: response.scheduledDeletionAt,
+      isPendingDeletion: status.isPendingDeletion,
+      remainingSeconds: totalSeconds,
+      scheduledDeletionAt: status.scheduledDeletionAt,
     };
   };
 
@@ -345,9 +365,10 @@ export default function OrganizationUnitProfile() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1">Name</label>
+              <label htmlFor="ou-name" className="block text-xs font-semibold text-muted-foreground mb-1">Name</label>
               {isEditing ? (
                 <Input
+                  id="ou-name"
                   value={editedName}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedName(e.target.value)}
                   className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
@@ -358,9 +379,10 @@ export default function OrganizationUnitProfile() {
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1">Description</label>
+              <label htmlFor="ou-description" className="block text-xs font-semibold text-muted-foreground mb-1">Description</label>
               {isEditing ? (
                 <Input
+                  id="ou-description"
                   value={editedDescription}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedDescription(e.target.value)}
                   className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
