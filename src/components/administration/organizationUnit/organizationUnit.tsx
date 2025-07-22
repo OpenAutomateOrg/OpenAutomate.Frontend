@@ -168,24 +168,6 @@ export default function OrganizationUnitProfile() {
     try {
       await organizationUnitApi.requestDeletion(organizationUnitId);
 
-      // Update status immediately and then every second
-      const checkStatus = async () => {
-        try {
-          const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
-          const status = result as unknown as DeletionStatusResponse;
-          console.log('Checking status:', status);
-
-          if (status.isPendingDeletion) {
-            await mutateDeletionStatus();
-            setTimeout(checkStatus, 1000);
-          }
-        } catch (error) {
-          console.error('Error checking deletion status:', error);
-        }
-      };
-
-      // Start checking status and trigger initial mutation
-      checkStatus();
       mutateDeletionStatus();
 
       toast({
@@ -242,6 +224,7 @@ export default function OrganizationUnitProfile() {
     const totalHours = status.hoursUntilDeletion + 1;
 
     // Convert total hours to days and remaining hours
+
     //const totalDays = Math.floor(status.hoursUntilDeletion / 24);
     //const remainingHours = status.hoursUntilDeletion % 24;
     const totalDays = Math.floor(totalHours / 24);
@@ -268,7 +251,7 @@ export default function OrganizationUnitProfile() {
     organizationUnitId ? swrKeys.organizationUnitDeletionStatus(organizationUnitId) : null,
     fetchDeletionStatus,
     {
-      refreshInterval: 1000, // Auto refresh every second
+      refreshInterval: 60000, // Only called once every minute
       refreshWhenHidden: true, // Continue refreshing when tab is hidden
     }
   );
@@ -299,22 +282,14 @@ export default function OrganizationUnitProfile() {
   // Format remaining time
   const formatTimeRemaining = (seconds: number): string => {
     if (seconds <= 0) return 'Deleting...';
-
-    // If time is less than or equal to 1 minute, show total seconds
-    if (seconds <= 60) {
-      return `${seconds} second${seconds !== 1 ? 's' : ''}`;
-    }
-
     const days = Math.floor(seconds / (24 * 60 * 60));
     const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
     const minutes = Math.floor((seconds % (60 * 60)) / 60);
-    const remainingSeconds = seconds % 60;
 
     const parts = [];
     if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
     if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
     if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-    parts.push(`${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`);
 
     return parts.join(', ');
   };
