@@ -173,10 +173,15 @@ export default function OrganizationUnitProfile() {
         title: 'Deletion Requested',
         description: 'Organization unit deletion has been initiated.',
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      let message = 'Failed to request deletion.';
+      if (error instanceof Error) {
+        message = error.message;
+      }
+
       toast({
         title: 'Error',
-        description: 'Failed to request deletion.',
+        description: message,
         variant: 'destructive',
       });
     }
@@ -191,10 +196,15 @@ export default function OrganizationUnitProfile() {
         title: 'Deletion Cancelled',
         description: 'Organization unit deletion has been cancelled.',
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      let message = 'Failed to cancel deletion.';
+      if (error instanceof Error) {
+        message = error.message;
+      }
+
       toast({
         title: 'Error',
-        description: 'Failed to cancel deletion.',
+        description: message,
         variant: 'destructive',
       });
     }
