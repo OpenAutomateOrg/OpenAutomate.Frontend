@@ -1,6 +1,7 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react';
+import * as React from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
@@ -8,6 +9,8 @@ import { organizationUnitApi } from '@/lib/api/organization-units';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Pencil } from 'lucide-react';
+import useSWR from 'swr';
+import { swrKeys } from '@/lib/swr-config';
 
 interface OrganizationUnit {
   id: string;
@@ -26,15 +29,17 @@ export default function OrganizationUnitProfile() {
   const [editedDescription, setEditedDescription] = useState('');
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { toast } = useToast();
+  const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Step 1: Get OU id from slug
   useEffect(() => {
     if (!slug) {
       setOrganizationUnitId(null);
       return;
     }
-    organizationUnitApi.getBySlug(slug)
+    organizationUnitApi
+      .getBySlug(slug)
       .then((ou) => {
         setOrganizationUnitId(ou.id);
       })
@@ -43,10 +48,10 @@ export default function OrganizationUnitProfile() {
       });
   }, [slug]);
 
-  // Step 2: Get OU info by id
   useEffect(() => {
     if (!organizationUnitId) return;
-    organizationUnitApi.getById(organizationUnitId)
+    organizationUnitApi
+      .getById(organizationUnitId)
       .then((ou) => {
         setOrganizationUnit(ou);
         setEditedName(ou.name);
@@ -139,6 +144,146 @@ export default function OrganizationUnitProfile() {
     }
   };
 
+  const handleDelete = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!organizationUnitId) return;
+    setShowDeleteConfirmation(false);
+    try {
+      await organizationUnitApi.requestDeletion(organizationUnitId);
+
+      // Update status immediately and then every second
+      const checkStatus = async () => {
+        const status = await organizationUnitApi.getDeletionStatus(organizationUnitId);
+        console.log('Checking status:', status);
+        await mutateDeletionStatus();
+
+        const response = status as any;
+        if (!response.isPendingDeletion) {
+          setTimeout(checkStatus, 1000);
+        }
+      };
+
+      // Start checking status
+      checkStatus();
+
+      toast({
+        title: 'Deletion Requested',
+        description: 'Organization unit deletion has been initiated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to request deletion.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    if (!organizationUnitId) return;
+    try {
+      await organizationUnitApi.cancelDeletion(organizationUnitId);
+      mutateDeletionStatus();
+      toast({
+        title: 'Deletion Cancelled',
+        description: 'Organization unit deletion has been cancelled.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel deletion.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Fetch deletion status from API
+  const fetchDeletionStatus = async (): Promise<{
+    isPendingDeletion: boolean;
+    remainingSeconds: number | null;
+    scheduledDeletionAt: string | null;
+  }> => {
+    if (!organizationUnitId) throw new Error('Missing ID');
+    const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
+    console.log('API Response:', result); // Log for debugging
+
+    const now = new Date();
+    const scheduledTime = result.scheduledDeletionAt ? new Date(result.scheduledDeletionAt) : null;
+    const diffSeconds = scheduledTime
+      ? Math.max(0, Math.floor((scheduledTime.getTime() - now.getTime()) / 1000))
+      : null;
+
+    // Log for debugging
+    console.log('API Response:', result);
+
+    const response = result as any; // Type assertion to access API keys
+
+    return {
+      isPendingDeletion: response.isPendingDeletion,
+      remainingSeconds: diffSeconds,
+      scheduledDeletionAt: response.scheduledDeletionAt,
+    };
+  };
+
+  // SWR hook for automatic status refetching
+  const { data: deletionStatusData, mutate: mutateDeletionStatus } = useSWR(
+    organizationUnitId ? swrKeys.organizationUnitDeletionStatus(organizationUnitId) : null,
+    fetchDeletionStatus,
+    {
+      refreshInterval: 1000, // Auto refresh every second
+      refreshWhenHidden: true, // Continue refreshing when tab is hidden
+    }
+  );
+
+  // Update countdown based on remainingSeconds
+  useEffect(() => {
+    if (!deletionStatusData?.isPendingDeletion) {
+      setCountdown(null);
+      return;
+    }
+
+    // Update countdown from remainingSeconds
+    setCountdown(deletionStatusData.remainingSeconds || 0);
+
+    // Update countdown every second
+    const interval = setInterval(() => {
+      setCountdown(current => {
+        if (current === null || current <= 0) return 0;
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds]);
+
+  const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion);
+
+  // Format remaining time
+  const formatTimeRemaining = (seconds: number): string => {
+    if (seconds <= 0) return 'Deleting...';
+
+    // If time is less than or equal to 1 minute, show total seconds
+    if (seconds <= 60) {
+      return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+    }
+
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    const remainingSeconds = seconds % 60;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    parts.push(`${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`);
+
+    return parts.join(', ');
+  };
+
   return (
     <div className="flex justify-center pt-8">
       <div className="w-full max-w-2xl">
@@ -159,14 +304,42 @@ export default function OrganizationUnitProfile() {
                 Edit Profile
               </Button>
             )}
+            {!isEditing && !showDeletionStatus && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600"
+                onClick={handleDelete}
+              >
+                Delete Organization Unit
+              </Button>
+            )}
           </div>
+
+          {showDeletionStatus && (
+            <div className="flex items-center justify-between bg-orange-50 border border-orange-300 rounded-lg px-4 py-3 my-4">
+              <div className="text-orange-700 font-semibold">
+                {(typeof countdown === 'number' && countdown > 0)
+                  ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
+                  : 'Deleting organization unit...'}
+              </div>
+              <Button
+                variant="outline"
+                className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
+                onClick={handleCancelDeletion}
+              >
+                Cancel Deletion
+              </Button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
               {isEditing ? (
                 <Input
                   value={editedName}
-                  onChange={e => setEditedName(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedName(e.target.value)}
                   className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit name"
                 />
@@ -179,7 +352,7 @@ export default function OrganizationUnitProfile() {
               {isEditing ? (
                 <Input
                   value={editedDescription}
-                  onChange={e => setEditedDescription(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedDescription(e.target.value)}
                   className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit description"
                 />
@@ -190,6 +363,7 @@ export default function OrganizationUnitProfile() {
               )}
             </div>
           </div>
+
           {isEditing && (
             <div className="flex justify-end gap-2 mt-8">
               <Button variant="outline" onClick={handleCancel} disabled={isSaving} className="rounded-lg">
@@ -205,7 +379,7 @@ export default function OrganizationUnitProfile() {
             </div>
           )}
         </div>
-        {/* Name change warning dialog */}
+
         <Dialog open={showNameChangeWarning} onOpenChange={setShowNameChangeWarning}>
           <DialogContent>
             <DialogHeader>
@@ -228,6 +402,27 @@ export default function OrganizationUnitProfile() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+            </DialogHeader>
+            <div>
+              Are you sure you want to delete this organization unit? This action cannot be undone.
+            </div>
+            <DialogFooter className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmDelete} className="bg-red-600 text-white hover:bg-red-700">
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
       </div>
     </div>
   );
