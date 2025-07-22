@@ -238,9 +238,14 @@ export default function OrganizationUnitProfile() {
     const status = result as unknown as DeletionStatusResponse;
     console.log('API Response:', status);
 
+    // Convert to local time by adding 1 hour (timezone difference)
+    const totalHours = status.hoursUntilDeletion + 1;
+
     // Convert total hours to days and remaining hours
-    const totalDays = Math.floor(status.hoursUntilDeletion / 24);
-    const remainingHours = status.hoursUntilDeletion % 24;
+    //const totalDays = Math.floor(status.hoursUntilDeletion / 24);
+    //const remainingHours = status.hoursUntilDeletion % 24;
+    const totalDays = Math.floor(totalHours / 24);
+    const remainingHours = totalHours % 24;
 
     // Calculate total seconds
     const totalSeconds = (totalDays * 24 * 3600) + (remainingHours * 3600);
