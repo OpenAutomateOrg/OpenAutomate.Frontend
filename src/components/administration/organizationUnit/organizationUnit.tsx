@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 import { organizationUnitApi } from '@/lib/api/organization-units';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash } from 'lucide-react';
 import useSWR from 'swr';
 import { swrKeys } from '@/lib/swr-config';
 
@@ -46,6 +46,7 @@ export default function OrganizationUnitProfile() {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { toast } = useToast();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [showCancelDeletionConfirmation, setShowCancelDeletionConfirmation] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -188,7 +189,7 @@ export default function OrganizationUnitProfile() {
     }
   };
 
-  const handleCancelDeletion = async () => {
+  const confirmCancelDeletion = async () => {
     if (!organizationUnitId) return;
     try {
       await organizationUnitApi.cancelDeletion(organizationUnitId);
@@ -202,12 +203,13 @@ export default function OrganizationUnitProfile() {
       if (error instanceof Error) {
         message = error.message;
       }
-
       toast({
         title: 'Error',
         description: message,
         variant: 'destructive',
       });
+    } finally {
+      setShowCancelDeletionConfirmation(false);
     }
   };
 
@@ -220,15 +222,9 @@ export default function OrganizationUnitProfile() {
     const status = result as unknown as DeletionStatusResponse;
     console.log('API Response:', status);
 
-    // Convert to local time by adding 1 hour (timezone difference)
-    const totalHours = status.hoursUntilDeletion + 1;
-
     // Convert total hours to days and remaining hours
-
-    //const totalDays = Math.floor(status.hoursUntilDeletion / 24);
-    //const remainingHours = status.hoursUntilDeletion % 24;
-    const totalDays = Math.floor(totalHours / 24);
-    const remainingHours = totalHours % 24;
+    const totalDays = Math.floor(status.hoursUntilDeletion / 24);
+    const remainingHours = status.hoursUntilDeletion % 24;
 
     // Calculate total seconds
     const totalSeconds = (totalDays * 24 * 3600) + (remainingHours * 3600);
@@ -304,25 +300,26 @@ export default function OrganizationUnitProfile() {
               <div className="text-sm text-muted-foreground">Details of your organization unit</div>
             </div>
             {!isEditing && !showDeletionStatus && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
-                onClick={handleEdit}
-              >
-                <Pencil className="h-4 w-4" />
-                Edit Profile
-              </Button>
-            )}
-            {!isEditing && !showDeletionStatus && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600"
-                onClick={handleDelete}
-              >
-                Delete Organization Unit
-              </Button>
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
+                  onClick={handleEdit}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600"
+                  onClick={handleDelete}
+                >
+                  <Trash className="h-4 w-4 text-red-600" />
+                  Delete
+                </Button>
+              </div>
             )}
           </div>
 
@@ -336,7 +333,7 @@ export default function OrganizationUnitProfile() {
               <Button
                 variant="outline"
                 className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
-                onClick={handleCancelDeletion}
+                onClick={() => setShowCancelDeletionConfirmation(true)}
               >
                 Cancel Deletion
               </Button>
@@ -429,6 +426,25 @@ export default function OrganizationUnitProfile() {
               </Button>
               <Button onClick={handleConfirmDelete} className="bg-red-600 text-white hover:bg-red-700">
                 Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showCancelDeletionConfirmation} onOpenChange={setShowCancelDeletionConfirmation}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancel Deletion</DialogTitle>
+            </DialogHeader>
+            <div>
+              Are you sure you want to cancel the deletion of this organization unit?
+            </div>
+            <DialogFooter className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowCancelDeletionConfirmation(false)}>
+                No
+              </Button>
+              <Button onClick={confirmCancelDeletion} className="bg-[#FF6A1A] text-white hover:bg-orange-500">
+                Cancel Deletion
               </Button>
             </DialogFooter>
           </DialogContent>
