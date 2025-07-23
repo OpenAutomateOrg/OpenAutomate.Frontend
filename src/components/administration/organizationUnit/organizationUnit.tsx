@@ -190,11 +190,6 @@ export default function OrganizationUnitProfile() {
     }
   };
 
-  const handleCancelDeletion = async () => {
-    if (!organizationUnitId) return;
-    setShowCancelDeletionConfirmation(true);
-  };
-
   const confirmCancelDeletion = async () => {
     if (!organizationUnitId) return;
     try {
