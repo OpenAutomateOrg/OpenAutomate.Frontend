@@ -260,20 +260,10 @@ export default function OrganizationUnitProfile() {
       return;
     }
 
-    // Initialize or re-sync countdown with server data
+    // Initialize countdown with server data
     // Use >= 0 to handle case where remainingSeconds is 0
-    if (countdown === null && typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
+    if (typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
       setCountdown(deletionStatusData.remainingSeconds);
-    }
-
-    // Re-sync if there's a significant difference between local countdown and server data
-    // This handles cases where the server data has been updated via SWR refresh
-    if (countdown !== null && typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
-      const timeDifference = Math.abs(countdown - deletionStatusData.remainingSeconds);
-      // Re-sync if difference is more than 5 seconds (allows for normal countdown drift)
-      if (timeDifference > 5) {
-        setCountdown(deletionStatusData.remainingSeconds);
-      }
     }
 
     // Update countdown every second
@@ -285,7 +275,7 @@ export default function OrganizationUnitProfile() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds, countdown]);
+  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds]);
 
   const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion);
 
