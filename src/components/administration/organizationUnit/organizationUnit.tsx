@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
@@ -51,6 +51,7 @@ export default function OrganizationUnitProfile() {
   const { toast } = useToast();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showCancelDeletionConfirmation, setShowCancelDeletionConfirmation] = useState(false);
+  const countdownInitialized = useRef(false);
 
   useEffect(() => {
     if (!slug) {
@@ -257,13 +258,15 @@ export default function OrganizationUnitProfile() {
   useEffect(() => {
     if (!deletionStatusData?.isPendingDeletion) {
       setCountdown(null);
+      countdownInitialized.current = false;
       return;
     }
 
-    // Initialize countdown with server data
+    // Initialize countdown with server data only once per deletion session
     // Use >= 0 to handle case where remainingSeconds is 0
-    if (typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
+    if (!countdownInitialized.current && typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
       setCountdown(deletionStatusData.remainingSeconds);
+      countdownInitialized.current = true;
     }
 
     // Update countdown every second
@@ -275,7 +278,7 @@ export default function OrganizationUnitProfile() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds]);
+  }, [deletionStatusData?.isPendingDeletion]);
 
   const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion);
 
