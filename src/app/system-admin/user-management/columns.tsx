@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -50,8 +50,6 @@ export const userColumns: ColumnDef<User>[] = [
               onClick={() => console.log('Delete user:', user.id)}
               className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
             >
-              <Trash2 className="mr-2 h-4 w-4 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" />
-              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -79,7 +77,7 @@ export const userColumns: ColumnDef<User>[] = [
     accessorKey: 'systemRole',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
     cell: ({ row }) => {
-      const role = row.getValue('systemRole') as string | number
+      const role = row.getValue('systemRole')
       // Handle both string and numeric role values safely
       const isAdmin = role === 'Admin' || role === 1
 
