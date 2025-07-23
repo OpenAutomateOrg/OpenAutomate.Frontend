@@ -30,6 +30,7 @@ interface DeletionStatus {
   isPendingDeletion: boolean;
   remainingSeconds: number | null;
   scheduledDeletionAt: string | null;
+  canCancel: boolean;
 }
 
 export default function OrganizationUnitProfile() {
@@ -189,6 +190,11 @@ export default function OrganizationUnitProfile() {
     }
   };
 
+  const handleCancelDeletion = async () => {
+    if (!organizationUnitId) return;
+    setShowCancelDeletionConfirmation(true);
+  };
+
   const confirmCancelDeletion = async () => {
     if (!organizationUnitId) return;
     try {
@@ -217,28 +223,15 @@ export default function OrganizationUnitProfile() {
   const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
     if (!organizationUnitId) throw new Error('Missing ID');
     const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
-
-    // Cast the result to get type checking
+    // result may have isPendingDeletion, daysUntilDeletion, hoursUntilDeletion, canCancel, scheduledDeletionAt
     const status = result as unknown as DeletionStatusResponse;
-    console.log('API Response:', status);
-
-    // Convert total hours to days and remaining hours
-    const totalDays = Math.floor(status.hoursUntilDeletion / 24);
-    const remainingHours = status.hoursUntilDeletion % 24;
-
-    // Calculate total seconds
-    const totalSeconds = (totalDays * 24 * 3600) + (remainingHours * 3600);
-
-    console.log('Calculated time:', {
-      totalDays,
-      remainingHours,
-      totalSeconds,
-    });
-
+    // Calculate remainingSeconds from hoursUntilDeletion
+    const remainingSeconds = typeof status.hoursUntilDeletion === 'number' ? status.hoursUntilDeletion * 3600 : null;
     return {
       isPendingDeletion: status.isPendingDeletion,
-      remainingSeconds: totalSeconds,
+      remainingSeconds,
       scheduledDeletionAt: status.scheduledDeletionAt,
+      canCancel: status.canCancel,
     };
   };
 
@@ -313,7 +306,7 @@ export default function OrganizationUnitProfile() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600"
+                  className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600 hover:text-red-600"
                   onClick={handleDelete}
                 >
                   <Trash className="h-4 w-4 text-red-600" />
@@ -330,13 +323,15 @@ export default function OrganizationUnitProfile() {
                   ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
                   : 'Deleting organization unit...'}
               </div>
-              <Button
-                variant="outline"
-                className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
-                onClick={() => setShowCancelDeletionConfirmation(true)}
-              >
-                Cancel Deletion
-              </Button>
+              {deletionStatusData?.canCancel && (
+                <Button
+                  variant="outline"
+                  className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
+                  onClick={() => setShowCancelDeletionConfirmation(true)}
+                >
+                  Cancel Deletion
+                </Button>
+              )}
             </div>
           )}
 
