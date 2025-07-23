@@ -19,11 +19,14 @@ interface OrganizationUnit {
 }
 
 interface DeletionStatusResponse {
-  isPendingDeletion: boolean;
-  scheduledDeletionAt: string;
-  daysUntilDeletion: number;
-  hoursUntilDeletion: number;
-  canCancel: boolean;
+  // Handle both possible API response formats
+  isPendingDeletion?: boolean;
+  isDeletionPending?: boolean;
+  scheduledDeletionAt: string | null;
+  daysUntilDeletion?: number;
+  hoursUntilDeletion?: number;
+  remainingSeconds?: number | null;
+  canCancel?: boolean;
 }
 
 interface DeletionStatus {
@@ -190,6 +193,11 @@ export default function OrganizationUnitProfile() {
     }
   };
 
+  const handleCancelDeletion = async () => {
+    if (!organizationUnitId) return;
+    setShowCancelDeletionConfirmation(true);
+  };
+
   const confirmCancelDeletion = async () => {
     if (!organizationUnitId) return;
     try {
@@ -218,15 +226,25 @@ export default function OrganizationUnitProfile() {
   const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
     if (!organizationUnitId) throw new Error('Missing ID');
     const result = await organizationUnitApi.getDeletionStatus(organizationUnitId);
-    // result may have isPendingDeletion, daysUntilDeletion, hoursUntilDeletion, canCancel, scheduledDeletionAt
+    // Handle both possible API response formats
     const status = result as unknown as DeletionStatusResponse;
-    // Calculate remainingSeconds from hoursUntilDeletion
-    const remainingSeconds = typeof status.hoursUntilDeletion === 'number' ? status.hoursUntilDeletion * 3600 : null;
+
+    // Determine deletion pending status (handle both property names)
+    const isPendingDeletion = status.isPendingDeletion ?? status.isDeletionPending ?? false;
+
+    // Calculate remainingSeconds (prefer direct value, fallback to calculation from hours)
+    let remainingSeconds: number | null = null;
+    if (typeof status.remainingSeconds === 'number') {
+      remainingSeconds = status.remainingSeconds;
+    } else if (typeof status.hoursUntilDeletion === 'number') {
+      remainingSeconds = status.hoursUntilDeletion * 3600;
+    }
+
     return {
-      isPendingDeletion: status.isPendingDeletion,
+      isPendingDeletion,
       remainingSeconds,
       scheduledDeletionAt: status.scheduledDeletionAt,
-      canCancel: status.canCancel,
+      canCancel: status.canCancel ?? false,
     };
   };
 
