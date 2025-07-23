@@ -260,19 +260,21 @@ export default function OrganizationUnitProfile() {
       return;
     }
 
-    // Update countdown from remainingSeconds
-    setCountdown(deletionStatusData.remainingSeconds || 0);
+    // Only initialize countdown if we don't have one running
+    if (countdown === null && deletionStatusData.remainingSeconds) {
+      setCountdown(deletionStatusData.remainingSeconds);
+    }
 
     // Update countdown every second
     const interval = setInterval(() => {
-      setCountdown(current => {
+      setCountdown((current: number | null) => {
         if (current === null || current <= 0) return 0;
         return current - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds]);
+  }, [deletionStatusData?.isPendingDeletion]); // Only depend on isPendingDeletion, not remainingSeconds
 
   const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion);
 
@@ -282,11 +284,13 @@ export default function OrganizationUnitProfile() {
     const days = Math.floor(seconds / (24 * 60 * 60));
     const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
     const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    const remainingSeconds = seconds % 60;
 
     const parts = [];
     if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
     if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
     if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    if (remainingSeconds > 0 && parts.length === 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`);
 
     return parts.join(', ');
   };
