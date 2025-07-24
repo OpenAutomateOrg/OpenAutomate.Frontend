@@ -50,6 +50,61 @@ interface StatCardProps {
   readonly isLoading: boolean
 }
 
+// Loading component
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center h-full py-10">
+      <div className="animate-spin text-primary">
+        <RefreshCw className="h-10 w-10" />
+      </div>
+    </div>
+  )
+}
+
+// Error component
+function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
+  return (
+    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+      <p className="text-red-800 dark:text-red-300">Failed to load organization unit details.</p>
+      <Button variant="outline" className="mt-2" onClick={onRetry}>
+        Retry
+      </Button>
+    </div>
+  )
+}
+
+// Deletion status banner component
+function DeletionStatusBanner({
+  countdown,
+  deletionStatusData,
+  onCancelClick,
+  formatTimeRemaining
+}: {
+  readonly countdown: number | null
+  readonly deletionStatusData: DeletionStatus | undefined
+  readonly onCancelClick: () => void
+  readonly formatTimeRemaining: (seconds: number) => string
+}) {
+  return (
+    <div className="flex items-center justify-between dark:bg-orange-950/50 bg-orange-50 border border-orange-300 dark:border-orange-800/50 rounded-lg px-4 py-3">
+      <div className="text-orange-700 dark:text-orange-400 font-semibold">
+        {(typeof countdown === 'number' && countdown > 0)
+          ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
+          : 'Deleting organization unit...'}
+      </div>
+      {deletionStatusData?.canCancel && (
+        <Button
+          variant="outline"
+          className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
+          onClick={onCancelClick}
+        >
+          Cancel Deletion
+        </Button>
+      )}
+    </div>
+  )
+}
+
 // Component for displaying statistics cards
 function StatCard({ title, count, icon, isLoading }: StatCardProps) {
   return (
@@ -73,26 +128,78 @@ function StatCard({ title, count, icon, isLoading }: StatCardProps) {
   )
 }
 
-export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailProps) {
-  const router = useRouter()
-  const params = useParams()
-  const tenant = params?.tenant as string
-  const { toast } = useToast()
-
-  // Delete state
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
-  // State for countdown and cancel deletion
-  const [showCancelDeletionDialog, setShowCancelDeletionDialog] = useState(false)
-  const [isRequestingDeletion, setIsRequestingDeletion] = useState(false)
-  const [isCancellingDeletion, setIsCancellingDeletion] = useState(false)
+// Custom hook for deletion status and countdown
+function useDeletionStatus(id: string) {
   const countdownInitialized = useRef(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
 
-  // Memoized fetcher functions to prevent re-renders
+  // Fetch deletion status from API
+  const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
+    if (!id) throw new Error('Missing ID');
+    const result = await organizationUnitApi.getDeletionStatus(id);
+    const status = result as DeletionStatus;
+
+    const isPendingDeletion = status.isPendingDeletion ?? status.isDeletionPending ?? false;
+
+    let remainingSeconds: number | null = null;
+    if (typeof status.remainingSeconds === 'number') {
+      remainingSeconds = status.remainingSeconds;
+    } else if (typeof status.hoursUntilDeletion === 'number') {
+      remainingSeconds = status.hoursUntilDeletion * 3600;
+    }
+
+    return {
+      isPendingDeletion,
+      remainingSeconds,
+      scheduledDeletionAt: status.scheduledDeletionAt,
+      canCancel: status.canCancel ?? false,
+    };
+  };
+
+  const { data: deletionStatusData, mutate: mutateDeletionStatus } = useSWR(
+    id ? swrKeys.organizationUnitDeletionStatus(id) : null,
+    fetchDeletionStatus,
+    {
+      refreshInterval: 60000,
+      refreshWhenHidden: true,
+    }
+  )
+
+  // Countdown effect
+  useEffect(() => {
+    if (!deletionStatusData?.isPendingDeletion) {
+      setCountdown(null)
+      countdownInitialized.current = false
+      return
+    }
+
+    if (!countdownInitialized.current && typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
+      setCountdown(deletionStatusData.remainingSeconds)
+      countdownInitialized.current = true
+    }
+
+    const interval = setInterval(() => {
+      setCountdown(current => {
+        if (current === null || current <= 0) return 0
+        return current - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds])
+
+  return {
+    deletionStatusData,
+    mutateDeletionStatus,
+    countdown,
+    showDeletionStatus: Boolean(deletionStatusData?.isPendingDeletion)
+  }
+}
+
+// Custom hook for organization unit data
+function useOrganizationUnitData(id: string) {
   const fetchOrgUnit = useCallback(async () => {
     if (!id) return Promise.reject(new Error('No ID provided'))
 
-    // For system admin, use admin API to get all org units and find the specific one
     try {
       const allOrgUnits = await adminApi.getAllOrganizationUnits()
       const orgUnit = allOrgUnits.find((unit) => unit.id === id)
@@ -102,11 +209,15 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
       return orgUnit
     } catch (error) {
       console.error('Failed to fetch organization unit via admin API, trying regular API:', error)
-      // Fallback to regular API if admin API fails
       return organizationUnitApi.getById(id)
     }
   }, [id])
 
+  return useSWR(id ? `organization-unit-${id}` : null, fetchOrgUnit)
+}
+
+// Custom hook for fetching statistics data
+function useStatisticsData(tenant: string) {
   const fetchAgentsCount = useCallback(async () => {
     const agents = await getAllBotAgents()
     return { length: agents.length, data: agents }
@@ -134,14 +245,6 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
     return { length: roles.length, data: roles }
   }, [tenant])
 
-  // ✅ SWR for organization unit data
-  const {
-    data: orgUnit,
-    error: orgError,
-    isLoading: orgLoading,
-  } = useSWR(id ? `organization-unit-${id}` : null, fetchOrgUnit)
-
-  // ✅ SWR for counts
   const { data: agentsData, isLoading: agentsLoading } = useSWR(
     tenant ? `agents-count-${tenant}` : null,
     fetchAgentsCount,
@@ -167,69 +270,48 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
     fetchRolesCount,
   )
 
-  // Fetch deletion status from API
-  const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
-    if (!id) throw new Error('Missing ID');
-    const result = await organizationUnitApi.getDeletionStatus(id);
-    // Handle both possible API response formats
-    const status = result as DeletionStatus;
+  return {
+    agentsData,
+    agentsLoading,
+    assetsData,
+    assetsLoading,
+    packagesData,
+    packagesLoading,
+    usersData,
+    usersLoading,
+    rolesData,
+    rolesLoading,
+  }
+}
 
-    // Determine deletion pending status (handle both property names)
-    const isPendingDeletion = status.isPendingDeletion ?? status.isDeletionPending ?? false;
+export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailProps) {
+  const router = useRouter()
+  const params = useParams()
+  const tenant = params?.tenant as string
+  const { toast } = useToast()
 
-    // Calculate remainingSeconds (prefer direct value, fallback to calculation from hours)
-    let remainingSeconds: number | null = null;
-    if (typeof status.remainingSeconds === 'number') {
-      remainingSeconds = status.remainingSeconds;
-    } else if (typeof status.hoursUntilDeletion === 'number') {
-      remainingSeconds = status.hoursUntilDeletion * 3600;
-    }
+  // Use custom hooks
+  const { data: orgUnit, error: orgError, isLoading: orgLoading } = useOrganizationUnitData(id)
+  const {
+    agentsData,
+    agentsLoading,
+    assetsData,
+    assetsLoading,
+    packagesData,
+    packagesLoading,
+    usersData,
+    usersLoading,
+    rolesData,
+    rolesLoading,
+  } = useStatisticsData(tenant)
 
-    return {
-      isPendingDeletion,
-      remainingSeconds,
-      scheduledDeletionAt: status.scheduledDeletionAt,
-      canCancel: status.canCancel ?? false,
-    };
-  };
+  const { deletionStatusData, mutateDeletionStatus, countdown, showDeletionStatus } = useDeletionStatus(id)
 
-  // SWR hook for automatic status refetching
-  const { data: deletionStatusData, mutate: mutateDeletionStatus } = useSWR(
-    id ? swrKeys.organizationUnitDeletionStatus(id) : null,
-    fetchDeletionStatus,
-    {
-      refreshInterval: 60000, // Only called once every minute
-      refreshWhenHidden: true, // Continue refreshing when tab is hidden
-    }
-  )
-
-  // Countdown effect - fixed to prevent reset every 60 seconds
-  const [countdown, setCountdown] = useState<number | null>(null)
-  useEffect(() => {
-    if (!deletionStatusData?.isPendingDeletion) {
-      setCountdown(null)
-      countdownInitialized.current = false
-      return
-    }
-
-    // Initialize countdown with server data only once per deletion session
-    // Use >= 0 to handle case where remainingSeconds is 0
-    if (!countdownInitialized.current && typeof deletionStatusData.remainingSeconds === 'number' && deletionStatusData.remainingSeconds >= 0) {
-      setCountdown(deletionStatusData.remainingSeconds)
-      countdownInitialized.current = true
-    }
-
-    // Update countdown every second
-    const interval = setInterval(() => {
-      setCountdown(current => {
-        if (current === null || current <= 0) return 0
-        return current - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds])
-
-  const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion)
+  // Delete state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showCancelDeletionDialog, setShowCancelDeletionDialog] = useState(false)
+  const [isRequestingDeletion, setIsRequestingDeletion] = useState(false)
+  const [isCancellingDeletion, setIsCancellingDeletion] = useState(false)
 
   // ✅ Handle SWR errors
   useEffect(() => {
@@ -282,7 +364,7 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
   }
 
   // Format remaining time
-  const formatTimeRemaining = (seconds: number): string => {
+  const formatTimeRemaining = useCallback((seconds: number): string => {
     if (seconds <= 0) return 'Deleting...';
     const days = Math.floor(seconds / (24 * 60 * 60));
     const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
@@ -296,32 +378,11 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
     if (remainingSeconds > 0 && parts.length === 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`);
 
     return parts.join(', ');
-  };
+  }, []);
 
-  if (orgLoading) {
-    return (
-      <div className="flex items-center justify-center h-full py-10">
-        <div className="animate-spin text-primary">
-          <RefreshCw className="h-10 w-10" />
-        </div>
-      </div>
-    )
-  }
-
-  if (orgError) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-        <p className="text-red-800 dark:text-red-300">Failed to load organization unit details.</p>
-        <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    )
-  }
-
-  if (!orgUnit) {
-    return <div>Organization unit not found</div>
-  }
+  if (orgLoading) return <LoadingState />
+  if (orgError) return <ErrorState onRetry={() => window.location.reload()} />
+  if (!orgUnit) return <div>Organization unit not found</div>
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -340,22 +401,12 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           {showDeletionStatus && (
-            <div className="flex items-center justify-between dark:bg-orange-950/50 bg-orange-50 border border-orange-300 dark:border-orange-800/50 rounded-lg px-4 py-3">
-              <div className="text-orange-700 dark:text-orange-400 font-semibold">
-                {(typeof countdown === 'number' && countdown > 0)
-                  ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
-                  : 'Deleting organization unit...'}
-              </div>
-              {deletionStatusData?.canCancel && (
-                <Button
-                  variant="outline"
-                  className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
-                  onClick={() => setShowCancelDeletionDialog(true)}
-                >
-                  Cancel Deletion
-                </Button>
-              )}
-            </div>
+            <DeletionStatusBanner
+              countdown={countdown}
+              deletionStatusData={deletionStatusData}
+              onCancelClick={() => setShowCancelDeletionDialog(true)}
+              formatTimeRemaining={formatTimeRemaining}
+            />
           )}
           {/* Organization Unit Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
