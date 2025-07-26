@@ -6,7 +6,6 @@ import { columns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
-import { CreateEditModal } from './create-edit-modal'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
@@ -47,7 +46,6 @@ function OrganizationUnitAdminInterfaceContent() {
   const [data, setData] = useState<OrganizationUnit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [isPending, setIsPending] = useState(false)
@@ -438,6 +436,9 @@ function OrganizationUnitAdminInterfaceContent() {
                   size: size.toString(),
                   page: (newPageIndex + 1).toString(),
                 })
+
+                // Reset the changing page size state
+                setTimeout(() => setIsChangingPageSize(false), 100)
               }}
             />
 
@@ -449,13 +450,6 @@ function OrganizationUnitAdminInterfaceContent() {
           </CardContent>
         </Card>
       </div>
-
-      <CreateEditModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-        }}
-      />
     </div>
   )
 }
