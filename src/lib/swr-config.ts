@@ -58,7 +58,6 @@ export const swrKeys = {
 
   // Organization Units
   organizationUnits: () => ['organization-units'] as const,
-  organizationUnitDeletionStatus: (id: string) => ['organization-units', id, 'deletion-status'] as const,
 
   // Assets
   assets: () => ['assets'] as const,
