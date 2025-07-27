@@ -37,5 +37,7 @@ export function RoleBasedContent({
   if (isLoading || !user) return fallback
 
   // Render content based on user's system role
-  return user.systemRole === SystemRole.Admin ? adminContent : userContent
+  return user.systemRole === SystemRole.Admin || user.systemRole === 'Admin'
+    ? adminContent
+    : userContent
 }

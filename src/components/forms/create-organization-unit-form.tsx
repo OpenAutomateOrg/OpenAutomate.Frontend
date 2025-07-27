@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { organizationUnitApi } from '@/lib/api/organization-units'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 // Form validation schema
 const formSchema = z.object({
@@ -67,7 +67,7 @@ export function CreateOrganizationUnitForm({
         onSuccess(result.slug)
       } else {
         // If no callback is provided, redirect to the new org dashboard
-        router.push(`/${result.slug}/dashboard`)
+        router.push(`/${result.slug}/tenant-selector`)
       }
     } catch (err: unknown) {
       console.error('Organization unit creation failed', err)

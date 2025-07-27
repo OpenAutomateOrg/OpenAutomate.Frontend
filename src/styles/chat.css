@@ -166,7 +166,9 @@
 .n8n-chat__window {
   animation: chatFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border: none !important;
-  box-shadow: 0 10px 40px oklch(0 0 0 / 15%), 0 4px 16px oklch(0 0 0 / 10%) !important;
+  box-shadow:
+    0 10px 40px oklch(0 0 0 / 15%),
+    0 4px 16px oklch(0 0 0 / 10%) !important;
   border-radius: var(--chat--border-radius) !important;
   overflow: hidden !important;
 }

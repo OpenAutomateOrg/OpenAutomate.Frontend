@@ -38,7 +38,7 @@ export default function DataTableRowAction({
   schedule,
   onDeleted,
   onToggleEnabled,
-  onEdit
+  onEdit,
 }: DataTableRowActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)

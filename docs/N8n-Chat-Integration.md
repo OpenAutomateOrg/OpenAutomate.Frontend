@@ -38,6 +38,7 @@ NEXT_PUBLIC_N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/chat
 ### 3. Verification
 
 The chat widget will automatically appear in the bottom-right corner when:
+
 - User is authenticated
 - User is within a tenant context (on `/[tenant]/*` routes)
 - Webhook URL is configured
@@ -56,26 +57,30 @@ interface TenantChatConfig {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   chatConfig?: {
     // Window configuration
-    width?: string                    // Default: '420px'
-    height?: string                   // Default: '650px'
-    
+    width?: string // Default: '420px'
+    height?: string // Default: '650px'
+
     // n8n chat specific options
-    mode?: 'window' | 'fullscreen'    // Default: 'window'
-    chatInputKey?: string             // Default: 'chatInput'
-    chatSessionKey?: string           // Default: 'sessionId'
-    loadPreviousSession?: boolean     // Default: true
-    metadata?: Record<string, any>    // Rich business context
-    showWelcomeScreen?: boolean       // Default: false
-    defaultLanguage?: string          // Default: 'en'
-    initialMessages?: string[]        // Personalized welcome messages
-    i18n?: Record<string, {           // Full internationalization
-      title: string
-      subtitle: string
-      footer: string
-      getStarted: string
-      inputPlaceholder: string
-      closeButtonTooltip: string
-    }>
+    mode?: 'window' | 'fullscreen' // Default: 'window'
+    chatInputKey?: string // Default: 'chatInput'
+    chatSessionKey?: string // Default: 'sessionId'
+    loadPreviousSession?: boolean // Default: true
+    metadata?: Record<string, any> // Rich business context
+    showWelcomeScreen?: boolean // Default: false
+    defaultLanguage?: string // Default: 'en'
+    initialMessages?: string[] // Personalized welcome messages
+    i18n?: Record<
+      string,
+      {
+        // Full internationalization
+        title: string
+        subtitle: string
+        footer: string
+        getStarted: string
+        inputPlaceholder: string
+        closeButtonTooltip: string
+      }
+    >
     // Webhook configuration
     webhookConfig?: {
       method?: 'POST' | 'GET'
@@ -276,9 +281,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   return (
     <TenantGuard>
       <ChatProvider>
-        <div className="[--header-height:calc(theme(spacing.14))]">
-          {children}
-        </div>
+        <div className="[--header-height:calc(theme(spacing.14))]">{children}</div>
       </ChatProvider>
     </TenantGuard>
   )
@@ -303,29 +306,29 @@ export function CustomChatImplementation() {
         loadPreviousSession: true,
         showWelcomeScreen: false,
         metadata: {
-          customContext: 'additional-business-data'
+          customContext: 'additional-business-data',
         },
         webhookConfig: {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Custom-Header': 'value'
-          }
+            'X-Custom-Header': 'value',
+          },
         },
         initialMessages: [
           'Welcome to support!',
-          'How can I help you with your automation workflows?'
+          'How can I help you with your automation workflows?',
         ],
         i18n: {
           en: {
             title: 'Custom Support',
-            subtitle: 'We\'re here to help',
+            subtitle: "We're here to help",
             footer: 'Powered by OpenAutomate',
             getStarted: 'Start Chat',
             inputPlaceholder: 'Type your message...',
-            closeButtonTooltip: 'Close chat window'
-          }
-        }
+            closeButtonTooltip: 'Close chat window',
+          },
+        },
       }}
     />
   )
@@ -339,7 +342,7 @@ import { useTenantChat } from '@/hooks/use-tenant-chat'
 
 export function ChatStatus() {
   const { config, tenantInfo, isEnabled, toggleChat } = useTenantChat()
-  
+
   return (
     <div className="space-y-4">
       <div>
@@ -348,15 +351,13 @@ export function ChatStatus() {
         <p>In Tenant Context: {tenantInfo.isInTenant ? 'Yes' : 'No'}</p>
         <p>Chat Enabled: {isEnabled ? 'Yes' : 'No'}</p>
       </div>
-      
+
       <div>
         <h3>Current Configuration</h3>
         <pre>{JSON.stringify(config, null, 2)}</pre>
       </div>
-      
-      <button onClick={toggleChat}>
-        {isEnabled ? 'Disable' : 'Enable'} Chat
-      </button>
+
+      <button onClick={toggleChat}>{isEnabled ? 'Disable' : 'Enable'} Chat</button>
     </div>
   )
 }
@@ -414,12 +415,14 @@ const config: TenantChatConfig = useTenantChat().config
 ### Common Issues
 
 1. **Chat not appearing**
+
    - Check user authentication status
    - Verify tenant context (must be on `/[tenant]/*` route)
    - Confirm webhook URL is configured
    - Check browser console for errors
 
 2. **Context not reaching n8n**
+
    - Verify payload structure in browser network tab
    - Check n8n workflow Chat Trigger configuration
    - Test with simple workflow to isolate issues
@@ -467,21 +470,24 @@ Check the Debug node output to see the complete payload structure.
 ### To Clean Three-Field Payload
 
 **Previous Implementation (Query Parameters):**
+
 ```
 URL: https://webhook.com/chat?tenant=fpt-education&email=user@domain.com
 ```
 
 **Previous Implementation (Separate Payload Fields):**
+
 ```json
 {
   "chatInput": "user message",
-  "tenant-slug": "fpt-education", 
+  "tenant-slug": "fpt-education",
   "email": "user@domain.com",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 **Current Implementation (Clean Three Fields):**
+
 ```json
 {
   "sessionId": "abc123",
@@ -493,6 +499,7 @@ URL: https://webhook.com/chat?tenant=fpt-education&email=user@domain.com
 ### Updating N8n Workflows
 
 **Old way (query parameters):**
+
 ```javascript
 const tenant = $request.query.tenant
 const email = $request.query.email
@@ -500,6 +507,7 @@ const userMessage = $request.query.message
 ```
 
 **Old way (separate payload fields):**
+
 ```javascript
 const tenant = $json['tenant-slug']
 const email = $json.email
@@ -508,6 +516,7 @@ const userMessage = $json.chatInput
 ```
 
 **New way (clean payload):**
+
 ```javascript
 // Direct access to clean fields
 const userMessage = $json.chatInput
@@ -526,5 +535,7 @@ const action = $json.action
 ## API Reference
 
 ### useTenantChat Hook
+
+```
 
 ```

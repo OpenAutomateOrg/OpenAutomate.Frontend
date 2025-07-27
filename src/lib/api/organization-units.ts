@@ -27,7 +27,10 @@ export const organizationUnitApi = {
     return response
   },
   // Update an organization unit by ID
-  update: async (id: string, data: { name: string; description?: string }): Promise<OrganizationUnit> => {
+  update: async (
+    id: string,
+    data: { name: string; description?: string },
+  ): Promise<OrganizationUnit> => {
     const response = await api.put<OrganizationUnit>(`/api/ou/${id}`, data)
     return response
   },

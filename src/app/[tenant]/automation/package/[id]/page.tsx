@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import PackageDetail from '@/components/automation/package/packageDetail'
+import PackageDetail from '@/components/automation/package/package-detail'
 
 export const metadata: Metadata = {
   title: 'Package Details',

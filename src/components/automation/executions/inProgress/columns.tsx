@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import ExecutionStatusBadge from '../ExecutionStatusBadge'
+import ExecutionStatusBadge from '../execution-status-badge'
 import DataTableRowAction from './data-table-row-actions'
 
 interface CreateInProgressColumnsProps {

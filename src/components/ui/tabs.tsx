@@ -4,7 +4,7 @@ import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/utils'
 
 interface TabsProps extends React.ComponentProps<typeof TabsPrimitive.Root> {
   // If true, will sync tab state with URL search params

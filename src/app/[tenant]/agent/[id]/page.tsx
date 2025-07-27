@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import AgentDetail from '@/components/agent/agentDetail'
+import AgentDetail from '@/components/agent/agent-detail'
 
 export default function Page() {
   const params = useParams()
