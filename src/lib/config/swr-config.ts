@@ -79,6 +79,9 @@ export const swrKeys = {
   schedulesWithOData: (options?: Record<string, unknown>) =>
     ['schedules', 'odata', options] as const,
   scheduleById: (id: string) => ['schedules', id] as const,
+
+  // Subscription
+  subscription: () => ['subscription'] as const,
 }
 
 /**

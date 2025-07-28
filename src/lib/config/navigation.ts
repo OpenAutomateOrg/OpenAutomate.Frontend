@@ -160,6 +160,14 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
           level: Permissions.UPDATE,
         },
       },
+      {
+        title: 'Subscription',
+        url: createTenantUrl('/administration/subscription'),
+        permission: {
+          resource: Resources.ORGANIZATION_UNIT,
+          level: Permissions.VIEW,
+        },
+      },
     ],
   },
 ]

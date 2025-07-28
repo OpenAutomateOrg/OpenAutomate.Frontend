@@ -10,6 +10,7 @@ import { NavOrganization } from './nav-organization'
 import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
 import { RoleBasedContent } from '@/components/auth/role-based-content'
+import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus'
 import { useAuth } from '@/hooks/use-auth'
 
 // Import navigation configuration
@@ -130,6 +131,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           userContent={<NavMain items={navigationItems.user} />}
           fallback={<NavMain items={navigationItems.user} />}
         />
+
+        {/* Subscription status - only show for regular users with tenant context */}
+        {!isSystemAdmin && tenant && (
+          <div className="px-3 py-2">
+            <SubscriptionStatus />
+          </div>
+        )}
 
         <NavSecondary items={secondaryNavItems} className="mt-auto" />
       </SidebarContent>

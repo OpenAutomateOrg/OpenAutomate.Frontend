@@ -81,6 +81,7 @@ export interface UserProfile {
   lastName: string
   systemRole: SystemRole
   organizationUnits: OrganizationUnitPermissions[]
+  hasUsedTrial: boolean
 }
 
 export interface LoginRequest {
