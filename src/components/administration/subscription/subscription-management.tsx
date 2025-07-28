@@ -21,6 +21,65 @@ import {
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
 
+// Helper function to render trial management content
+const renderTrialManagement = (
+  subscription: { hasSubscription?: boolean; isEligibleForTrial?: boolean } | null, 
+  userProfile: { hasUsedTrial?: boolean } | null, 
+  isStartingTrial: boolean, 
+  handleStartTrial: () => void
+) => {
+  const hasSubscription = subscription?.hasSubscription
+  const isEligibleForTrial = subscription?.isEligibleForTrial
+  const hasUsedTrial = userProfile?.hasUsedTrial
+
+  if (!hasSubscription && isEligibleForTrial) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          You can start a free trial to explore all premium features.
+        </p>
+        <Button 
+          onClick={handleStartTrial} 
+          disabled={isStartingTrial}
+          className="w-full transition-all duration-200"
+        >
+          {isStartingTrial ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Activating Trial...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Start Free Trial
+            </>
+          )}
+        </Button>
+      </div>
+    )
+  }
+
+  if (!hasSubscription) {
+    const message = hasUsedTrial 
+      ? 'You have already used your free trial. Upgrade to continue using premium features.'
+      : 'Free trial is only available on your first organization unit. Upgrade to access premium features.'
+    
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">{message}</p>
+        <Button className="w-full">Upgrade to Premium</Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-center py-4">
+      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+      <p className="text-sm text-muted-foreground">You have an active subscription</p>
+    </div>
+  )
+}
+
 export default function SubscriptionManagement() {
   const { userProfile } = useAuth()
   const { subscription, isLoading, mutate } = useSubscription()
@@ -241,47 +300,7 @@ export default function SubscriptionManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!subscription?.hasSubscription && subscription?.isEligibleForTrial ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  You can start a free trial to explore all premium features.
-                </p>
-                <Button 
-                  onClick={handleStartTrial} 
-                  disabled={isStartingTrial}
-                  className="w-full transition-all duration-200"
-                >
-                  {isStartingTrial ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Activating Trial...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Start Free Trial
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : !subscription?.hasSubscription ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {userProfile?.hasUsedTrial 
-                    ? 'You have already used your free trial. Upgrade to continue using premium features.'
-                    : 'Free trial is only available on your first organization unit. Upgrade to access premium features.'
-                  }
-                </p>
-                <Button className="w-full">
-                  Upgrade to Premium
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">You have an active subscription</p>
-              </div>
-            )}
+            {renderTrialManagement(subscription, userProfile, isStartingTrial, handleStartTrial)}
           </CardContent>
         </Card>
       </div>
