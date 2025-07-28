@@ -5,7 +5,7 @@
 
 // Import browser-safe localStorage utility
 import { getAuthToken, setAuthToken } from '@/lib/auth/token-storage'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 type ApiError = {
   message: string

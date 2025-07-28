@@ -16,10 +16,8 @@ import { useTenantChat } from '@/hooks/use-tenant-chat'
 export function ChatSettings() {
   const { toast } = useToast()
   const { config, tenantInfo, isEnabled, enableChat, disableChat } = useTenantChat()
-  
-  const [webhookUrl, setWebhookUrl] = useState(
-    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || ''
-  )
+
+  const [webhookUrl, setWebhookUrl] = useState(process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || '')
   const [chatTitle, setChatTitle] = useState(config.chatConfig?.title || '')
   const [chatSubtitle, setChatSubtitle] = useState(config.chatConfig?.subtitle || '')
 
@@ -56,7 +54,8 @@ export function ChatSettings() {
             Configure the n8n chat widget for customer support and assistance.
             {tenantInfo.isInTenant && (
               <span className="block mt-1 text-sm text-muted-foreground">
-                Currently configured for tenant: <span className="font-medium">{tenantInfo.currentTenant}</span>
+                Currently configured for tenant:{' '}
+                <span className="font-medium">{tenantInfo.currentTenant}</span>
               </span>
             )}
           </CardDescription>
@@ -134,9 +133,7 @@ export function ChatSettings() {
       <Card>
         <CardHeader>
           <CardTitle>Setup Instructions</CardTitle>
-          <CardDescription>
-            How to configure n8n for chat functionality
-          </CardDescription>
+          <CardDescription>How to configure n8n for chat functionality</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -145,24 +142,26 @@ export function ChatSettings() {
               Create a new workflow in n8n with a Chat Trigger node.
             </p>
           </div>
-          
+
           <div className="space-y-2">
             <h4 className="font-medium">2. Configure Webhook</h4>
             <p className="text-sm text-muted-foreground">
-              Copy the webhook URL from your Chat Trigger node and add it to your environment variables:
+              Copy the webhook URL from your Chat Trigger node and add it to your environment
+              variables:
             </p>
             <code className="text-xs bg-muted p-2 rounded block">
               NEXT_PUBLIC_N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/chat
             </code>
           </div>
-          
+
           <div className="space-y-2">
             <h4 className="font-medium">3. Design Your Chat Flow</h4>
             <p className="text-sm text-muted-foreground">
-              Add nodes to handle user messages, integrate with AI services, or route to human agents.
+              Add nodes to handle user messages, integrate with AI services, or route to human
+              agents.
             </p>
           </div>
-          
+
           <div className="space-y-2">
             <h4 className="font-medium">4. Test Integration</h4>
             <p className="text-sm text-muted-foreground">
@@ -173,4 +172,4 @@ export function ChatSettings() {
       </Card>
     </div>
   )
-} 
+}

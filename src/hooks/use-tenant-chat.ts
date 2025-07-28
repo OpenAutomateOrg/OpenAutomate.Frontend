@@ -27,7 +27,7 @@ export interface TenantChatConfig {
     height?: string
     title?: string
     subtitle?: string
-    
+
     // n8n chat specific options
     mode?: 'window' | 'fullscreen'
     chatInputKey?: string
@@ -37,15 +37,18 @@ export interface TenantChatConfig {
     showWelcomeScreen?: boolean
     defaultLanguage?: string
     initialMessages?: string[]
-    i18n?: Record<string, {
-      [message: string]: string
-      title: string
-      subtitle: string
-      footer: string
-      getStarted: string
-      inputPlaceholder: string
-      closeButtonTooltip: string
-    }>
+    i18n?: Record<
+      string,
+      {
+        [message: string]: string
+        title: string
+        subtitle: string
+        footer: string
+        getStarted: string
+        inputPlaceholder: string
+        closeButtonTooltip: string
+      }
+    >
     // Webhook configuration for custom payload
     webhookConfig?: {
       method?: 'POST' | 'GET'
@@ -58,7 +61,7 @@ export function useTenantChat() {
   const params = useParams()
   const { user, isAuthenticated } = useAuth()
   const [isEnabled, setIsEnabled] = useState(true)
-  
+
   // Get current tenant from URL params
   const currentTenant = params.tenant as string | undefined
 
@@ -75,13 +78,15 @@ export function useTenantChat() {
     // 2. Webhook URL is configured
     // 3. User is authenticated
     // 4. User is within a tenant context
-    const shouldEnable = isEnabled && Boolean(baseWebhookUrl) && isAuthenticated && Boolean(currentTenant)
+    const shouldEnable =
+      isEnabled && Boolean(baseWebhookUrl) && isAuthenticated && Boolean(currentTenant)
 
     // Determine user name for personalization
     const userName = user?.firstName ?? 'there'
-    const fullUserName = user?.firstName && user?.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user?.firstName ?? user?.email ?? 'User'
+    const fullUserName =
+      user?.firstName && user?.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : (user?.firstName ?? user?.email ?? 'User')
 
     return {
       webhookUrl: baseWebhookUrl,
@@ -91,7 +96,7 @@ export function useTenantChat() {
         // Window configuration
         width: '420px',
         height: '600px',
-        
+
         // n8n chat configuration tailored for OpenAutomate
         mode: 'window',
         chatInputKey: 'chatInput',
@@ -99,7 +104,7 @@ export function useTenantChat() {
         loadPreviousSession: true,
         showWelcomeScreen: false,
         defaultLanguage: 'en',
-        
+
         // Enhanced metadata with business context
         metadata: {
           tenant: currentTenant,
@@ -110,16 +115,16 @@ export function useTenantChat() {
           timestamp: new Date().toISOString(),
           platform: 'openAutomate',
           source: 'frontend-chat',
-          hasToken: Boolean(authToken)
+          hasToken: Boolean(authToken),
         },
-        
+
         // Personalized welcome messages
         initialMessages: [
           `Hi ${userName}! 👋`,
           `Welcome to OpenAutomate. I'm your AI assistant ready to help you with automation and general questions.`,
-          `What can I help you with today?`
+          `What can I help you with today?`,
         ],
-        
+
         // Internationalization configuration
         i18n: {
           en: {
@@ -128,19 +133,21 @@ export function useTenantChat() {
             footer: 'Powered by OpenAutomate',
             getStarted: 'Start New Conversation',
             inputPlaceholder: 'Ask automation, or anything else...',
-            closeButtonTooltip: 'Close chat'
-          }
+            closeButtonTooltip: 'Close chat',
+          },
         },
 
         // Webhook configuration with authentication headers
-        webhookConfig: authToken ? {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            'X-Tenant': currentTenant ?? '',
-          }
-        } : undefined
+        webhookConfig: authToken
+          ? {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+                'X-Tenant': currentTenant ?? '',
+              },
+            }
+          : undefined,
       },
     }
   }, [isEnabled, isAuthenticated, user, currentTenant])
@@ -155,17 +162,20 @@ export function useTenantChat() {
   }, [])
 
   const toggleChat = useCallback(() => {
-    setIsEnabled(prev => !prev)
+    setIsEnabled((prev) => !prev)
   }, [])
 
   // ✅ Get tenant information
-  const tenantInfo = useMemo(() => ({
-    currentTenant,
-    isInTenant: Boolean(currentTenant),
-    tenantDisplayName: currentTenant 
-      ? currentTenant.charAt(0).toUpperCase() + currentTenant.slice(1).replace(/-/g, ' ')
-      : null,
-  }), [currentTenant])
+  const tenantInfo = useMemo(
+    () => ({
+      currentTenant,
+      isInTenant: Boolean(currentTenant),
+      tenantDisplayName: currentTenant
+        ? currentTenant.charAt(0).toUpperCase() + currentTenant.slice(1).replace(/-/g, ' ')
+        : null,
+    }),
+    [currentTenant],
+  )
 
   return {
     config: getChatConfig(),
@@ -177,4 +187,4 @@ export function useTenantChat() {
     tenantSlug: currentTenant,
     jwtToken: getAuthToken(),
   }
-} 
+}

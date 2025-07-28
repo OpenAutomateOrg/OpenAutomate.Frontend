@@ -3,7 +3,7 @@
 import { TrendingUp } from 'lucide-react'
 import { Pie, PieChart } from 'recharts'
 import { getExecutionsWithOData } from '@/lib/api/executions'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
 

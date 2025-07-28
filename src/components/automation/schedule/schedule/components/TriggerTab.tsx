@@ -113,15 +113,15 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
 
       {(recurrence.type === RecurrenceType.Minutes ||
         recurrence.type === RecurrenceType.Hourly) && (
-          <RecurringConfiguration
-            recurrence={recurrence}
-            onUpdate={onUpdate}
-            startDateOpen={startDateOpen}
-            setStartDateOpen={setStartDateOpen}
-            endDateOpen={endDateOpen}
-            setEndDateOpen={setEndDateOpen}
-          />
-        )}
+        <RecurringConfiguration
+          recurrence={recurrence}
+          onUpdate={onUpdate}
+          startDateOpen={startDateOpen}
+          setStartDateOpen={setStartDateOpen}
+          endDateOpen={endDateOpen}
+          setEndDateOpen={setEndDateOpen}
+        />
+      )}
     </div>
   )
 }
@@ -165,10 +165,7 @@ function OnceConfiguration({
   )
 }
 
-function DailyConfiguration({
-  recurrence,
-  onUpdate
-}: ConfigurationProps) {
+function DailyConfiguration({ recurrence, onUpdate }: ConfigurationProps) {
   return (
     <div className="space-y-4">
       <TimeSelector
@@ -182,11 +179,7 @@ function DailyConfiguration({
   )
 }
 
-function WeeklyConfiguration({
-  recurrence,
-  onUpdate,
-  updateDaySelection
-}: ConfigurationProps) {
+function WeeklyConfiguration({ recurrence, onUpdate, updateDaySelection }: ConfigurationProps) {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const selectedDays = recurrence.selectedDays ?? []
 
@@ -205,11 +198,7 @@ function WeeklyConfiguration({
   )
 }
 
-function MonthlyConfiguration({
-  recurrence,
-  onUpdate,
-  updateMonthSelection
-}: ConfigurationProps) {
+function MonthlyConfiguration({ recurrence, onUpdate, updateMonthSelection }: ConfigurationProps) {
   const months = [
     'January',
     'February',
@@ -247,10 +236,7 @@ function MonthlyConfiguration({
   )
 }
 
-function RecurringConfiguration({
-  recurrence,
-  onUpdate
-}: ConfigurationProps) {
+function RecurringConfiguration({ recurrence, onUpdate }: ConfigurationProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">

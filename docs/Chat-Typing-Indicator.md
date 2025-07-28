@@ -60,7 +60,7 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (onTypingStart && originalChatInput.trim()) {
     onTypingStart()
   }
-  
+
   try {
     const response = await originalFetch(input, modifiedOptions)
     // Hide typing indicator when response received
@@ -108,8 +108,16 @@ typingIndicator.innerHTML = `
 }
 
 @keyframes typingDot {
-  0%, 60%, 100% { opacity: 0.4; transform: scale(1); }
-  30% { opacity: 1; transform: scale(1.2); }
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 ```
 

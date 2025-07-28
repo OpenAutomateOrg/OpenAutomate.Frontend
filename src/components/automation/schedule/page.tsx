@@ -21,7 +21,7 @@ import {
   disableSchedule,
 } from '@/lib/api/schedules'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { createErrorToast } from '@/lib/utils/error-utils'
@@ -57,12 +57,21 @@ function parseWeeklyCron(cron: string) {
   const parts = cron.split(' ')
   const minute = parts[1]
   const hour = parts[2]
-  const days = parts[5]?.split(',').map(num => {
-    const map: Record<string, string> = {
-      '0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday'
-    }
-    return map[num]
-  }).filter(Boolean)
+  const days = parts[5]
+    ?.split(',')
+    .map((num) => {
+      const map: Record<string, string> = {
+        '0': 'Sunday',
+        '1': 'Monday',
+        '2': 'Tuesday',
+        '3': 'Wednesday',
+        '4': 'Thursday',
+        '5': 'Friday',
+        '6': 'Saturday',
+      }
+      return map[num]
+    })
+    .filter(Boolean)
   return { weeklyHour: hour, weeklyMinute: minute, selectedDays: days }
 }
 
@@ -71,7 +80,12 @@ function parseMonthlyCron(cron: string) {
   const minute = parts[1]
   const hour = parts[2]
   const day = parts[3]
-  return { monthlyHour: hour, monthlyMinute: minute, monthlyOnType: 'day' as const, selectedDay: day }
+  return {
+    monthlyHour: hour,
+    monthlyMinute: minute,
+    monthlyOnType: 'day' as const,
+    selectedDay: day,
+  }
 }
 
 function parseHourlyCron(cron: string) {
@@ -576,7 +590,7 @@ export default function ScheduleInterface() {
         onEdit: async (schedule: ScheduleResponseDto) => {
           setEditingSchedule(mapApiScheduleToEditingSchedule(schedule))
           setIsCreateModalOpen(true)
-        }
+        },
       }),
     [mutateSchedules, mutateFallbackSchedules, toast],
   )
@@ -909,12 +923,6 @@ export default function ScheduleInterface() {
             }, 0)
           }}
         />
-
-        {!isDataLoading && schedules.length === 0 && !schedulesError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No schedules found.</p>
-          </div>
-        )}
       </div>
 
       {/* Create/Edit Schedule Modal */}

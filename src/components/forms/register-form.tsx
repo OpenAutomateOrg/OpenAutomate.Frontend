@@ -83,7 +83,7 @@ export function RegisterForm() {
       if (token && tenant) {
         await organizationInvitationsApi.acceptInvitation(tenant, token)
         // Redirect to organization dashboard
-        router.push(`/${tenant}/dashboard`)
+        router.push(`/${tenant}/tenant-selector`)
         return true
       }
     } catch (error) {

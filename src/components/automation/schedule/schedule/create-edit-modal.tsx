@@ -33,7 +33,7 @@ import {
   AutomationPackageResponseDto,
   PackageVersionResponseDto,
 } from '@/lib/api/automation-packages'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { createErrorToast } from '@/lib/utils/error-utils'
 
 // Sub-components
@@ -160,7 +160,7 @@ export function CreateEditModal({
           dailyHour = dateObj.getHours().toString().padStart(2, '0')
           dailyMinute = dateObj.getMinutes().toString().padStart(2, '0')
         } catch (e) {
-          console.error("Failed to parse date:", e)
+          console.error('Failed to parse date:', e)
         }
       }
 
@@ -179,7 +179,13 @@ export function CreateEditModal({
           startTime: `${dailyHour}:${dailyMinute}`,
           weeklyHour: rec.weeklyHour ?? '09',
           weeklyMinute: rec.weeklyMinute ?? '00',
-          selectedDays: rec.selectedDays ?? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          selectedDays: rec.selectedDays ?? [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+          ],
           monthlyHour: rec.monthlyHour ?? '09',
           monthlyMinute: rec.monthlyMinute ?? '00',
           monthlyOnType: rec.monthlyOnType ?? 'day',
@@ -187,8 +193,18 @@ export function CreateEditModal({
           selectedOrdinal: rec.selectedOrdinal ?? '1st',
           selectedWeekday: rec.selectedWeekday ?? 'Monday',
           selectedMonths: rec.selectedMonths ?? [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December',
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
           ],
         },
       })
@@ -216,8 +232,18 @@ export function CreateEditModal({
           selectedOrdinal: '1st',
           selectedWeekday: 'Monday',
           selectedMonths: [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December',
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
           ],
         },
       })
@@ -270,7 +296,12 @@ export function CreateEditModal({
       case RecurrenceType.Once:
         if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
           const date = new Date(recurrence.startDate)
-          date.setHours(parseInt(recurrence.dailyHour, 10), parseInt(recurrence.dailyMinute, 10), 0, 0)
+          date.setHours(
+            parseInt(recurrence.dailyHour, 10),
+            parseInt(recurrence.dailyMinute, 10),
+            0,
+            0,
+          )
           oneTimeExecution = date.toISOString()
         } else {
           throw new Error('Please select both date and time for one-time schedule')

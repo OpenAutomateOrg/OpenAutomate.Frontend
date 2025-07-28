@@ -3,22 +3,24 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 export default function LandingPage() {
   const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, isSystemAdmin } = useAuth()
   useEffect(() => {
     // If the user is already authenticated, redirect them to organization selector
     // Otherwise, redirect to login page
     if (!isLoading) {
-      if (isAuthenticated) {
+      if (isSystemAdmin) {
+        router.push('/dashboard')
+      } else if (isAuthenticated) {
         router.push(config.paths.defaultRedirect)
-      } else {
-        router.push(config.paths.auth.login)
       }
+    } else {
+      router.push(config.paths.auth.login)
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router, isSystemAdmin])
 
   // Display a minimal loading screen while redirecting
   return (

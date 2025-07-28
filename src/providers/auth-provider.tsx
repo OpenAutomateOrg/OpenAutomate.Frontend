@@ -28,7 +28,7 @@ import {
 } from '@/lib/auth/token-storage'
 import logger from '@/lib/utils/logger'
 import authLogger from '@/lib/utils/auth-logger'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 interface AuthContextType {
   user: User | null
@@ -36,6 +36,7 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   isSystemAdmin: boolean
+  isLogout: boolean
   login: (data: LoginRequest) => Promise<User | void>
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
@@ -55,12 +56,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLogout, setIsLogout] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const params = useParams()
-
-  // Computed property for system admin status
-  const isSystemAdmin = user?.systemRole === SystemRole.Admin
 
   // Helper function to fetch and update user profile
   const fetchAndUpdateUserProfile = useCallback(
@@ -76,6 +75,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     },
     [],
   )
+  // Computed property for system admin status
+  const isSystemAdmin = user?.systemRole === SystemRole.Admin || user?.systemRole === 'Admin'
 
   // Helper function to check permissions for a specific resource and tenant
   const hasPermission = useCallback(
@@ -227,7 +228,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
                 lastName: response.lastName,
                 systemRole: response.systemRole || SystemRole.User,
               }
-
+              console.log(userToSet)
               // Update in storage and local state
               setStoredUser(userToSet)
               setUser(userToSet)
@@ -350,6 +351,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   // Logout function
   const logout = useCallback(async () => {
     setIsLoading(true)
+    setIsLogout(true)
 
     try {
       await authApi.logout()
@@ -361,6 +363,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       clearAuthData()
       setUser(null)
       setUserProfile(null)
+      setIsLogout(false)
       router.push('/login')
       setIsLoading(false)
     }
@@ -388,6 +391,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           isLoading,
           isAuthenticated: !!user,
           isSystemAdmin,
+          isLogout,
           login,
           register,
           logout,
@@ -401,6 +405,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           userProfile,
           isLoading,
           isSystemAdmin,
+          isLogout,
           login,
           register,
           logout,

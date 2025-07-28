@@ -3,12 +3,11 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { AuthProvider } from '@/providers/auth-provider'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 import { Toaster } from '@/components/ui/toaster'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { LocaleProvider } from '@/providers/locale-provider'
 import { SWRProvider } from '@/providers/swr-provider'
-
 
 const inter = Inter({ subsets: ['latin'] })
 

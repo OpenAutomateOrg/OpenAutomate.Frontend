@@ -240,7 +240,7 @@ export function ResetPasswordForm() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" suppressHydrationWarning>
-          <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+          <div className="p-3 bg-gray-50 rounded-md border w-full">
             <p className="text-sm text-gray-600 mb-0">
               Resetting password for: <span className="font-medium">{email}</span>
             </p>

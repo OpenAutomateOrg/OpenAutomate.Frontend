@@ -6,12 +6,10 @@ import {
   FileKey2,
   Settings2,
   Users,
-  ShieldAlert,
   LifeBuoy,
-  Send,
-  Command,
   Sparkles,
   Building2,
+  LayoutDashboard,
 } from 'lucide-react'
 import { Resources, Permissions } from '@/lib/constants/resources'
 
@@ -64,9 +62,7 @@ export interface UserNavigationItem {
  * Common navigation items for all users with tenant context
  * Each item specifies the minimum permission required to view it
  */
-export const createCommonNavItems = (
-  createTenantUrl: (path: string) => string,
-): NavigationItem[] => [
+export const createUserNavItems = (createTenantUrl: (path: string) => string): NavigationItem[] => [
   {
     title: 'Home',
     url: createTenantUrl('/dashboard'),
@@ -169,30 +165,28 @@ export const createCommonNavItems = (
 ]
 
 /**
- * Standard user navigation items with tenant context
- */
-export const createUserNavItems = (createTenantUrl: (path: string) => string): NavigationItem[] => [
-  {
-    title: 'Settings',
-    url: createTenantUrl('/settings'),
-    icon: Settings2,
-    // Settings available to all users
-  },
-]
-
-/**
  * Admin-only navigation items (system-level, not tenant-specific)
  */
 export const adminNavItems: NavigationItem[] = [
   {
-    title: 'System Users',
-    url: '/admin/users',
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'User Management',
+    url: '/systemAdmin/user-management',
     icon: Users,
   },
   {
-    title: 'System Security',
-    url: '/admin/security',
-    icon: ShieldAlert,
+    title: 'Organization Units',
+    url: '/systemAdmin/org-unit-management',
+    icon: Building2,
+  },
+  {
+    title: 'Agent Management',
+    url: '/systemAdmin/agent-management',
+    icon: Bot,
   },
 ]
 
@@ -204,16 +198,6 @@ export const secondaryNavItems: { title: string; url: string; icon: LucideIcon }
     title: 'Support',
     url: '#',
     icon: LifeBuoy,
-  },
-  {
-    title: 'Feedback',
-    url: '#',
-    icon: Send,
-  },
-  {
-    title: 'Switch Organization',
-    url: '/tenant-selector',
-    icon: Command,
   },
 ]
 

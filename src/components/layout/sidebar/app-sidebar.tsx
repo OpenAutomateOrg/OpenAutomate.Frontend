@@ -14,7 +14,6 @@ import { useAuth } from '@/hooks/use-auth'
 
 // Import navigation configuration
 import {
-  createCommonNavItems,
   createUserNavItems,
   adminNavItems,
   secondaryNavItems,
@@ -51,24 +50,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (!userProfile && !isSystemAdmin) {
       // If no profile loaded yet, return empty navigation to prevent flash
       return {
-        common: [],
         user: [],
         admin: [],
       }
     }
 
-    // Create base navigation items
-    const commonItems = createCommonNavItems(createTenantUrl)
+    if (isSystemAdmin) {
+      // System admin gets admin navigation items
+      return {
+        admin: adminNavItems,
+      }
+    }
+
+    // Regular users get filtered navigation based on permissions
     const userItems = createUserNavItems(createTenantUrl)
 
     // Filter items based on permissions
-    const filteredCommon = filterNavigationByPermissions(commonItems, hasPermission)
     const filteredUser = filterNavigationByPermissions(userItems, hasPermission)
 
     return {
-      common: filteredCommon,
       user: filteredUser,
-      admin: adminNavItems, // Admin items don't need filtering as they're only shown to system admins
+      admin: [], // Regular users don't get admin items
     }
   }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin])
 
@@ -79,19 +81,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ? {
         name: `${user.firstName} ${user.lastName}`.trim() || user.email,
         email: user.email,
-        avatar: '/avatars/placeholder.png', // Default avatar image
       }
     : {
         name: 'User',
         email: 'Loading...',
-        avatar: '/avatars/placeholder.png',
       }
 
   /**
    * User navigation items for profile management
    */
   const navUserItem = createUserManagementItems(createTenantUrl)
-
   /**
    * Show loading state while navigation is being determined
    */
@@ -127,9 +126,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* Main navigation with role-based items and permission filtering */}
         <RoleBasedContent
-          adminContent={<NavMain items={[...navigationItems.common, ...navigationItems.admin]} />}
-          userContent={<NavMain items={[...navigationItems.common, ...navigationItems.user]} />}
-          fallback={<NavMain items={navigationItems.common} />}
+          adminContent={<NavMain items={navigationItems.admin} />}
+          userContent={<NavMain items={navigationItems.user} />}
+          fallback={<NavMain items={navigationItems.user} />}
         />
 
         <NavSecondary items={secondaryNavItems} className="mt-auto" />

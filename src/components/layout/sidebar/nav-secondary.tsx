@@ -29,7 +29,7 @@ export function NavSecondary({
               <SidebarMenuButton
                 asChild
                 size="sm"
-                className="hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
+                className="hover:bg-orange-600/10 hover:text-orange-600 hover:outline  hover:outline-orange-600 transition-all duration-200"
               >
                 <Link href={item.url}>
                   <item.icon />

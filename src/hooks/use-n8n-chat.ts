@@ -49,9 +49,7 @@ export function useN8nChat() {
     const shouldEnable = isEnabled && Boolean(defaultWebhookUrl) && isAuthenticated
 
     // Custom configuration based on user/context
-    const title = user?.firstName
-      ? `Hi ${user.firstName}! 👋`
-      : 'OpenAutomate Support'
+    const title = user?.firstName ? `Hi ${user.firstName}! 👋` : 'OpenAutomate Support'
 
     const subtitle = 'How can we help you today?'
 
@@ -65,17 +63,20 @@ export function useN8nChat() {
         title,
         subtitle,
         // Webhook configuration with authentication headers
-        webhookConfig: authToken ? {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            'X-User-Email': user?.email ?? '',
-            'X-User-Name': user?.firstName && user?.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user?.firstName ?? user?.email ?? 'User'
-          }
-        } : undefined
+        webhookConfig: authToken
+          ? {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+                'X-User-Email': user?.email ?? '',
+                'X-User-Name':
+                  user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : (user?.firstName ?? user?.email ?? 'User'),
+              },
+            }
+          : undefined,
       },
     }
   }, [isEnabled, isAuthenticated, user])
@@ -90,7 +91,7 @@ export function useN8nChat() {
   }, [])
 
   const toggleChat = useCallback(() => {
-    setIsEnabled(prev => !prev)
+    setIsEnabled((prev) => !prev)
   }, [])
 
   return {
@@ -101,4 +102,4 @@ export function useN8nChat() {
     toggleChat,
     jwtToken: getAuthToken(),
   }
-} 
+}
