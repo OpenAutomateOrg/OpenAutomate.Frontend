@@ -36,11 +36,6 @@ export const columns: ColumnDef<OrganizationUnit>[] = [
     enableHiding: false,
   },
   {
-    id: 'actions',
-    // cell: ({ row }) => <DataTableRowActions row={row} />,
-    header: 'Action',
-  },
-  {
     accessorKey: 'name',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
