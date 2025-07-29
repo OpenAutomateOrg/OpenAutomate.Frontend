@@ -183,17 +183,17 @@ export const adminNavItems: NavigationItem[] = [
   },
   {
     title: 'User Management',
-    url: '/systemAdmin/user-management',
+    url: '/user-management',
     icon: Users,
   },
   {
     title: 'Organization Units',
-    url: '/systemAdmin/org-unit-management',
+    url: '/org-unit-management',
     icon: Building2,
   },
   {
     title: 'Agent Management',
-    url: '/systemAdmin/agent-management',
+    url: '/agent-management',
     icon: Bot,
   },
 ]
