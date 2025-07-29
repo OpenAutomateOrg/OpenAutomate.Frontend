@@ -238,7 +238,7 @@ function OrganizationUnitAdminInterfaceContent() {
   })
 
   const handleRowClick = (row: OrganizationUnit) => {
-    const route = `/systemAdmin/org-unit-management/${row.id}`
+    const route = `/org-unit-management/${row.id}`
     router.push(route)
   }
 
