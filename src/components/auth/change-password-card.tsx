@@ -56,7 +56,7 @@ export function ChangePasswordCard() {
       await authApi.changePassword({
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+        confirmNewPassword: formData.confirmPassword, 
       })
 
       toast({
