@@ -51,7 +51,7 @@ export function ChangePasswordCard() {
 
     setIsLoading(true)
 
-    try {
+ try {
       // Call the changePassword API
       await authApi.changePassword({
         currentPassword: formData.currentPassword,
