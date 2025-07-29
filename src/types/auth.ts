@@ -139,7 +139,7 @@ export interface ChangeUserNameRequest {
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
-  confirmPassword: string
+  confirmNewPassword: string
 }
 
 export interface RevokeTokenRequest {
