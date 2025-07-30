@@ -7,7 +7,7 @@
 import { getAuthToken, setAuthToken } from '@/lib/auth/token-storage'
 import { config } from '@/lib/config/config'
 
-type ApiError = {
+export type ApiError = {
   message: string
   status: number
   details?: string
@@ -48,7 +48,10 @@ const createApiError = async (response: Response): Promise<ApiError> => {
 
     if (errorBody.message) {
       errorData.message = errorBody.message
-      errorData.details = errorBody.message
+      errorData.details = errorBody.details || errorBody.message
+    } else if (errorBody.error) {
+      errorData.message = errorBody.error
+      errorData.details = errorBody.error
     } else {
       errorData.details = JSON.stringify(errorBody)
     }
@@ -70,7 +73,7 @@ const notifyTokenExpired = (): void => {
 }
 
 /**
- * Handle network errors
+ * Handle network errors and convert them to structured ApiError objects
  */
 const handleNetworkError = (error: unknown): never => {
   // If it's already an ApiError (from our code), just rethrow it
@@ -90,14 +93,20 @@ const handleNetworkError = (error: unknown): never => {
   // For Error objects, preserve the message
   if (error instanceof Error) {
     const apiError: ApiError = {
-      message: error.message,
+      message: error.message || 'Network error occurred',
       status: 0,
-      details: error.stack,
+      details: error.stack || error.message,
     }
     throw apiError
   }
 
-  throw error
+  // For any unknown error types, create a generic ApiError
+  const apiError: ApiError = {
+    message: 'An unexpected error occurred',
+    status: 0,
+    details: String(error),
+  }
+  throw apiError
 }
 
 /**
@@ -296,16 +305,16 @@ export async function fetchApi<T>(
     // For all other error responses, create and throw an API error
     const errorData = await createApiError(response)
 
-    // Log error for debugging
-    console.error(`API Error [${response.status}]:`, errorData.message)
-
     throw errorData
   } catch (error) {
+    // If it's already an ApiError (from createApiError or previous handling), rethrow it
     if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
-      // Nếu đã là ApiError, trả về ngay
       throw error
     }
-    return handleNetworkError(error)
+    // Convert network errors to structured ApiError objects
+    handleNetworkError(error)
+    // This line should never be reached since handleNetworkError always throws
+    throw new Error('Unexpected error in fetchApi')
   }
 }
 

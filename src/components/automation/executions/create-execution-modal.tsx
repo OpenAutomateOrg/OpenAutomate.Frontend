@@ -30,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Loader2, Play } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-import { createErrorToast } from '@/lib/utils/error-utils'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { getAllAutomationPackages } from '@/lib/api/automation-packages'
@@ -96,18 +95,16 @@ export default function CreateExecutionModal({
   const selectedPackage = packages?.find((p) => p.id === selectedPackageId)
   const availableVersions = selectedPackage?.versions || []
 
-  // Handle SWR errors (following guideline #3: user feedback belongs in event handlers, not effects)
-  // Client-only: Requires toast notifications
+  // SWR errors are now handled automatically by the global error handler
+  // Log errors for debugging purposes only
   useEffect(() => {
     if (packagesError) {
       console.error('Error loading packages:', packagesError)
-      toast(createErrorToast(packagesError))
     }
     if (agentsError) {
       console.error('Error loading agents:', agentsError)
-      toast(createErrorToast(agentsError))
     }
-  }, [packagesError, agentsError, toast])
+  }, [packagesError, agentsError])
 
   // Reset version when package changes
   // Client-only: Requires form state manipulation
@@ -176,38 +173,10 @@ export default function CreateExecutionModal({
     return { selectedPackage, selectedVersion }
   }
 
-  // Helper function to handle execution errors
+  // Simple error logging - API errors are handled globally
   const handleExecutionError = (error: unknown) => {
     console.error('Error triggering execution:', error)
-
-    if (error && typeof error === 'object' && 'response' in error) {
-      const httpError = error as { response?: { status?: number } }
-      const status = httpError.response?.status
-
-      if (status === 403) {
-        toast({
-          variant: 'destructive',
-          title: 'Permission Denied',
-          description: 'You do not have permission to create executions',
-        })
-      } else if (status === 404) {
-        toast({
-          variant: 'destructive',
-          title: 'Not Found',
-          description: 'Selected package or agent not found',
-        })
-      } else if (status === 400) {
-        toast({
-          variant: 'destructive',
-          title: 'Agent Busy',
-          description: 'Agent is currently busy with another execution',
-        })
-      } else {
-        toast(createErrorToast(error))
-      }
-    } else {
-      toast(createErrorToast(error))
-    }
+    // Global error handler will show appropriate toast notification
   }
 
   const onSubmit = async (data: CreateExecutionFormData) => {
