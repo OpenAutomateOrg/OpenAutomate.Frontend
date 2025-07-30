@@ -185,7 +185,11 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                   <FileText className="w-4 h-4" /> Created At
                 </div>
                 <div className="text-base font-semibold border-b pb-1">
-                  {formatUtcToLocal(asset.createdAt, { fallback: '-' })}
+                  {formatUtcToLocal(asset.createdAt, { 
+                    dateStyle: 'medium',
+                    timeStyle: undefined,
+                    fallback: '-' 
+                  })}
                 </div>
               </div>
             </div>

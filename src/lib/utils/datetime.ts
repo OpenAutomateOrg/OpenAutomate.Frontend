@@ -11,6 +11,18 @@ import { parseISO } from 'date-fns';
  */
 
 /**
+ * Get the browser's locale or fall back to a default
+ */
+function getBrowserLocale(): string {
+  if (typeof window !== 'undefined') {
+    // Try to get the user's preferred locale
+    return navigator.language || 'en-US'
+  }
+  return 'en-US'
+}
+
+
+/**
  * Default date format options for displaying dates
  */
 export const DEFAULT_DATE_FORMAT = 'MMM dd, yyyy, h:mm a' // Jul 26, 2024, 5:17 PM
@@ -41,6 +53,11 @@ export interface DateFormatOptions {
    * Custom format string (overrides dateStyle/timeStyle)
    */
   customFormat?: string
+  /**
+   * Locale for formatting (e.g., 'en-US', 'vi-VN')
+   * @default 'en-US'
+   */
+  locale?: string
 }
 
 /**
@@ -64,7 +81,8 @@ export function formatUtcToLocal(
     dateStyle = 'medium', 
     timeStyle = 'short', 
     fallback = 'N/A',
-    customFormat
+    customFormat,
+    locale = getBrowserLocale()
   } = options
 
   if (!utcDate) {
@@ -103,7 +121,7 @@ export function formatUtcToLocal(
     }
 
     // Use Intl.DateTimeFormat for proper local timezone formatting
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(locale, {
       dateStyle,
       timeStyle,
     }).format(date)
