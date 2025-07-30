@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/hooks/use-auth'
 import { useSubscription } from '@/hooks/use-subscription'
 import { subscriptionApi } from '@/lib/api/subscription'
 import { TrialStatus } from '@/types/subscription'
@@ -13,7 +12,6 @@ import { useToast } from '@/components/ui/use-toast'
 import { formatDistanceToNow } from 'date-fns'
 
 export function SubscriptionStatus() {
-  const { userProfile } = useAuth()
   const { subscription, isLoading, mutate } = useSubscription()
   const [isStartingTrial, setIsStartingTrial] = useState(false)
   const { toast } = useToast()

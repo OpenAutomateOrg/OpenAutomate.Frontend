@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { z } from 'zod'
 // import { taskSchema } from '@/components/data/schema' // Commented out - schema not found
 
 export async function GET() {
