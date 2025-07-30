@@ -313,6 +313,8 @@ export async function fetchApi<T>(
     }
     // Convert network errors to structured ApiError objects
     handleNetworkError(error)
+    // This line should never be reached since handleNetworkError always throws
+    throw new Error('Unexpected error in fetchApi')
   }
 }
 

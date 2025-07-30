@@ -1,4 +1,5 @@
 import type { ToastType } from '@/components/ui/use-toast'
+import type { ToastActionElement } from '@/components/ui/toast'
 
 /**
  * Centralized notification manager for consistent error/success handling
@@ -20,7 +21,7 @@ export class NotificationManager {
   static error(message: string, options?: {
     title?: string
     duration?: number
-    action?: React.ReactNode
+    action?: ToastActionElement
   }) {
     if (!this.toastFunction) return
 
@@ -39,7 +40,7 @@ export class NotificationManager {
   static success(message: string, options?: {
     title?: string
     duration?: number
-    action?: React.ReactNode
+    action?: ToastActionElement
   }) {
     if (!this.toastFunction) return
 
@@ -58,7 +59,7 @@ export class NotificationManager {
   static warning(message: string, options?: {
     title?: string
     duration?: number
-    action?: React.ReactNode
+    action?: ToastActionElement
   }) {
     if (!this.toastFunction) return
 
@@ -77,7 +78,7 @@ export class NotificationManager {
   static info(message: string, options?: {
     title?: string
     duration?: number
-    action?: React.ReactNode
+    action?: ToastActionElement
   }) {
     if (!this.toastFunction) return
 

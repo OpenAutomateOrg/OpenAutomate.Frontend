@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect } from 'react'
 import { SWRConfig } from 'swr'
-import { createSWRConfig, defaultSWRConfig } from '@/lib/config/swr-config'
+import { createSWRConfig } from '@/lib/config/swr-config'
 import { setGlobalToastFunction } from '@/lib/utils/global-error-handler'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -27,12 +27,9 @@ export function SWRProvider({ children }: SWRProviderProps) {
 
   // Create SWR configuration
   const swrConfig = useMemo(() => {
-    if (toast) {
-      return createSWRConfig()
-    } else {
-      return defaultSWRConfig
-    }
-  }, [toast])
+    // Always use the enhanced config since toast is available
+    return createSWRConfig()
+  }, [])
 
   return <SWRConfig value={swrConfig}>{children}</SWRConfig>
 }
