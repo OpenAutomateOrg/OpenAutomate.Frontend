@@ -14,6 +14,7 @@ import {
   type AssetDetailDto,
   type BotAgentSummaryDto,
 } from '@/lib/api/assets'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface AssetDetailProps {
   readonly id: string
@@ -184,7 +185,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                   <FileText className="w-4 h-4" /> Created At
                 </div>
                 <div className="text-base font-semibold border-b pb-1">
-                  {asset.createdAt ? new Date(asset.createdAt).toLocaleDateString('vi-VN') : '-'}
+                  {formatUtcToLocal(asset.createdAt, { fallback: '-' })}
                 </div>
               </div>
             </div>

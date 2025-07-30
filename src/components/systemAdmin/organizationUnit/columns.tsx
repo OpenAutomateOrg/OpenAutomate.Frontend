@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 
 import type { OrganizationUnit } from '@/types/organization'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
 export const columns: ColumnDef<OrganizationUnit>[] = [
@@ -82,17 +83,8 @@ export const columns: ColumnDef<OrganizationUnit>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
-      return (
-        <div className="text-sm">
-          {new Date(createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </div>
-      )
+      const formatted = formatUtcToLocal(createdAt, { fallback: '-' })
+      return <div className="text-sm">{formatted}</div>
     },
   },
 ]

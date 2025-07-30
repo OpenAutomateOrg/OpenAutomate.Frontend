@@ -9,6 +9,7 @@ import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import ExecutionStatusBadge from '../execution-status-badge'
 import DataTableRowAction from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface CreateInProgressColumnsProps {
   onDeleted?: () => void
@@ -106,19 +107,8 @@ export const createInProgressColumns = ({
     accessorKey: 'startTime',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Start Time" />,
     cell: ({ row }) => {
-      const value = row.getValue('startTime')
-      let formatted = ''
-      try {
-        if (value) {
-          const date = new Date(value as string)
-          if (!isNaN(date.getTime())) {
-            formatted = new Intl.DateTimeFormat('en-US', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }).format(date)
-          }
-        }
-      } catch {}
+      const value = row.getValue('startTime') as string
+      const formatted = formatUtcToLocal(value, { fallback: '' })
       return <span>{formatted}</span>
     },
   },
@@ -126,19 +116,8 @@ export const createInProgressColumns = ({
     accessorKey: 'endTime',
     header: ({ column }) => <DataTableColumnHeader column={column} title="End Time" />,
     cell: ({ row }) => {
-      const value = row.getValue('endTime')
-      let formatted = ''
-      try {
-        if (value) {
-          const date = new Date(value as string)
-          if (!isNaN(date.getTime())) {
-            formatted = new Intl.DateTimeFormat('en-US', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }).format(date)
-          }
-        }
-      } catch {}
+      const value = row.getValue('endTime') as string
+      const formatted = formatUtcToLocal(value, { fallback: '' })
       return <span>{formatted}</span>
     },
   },

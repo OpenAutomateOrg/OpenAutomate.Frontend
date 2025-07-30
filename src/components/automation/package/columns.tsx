@@ -9,6 +9,7 @@ import {
 } from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 export const createPackageColumns = (
   onRefresh?: () => void,
@@ -126,19 +127,12 @@ export const createPackageColumns = (
     accessorKey: 'createdAt',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
-      // Format the date using Intl.DateTimeFormat for consistent display
-      let formattedDate = ''
-      try {
-        const date = new Date(row.getValue('createdAt') as string)
-        if (!isNaN(date.getTime())) {
-          formattedDate = new Intl.DateTimeFormat('en-US', {
-            dateStyle: 'medium',
-          }).format(date)
-        }
-      } catch (error) {
-        console.error('Error formatting date:', error)
-        formattedDate = 'Invalid date'
-      }
+      const createdAt = row.getValue('createdAt') as string
+      const formattedDate = formatUtcToLocal(createdAt, { 
+        dateStyle: 'medium',
+        timeStyle: undefined, // Only show date, no time
+        fallback: 'Invalid date' 
+      })
 
       return (
         <div className="flex items-center">

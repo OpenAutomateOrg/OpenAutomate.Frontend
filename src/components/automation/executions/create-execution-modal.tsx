@@ -34,6 +34,7 @@ import { createErrorToast } from '@/lib/utils/error-utils'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { getAllAutomationPackages } from '@/lib/api/automation-packages'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 import { getAllBotAgents, BotAgentResponseDto } from '@/lib/api/bot-agents'
 import { triggerExecution, TriggerExecutionDto } from '@/lib/api/executions'
 
@@ -333,7 +334,11 @@ export default function CreateExecutionModal({
                             <div className="flex flex-col">
                               <span className="font-medium">v{version.versionNumber}</span>
                               <span className="text-sm text-muted-foreground">
-                                Uploaded {new Date(version.uploadedAt).toLocaleDateString()}
+                                Uploaded {formatUtcToLocal(version.uploadedAt, { 
+                                  dateStyle: 'medium',
+                                  timeStyle: undefined,
+                                  fallback: 'Unknown date'
+                                })}
                               </span>
                             </div>
                           </SelectItem>

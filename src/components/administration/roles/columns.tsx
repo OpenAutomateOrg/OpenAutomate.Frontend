@@ -3,11 +3,11 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { format } from 'date-fns'
 
 import type { RolesRow } from './roles'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[] => [
   {
@@ -96,15 +96,16 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string
-      try {
-        return (
-          <div className="text-sm text-muted-foreground">
-            {format(new Date(date), 'MMM dd, yyyy')}
-          </div>
-        )
-      } catch {
-        return <div className="text-sm text-muted-foreground">Invalid date</div>
-      }
+      const formatted = formatUtcToLocal(date, { 
+        dateStyle: 'medium',
+        timeStyle: undefined, // Only show date, no time
+        fallback: 'Invalid date' 
+      })
+      return (
+        <div className="text-sm text-muted-foreground">
+          {formatted}
+        </div>
+      )
     },
   },
 ]
