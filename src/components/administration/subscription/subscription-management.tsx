@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useSubscription } from '@/hooks/use-subscription'
 import { subscriptionApi } from '@/lib/api/subscription'
+import { TrialStatus } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,61 +24,77 @@ import { format } from 'date-fns'
 
 // Helper function to render trial management content
 const renderTrialManagement = (
-  subscription: { hasSubscription?: boolean; isEligibleForTrial?: boolean } | null, 
-  userProfile: { hasUsedTrial?: boolean } | null, 
+  subscription: { hasSubscription?: boolean; userTrialStatus?: TrialStatus } | null, 
   isStartingTrial: boolean, 
   handleStartTrial: () => void
 ) => {
-  const hasSubscription = subscription?.hasSubscription
-  const isEligibleForTrial = subscription?.isEligibleForTrial
-  const hasUsedTrial = userProfile?.hasUsedTrial
-
-  if (!hasSubscription && isEligibleForTrial) {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          You can start a free trial to explore all premium features.
-        </p>
-        <Button 
-          onClick={handleStartTrial} 
-          disabled={isStartingTrial}
-          className="w-full transition-all duration-200"
-        >
-          {isStartingTrial ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Activating Trial...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Start Free Trial
-            </>
-          )}
-        </Button>
-      </div>
-    )
+  if (!subscription?.userTrialStatus) {
+    return null
   }
 
-  if (!hasSubscription) {
-    const message = hasUsedTrial 
-      ? 'You have already used your free trial. Upgrade to continue using premium features.'
-      : 'Free trial is only available on your first organization unit. Upgrade to access premium features.'
-    
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <Button className="w-full">Upgrade to Premium</Button>
-      </div>
-    )
-  }
+  switch (subscription.userTrialStatus) {
+    case TrialStatus.Eligible:
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            You can start a free trial to explore all premium features.
+          </p>
+          <Button 
+            onClick={handleStartTrial} 
+            disabled={isStartingTrial}
+            className="w-full transition-all duration-200"
+          >
+            {isStartingTrial ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Activating Trial...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Start Free Trial
+              </>
+            )}
+          </Button>
+        </div>
+      )
 
-  return (
-    <div className="text-center py-4">
-      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-      <p className="text-sm text-muted-foreground">You have an active subscription</p>
-    </div>
-  )
+    case TrialStatus.Active:
+      return (
+        <div className="text-center py-4">
+          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">You have an active trial subscription</p>
+        </div>
+      )
+
+    case TrialStatus.Used:
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            You have already used your free trial. Upgrade to continue using premium features.
+          </p>
+          <Button className="w-full">Upgrade to Premium</Button>
+        </div>
+      )
+
+    case TrialStatus.NotEligible:
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Free trial is only available on your first organization unit. Upgrade to access premium features.
+          </p>
+          <Button className="w-full">Upgrade to Premium</Button>
+        </div>
+      )
+
+    default:
+      return (
+        <div className="text-center py-4">
+          <AlertCircle className="h-12 w-12 text-gray-500 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Unable to determine trial status</p>
+        </div>
+      )
+  }
 }
 
 export default function SubscriptionManagement() {
@@ -221,8 +238,9 @@ export default function SubscriptionManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {subscription?.isEligibleForTrial ? 'Available' : 
-               userProfile?.hasUsedTrial ? 'Used' : 'Not Available'}
+              {subscription?.userTrialStatus === TrialStatus.Eligible ? 'Available' : 
+               subscription?.userTrialStatus === TrialStatus.Used ? 'Used' : 
+               subscription?.userTrialStatus === TrialStatus.Active ? 'Active' : 'Not Available'}
             </div>
           </CardContent>
         </Card>
@@ -300,7 +318,7 @@ export default function SubscriptionManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {renderTrialManagement(subscription, userProfile, isStartingTrial, handleStartTrial)}
+            {renderTrialManagement(subscription, isStartingTrial, handleStartTrial)}
           </CardContent>
         </Card>
       </div>

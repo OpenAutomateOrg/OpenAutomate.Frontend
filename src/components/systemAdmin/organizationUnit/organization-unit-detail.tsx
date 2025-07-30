@@ -24,6 +24,7 @@ import type { ReactNode } from 'react'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface OrganizationUnitDetailProps {
   readonly id: string
@@ -499,24 +500,12 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DetailBlock label="Created At">
-                {new Date(orgUnit.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {formatUtcToLocal(orgUnit.createdAt)}
               </DetailBlock>
 
               {orgUnit.updatedAt && (
                 <DetailBlock label="Last Updated">
-                  {new Date(orgUnit.updatedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {formatUtcToLocal(orgUnit.updatedAt)}
                 </DetailBlock>
               )}
             </div>

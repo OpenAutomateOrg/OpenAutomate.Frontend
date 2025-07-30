@@ -1,3 +1,10 @@
+export enum TrialStatus {
+  Eligible = 'Eligible',
+  Active = 'Active',
+  Used = 'Used',
+  NotEligible = 'NotEligible'
+}
+
 export interface SubscriptionStatus {
   hasSubscription: boolean
   isActive: boolean
@@ -8,7 +15,7 @@ export interface SubscriptionStatus {
   renewsAt?: string
   endsAt?: string
   daysRemaining?: number
-  isEligibleForTrial: boolean
+  userTrialStatus: TrialStatus
 }
 
 export interface StartTrialResponse {

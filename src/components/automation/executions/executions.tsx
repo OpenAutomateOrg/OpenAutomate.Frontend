@@ -26,6 +26,7 @@ import { swrKeys } from '@/lib/config/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { useExecutionStatus } from '@/hooks/use-execution-status'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 import {
   useReactTable,
@@ -276,22 +277,9 @@ export default function ExecutionsInterface() {
       const realtimeUpdate = executionStatuses[execution.id]
       const currentStatus = realtimeUpdate?.status || execution.status
 
-      // Helper function to safely format dates
+      // Helper function to safely format dates using our datetime utility
       const formatDate = (dateString: string | undefined | null): string => {
-        if (!dateString) return ''
-        try {
-          const date = new Date(dateString)
-          if (isNaN(date.getTime())) {
-            return ''
-          }
-          return new Intl.DateTimeFormat('en-US', {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-          }).format(date)
-        } catch (error) {
-          console.error('Date formatting error:', error, 'for date:', dateString)
-          return ''
-        }
+        return formatUtcToLocal(dateString, { fallback: '' })
       }
 
       const formattedStartTime = formatDate(execution.startTime)
@@ -317,9 +305,11 @@ export default function ExecutionsInterface() {
         Command: 'execute',
         Schedules: 'Once', // For immediate executions
         'Task Id': execution.id,
-        'Created Date': execution.startTime
-          ? new Date(execution.startTime).toLocaleDateString()
-          : '',
+        'Created Date': formatUtcToLocal(execution.startTime, { 
+          dateStyle: 'medium', 
+          timeStyle: undefined,
+          fallback: '' 
+        }),
         'Created By': 'Current User', // TODO: Get from auth context when available
 
         // Legacy fields for compatibility
@@ -337,7 +327,11 @@ export default function ExecutionsInterface() {
         command: 'execute',
         schedules: 'Once',
         taskId: execution.id,
-        createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
+        createdDate: formatUtcToLocal(execution.startTime, { 
+          dateStyle: 'medium', 
+          timeStyle: undefined,
+          fallback: '' 
+        }),
         packageName: execution.packageName || '',
         hasLogs: execution.hasLogs || false,
       }

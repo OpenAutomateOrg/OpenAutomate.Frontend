@@ -20,6 +20,8 @@ import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { organizationUnitApi } from '@/lib/api/organization-units'
 import { cn } from '@/lib/utils/utils'
+import { mutate } from 'swr'
+import { swrKeys } from '@/lib/config/swr-config'
 
 // Form validation schema
 const formSchema = z.object({
@@ -61,6 +63,12 @@ export function CreateOrganizationUnitForm({
         name: data.name,
         description: data.description,
       })
+
+      // Invalidate relevant SWR cache keys to ensure fresh data is fetched
+      // This ensures subscription status and user profile are up-to-date
+      await mutate(swrKeys.subscription())
+      await mutate('user-profile') // Cache key for user profile
+      await mutate(swrKeys.organizationUnits())
 
       // Call onSuccess callback with the new organization slug
       if (onSuccess) {
