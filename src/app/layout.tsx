@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { ToastProvider } from '@/components/ui/toast-provider'
 import { LocaleProvider } from '@/providers/locale-provider'
 import { SWRProvider } from '@/providers/swr-provider'
+import { AutoErrorProvider } from '@/providers/auto-error-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,14 +40,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LocaleProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <ToastProvider>
-              <SWRProvider>
-                <AuthProvider>
-                  <div className="min-h-screen flex flex-col antialiased bg-background">
-                    {children}
-                  </div>
-                  <Toaster />
-                </AuthProvider>
-              </SWRProvider>
+              <AutoErrorProvider>
+                <SWRProvider>
+                  <AuthProvider>
+                    <div className="min-h-screen flex flex-col antialiased bg-background">
+                      {children}
+                    </div>
+                    <Toaster />
+                  </AuthProvider>
+                </SWRProvider>
+              </AutoErrorProvider>
             </ToastProvider>
           </ThemeProvider>
         </LocaleProvider>

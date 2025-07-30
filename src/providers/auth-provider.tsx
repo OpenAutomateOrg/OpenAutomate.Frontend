@@ -29,6 +29,7 @@ import {
 import logger from '@/lib/utils/logger'
 import authLogger from '@/lib/utils/auth-logger'
 import { config } from '@/lib/config/config'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 interface AuthContextType {
   user: User | null
@@ -297,15 +298,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
         return userData
       } catch (err: unknown) {
-        // Handle API error with type safety
-        const errorMessage =
-          typeof err === 'object' && err !== null
-            ? (err as { response?: { data?: { message?: string } }; message?: string })?.response
-                ?.data?.message ||
-              (err as { message?: string })?.message ||
-              'An error occurred during login'
-            : 'An error occurred during login'
-
+        // Use proper error message extraction
+        const errorMessage = extractErrorMessage(err)
         setError(errorMessage)
         logger.error('Login failed:', err)
         throw err
@@ -334,14 +328,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
       return response
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err.message as string) || 'Registration failed'
-        setError(errorMessage)
-        logger.error('Registration failed:', errorMessage)
-      } else {
-        setError('Registration failed')
-        logger.error('Registration failed: Unknown error')
-      }
+      // Use proper error message extraction to get backend message
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      logger.error('Registration failed:', errorMessage)
       throw err
     } finally {
       setIsLoading(false)

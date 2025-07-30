@@ -1,11 +1,55 @@
 import { SWRConfiguration } from 'swr'
 import { fetchApi } from '../api/client'
+import { handleGlobalError } from '../utils/global-error-handler'
 
 /**
- * Centralized SWR configuration for the application
- * Provides consistent fetching, caching, and error handling
+ * Creates SWR configuration with toast error handling
+ * Uses the global error handler for toast notifications
  */
-export const swrConfig: SWRConfiguration = {
+export function createSWRConfig(): SWRConfiguration {
+  /**
+   * Global error handler for SWR
+   * Shows toast notifications for unhandled API errors
+   */
+  function handleSWRError(error: unknown) {
+    // Use the centralized global error handler
+    handleGlobalError(error, { skipAuth: true })
+  }
+
+  return {
+    // Use our existing fetchApi function as the default fetcher
+    fetcher: (url: string) => fetchApi(url),
+
+    // Global error handler
+    onError: handleSWRError,
+
+    // Revalidation settings
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    revalidateIfStale: true,
+
+    // Error handling
+    errorRetryCount: 3,
+    errorRetryInterval: 1000,
+    shouldRetryOnError: (error) => {
+      // Don't retry on 4xx errors (client errors)
+      if (error?.status >= 400 && error?.status < 500) {
+        return false
+      }
+      return true
+    },
+
+    // Performance settings
+    dedupingInterval: 2000, // Dedupe requests within 2 seconds
+    focusThrottleInterval: 5000, // Throttle focus revalidation
+  }
+}
+
+/**
+ * Default SWR configuration without error handling
+ * Used as fallback if toast function is not available
+ */
+export const defaultSWRConfig: SWRConfiguration = {
   // Use our existing fetchApi function as the default fetcher
   fetcher: (url: string) => fetchApi(url),
 

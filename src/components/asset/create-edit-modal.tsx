@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { useParams } from 'next/navigation'
 import { createAsset, updateAsset, getAllAgents } from '@/lib/api/assets'
+import { notify } from '@/lib/utils/notification-manager'
 import type { AssetEditRow } from './asset'
 import {
   PlusCircle,
@@ -80,7 +81,7 @@ export function CreateEditModal({
         const res = await getAllAgents()
         setAgents(res.map((a: Agent) => ({ id: a.id, name: a.name })))
       } catch (err) {
-        console.error('Error fetching agents:', err)
+        notify.handleError(err, 'Loading agents')
       }
     }
     fetchAgents()
@@ -157,14 +158,16 @@ export function CreateEditModal({
       const agentIds = addedAgents.map((a: Agent) => a.id)
       if (isEditing && asset?.id) {
         await updateAsset(asset.id, { key, description, value }, agentIds)
+        notify.handleSuccess('updated', `Asset "${key}"`)
       } else {
         await createAsset({ key, description, value, type: Number(type), botAgentIds: agentIds })
+        notify.handleSuccess('created', `Asset "${key}"`)
       }
       resetForm()
       onClose()
       if (onCreated) onCreated()
     } catch (err) {
-      console.error('Error saving asset:', err)
+      notify.handleError(err, isEditing ? 'Updating asset' : 'Creating asset')
     } finally {
       setSubmitting(false)
     }
