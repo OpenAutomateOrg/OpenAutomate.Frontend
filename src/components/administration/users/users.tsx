@@ -196,7 +196,7 @@ export default function UsersInterface() {
   return (
     <div className="flex flex-col h-full w-full space-y-8">
       {/* Tabs */}
-      <div className="mb-4 border-b border-gray-200 w-full">
+      <div className="mb-4 border-b w-full">
         <nav className="flex space-x-8" aria-label="Tabs">
           <button
             className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -278,11 +278,6 @@ export default function UsersInterface() {
                 <Button variant="outline" className="mt-2" onClick={() => mutate()}>
                   Retry
                 </Button>
-              </div>
-            )}
-            {!isLoading && users.length === 0 && !localError && (
-              <div className="text-center py-10 text-muted-foreground">
-                <p>No users found.</p>
               </div>
             )}
             <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />

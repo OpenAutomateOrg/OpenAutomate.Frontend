@@ -16,10 +16,12 @@ import {
   formatNextRunTime,
 } from '@/lib/api/schedules'
 import DataTableRowAction from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface CreateScheduleColumnsProps {
   onDeleted?: () => void
   onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
+  onEdit?: (schedule: ScheduleResponseDto) => void
 }
 
 // Enhanced Switch component with loading state
@@ -77,6 +79,7 @@ const EnhancedSwitch = ({
 export const createScheduleColumns = ({
   onDeleted,
   onToggleEnabled,
+  onEdit,
 }: CreateScheduleColumnsProps = {}): ColumnDef<ScheduleResponseDto>[] => [
   {
     id: 'select',
@@ -124,6 +127,7 @@ export const createScheduleColumns = ({
         schedule={row.original}
         onDeleted={onDeleted}
         onToggleEnabled={onToggleEnabled}
+        onEdit={onEdit ? () => onEdit(row.original) : undefined}
       />
     ),
     enableSorting: false,
@@ -208,16 +212,8 @@ export const createScheduleColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
-      try {
-        const date = new Date(createdAt)
-        const formatted = new Intl.DateTimeFormat('en-US', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }).format(date)
-        return <span className="text-sm">{formatted}</span>
-      } catch {
-        return <span className="text-sm">-</span>
-      }
+      const formatted = formatUtcToLocal(createdAt, { fallback: '-' })
+      return <span className="text-sm">{formatted}</span>
     },
   },
   {

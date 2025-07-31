@@ -31,7 +31,7 @@ import {
   type UpdateRoleDto,
 } from '@/lib/api/roles'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import type { RolesRow } from './roles'
 
 interface CreateEditModalProps {

@@ -37,6 +37,11 @@ export const Resources = {
    * Organization Unit resource
    */
   ORGANIZATION_UNIT: 'OrganizationUnit',
+
+  /**
+   * Subscription resource
+   */
+  SUBSCRIPTION: 'Subscription',
 } as const
 
 /**
@@ -62,6 +67,7 @@ export const getResourceDisplayName = (resource: string): string => {
     [Resources.SCHEDULE]: 'Schedules',
     [Resources.USER]: 'Users',
     [Resources.ORGANIZATION_UNIT]: 'Organization Unit',
+    [Resources.SUBSCRIPTION]: 'Subscription',
   }
 
   return displayNames[resource] || resource

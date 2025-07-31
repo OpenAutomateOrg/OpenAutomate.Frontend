@@ -81,6 +81,7 @@ export interface UserProfile {
   lastName: string
   systemRole: SystemRole
   organizationUnits: OrganizationUnitPermissions[]
+  hasUsedTrial: boolean
 }
 
 export interface LoginRequest {
@@ -138,7 +139,7 @@ export interface ChangeUserNameRequest {
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
-  confirmPassword: string
+  confirmNewPassword: string
 }
 
 export interface RevokeTokenRequest {

@@ -24,4 +24,4 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       <ChatWrapper />
     </>
   )
-} 
+}

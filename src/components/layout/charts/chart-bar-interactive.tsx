@@ -55,7 +55,7 @@ export function ChartBarInteractive({
       (acc) => {
         // Since users don't have createdAt, we'll distribute them evenly or use a fallback
         // For demo purposes, we'll create sample data
-        const randomIndex = Math.floor(Math.random() * last30Days.length)
+        const randomIndex = Math.floor(50 * last30Days.length)
         const date = last30Days[randomIndex]
         acc[date] = (acc[date] || 0) + 1
         return acc

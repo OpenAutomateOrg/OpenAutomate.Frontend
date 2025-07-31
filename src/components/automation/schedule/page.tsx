@@ -21,7 +21,7 @@ import {
   disableSchedule,
 } from '@/lib/api/schedules'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { createErrorToast } from '@/lib/utils/error-utils'
@@ -40,6 +40,108 @@ import {
   PaginationState,
 } from '@tanstack/react-table'
 
+import type { ScheduleFormData } from './schedule/create-edit-modal'
+
+interface ScheduleData {
+  id?: string
+  name?: string
+  packageId?: string
+  packageVersion?: string
+  agentId?: string
+  timezone?: string
+  recurrence?: Partial<ScheduleFormData['recurrence']>
+  oneTimeExecution?: string
+}
+
+function parseWeeklyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  const days = parts[5]
+    ?.split(',')
+    .map((num) => {
+      const map: Record<string, string> = {
+        '0': 'Sunday',
+        '1': 'Monday',
+        '2': 'Tuesday',
+        '3': 'Wednesday',
+        '4': 'Thursday',
+        '5': 'Friday',
+        '6': 'Saturday',
+      }
+      return map[num]
+    })
+    .filter(Boolean)
+  return { weeklyHour: hour, weeklyMinute: minute, selectedDays: days }
+}
+
+function parseMonthlyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  const day = parts[3]
+  return {
+    monthlyHour: hour,
+    monthlyMinute: minute,
+    monthlyOnType: 'day' as const,
+    selectedDay: day,
+  }
+}
+
+function parseHourlyCron(cron: string) {
+  const parts = cron.split(' ')
+  const value = parts[2].startsWith('*/') ? parts[2].replace('*/', '') : '1'
+  return { value }
+}
+
+function parseMinutesCron(cron: string) {
+  const parts = cron.split(' ')
+  const value = parts[1].startsWith('*/') ? parts[1].replace('*/', '') : '1'
+  return { value }
+}
+
+function parseDailyCron(cron: string) {
+  const parts = cron.split(' ')
+  const minute = parts[1]
+  const hour = parts[2]
+  return { dailyHour: hour, dailyMinute: minute }
+}
+
+function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): ScheduleData {
+  const recurrenceType = apiSchedule.recurrenceType as RecurrenceType
+  let recurrence: Partial<ScheduleFormData['recurrence']> = { type: recurrenceType }
+
+  if (apiSchedule.cronExpression) {
+    if (recurrenceType === RecurrenceType.Daily) {
+      recurrence = { ...recurrence, ...parseDailyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Weekly) {
+      recurrence = { ...recurrence, ...parseWeeklyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Monthly) {
+      recurrence = { ...recurrence, ...parseMonthlyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Hourly) {
+      recurrence = { ...recurrence, ...parseHourlyCron(apiSchedule.cronExpression) }
+    } else if (recurrenceType === RecurrenceType.Minutes) {
+      recurrence = { ...recurrence, ...parseMinutesCron(apiSchedule.cronExpression) }
+    }
+  }
+
+  const scheduleData: ScheduleData = {
+    id: apiSchedule.id,
+    name: apiSchedule.name,
+    packageId: apiSchedule.automationPackageId,
+    packageVersion: 'latest',
+    agentId: apiSchedule.botAgentId,
+    timezone: apiSchedule.timeZoneId,
+    recurrence,
+  }
+
+  if (recurrenceType === RecurrenceType.Once && apiSchedule.oneTimeExecution) {
+    scheduleData.oneTimeExecution = apiSchedule.oneTimeExecution
+  }
+
+  return scheduleData
+}
+
 export default function ScheduleInterface() {
   const router = useRouter()
   const pathname = usePathname()
@@ -49,7 +151,7 @@ export default function ScheduleInterface() {
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [editingSchedule, setEditingSchedule] = useState<ScheduleResponseDto | null>(null)
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleData | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -485,6 +587,10 @@ export default function ScheduleInterface() {
             throw error // Re-throw to let the component handle the optimistic update reversion
           }
         },
+        onEdit: async (schedule: ScheduleResponseDto) => {
+          setEditingSchedule(mapApiScheduleToEditingSchedule(schedule))
+          setIsCreateModalOpen(true)
+        },
       }),
     [mutateSchedules, mutateFallbackSchedules, toast],
   )
@@ -817,12 +923,6 @@ export default function ScheduleInterface() {
             }, 0)
           }}
         />
-
-        {!isDataLoading && schedules.length === 0 && !schedulesError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No schedules found.</p>
-          </div>
-        )}
       </div>
 
       {/* Create/Edit Schedule Modal */}

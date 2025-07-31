@@ -1,4 +1,4 @@
-import OrganizationUnitInterface from '@/components/administration/organizationUnit/organizationUnit'
+import OrganizationUnitInterface from '@/components/administration/organization-unit/organization-unit'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {

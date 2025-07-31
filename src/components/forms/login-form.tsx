@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/providers/auth-provider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
 
 // Form validation schema
@@ -38,7 +38,7 @@ export function LoginForm() {
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login } = useAuth()
+  const { login, isSystemAdmin } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
@@ -103,9 +103,10 @@ export function LoginForm() {
         router.push(returnUrl)
         return
       }
-
       // Normal redirect if not from invitation
-      if (returnUrl && !isInvitation) {
+      if (isSystemAdmin) {
+        router.push('/dashboard') // Default redirect to system admin dashboard
+      } else if (returnUrl && !isInvitation) {
         router.push(returnUrl)
       } else {
         router.push('/tenant-selector') // Default redirect to tenant selector
@@ -171,13 +172,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="name@example.com"
-                    autoComplete="email"
-                    {...field}
-                    disabled={isLoading}
-                  />
+                  <Input type="email" autoComplete="email" {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -194,7 +189,6 @@ export function LoginForm() {
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="••••••••"
                     autoComplete="current-password"
                     {...field}
                     disabled={isLoading}

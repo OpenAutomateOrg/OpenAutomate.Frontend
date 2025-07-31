@@ -12,9 +12,10 @@ interface TenantGuardProps {
 export function TenantGuard({ children }: TenantGuardProps) {
   const { tenant } = useParams()
   const router = useRouter()
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading, refreshUserProfile } = useAuth()
   const { organizationUnits, isLoading: orgLoading } = useOrganizationUnits()
   const [isValidating, setIsValidating] = useState(true)
+  const [currentTenant, setCurrentTenant] = useState<string | null>(null)
 
   useEffect(() => {
     // Don't validate until we have all the data
@@ -46,9 +47,18 @@ export function TenantGuard({ children }: TenantGuardProps) {
       return
     }
 
+    // If this is a new tenant (different from the current one), refresh user profile
+    if (tenant !== currentTenant) {
+      setCurrentTenant(tenant as string)
+      // Refresh user profile to get updated permissions for this tenant
+      refreshUserProfile().catch((error) => {
+        console.warn('Failed to refresh user profile on tenant switch:', error)
+      })
+    }
+
     // All validations passed
     setIsValidating(false)
-  }, [tenant, isAuthenticated, authLoading, organizationUnits, orgLoading, router])
+  }, [tenant, isAuthenticated, authLoading, organizationUnits, orgLoading, router, currentTenant, refreshUserProfile])
 
   // Show loading while validating
   if (authLoading || orgLoading || isValidating) {

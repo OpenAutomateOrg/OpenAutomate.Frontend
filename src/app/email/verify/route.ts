@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 /**
  * Handles email verification by redirecting to the backend API

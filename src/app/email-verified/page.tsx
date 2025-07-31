@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 // Loading component for suspense fallback
 function EmailVerificationLoading() {

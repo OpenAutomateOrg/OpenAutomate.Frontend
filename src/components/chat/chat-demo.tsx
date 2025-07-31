@@ -18,17 +18,14 @@ export function ChatDemo() {
         <CardHeader>
           <CardTitle>Chat Typing Indicator Demo</CardTitle>
           <CardDescription>
-            Test the chat typing indicator functionality. When you send a message,
-            you should see a &ldquo;Assistant is typing...&rdquo; indicator with animated dots
-            while waiting for the response.
+            Test the chat typing indicator functionality. When you send a message, you should see a
+            &ldquo;Assistant is typing...&rdquo; indicator with animated dots while waiting for the
+            response.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-3">
-            <Button 
-              onClick={() => setIsVisible(!isVisible)}
-              variant="outline"
-            >
+            <Button onClick={() => setIsVisible(!isVisible)} variant="outline">
               {isVisible ? 'Hide' : 'Show'} Chat
             </Button>
           </div>

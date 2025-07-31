@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import AssetDetail from '@/components/asset/assetDetail'
+import AssetDetail from '@/components/asset/asset-detail'
 
 export default function Page() {
   const params = useParams()

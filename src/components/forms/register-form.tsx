@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 // Form validation schema
 const formSchema = z
@@ -83,7 +84,7 @@ export function RegisterForm() {
       if (token && tenant) {
         await organizationInvitationsApi.acceptInvitation(tenant, token)
         // Redirect to organization dashboard
-        router.push(`/${tenant}/dashboard`)
+        router.push(`/${tenant}/tenant-selector`)
         return true
       }
     } catch (error) {
@@ -130,9 +131,8 @@ export function RegisterForm() {
       const verificationUrl = `/verification-pending?${params.toString()}`
       router.push(verificationUrl)
     } catch (error: unknown) {
-      console.error('Registration failed', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Registration failed. Please try again.'
+      // Use the proper error message extraction to get backend message
+      const errorMessage = extractErrorMessage(error)
       setRegisterError(errorMessage)
     } finally {
       setIsLoading(false)

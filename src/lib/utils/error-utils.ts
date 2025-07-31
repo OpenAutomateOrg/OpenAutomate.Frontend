@@ -2,11 +2,8 @@
  * Utility functions for handling API errors and extracting user-friendly messages
  */
 
-interface ApiError {
-  message: string
-  status: number
-  details?: string
-}
+import type { ApiError } from '@/lib/api/client'
+import type { ToastType } from '@/components/ui/use-toast'
 
 /**
  * Tries to parse JSON details from API error
@@ -92,7 +89,14 @@ function extractAxiosErrorMessage(error: unknown): string | null {
  * Checks if error is an API error object
  */
 function isApiError(error: unknown): error is ApiError {
-  return typeof error === 'object' && error !== null && 'details' in error && 'status' in error
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    'message' in error &&
+    typeof (error as ApiError).status === 'number' &&
+    typeof (error as ApiError).message === 'string'
+  )
 }
 
 /**
@@ -108,10 +112,18 @@ export function extractErrorMessage(error: unknown): string {
   }
 
   if (isApiError(error)) {
+    // Handle network errors (status 0) specially
+    if (error.status === 0) {
+      return error.message || 'Network error. Please check your connection.'
+    }
     return extractApiErrorMessage(error)
   }
 
   if (error instanceof Error) {
+    // Handle common network error messages
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      return 'Network error. Please check your connection.'
+    }
     return error.message
   }
 
@@ -169,4 +181,13 @@ export function createErrorToast(error: unknown) {
     description: message,
     variant,
   }
+}
+
+/**
+ * Creates and displays an error toast notification
+ * This function is meant to be used with the actual toast hook
+ */
+export function showErrorToast(error: unknown, toastFn: (props: ToastType) => void) {
+  const toastConfig = createErrorToast(error)
+  toastFn(toastConfig)
 }

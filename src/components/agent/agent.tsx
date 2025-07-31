@@ -29,9 +29,9 @@ import {
 } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
-import { useAgentStatus } from '@/hooks/useAgentStatus'
+import { useAgentStatus } from '@/hooks/use-agent-status'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
 
 export const agentSchema = z.object({
@@ -561,12 +561,6 @@ export default function AgentInterface() {
             })
           }}
         />
-
-        {!isLoading && agents.length === 0 && !agentsError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No agents found. Create your first agent to get started.</p>
-          </div>
-        )}
       </div>
 
       <CreateEditModal

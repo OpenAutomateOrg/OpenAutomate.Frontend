@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import RolesDetail from '@/components/administration/roles/rolesDetail'
+import RolesDetail from '@/components/administration/roles/roles-detail'
 
 export default function Page() {
   const params = useParams()
