@@ -42,6 +42,7 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
   refreshToken: () => Promise<boolean>
+  refreshUserProfile: () => Promise<void>
   updateUser: (userData: Partial<User>) => void
   hasPermission: (resource: string, requiredPermission: PermissionLevel, tenant?: string) => boolean
   error: string | null
@@ -386,6 +387,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           register,
           logout,
           refreshToken,
+          refreshUserProfile: fetchAndUpdateUserProfile,
           updateUser,
           hasPermission,
           error,
@@ -400,6 +402,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           register,
           logout,
           refreshToken,
+          fetchAndUpdateUserProfile,
           updateUser,
           hasPermission,
           error,
