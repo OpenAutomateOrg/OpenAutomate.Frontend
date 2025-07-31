@@ -8,7 +8,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
@@ -38,7 +37,7 @@ export function NavOrganization({ organizations }: NavOrganizationProps) {
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="">
+            <div className="flex items-center gap-3 px-2 py-2">
               <activeOrg.icon className="size-4" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{activeOrg.name}</span>
@@ -51,7 +50,7 @@ export function NavOrganization({ organizations }: NavOrganizationProps) {
               >
                 <RefreshCcw />
               </Button>
-            </SidebarMenuButton>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
