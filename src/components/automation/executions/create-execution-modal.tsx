@@ -228,7 +228,7 @@ export default function CreateExecutionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[70vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Play className="h-5 w-5" />
@@ -254,16 +254,16 @@ export default function CreateExecutionModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Package</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select data-size="sm" onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full py-8">
                           <SelectValue placeholder="Select a package" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {filteredPackages.map((pkg) => (
                           <SelectItem key={pkg.id} value={pkg.id}>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col text-left">
                               <span className="font-medium">{pkg.name}</span>
                               {pkg.description && (
                                 <span className="text-sm text-muted-foreground">
@@ -288,25 +288,27 @@ export default function CreateExecutionModal({
                   <FormItem>
                     <FormLabel>Version</FormLabel>
                     <Select
+                      data-size="sm"
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={!selectedPackageId}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full py-8">
                           <SelectValue placeholder="Select a version" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {availableVersions.map((version) => (
                           <SelectItem key={version.id} value={version.versionNumber}>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col text-left">
                               <span className="font-medium">v{version.versionNumber}</span>
                               <span className="text-sm text-muted-foreground">
-                                Uploaded {formatUtcToLocal(version.uploadedAt, { 
+                                Uploaded{' '}
+                                {formatUtcToLocal(version.uploadedAt, {
                                   dateStyle: 'medium',
                                   timeStyle: undefined,
-                                  fallback: 'Unknown date'
+                                  fallback: 'Unknown date',
                                 })}
                               </span>
                             </div>
@@ -326,9 +328,9 @@ export default function CreateExecutionModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Agent</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select data-size="sm" onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full py-8">
                           <SelectValue placeholder="Select an agent" />
                         </SelectTrigger>
                       </FormControl>
@@ -336,7 +338,7 @@ export default function CreateExecutionModal({
                         {filteredAgents.map((agent) => (
                           <SelectItem key={agent.id} value={agent.id}>
                             <div className="flex items-center justify-between w-full">
-                              <div className="flex flex-col">
+                              <div className="flex flex-col text-left">
                                 <span className="font-medium">{agent.name}</span>
                                 <span className="text-sm text-muted-foreground">
                                   {agent.machineName}
