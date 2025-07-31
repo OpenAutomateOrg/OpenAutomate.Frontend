@@ -5,8 +5,8 @@ import { SidebarIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { LanguageSwitcher } from '@/components/layout/Language-switcher'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageSwitcher } from '@/components/layout/language-switcher'
 
 import { useSidebar } from '@/components/ui/sidebar'
 

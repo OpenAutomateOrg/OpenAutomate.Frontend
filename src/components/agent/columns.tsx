@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[] => [
   {
@@ -93,30 +94,10 @@ export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[
       <DataTableColumnHeader column={column} title="Last Connected" />
     ),
     cell: ({ row }: { row: Row<AgentRow> }) => {
-      // Get the value and convert it to a string to ensure it's safe for display
       const rawValue = row.getValue('lastConnected')
-      let lastConnected = ''
-      if (typeof rawValue === 'string') {
-        lastConnected = rawValue
-      } else if (rawValue !== null && rawValue !== undefined) {
-        lastConnected = String(rawValue)
-      }
-
-      // Format the date if it's a valid date string
-      let formattedDate = 'Never'
-      try {
-        if (lastConnected && lastConnected !== 'null' && lastConnected !== 'undefined') {
-          const date = new Date(lastConnected)
-          if (!isNaN(date.getTime())) {
-            formattedDate = new Intl.DateTimeFormat('en-US', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }).format(date)
-          }
-        }
-      } catch (error) {
-        console.error('Error formatting date:', error)
-      }
+      const lastConnected = typeof rawValue === 'string' ? rawValue : rawValue ? String(rawValue) : null
+      
+      const formattedDate = formatUtcToLocal(lastConnected, { fallback: 'Never' })
 
       return (
         <div className="flex items-center">

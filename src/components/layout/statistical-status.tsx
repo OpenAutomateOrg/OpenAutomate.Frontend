@@ -3,7 +3,7 @@
 import { Info } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getExecutionsWithOData } from '@/lib/api/executions'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
 

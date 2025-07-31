@@ -5,7 +5,7 @@
 
 // Import user type
 import type { User } from '@/types/auth'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 // Storage keys from config
 const TOKEN_KEY = config.auth.tokenStorageKey

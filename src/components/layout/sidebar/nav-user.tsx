@@ -2,7 +2,6 @@
 
 import { ChevronsUpDown } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,12 +19,12 @@ import {
 } from '@/components/ui/sidebar'
 import { type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/providers/auth-provider'
 
 interface UserProps {
   user: {
     name: string
     email: string
-    avatar: string
   }
 }
 interface NavUserItem {
@@ -42,7 +41,7 @@ interface NavUserProps {
 }
 export function NavUser({ user, navUser }: UserProps & NavUserProps) {
   const { isMobile } = useSidebar()
-
+  const { logout } = useAuth()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -50,12 +49,8 @@ export function NavUser({ user, navUser }: UserProps & NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-orange-600/10 hover:text-orange-600 hover:outline hover:outline-2 hover:outline-orange-600 transition-all duration-200"
+              className="data-[state=open]:-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-orange-600/10 hover:text-orange-600 hover:outline  hover:outline-orange-600 transition-all duration-200"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
@@ -71,10 +66,6 @@ export function NavUser({ user, navUser }: UserProps & NavUserProps) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="truncate text-xs">{user.email}</span>
@@ -95,16 +86,16 @@ export function NavUser({ user, navUser }: UserProps & NavUserProps) {
               ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Link href={navUser.logout.url}>
+            <Link onClick={() => logout()} href={''}>
+              <DropdownMenuGroup>
+                <DropdownMenuItem>
                   <div className="flex align-center items-center gap-2">
                     {navUser.logout.icon && <navUser.logout.icon />}
                     <span>{navUser.logout.title}</span>
                   </div>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

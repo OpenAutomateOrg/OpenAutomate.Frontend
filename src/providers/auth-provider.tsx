@@ -28,7 +28,8 @@ import {
 } from '@/lib/auth/token-storage'
 import logger from '@/lib/utils/logger'
 import authLogger from '@/lib/utils/auth-logger'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 interface AuthContextType {
   user: User | null
@@ -36,10 +37,12 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   isSystemAdmin: boolean
+  isLogout: boolean
   login: (data: LoginRequest) => Promise<User | void>
   register: (data: RegisterRequest) => Promise<User>
   logout: () => Promise<void>
   refreshToken: () => Promise<boolean>
+  refreshUserProfile: () => Promise<void>
   updateUser: (userData: Partial<User>) => void
   hasPermission: (resource: string, requiredPermission: PermissionLevel, tenant?: string) => boolean
   error: string | null
@@ -55,12 +58,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLogout, setIsLogout] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const params = useParams()
-
-  // Computed property for system admin status
-  const isSystemAdmin = user?.systemRole === SystemRole.Admin
 
   // Helper function to fetch and update user profile
   const fetchAndUpdateUserProfile = useCallback(
@@ -76,6 +77,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     },
     [],
   )
+  // Computed property for system admin status
+  const isSystemAdmin = user?.systemRole === SystemRole.Admin || user?.systemRole === 'Admin'
 
   // Helper function to check permissions for a specific resource and tenant
   const hasPermission = useCallback(
@@ -227,7 +230,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
                 lastName: response.lastName,
                 systemRole: response.systemRole || SystemRole.User,
               }
-
+              console.log(userToSet)
               // Update in storage and local state
               setStoredUser(userToSet)
               setUser(userToSet)
@@ -296,15 +299,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
         return userData
       } catch (err: unknown) {
-        // Handle API error with type safety
-        const errorMessage =
-          typeof err === 'object' && err !== null
-            ? (err as { response?: { data?: { message?: string } }; message?: string })?.response
-                ?.data?.message ||
-              (err as { message?: string })?.message ||
-              'An error occurred during login'
-            : 'An error occurred during login'
-
+        // Use proper error message extraction
+        const errorMessage = extractErrorMessage(err)
         setError(errorMessage)
         logger.error('Login failed:', err)
         throw err
@@ -333,14 +329,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
       return response
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err.message as string) || 'Registration failed'
-        setError(errorMessage)
-        logger.error('Registration failed:', errorMessage)
-      } else {
-        setError('Registration failed')
-        logger.error('Registration failed: Unknown error')
-      }
+      // Use proper error message extraction to get backend message
+      const errorMessage = extractErrorMessage(err)
+      setError(errorMessage)
+      logger.error('Registration failed:', errorMessage)
       throw err
     } finally {
       setIsLoading(false)
@@ -350,6 +342,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   // Logout function
   const logout = useCallback(async () => {
     setIsLoading(true)
+    setIsLogout(true)
 
     try {
       await authApi.logout()
@@ -361,6 +354,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       clearAuthData()
       setUser(null)
       setUserProfile(null)
+      setIsLogout(false)
       router.push('/login')
       setIsLoading(false)
     }
@@ -388,10 +382,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           isLoading,
           isAuthenticated: !!user,
           isSystemAdmin,
+          isLogout,
           login,
           register,
           logout,
           refreshToken,
+          refreshUserProfile: fetchAndUpdateUserProfile,
           updateUser,
           hasPermission,
           error,
@@ -401,10 +397,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           userProfile,
           isLoading,
           isSystemAdmin,
+          isLogout,
           login,
           register,
           logout,
           refreshToken,
+          fetchAndUpdateUserProfile,
           updateUser,
           hasPermission,
           error,

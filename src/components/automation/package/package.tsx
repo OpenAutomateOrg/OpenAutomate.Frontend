@@ -30,7 +30,7 @@ import {
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
 
 export const packageSchema = z.object({
@@ -511,12 +511,6 @@ export default function PackageInterface() {
             }
           }}
         />
-
-        {!isLoading && packages.length === 0 && !packagesError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No packages found. Create your first package to get started.</p>
-          </div>
-        )}
       </div>
 
       <CreateEditModal

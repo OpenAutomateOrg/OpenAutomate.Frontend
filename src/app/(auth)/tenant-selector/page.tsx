@@ -27,6 +27,7 @@ function TenantSelectorContent() {
   const searchParams = useSearchParams()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // Get the force parameter from URL, default to true to prevent auto-redirect
   const forceStay = searchParams.get('force') !== 'false'
@@ -109,6 +110,7 @@ function TenantSelectorContent() {
   // Handle successful organization creation
   const handleOrganizationCreated = (slug: string) => {
     refresh() // Refresh the list first (in case user wants to create another)
+    setIsDialogOpen(false) // Close the dialog
 
     // Only auto-navigate if not forcing to stay on this page
     if (!shouldStayOnPage) {
@@ -218,7 +220,7 @@ function TenantSelectorContent() {
             </div>
 
             {/* Create new organization */}
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full mt-4 border-dashed">
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -232,7 +234,10 @@ function TenantSelectorContent() {
                     Create a new organization unit to manage your automation processes.
                   </DialogDescription>
                 </DialogHeader>
-                <CreateOrganizationUnitForm onSuccess={handleOrganizationCreated} />
+                <CreateOrganizationUnitForm 
+                  onSuccess={handleOrganizationCreated}
+                  onCancel={() => setIsDialogOpen(false)}
+                />
               </DialogContent>
             </Dialog>
           </>

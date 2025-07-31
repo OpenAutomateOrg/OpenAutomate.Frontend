@@ -12,10 +12,7 @@ export async function GET() {
 
     if (!apiUrl) {
       console.error('NEXT_PUBLIC_API_URL environment variable is not set')
-      return NextResponse.json(
-        { error: 'Backend API URL not configured' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Backend API URL not configured' }, { status: 500 })
     }
 
     // Return the API URL for agent discovery
@@ -24,9 +21,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error in connection-info endpoint:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

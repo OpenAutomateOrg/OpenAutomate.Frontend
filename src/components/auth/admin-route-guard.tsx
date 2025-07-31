@@ -13,7 +13,7 @@ interface AdminRouteGuardProps {
 
   /**
    * The path to redirect non-admin users to
-   * @default "/dashboard"
+   * @default "/tenant-selector"
    */
   redirectPath?: string
 
@@ -31,18 +31,20 @@ interface AdminRouteGuardProps {
  */
 export function AdminRouteGuard({
   children,
-  redirectPath = '/dashboard',
+  redirectPath = '/tenant-selector',
   loadingComponent,
 }: AdminRouteGuardProps) {
-  const { isSystemAdmin, isLoading } = useAuth()
+  const { isSystemAdmin, isLoading, isLogout } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     // Only redirect after loading completes and we know user is not an admin
     if (!isLoading && !isSystemAdmin) {
       router.push(redirectPath)
+    } else if (isLogout) {
+      router.push('/login')
     }
-  }, [isSystemAdmin, isLoading, router, redirectPath])
+  }, [isSystemAdmin, isLoading, router, redirectPath, isLogout])
 
   // If still loading, show loading component
   if (isLoading) {

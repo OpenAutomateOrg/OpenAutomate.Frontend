@@ -64,7 +64,7 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={getTenantPath('/dashboard')}>
+            <Link href={getTenantPath('/tenant-selector')}>
               <Icons.home className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
             </Link>

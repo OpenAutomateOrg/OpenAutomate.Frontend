@@ -5,7 +5,7 @@ import useSWR from 'swr'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search, Server, Wifi, WifiOff } from 'lucide-react'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { getAllBotAgents } from '@/lib/api/bot-agents'
 
 interface Agent {

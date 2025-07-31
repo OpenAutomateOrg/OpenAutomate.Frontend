@@ -7,7 +7,7 @@ import { createInProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import CreateExecutionModal from './CreateExecutionModal'
+import CreateExecutionModal from './create-execution-modal'
 
 import { z } from 'zod'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
@@ -22,10 +22,11 @@ import {
   ODataQueryOptions,
 } from '@/lib/api/executions'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
-import { useExecutionStatus } from '@/hooks/useExecutionStatus'
+import { useExecutionStatus } from '@/hooks/use-execution-status'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 import {
   useReactTable,
@@ -276,22 +277,9 @@ export default function ExecutionsInterface() {
       const realtimeUpdate = executionStatuses[execution.id]
       const currentStatus = realtimeUpdate?.status || execution.status
 
-      // Helper function to safely format dates
+      // Helper function to safely format dates using our datetime utility
       const formatDate = (dateString: string | undefined | null): string => {
-        if (!dateString) return ''
-        try {
-          const date = new Date(dateString)
-          if (isNaN(date.getTime())) {
-            return ''
-          }
-          return new Intl.DateTimeFormat('en-US', {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-          }).format(date)
-        } catch (error) {
-          console.error('Date formatting error:', error, 'for date:', dateString)
-          return ''
-        }
+        return formatUtcToLocal(dateString, { fallback: '' })
       }
 
       const formattedStartTime = formatDate(execution.startTime)
@@ -317,9 +305,11 @@ export default function ExecutionsInterface() {
         Command: 'execute',
         Schedules: 'Once', // For immediate executions
         'Task Id': execution.id,
-        'Created Date': execution.startTime
-          ? new Date(execution.startTime).toLocaleDateString()
-          : '',
+        'Created Date': formatUtcToLocal(execution.startTime, { 
+          dateStyle: 'medium', 
+          timeStyle: undefined,
+          fallback: '' 
+        }),
         'Created By': 'Current User', // TODO: Get from auth context when available
 
         // Legacy fields for compatibility
@@ -337,7 +327,11 @@ export default function ExecutionsInterface() {
         command: 'execute',
         schedules: 'Once',
         taskId: execution.id,
-        createdDate: execution.startTime ? new Date(execution.startTime).toLocaleDateString() : '',
+        createdDate: formatUtcToLocal(execution.startTime, { 
+          dateStyle: 'medium', 
+          timeStyle: undefined,
+          fallback: '' 
+        }),
         packageName: execution.packageName || '',
         hasLogs: execution.hasLogs || false,
       }
@@ -904,7 +898,7 @@ export default function ExecutionsInterface() {
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         {/* Tabs */}
-        <div className="mb-4 border-b border-gray-200">
+        <div className="mb-4 border-b w-full">
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -1083,12 +1077,6 @@ export default function ExecutionsInterface() {
             }, 0)
           }}
         />
-
-        {!isDataLoading && executionsData.length === 0 && !executionsError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No executions found.</p>
-          </div>
-        )}
       </div>
 
       {/* Create Execution Modal */}

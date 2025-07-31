@@ -4,7 +4,7 @@ import { useCallback } from 'react'
 import { organizationUnitApi } from '@/lib/api/organization-units'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 
 export function useOrganizationUnits() {
   const router = useRouter()

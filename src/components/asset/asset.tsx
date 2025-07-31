@@ -32,7 +32,7 @@ import {
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
-import { swrKeys } from '@/lib/swr-config'
+import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
 
 export const assetSchema = z.object({
@@ -509,12 +509,6 @@ export default function AssetInterface() {
             })
           }}
         />
-
-        {!isLoading && assets.length === 0 && !assetsError && (
-          <div className="text-center py-10 text-muted-foreground">
-            <p>No assets found. Create your first asset to get started.</p>
-          </div>
-        )}
       </div>
 
       <CreateEditModal

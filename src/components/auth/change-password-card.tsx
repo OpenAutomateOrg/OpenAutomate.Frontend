@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { Eye, EyeOff, LoaderCircle, LockKeyhole } from 'lucide-react'
 import { authApi } from '@/lib/api/auth'
+import { handleGlobalError } from '@/lib/utils/global-error-handler'
 
 export function ChangePasswordCard() {
   const [isLoading, setIsLoading] = useState(false)
@@ -51,12 +52,12 @@ export function ChangePasswordCard() {
 
     setIsLoading(true)
 
-    try {
+ try {
       // Call the changePassword API
       await authApi.changePassword({
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+        confirmNewPassword: formData.confirmPassword,
       })
 
       toast({
@@ -71,12 +72,8 @@ export function ChangePasswordCard() {
         confirmPassword: '',
       })
     } catch (error) {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to change password. Please try again.',
-        variant: 'destructive',
-      })
+      // Use global error handler for consistent user experience
+      handleGlobalError(error)
     } finally {
       setIsLoading(false)
     }

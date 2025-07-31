@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { Icons } from '@/components/ui/icons'
-import { config } from '@/lib/config'
+import { config } from '@/lib/config/config'
 
 interface RouteGuardProps {
   readonly children: React.ReactNode
