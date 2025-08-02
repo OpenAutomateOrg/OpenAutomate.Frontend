@@ -108,17 +108,16 @@ export const createInProgressColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Start Time" />,
     cell: ({ row }) => {
       const value = row.getValue('startTime') as string
-      const formatted = formatUtcToLocal(value, { fallback: '' })
-      return <span>{formatted}</span>
-    },
-  },
-  {
-    accessorKey: 'endTime',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="End Time" />,
-    cell: ({ row }) => {
-      const value = row.getValue('endTime') as string
-      const formatted = formatUtcToLocal(value, { fallback: '' })
-      return <span>{formatted}</span>
+      const formatted = formatUtcToLocal(value, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        fallback: 'N/A',
+      })
+      return (
+        <div className="flex items-center">
+          <span>{formatted}</span>
+        </div>
+      )
     },
   },
   {
