@@ -125,6 +125,11 @@ export default function ExecutionsInterface() {
       return [{ id: sort, desc: order === 'desc' }]
     }
 
+    // Default sorting for Historical tab: newest executions first
+    if (tab === 'historical') {
+      return [{ id: 'startTime', desc: true }]
+    }
+
     return []
   }
 
@@ -183,9 +188,28 @@ export default function ExecutionsInterface() {
       $count: true,
     }
 
-    // Add sorting
+    // Add sorting with column mapping
     if (sorting.length > 0) {
-      params.$orderby = sorting.map((sort) => `${sort.id} ${sort.desc ? 'desc' : 'asc'}`).join(',')
+      params.$orderby = sorting
+        .map((sort) => {
+          // Map frontend column names to backend property names
+          let backendColumn = sort.id
+          if (sort.id === 'startTime') {
+            backendColumn = 'StartTime'
+          } else if (sort.id === 'endTime') {
+            backendColumn = 'EndTime'
+          } else if (sort.id === 'agent') {
+            backendColumn = 'BotAgentName'
+          } else if (sort.id === 'state') {
+            backendColumn = 'Status'
+          }
+
+          console.log(`🔄 Sorting: ${sort.id} → ${backendColumn} ${sort.desc ? 'desc' : 'asc'}`)
+          return `${backendColumn} ${sort.desc ? 'desc' : 'asc'}`
+        })
+        .join(',')
+
+      console.log(`📊 Final OData $orderby: ${params.$orderby}`)
     }
 
     // Add filtering
@@ -267,6 +291,15 @@ export default function ExecutionsInterface() {
     getAllExecutions,
   )
 
+  // Debug logging for data sources
+  console.log('📊 Data source debug:', {
+    hasODataResponse: !!executionsResponse?.value,
+    oDataCount: executionsResponse?.value?.length || 0,
+    hasFallback: !!fallbackExecutions,
+    fallbackCount: fallbackExecutions?.length || 0,
+    hasError: !!executionsError,
+  })
+
   // Combined loading state
   const isDataLoading = isLoading || (executionsError && !fallbackExecutions)
 
@@ -285,14 +318,10 @@ export default function ExecutionsInterface() {
       const formattedStartTime = formatDate(execution.startTime)
       const formattedEndTime = formatDate(execution.endTime)
 
-      // Debug logging for date transformation
-      console.log('Execution transformation:', {
-        id: execution.id,
-        startTime: execution.startTime,
-        endTime: execution.endTime,
-        formattedStartTime,
-        formattedEndTime,
-      })
+      // Debug logging for date transformation (simplified)
+      if (!execution.startTime) {
+        console.warn('🕒 Missing startTime for execution:', execution.id)
+      }
 
       return {
         id: execution.id,
@@ -305,14 +334,14 @@ export default function ExecutionsInterface() {
         Command: 'execute',
         Schedules: 'Once', // For immediate executions
         'Task Id': execution.id,
-        'Created Date': formatUtcToLocal(execution.startTime, { 
-          dateStyle: 'medium', 
+        'Created Date': formatUtcToLocal(execution.startTime, {
+          dateStyle: 'medium',
           timeStyle: undefined,
-          fallback: '' 
+          fallback: '',
         }),
         'Created By': 'Current User', // TODO: Get from auth context when available
 
-        // Legacy fields for compatibility
+        // Legacy fields for compatibility - KEEP RAW DATA for column access
         name: execution.packageName || '',
         type: 'execution',
         value: execution.packageVersion || '',
@@ -321,16 +350,16 @@ export default function ExecutionsInterface() {
         status: currentStatus,
         agent: execution.botAgentName || '',
         state: currentStatus,
-        startTime: formattedStartTime,
-        endTime: formattedEndTime,
+        startTime: execution.startTime, // Keep RAW data here for column formatting
+        endTime: execution.endTime, // Keep RAW data here for column formatting
         source: 'Manual',
         command: 'execute',
         schedules: 'Once',
         taskId: execution.id,
-        createdDate: formatUtcToLocal(execution.startTime, { 
-          dateStyle: 'medium', 
+        createdDate: formatUtcToLocal(execution.startTime, {
+          dateStyle: 'medium',
           timeStyle: undefined,
-          fallback: '' 
+          fallback: '',
         }),
         packageName: execution.packageName || '',
         hasLogs: execution.hasLogs || false,
@@ -367,7 +396,7 @@ export default function ExecutionsInterface() {
       fallbackExecutions &&
       (!executionsResponse?.value || executionsResponse.value.length === 0)
     ) {
-      console.log('Using fallback data with pagination:', pagination)
+      console.log('⚠️ Using fallback data - this will ignore OData sorting!', pagination)
 
       // Transform fallback data
       const transformedData = fallbackExecutions.map((execution) =>
@@ -388,6 +417,35 @@ export default function ExecutionsInterface() {
         }
         return true
       })
+
+      // 1.5. Apply sorting to fallback data (since OData sorting is not available)
+      if (sorting.length > 0) {
+        filteredData.sort((a, b) => {
+          const sort = sorting[0] // Take first sort
+          const aValue = a[sort.id as keyof ExecutionsRow]
+          const bValue = b[sort.id as keyof ExecutionsRow]
+
+          // Handle date sorting for startTime/endTime
+          if (sort.id === 'startTime' || sort.id === 'endTime') {
+            const dateA = new Date(aValue as string)
+            const dateB = new Date(bValue as string)
+
+            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
+            if (isNaN(dateA.getTime())) return 1
+            if (isNaN(dateB.getTime())) return -1
+
+            const result = dateA.getTime() - dateB.getTime()
+            return sort.desc ? -result : result
+          }
+
+          // Handle string sorting
+          const result = String(aValue).localeCompare(String(bValue))
+          return sort.desc ? -result : result
+        })
+        console.log(
+          `🔄 Applied client-side sorting: ${sorting[0].id} ${sorting[0].desc ? 'desc' : 'asc'}`,
+        )
+      }
 
       // 2. Apply search filtering if search value exists - search by Agent only
       if (searchValue) {
@@ -436,7 +494,17 @@ export default function ExecutionsInterface() {
       return []
     }
 
-    console.log(`Returning ${executionsResponse.value.length} items from OData response`)
+    console.log(
+      `✅ Using OData response with ${executionsResponse.value.length} items (sorting preserved)`,
+    )
+    console.log(
+      '📋 First 3 execution start times:',
+      executionsResponse.value.slice(0, 3).map((e) => ({
+        id: e.id.substring(0, 8),
+        startTime: e.startTime,
+        status: e.status,
+      })),
+    )
     return executionsResponse.value.map((execution) => transformExecutionToRow(execution))
   }, [
     executionsResponse,
@@ -447,6 +515,7 @@ export default function ExecutionsInterface() {
     columnFilters,
     pagination,
     totalCount,
+    sorting, // Add sorting dependency for client-side sorting
   ])
 
   // Update totalCount from filteredData in a separate useEffect
@@ -844,7 +913,7 @@ export default function ExecutionsInterface() {
               packageName: newExecution.packageName,
               botAgentName: newExecution.botAgentName,
               status: 'Pending',
-              startTime: new Date().toISOString(),
+              startTime: new Date().toISOString(), // This is already UTC format
               endTime: undefined,
               packageVersion: undefined,
               errorMessage: undefined,
@@ -868,6 +937,7 @@ export default function ExecutionsInterface() {
       // This handles cases where optimistic update might be incomplete
       // Note: We don't return a cleanup function from this callback - that's only for useEffect
       setTimeout(() => {
+        console.log('🔄 Refreshing executions after create...')
         mutateExecutions()
       }, 2000) // 2 second delay to allow server processing
     },
@@ -888,7 +958,24 @@ export default function ExecutionsInterface() {
     setTab(newTab)
     // Reset pagination to first page when tab changes
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-    updateUrl(pathname, { page: '1' })
+
+    // Set default sorting for Historical tab: newest executions first
+    if (newTab === 'historical') {
+      setSorting([{ id: 'startTime', desc: true }])
+      updateUrl(pathname, {
+        page: '1',
+        sort: 'startTime',
+        order: 'desc',
+      })
+    } else {
+      // Clear sorting for other tabs
+      setSorting([])
+      updateUrl(pathname, {
+        page: '1',
+        sort: null,
+        order: null,
+      })
+    }
 
     // Force reload data immediately when tab changes
     mutateExecutions()
