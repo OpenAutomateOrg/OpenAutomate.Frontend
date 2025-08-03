@@ -17,7 +17,7 @@ export interface UpdateAssetDto {
 export interface AssetResponseDto {
   id: string
   key: string
-  type: number
+  type: number | string // Allow both number and string type from API
   description: string
   createdBy: string
   createdAt?: string
@@ -50,7 +50,7 @@ export interface AssetDetailDto {
   id: string
   key: string
   description: string
-  type: number
+  type: number | string // Allow both number and string type from API
   value?: string
   createdAt?: string
   createdById?: string

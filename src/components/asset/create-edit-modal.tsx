@@ -95,8 +95,16 @@ export function CreateEditModal({
 
   function fillFormFromAsset(asset: AssetEditRow) {
     setKey(asset.key || '')
-    const typeValue = typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0
+
+    // Convert type to number for form consistency
+    let typeValue: number
+    if (asset.type === 'String' || asset.type === 0 || asset.type === '0') {
+      typeValue = 0
+    } else {
+      typeValue = 1
+    }
     setType(typeValue)
+
     setValue(asset.value ?? '')
     setDescription(asset.description || '')
     setAddedAgents(asset.agents?.filter((agent: Agent) => agent?.id && agent?.name) ?? [])
@@ -236,7 +244,10 @@ export function CreateEditModal({
 
   let inputType: string
   if (isEditing) {
-    inputType = asset?.type === 1 ? 'password' : 'text'
+    // Handle both string and number types from API
+    const assetType = asset?.type
+    const isSecret = assetType === 1 || assetType === '1' || assetType === 'Secret'
+    inputType = isSecret ? 'password' : 'text'
   } else {
     inputType = type === 1 ? 'password' : 'text'
   }
