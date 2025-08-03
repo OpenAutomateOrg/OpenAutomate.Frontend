@@ -8,6 +8,7 @@ import type { RolesRow } from './roles'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
+import { isProtectedRole, canModifyRole } from '@/lib/constants/resources'
 
 export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[] => [
   {
@@ -30,6 +31,7 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
         onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
         aria-label="Select row"
         className="translate-y-[2px]"
+        disabled={!canModifyRole(row.original)}
       />
     ),
     enableSorting: false,
@@ -49,6 +51,11 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
         {row.original.isSystemAuthority && (
           <Badge variant="secondary" className="text-xs">
             System
+          </Badge>
+        )}
+        {isProtectedRole(row.original.name) && (
+          <Badge variant="outline" className="text-xs border-orange-500 text-orange-600">
+            Default
           </Badge>
         )}
       </div>
@@ -96,10 +103,10 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string
-      const formatted = formatUtcToLocal(date, { 
+      const formatted = formatUtcToLocal(date, {
         dateStyle: 'medium',
         timeStyle: undefined, // Only show date, no time
-        fallback: 'Invalid date' 
+        fallback: 'Invalid date'
       })
       return (
         <div className="text-sm text-muted-foreground">
