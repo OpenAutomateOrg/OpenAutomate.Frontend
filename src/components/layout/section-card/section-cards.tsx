@@ -1,38 +1,40 @@
 'use client'
 
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { getBotAgentsWithOData } from '@/lib/api/bot-agents'
-import { getOrganizationUnitUsersWithOData } from '@/lib/api/organization-unit-user'
-import { getAssetsWithOData } from '@/lib/api/assets'
-import { getSchedulesWithOData } from '@/lib/api/schedules'
-import { getAutomationPackagesWithOData } from '@/lib/api/automation-packages'
+import { getBotAgentsODataTotal } from '@/lib/api/bot-agents'
+import { getOrganizationUnitUsersODataTotal } from '@/lib/api/organization-unit-user'
+import { getAssetsODataTotal } from '@/lib/api/assets'
+import { getSchedulesODataTotal } from '@/lib/api/schedules'
+import { getAutomationPackagesODataTotal } from '@/lib/api/automation-packages'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
+import { usePathname } from 'next/navigation'
 
 export function SectionCards() {
   // const { t } = useLocale()
+  const pathname = usePathname()
+
+  const tenant = pathname.split('/')[1]
 
   // API calls to get counts for each card
-  const { data: usersResponse } = useSWR(swrKeys.organizationUnits(), () =>
-    getOrganizationUnitUsersWithOData({ $count: true, $top: 1 }),
+  const { data: usersResponse } = useSWR(swrKeys.organizationUnitUsersTotal(tenant), () =>
+    getOrganizationUnitUsersODataTotal(tenant),
   )
 
-  const { data: agentsResponse } = useSWR(swrKeys.agentsWithOData({ $count: true, $top: 1 }), () =>
-    getBotAgentsWithOData({ $count: true, $top: 1 }),
+  const { data: agentsResponse } = useSWR(swrKeys.agentsWithTotal(tenant), () =>
+    getBotAgentsODataTotal(tenant),
   )
 
-  const { data: assetsResponse } = useSWR(swrKeys.assetsWithOData({ $count: true, $top: 1 }), () =>
-    getAssetsWithOData({ $count: true, $top: 1 }),
+  const { data: assetsResponse } = useSWR(swrKeys.assetsWithTotal(tenant), () =>
+    getAssetsODataTotal(tenant),
   )
 
-  const { data: schedulesResponse } = useSWR(
-    swrKeys.schedulesWithOData({ $count: true, $top: 1 }),
-    () => getSchedulesWithOData({ $count: true, $top: 1 }),
+  const { data: schedulesResponse } = useSWR(swrKeys.schedulesWithTotal(tenant), () =>
+    getSchedulesODataTotal(tenant),
   )
 
-  const { data: packagesResponse } = useSWR(
-    swrKeys.packagesWithOData({ $count: true, $top: 1 }),
-    () => getAutomationPackagesWithOData({ $count: true, $top: 1 }),
+  const { data: packagesResponse } = useSWR(swrKeys.packagesWithTotal(tenant), () =>
+    getAutomationPackagesODataTotal(tenant),
   )
 
   // Extract counts from responses

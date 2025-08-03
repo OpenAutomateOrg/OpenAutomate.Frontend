@@ -24,7 +24,7 @@ interface NavOrganizationProps {
   organizations: OrganizationItem[]
 }
 
-export function NavOrganization({ organizations }: NavOrganizationProps) {
+export function NavOrganization({ organizations }: Readonly<NavOrganizationProps>) {
   const router = useRouter()
 
   // Find active organization

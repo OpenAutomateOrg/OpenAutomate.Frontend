@@ -189,6 +189,21 @@ export const getBotAgentsWithOData = async (
     return { value: [] }
   }
 }
+// This function retrieves the total count of bot agents using OData query capabilities.
+export const getBotAgentsODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<BotAgentResponseDto>> => {
+  const endpoint = `${tenant}/odata/BotAgents`
+
+  try {
+    const response = await api.get<ODataResponse<BotAgentResponseDto>>(endpoint)
+    console.log(`getBotAgentsODataTotal for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching BotAgents for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
+}
 
 /**
  * Get a specific bot agent by ID with OData query options

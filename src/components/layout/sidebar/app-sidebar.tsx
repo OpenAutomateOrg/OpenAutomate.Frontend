@@ -101,11 +101,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         className=" top-(--header-height) h-[calc(100svh-var(--header-height))]! dark:bg-black/60"
         {...props}
       >
-        {!isSystemAdmin && (
-          <SidebarHeader>
-            <NavOrganization organizations={organizationData} />
-          </SidebarHeader>
-        )}
+        <SidebarHeader>
+          <NavOrganization organizations={organizationData} />
+        </SidebarHeader>
         <SidebarContent>
           <div className="flex items-center justify-center h-full">
             <div className="text-sm text-muted-foreground">Loading navigation...</div>
