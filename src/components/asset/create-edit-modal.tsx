@@ -162,35 +162,49 @@ export function CreateEditModal({
     return valid
   }
 
+  const handleDuplicateKeyError = (err: unknown) => {
+    if (err && typeof err === 'object' && 'message' in err) {
+      const errorMessage = (err as { message: string }).message
+      const isDuplicateError = errorMessage.toLowerCase().includes('duplicate') ||
+        errorMessage.toLowerCase().includes('already exists') ||
+        errorMessage.toLowerCase().includes('unique')
+
+      if (isDuplicateError) {
+        const errorMsg = isEditing
+          ? 'This key is already used by another asset. Please choose a different key.'
+          : 'Key already exists. Please choose a unique key.'
+        setKeyError(errorMsg)
+        return true
+      }
+    }
+    return false
+  }
+
+  const submitAsset = async (agentIds: string[]) => {
+    if (isEditing && asset?.id) {
+      await updateAsset(asset.id, { key, description, value }, agentIds)
+      notify.handleSuccess('updated', `Asset "${key}"`)
+    } else {
+      await createAsset({ key, description, value, type: Number(type), botAgentIds: agentIds })
+      notify.handleSuccess('created', `Asset "${key}"`)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!validateForm()) return
+
     setSubmitting(true)
     try {
       const agentIds = addedAgents.map((a: Agent) => a.id)
-      if (isEditing && asset?.id) {
-        await updateAsset(asset.id, { key, description, value }, agentIds)
-        notify.handleSuccess('updated', `Asset "${key}"`)
-      } else {
-        await createAsset({ key, description, value, type: Number(type), botAgentIds: agentIds })
-        notify.handleSuccess('created', `Asset "${key}"`)
-      }
+      await submitAsset(agentIds)
       resetForm()
       onClose()
       if (onCreated) onCreated()
     } catch (err) {
-      // Handle duplicate key error specifically
-      if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err as { message: string }).message
-        if (errorMessage.toLowerCase().includes('duplicate') ||
-          errorMessage.toLowerCase().includes('already exists') ||
-          errorMessage.toLowerCase().includes('unique')) {
-          setKeyError(isEditing ? 'This key is already used by another asset. Please choose a different key.' : 'Key already exists. Please choose a unique key.')
-          return
-        }
+      const isDuplicateHandled = handleDuplicateKeyError(err)
+      if (!isDuplicateHandled) {
+        console.error('Error submitting asset:', err)
       }
-
-      // For other errors, don't show toast - just log to console
-      console.error('Error submitting asset:', err)
     } finally {
       setSubmitting(false)
     }
