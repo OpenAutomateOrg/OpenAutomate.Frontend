@@ -203,7 +203,8 @@ export function CreateEditModal({
     } catch (err) {
       const isDuplicateHandled = handleDuplicateKeyError(err)
       if (!isDuplicateHandled) {
-        console.error('Error submitting asset:', err)
+        // Show error notification for all non-duplicate errors
+        notify.handleError(err, isEditing ? 'updating asset' : 'creating asset')
       }
     } finally {
       setSubmitting(false)
