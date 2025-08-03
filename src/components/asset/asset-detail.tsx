@@ -30,7 +30,8 @@ const AssetValueDisplay = ({
   showSecret: boolean
   onToggleSecret: () => void
 }) => {
-  if (asset.type === 0) {
+  // Check if type is String (handle both number 0 and string "String")
+  if (asset.type === 0 || asset.type === '0' || asset.type === 'String') {
     return <div className="text-base font-semibold border-b pb-1">{asset.value ?? '-'}</div>
   }
 
@@ -137,14 +138,14 @@ export default function AssetDetail({ id }: AssetDetailProps) {
     <div className="container mx-auto py-6 px-4">
       <Card className="border rounded-xl shadow-lg">
         <CardHeader className="flex items-center justify-between border-b p-6 rounded-t-xl">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold">Asset Detail</span>
-          </div>
           <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
+          <div className="flex items-center gap-2">
+            <Shield className="w-6 h-6 text-primary" />
+            <span className="text-xl font-bold">Asset Detail</span>
+          </div>
         </CardHeader>
         <CardContent className="p-8 space-y-8">
           {/* Asset Details */}
@@ -178,17 +179,21 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
                   <FileText className="w-4 h-4" /> Type
                 </div>
-                <span>{asset.type === 0 ? 'String' : 'Secret'}</span>
+                <span>
+                  {asset.type === 0 || asset.type === '0' || asset.type === 'String'
+                    ? 'String'
+                    : 'Secret'}
+                </span>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
                   <FileText className="w-4 h-4" /> Created At
                 </div>
                 <div className="text-base font-semibold border-b pb-1">
-                  {formatUtcToLocal(asset.createdAt, { 
+                  {formatUtcToLocal(asset.createdAt, {
                     dateStyle: 'medium',
                     timeStyle: undefined,
-                    fallback: '-' 
+                    fallback: '-'
                   })}
                 </div>
               </div>
