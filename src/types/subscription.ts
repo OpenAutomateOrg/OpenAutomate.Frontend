@@ -2,7 +2,7 @@ export enum TrialStatus {
   Eligible = 'Eligible',
   Active = 'Active',
   Used = 'Used',
-  NotEligible = 'NotEligible'
+  NotEligible = 'NotEligible',
 }
 
 export interface SubscriptionStatus {
@@ -21,4 +21,18 @@ export interface SubscriptionStatus {
 export interface StartTrialResponse {
   success: boolean
   message?: string
+}
+export interface CheckoutResponse {
+  checkoutUrl: string
+  organizationUnitId: string
+  userEmail: string
+}
+
+export interface CheckoutRequest {
+  redirectUrl?: string
+  tenant: string
+}
+export interface CustomerPortalResponse {
+  url: string
+  organizationUnitId: string
 }

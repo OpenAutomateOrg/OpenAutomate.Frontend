@@ -224,6 +224,11 @@ export const createUserManagementItems = (createTenantUrl: (path: string) => str
       url: '',
       icon: Sparkles,
     },
+    {
+      title: 'Upgrade Plan',
+      url: createTenantUrl('/subscription'),
+      icon: Sparkles,
+    },
   ],
   logout: {
     title: 'Log out',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSubscription } from '@/hooks/use-subscription'
 import { subscriptionApi } from '@/lib/api/subscription'
 import { TrialStatus } from '@/types/subscription'
@@ -10,23 +10,41 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { formatDistanceToNow } from 'date-fns'
+import { TrialExpiredModal } from './TrialExpiredModal'
 
 export function SubscriptionStatus() {
   const { subscription, isLoading, mutate } = useSubscription()
   const [isStartingTrial, setIsStartingTrial] = useState(false)
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false)
   const { toast } = useToast()
+
+  // Check if trial has expired and show modal
+  useEffect(() => {
+    if (subscription?.isInTrial && subscription?.trialEndsAt) {
+      const trialEndTime = new Date(subscription.trialEndsAt + 'Z')
+      const now = new Date()
+
+      if (trialEndTime <= now) {
+        setShowTrialExpiredModal(true)
+      }
+    }
+  }, [subscription])
+
+  const openTrialExpiredModal = () => {
+    setShowTrialExpiredModal(true)
+  }
 
   const handleStartTrial = async () => {
     if (isStartingTrial) return // Prevent multiple clicks
-    
+
     setIsStartingTrial(true)
-    
+
     // Show immediate feedback
     toast({
       title: 'Starting Trial...',
       description: 'Please wait while we activate your free trial.',
     })
-    
+
     try {
       const response = await subscriptionApi.startTrial()
       if (response.success) {
@@ -44,7 +62,8 @@ export function SubscriptionStatus() {
         })
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while starting your trial.'
+      const errorMessage =
+        error instanceof Error ? error.message : 'An error occurred while starting your trial.'
       toast({
         title: 'Error Starting Trial',
         description: errorMessage,
@@ -74,9 +93,7 @@ export function SubscriptionStatus() {
             <AlertCircle className="h-5 w-5 text-gray-500" />
             Loading...
           </CardTitle>
-          <CardDescription>
-            Checking subscription status...
-          </CardDescription>
+          <CardDescription>Checking subscription status...</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -108,7 +125,7 @@ export function SubscriptionStatus() {
       // Parse as UTC and convert to local time for display
       const trialEndTime = new Date(subscription.trialEndsAt + 'Z') // Add Z to ensure UTC parsing
       const now = new Date()
-      
+
       if (trialEndTime > now) {
         const expiresIn = formatDistanceToNow(trialEndTime, { addSuffix: true })
         return `Trial expires ${expiresIn}`
@@ -131,113 +148,120 @@ export function SubscriptionStatus() {
   }
 
   // Use the new explicit UserTrialStatus to determine what to render
-  switch (subscription.userTrialStatus) {
-    case TrialStatus.Eligible:
-      return (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Start Your Free Trial
-            </CardTitle>
-            <CardDescription>
-              Get full access to all features with a free trial period.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={handleStartTrial} 
-              disabled={isStartingTrial}
-              className="w-full transition-all duration-200"
-            >
-              {isStartingTrial ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Activating Trial...
-                </>
-              ) : (
-                <>
-                  <Clock className="mr-2 h-4 w-4" />
-                  Start Free Trial
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      )
+  const content = (() => {
+    switch (subscription.userTrialStatus) {
+      case TrialStatus.Eligible:
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Start Your Free Trial
+              </CardTitle>
+              <CardDescription>
+                Get full access to all features with a free trial period.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={handleStartTrial}
+                disabled={isStartingTrial}
+                className="w-full transition-all duration-200"
+              >
+                {isStartingTrial ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Activating Trial...
+                  </>
+                ) : (
+                  <>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Start Free Trial
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )
 
-    case TrialStatus.Active:
-      return (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getStatusIcon()}
-                {subscription.planName} Plan
-              </div>
-              {getStatusBadge()}
-            </CardTitle>
-            <CardDescription>
-              {getExpirationText()}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )
+      case TrialStatus.Active:
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon()}
+                  {subscription.planName} Plan
+                </div>
+                {getStatusBadge()}
+              </CardTitle>
+              <CardDescription>{getExpirationText()}</CardDescription>
+            </CardHeader>
+          </Card>
+        )
 
-    case TrialStatus.Used:
-      return (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              Trial Already Used
-            </CardTitle>
-            <CardDescription>
-              You have already used your free trial. Upgrade to continue using all features.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">
-              Upgrade to Premium
-            </Button>
-          </CardContent>
-        </Card>
-      )
+      case TrialStatus.Used:
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                Trial Already Used
+              </CardTitle>
+              <CardDescription>
+                You have already used your free trial. Upgrade to continue using all features.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={openTrialExpiredModal} className="w-full">
+                Upgrade to Premium
+              </Button>
+            </CardContent>
+          </Card>
+        )
 
-    case TrialStatus.NotEligible:
-      return (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              Trial Not Available
-            </CardTitle>
-            <CardDescription>
-              Free trial is only available on your first organization unit. Upgrade to access premium features.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">
-              Upgrade to Premium
-            </Button>
-          </CardContent>
-        </Card>
-      )
+      case TrialStatus.NotEligible:
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                Trial Not Available
+              </CardTitle>
+              <CardDescription>
+                Free trial is only available on your first organization unit. Upgrade to access
+                premium features.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full">Upgrade to Premium</Button>
+            </CardContent>
+          </Card>
+        )
 
-    default:
-      // Fallback for unknown status
-      return (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-gray-500" />
-              Unknown Status
-            </CardTitle>
-            <CardDescription>
-              Unable to determine subscription status. Please refresh the page.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )
-  }
+      default:
+        // Fallback for unknown status
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-gray-500" />
+                Unknown Status
+              </CardTitle>
+              <CardDescription>
+                Unable to determine subscription status. Please refresh the page.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )
+    }
+  })()
+
+  return (
+    <>
+      {content}
+
+      <TrialExpiredModal open={showTrialExpiredModal} onOpenChange={setShowTrialExpiredModal} />
+    </>
+  )
 }
