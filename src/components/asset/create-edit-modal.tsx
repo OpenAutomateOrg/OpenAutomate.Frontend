@@ -136,6 +136,9 @@ export function CreateEditModal({
     } else if (!isEditing && existingKeys.includes(key.trim())) {
       setKeyError('Key already exists. Please choose a unique key.')
       valid = false
+    } else if (isEditing && existingKeys.includes(key.trim()) && key.trim() !== asset?.key) {
+      setKeyError('Key already exists. Please choose a unique key.')
+      valid = false
     }
 
     if (!isEditing && !type.toString().trim()) {
@@ -167,7 +170,19 @@ export function CreateEditModal({
       onClose()
       if (onCreated) onCreated()
     } catch (err) {
-      notify.handleError(err, isEditing ? 'Updating asset' : 'Creating asset')
+      // Handle duplicate key error specifically
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorMessage = (err as { message: string }).message
+        if (errorMessage.toLowerCase().includes('duplicate') ||
+          errorMessage.toLowerCase().includes('already exists') ||
+          errorMessage.toLowerCase().includes('unique')) {
+          setKeyError(isEditing ? 'This key is already used by another asset. Please choose a different key.' : 'Key already exists. Please choose a unique key.')
+          return
+        }
+      }
+
+      // For other errors, don't show toast - just log to console
+      console.error('Error submitting asset:', err)
     } finally {
       setSubmitting(false)
     }
