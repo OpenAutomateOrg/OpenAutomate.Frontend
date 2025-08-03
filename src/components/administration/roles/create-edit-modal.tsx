@@ -163,7 +163,8 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     if (roleDescription.length > 200) {
       return 'Description cannot exceed 200 characters.'
     }
-    if (resourcePermissions.length === 0) {
+    // Only require permissions for new roles, allow existing roles to have zero permissions
+    if (!editingRole && resourcePermissions.length === 0) {
       return 'At least one resource permission must be added.'
     }
     return null
