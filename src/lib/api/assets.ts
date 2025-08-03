@@ -220,6 +220,22 @@ export const getAssetsWithOData = async (
   }
 }
 
+// This function retrieves the total count of assets using OData query capabilities.
+export const getAssetsODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<AssetResponseDto>> => {
+  const endpoint = `${tenant}/odata/Assets`
+
+  try {
+    const response = await api.get<ODataResponse<AssetResponseDto>>(endpoint)
+    console.log(`getAssetsODataTotal for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching Assets for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
+}
+
 /**
  * Get a specific asset by ID with OData query options
  */

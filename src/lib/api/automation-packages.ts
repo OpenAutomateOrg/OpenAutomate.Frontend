@@ -279,6 +279,25 @@ export const getAutomationPackagesWithOData = async (
   }
 }
 
+// This function retrieves the total count of automation packages using OData query capabilities.
+export const getAutomationPackagesODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<AutomationPackageResponseDto>> => {
+  const endpoint = `${tenant}/odata/AutomationPackages`
+
+  try {
+    const response = await api.get<ODataResponse<AutomationPackageResponseDto>>(endpoint)
+    console.log(
+      `getAutomationPackagesODataTotal for tenant ${tenant}:`,
+      response,
+    )
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching Automation Packages for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
+}
+
 /**
  * Get package versions with OData query capabilities
  */
