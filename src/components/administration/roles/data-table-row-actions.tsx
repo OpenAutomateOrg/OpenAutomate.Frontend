@@ -71,11 +71,34 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
       setShowConfirm(false)
+
+      // Extract error message with better handling for role deletion specific errors
+      let errorMessage = 'Failed to delete role.'
+
       if (err instanceof Error) {
-        setErrorMsg(err.message)
-      } else {
-        setErrorMsg('Failed to delete role.')
+        errorMessage = err.message
+      } else if (err && typeof err === 'object') {
+        // Handle API error responses
+        const apiError = err as { message?: string; error?: string; details?: string }
+        if (apiError.message) {
+          errorMessage = apiError.message
+        } else if (apiError.error) {
+          errorMessage = apiError.error
+        } else if (apiError.details) {
+          errorMessage = apiError.details
+        }
       }
+
+      // Check if the error is related to users having this role assigned
+      const lowerMessage = errorMessage.toLowerCase()
+      if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
+        setErrorMsg(`Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.`)
+      } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
+        setErrorMsg(`Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.`)
+      } else {
+        setErrorMsg(errorMessage)
+      }
+
       setShowError(true)
     } finally {
       setIsDeleting(false)
@@ -158,7 +181,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       <Dialog open={showError} onOpenChange={setShowError}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Error</DialogTitle>
+            <DialogTitle>Cannot Delete Role</DialogTitle>
           </DialogHeader>
           <div>{errorMsg}</div>
           <DialogFooter>
