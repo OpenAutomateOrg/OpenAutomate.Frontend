@@ -81,14 +81,15 @@ export function DataTableToolbar<TData>({
   }
 
   // Type filter value handling - use prop if provided, otherwise derive from table state
+  const columnFilters = table.getState().columnFilters
   const typeFilterValue = useMemo(() => {
     if (propTypeFilterValue !== undefined) {
       return propTypeFilterValue
     }
-    const typeFilter = table.getState().columnFilters.find((filter) => filter.id === 'type')
+    const typeFilter = columnFilters.find((filter) => filter.id === 'type')
     const value = typeFilter ? (typeFilter.value as string) : 'all'
     return value
-  }, [propTypeFilterValue, table.getState().columnFilters])
+  }, [propTypeFilterValue, columnFilters, table])
 
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
