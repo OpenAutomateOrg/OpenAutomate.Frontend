@@ -220,7 +220,7 @@ export const getAssetsWithOData = async (
   }
 }
 
-// This function retrieves the total count of bot agents using OData query capabilities.
+// This function retrieves the total count of assets using OData query capabilities.
 export const getAssetsODataTotal = async (
   tenant: string,
 ): Promise<ODataResponse<AssetResponseDto>> => {
