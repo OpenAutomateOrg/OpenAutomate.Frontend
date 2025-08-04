@@ -2,6 +2,7 @@ import { fetchApi } from './client'
 import { User } from '@/types/auth'
 import { api } from './client'
 import { OrganizationUnit } from '@/types/organization'
+import { SystemStatistics, RevenueStatistics } from '@/types/statistics'
 
 export const adminApi = {
   /**
@@ -72,5 +73,23 @@ export const adminApi = {
    */
   deleteOrganizationUnit: async (id: string): Promise<void> => {
     await api.delete<void>(`/api/admin/organization-unit/${id}`)
+  },
+
+  /**
+   * Get system resource statistics (system admin access)
+   * @returns Promise with system statistics data
+   */
+  getSystemStatistics: async (): Promise<SystemStatistics> => {
+    const response = await api.get<SystemStatistics>('/api/system/statistics/resources')
+    return response
+  },
+
+  /**
+   * Get revenue statistics (system admin access)
+   * @returns Promise with revenue statistics data
+   */
+  getRevenueStatistics: async (): Promise<RevenueStatistics> => {
+    const response = await api.get<RevenueStatistics>('/api/admin/revenue')
+    return response
   },
 }
