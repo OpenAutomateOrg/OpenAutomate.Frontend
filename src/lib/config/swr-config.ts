@@ -125,6 +125,8 @@ export const swrKeys = {
   standardUsers: () => ['system-roles', 'user'] as const,
   usersByRole: (role: string) => ['system-roles', 'users', role] as const,
   adminAllOrganizationUnits: () => ['system-roles', 'organization-units'] as const,
+  adminAllTotals: () => ['system-roles', 'all-totals'] as const,
+  revenueStatistics: () => ['system-roles', 'revenue-statistics'] as const,
 
   // Schedules
   schedules: () => ['schedules'] as const,
