@@ -18,6 +18,7 @@ import {
   updateBotAgent,
   getBotAgentById,
   checkAgentNameExists,
+  checkMachineNameExists,
   type BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
 
@@ -69,8 +70,23 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
           return false
         }
       } catch (error) {
-        console.error('Error checking name:', error)
+        console.error('Error checking agent name:', error)
         setError('Failed to check name availability')
+        return false
+      }
+    }
+
+    // ✅ Check machine name uniqueness
+    if (machineName !== agent?.machineName) {
+      try {
+        const machineNameExists = await checkMachineNameExists(machineName, agent?.id)
+        if (machineNameExists) {
+          setError('Machine name already exists')
+          return false
+        }
+      } catch (error) {
+        console.error('Error checking machine name:', error)
+        setError('Failed to check machine name availability')
         return false
       }
     }
@@ -211,12 +227,18 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 value={machineName}
                 onChange={(e) => setMachineName(e.target.value)}
                 disabled={isLoading}
-                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20 mt-2"
+                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 spellCheck="false"
               />
+              {error && error === 'Machine name already exists' && (
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
             </div>
-            {error && error !== 'Agent name already exists' && (
+            {error && !['Agent name already exists', 'Machine name already exists'].includes(error) && (
               <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                 <AlertCircle className="w-4 h-4" />
                 {error}
