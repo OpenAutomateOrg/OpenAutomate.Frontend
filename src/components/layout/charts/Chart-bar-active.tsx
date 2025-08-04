@@ -1,7 +1,7 @@
 'use client'
 
 import { TrendingUp, TrendingDown } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, Rectangle, XAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
 
 import {
   Card,
@@ -46,19 +46,6 @@ const chartConfig = {
     color: 'var(--chart-5)',
   },
 } satisfies ChartConfig
-
-
-const ActiveBar = (props: RectangleProps) => {
-  return (
-    <Rectangle
-      {...props}
-      fillOpacity={0.8}
-      stroke={props.payload?.fill}
-      strokeDasharray={4}
-      strokeDashoffset={4}
-    />
-  )
-}
 
 interface ChartBarActiveProps {
   readonly revenueStatistics?: RevenueStatistics | null
@@ -157,7 +144,7 @@ export function ChartBarActive({ revenueStatistics }: ChartBarActiveProps) {
                 />
               }
             />
-            <Bar dataKey="value" strokeWidth={2} radius={8} activeIndex={2} activeBar={ActiveBar} />
+            <Bar dataKey="value" strokeWidth={2} radius={8} activeIndex={2} />
           </BarChart>
         </ChartContainer>
       </CardContent>
