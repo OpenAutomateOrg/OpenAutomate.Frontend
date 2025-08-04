@@ -10,9 +10,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { deleteBotAgent, getBotAgentById } from '@/lib/api/bot-agents'
+import { deleteBotAgent } from '@/lib/api/bot-agents'
 import { Button } from '@/components/ui/button'
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,37 +20,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AgentRow } from './agent'
-import { CreateEditModal } from './create-edit-modal'
-import type { BotAgentResponseDto } from '@/lib/api/bot-agents'
 
 interface DataTableRowActionsProps {
   readonly row: Row<AgentRow>
   readonly onRefresh?: () => void
+  readonly onEdit?: (agent: AgentRow) => void
 }
 
-export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
+export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [showError, setShowError] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showEdit, setShowEdit] = useState(false)
-  const [editAgent, setEditAgent] = useState<BotAgentResponseDto | null>(null)
 
-  const handleEdit = async (e?: React.MouseEvent) => {
+  // ✅ Simple edit handler using parent callback
+  const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (row.original.status !== 'Disconnected') {
       setErrorMsg('You can only edit an agent when its status is "Disconnected".')
       setShowError(true)
       return
     }
-    // Fetch agent chi tiết từ API
-    try {
-      const agentDetail = await getBotAgentById(row.original.id)
-      setEditAgent(agentDetail)
-      setShowEdit(true)
-    } catch {
-      setErrorMsg('Failed to fetch agent details.')
-      setShowError(true)
+    if (onEdit) {
+      onEdit(row.original)
     }
   }
 
@@ -113,22 +104,6 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Edit Modal */}
-      <CreateEditModal
-        isOpen={showEdit}
-        onClose={() => {
-          setShowEdit(false)
-          setEditAgent(null)
-        }}
-        mode="edit"
-        agent={editAgent}
-        onSuccess={() => {
-          setShowEdit(false)
-          setEditAgent(null)
-          if (onRefresh) onRefresh()
-        }}
-      />
 
       {/* Confirm Delete Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
