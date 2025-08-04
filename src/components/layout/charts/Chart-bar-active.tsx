@@ -47,8 +47,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ActiveBar = (props: any) => {
+
+const ActiveBar = (props: RectangleProps) => {
   return (
     <Rectangle
       {...props}
