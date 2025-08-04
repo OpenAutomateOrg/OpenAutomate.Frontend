@@ -2,10 +2,11 @@
 
 import { TrendingUp } from 'lucide-react'
 import { Pie, PieChart } from 'recharts'
-import { getExecutionsWithOData } from '@/lib/api/executions'
+import { getExecutionsODataTotal } from '@/lib/api/executions'
 import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
+import { usePathname } from 'next/navigation'
 
 import {
   Card,
@@ -45,50 +46,46 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ChartPieLabel() {
+  const pathname = usePathname()
+  const tenant = pathname.split('/')[1]
   // Fetch executions data for status counting
-  const { data: executionsResponse } = useSWR(
-    swrKeys.executionsWithOData({ $count: true, $top: 1000 }),
-    () => getExecutionsWithOData({ $count: true, $top: 1000 }),
+  const { data: executionsResponse } = useSWR(swrKeys.executionsODataTotal(tenant), () =>
+    getExecutionsODataTotal(tenant),
   )
 
   // Process execution data for pie chart
   const chartData = useMemo(() => {
     if (!executionsResponse?.value) {
       return [
-        { status: 'running', count: 0, fill: 'hsl(var(--chart-1))' },
-        { status: 'pending', count: 0, fill: 'hsl(var(--chart-2))' },
-        { status: 'completed', count: 0, fill: 'hsl(var(--chart-3))' },
-        { status: 'failed', count: 0, fill: 'hsl(var(--chart-4))' },
+        { status: 'Cancelled', count: 0, fill: 'hsl(var(--chart-2))' },
+        { status: 'Completed', count: 0, fill: 'hsl(var(--chart-3))' },
+        { status: 'Failed', count: 0, fill: 'hsl(var(--chart-4))' },
       ]
     }
 
     const executions = executionsResponse.value
     const statusCounts = {
-      running: 0,
-      pending: 0,
-      completed: 0,
-      failed: 0,
+      Cancelled: 0,
+      Completed: 0,
+      Failed: 0,
     }
 
     // Count each status
     executions.forEach((execution) => {
       const status = execution.status.toLowerCase()
-      if (status === 'running') {
-        statusCounts.running++
-      } else if (status === 'pending') {
-        statusCounts.pending++
+      if (status === 'cancelled') {
+        statusCounts.Cancelled++
       } else if (status === 'completed') {
-        statusCounts.completed++
+        statusCounts.Completed++
       } else if (status === 'failed') {
-        statusCounts.failed++
+        statusCounts.Failed++
       }
     })
 
     return [
-      { status: 'running', count: statusCounts.running, fill: 'hsl(var(--chart-1))' },
-      { status: 'pending', count: statusCounts.pending, fill: 'hsl(var(--chart-2))' },
-      { status: 'completed', count: statusCounts.completed, fill: 'hsl(var(--chart-3))' },
-      { status: 'failed', count: statusCounts.failed, fill: 'hsl(var(--chart-4))' },
+      { status: 'Cancelled', count: statusCounts.Cancelled, fill: 'hsl(var(--chart-2))' },
+      { status: 'Completed', count: statusCounts.Completed, fill: 'hsl(var(--chart-3))' },
+      { status: 'Failed', count: statusCounts.Failed, fill: 'hsl(var(--chart-4))' },
     ].filter((item) => item.count > 0) // Only show statuses with actual data
   }, [executionsResponse])
 

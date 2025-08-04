@@ -62,12 +62,33 @@ export const getOrganizationUnitUsersWithOData = async (
 ): Promise<ODataResponse<OrganizationUnitUser>> => {
   const tenant = getCurrentTenant()
   const queryString = buildODataQueryString(options)
-  let endpoint = `${tenant}/odata/OrganizationUnitUsers`
-  if (queryString) {
-    endpoint += `?${queryString}`
+  const endpoint = queryString
+    ? `${tenant}/odata/OrganizationUnitUsers?${queryString}`
+    : `${tenant}/odata/OrganizationUnitUsers`
+
+  try {
+    const response = await api.get<unknown>(endpoint)
+    console.log('getOrganizationUnitUsersWithOData', response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error('Error fetching OrganizationUnitUsers:', error)
+    return { value: [], '@odata.count': 0 }
   }
-  const response = await api.get<unknown>(endpoint)
-  return processODataResponse(response)
+}
+// This function retrieves the total count of organization unit users using OData query capabilities.
+export const getOrganizationUnitUsersODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<OrganizationUnitUser>> => {
+  const endpoint = `${tenant}/odata/OrganizationUnitUsers`
+
+  try {
+    const response = await api.get<ODataResponse<OrganizationUnitUser>>(endpoint)
+    console.log(`getOrganizationUnitUsersOData for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching OrganizationUnitUsers for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
 }
 
 export interface OrganizationUnitUserResponse {

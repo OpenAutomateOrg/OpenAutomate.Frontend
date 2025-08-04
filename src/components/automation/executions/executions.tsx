@@ -85,7 +85,7 @@ export default function ExecutionsInterface() {
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [tab, setTab] = useState<'inprogress' | 'sheduled' | 'historical'>('inprogress')
+  const [tab, setTab] = useState<'inprogress' | 'scheduled' | 'historical'>('inprogress')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -251,7 +251,7 @@ export default function ExecutionsInterface() {
       case 'inprogress':
         tabFilter = "status eq 'Running' or status eq 'Pending'"
         break
-      case 'sheduled':
+      case 'scheduled':
         tabFilter = "status eq 'Scheduled'"
         break
       case 'historical':
@@ -339,7 +339,7 @@ export default function ExecutionsInterface() {
           timeStyle: undefined,
           fallback: '',
         }),
-        'Created By': 'Current User', // TODO: Get from auth context when available
+        'Created By': 'Current User', // Get from auth context when available
 
         // Legacy fields for compatibility - KEEP RAW DATA for column access
         name: execution.packageName || '',
@@ -373,7 +373,9 @@ export default function ExecutionsInterface() {
   const ProgressColumns = useMemo(
     () =>
       createInProgressColumns({
-        onDeleted: () => mutateExecutions(),
+        onDeleted: () => {
+          void mutateExecutions()
+        },
       }),
     [mutateExecutions],
   )
@@ -381,7 +383,9 @@ export default function ExecutionsInterface() {
   const HistoricalColumns = useMemo(
     () =>
       createHistoricalColumns({
-        onDeleted: () => mutateExecutions(),
+        onDeleted: () => {
+          void mutateExecutions()
+        },
       }),
     [mutateExecutions],
   )
@@ -410,7 +414,7 @@ export default function ExecutionsInterface() {
       filteredData = filteredData.filter((row) => {
         if (tab === 'inprogress') {
           return row.state === 'Running' || row.state === 'Pending'
-        } else if (tab === 'sheduled') {
+        } else if (tab === 'scheduled') {
           return row.state === 'Scheduled'
         } else if (tab === 'historical') {
           return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
@@ -450,8 +454,7 @@ export default function ExecutionsInterface() {
       // 2. Apply search filtering if search value exists - search by Agent only
       if (searchValue) {
         filteredData = filteredData.filter((row) => {
-          const agentMatch =
-            row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase())
+          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
           return agentMatch
         })
       }
@@ -531,7 +534,7 @@ export default function ExecutionsInterface() {
       filteredData = filteredData.filter((row) => {
         if (tab === 'inprogress') {
           return row.state === 'Running' || row.state === 'Pending'
-        } else if (tab === 'sheduled') {
+        } else if (tab === 'scheduled') {
           return row.state === 'Scheduled'
         } else if (tab === 'historical') {
           return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
@@ -542,8 +545,7 @@ export default function ExecutionsInterface() {
       // Apply search filtering
       if (searchValue) {
         filteredData = filteredData.filter((row) => {
-          const agentMatch =
-            row.agent && row.agent.toLowerCase().includes(searchValue.toLowerCase())
+          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
           return agentMatch
         })
       }
@@ -617,7 +619,7 @@ export default function ExecutionsInterface() {
       const filteredCount = fallbackExecutions.filter((execution) => {
         if (tab === 'inprogress') {
           return execution.status === 'Running' || execution.status === 'Pending'
-        } else if (tab === 'sheduled') {
+        } else if (tab === 'scheduled') {
           return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
           return (
@@ -738,12 +740,14 @@ export default function ExecutionsInterface() {
   }, [hasExactCount, executionsData.length, pagination.pageSize])
 
   // Define columns based on tab
-  const columns =
-    tab === 'inprogress'
-      ? ProgressColumns
-      : tab === 'sheduled'
-        ? ScheduledColumns
-        : HistoricalColumns
+  let columns;
+  if (tab === 'inprogress') {
+    columns = ProgressColumns;
+  } else if (tab === 'scheduled') {
+    columns = ScheduledColumns;
+  } else {
+    columns = HistoricalColumns;
+  }
 
   const table = useReactTable({
     data: executionsData,
@@ -814,7 +818,7 @@ export default function ExecutionsInterface() {
 
       searchDebounceTimeout.current = setTimeout(() => {
         // Use the same column for all tabs - we're searching by Agent name only
-        const searchColumn = tab === 'sheduled' ? 'packageName' : 'agent'
+        const searchColumn = tab === 'scheduled' ? 'packageName' : 'agent'
         const column = table.getColumn(searchColumn)
 
         if (column) {
@@ -954,7 +958,7 @@ export default function ExecutionsInterface() {
     router.push(route)
   }
 
-  const handleTabChange = (newTab: 'inprogress' | 'sheduled' | 'historical') => {
+  const handleTabChange = (newTab: 'inprogress' | 'scheduled' | 'historical') => {
     setTab(newTab)
     // Reset pagination to first page when tab changes
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
@@ -997,9 +1001,9 @@ export default function ExecutionsInterface() {
             </button>
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'sheduled'}
+              data-active={tab === 'scheduled'}
               type="button"
-              onClick={() => handleTabChange('sheduled')}
+              onClick={() => handleTabChange('scheduled')}
             >
               Scheduled
             </button>
@@ -1070,7 +1074,7 @@ export default function ExecutionsInterface() {
             />
           </>
         )}
-        {tab === 'sheduled' && (
+        {tab === 'scheduled' && (
           <>
             <ScheduledToolbar
               table={table}

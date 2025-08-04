@@ -205,6 +205,21 @@ export const getSchedulesWithOData = async (
     return { value: [] }
   }
 }
+// This function retrieves the total count of Schedules using OData query capabilities.
+export const getSchedulesODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<ScheduleResponseDto>> => {
+  const endpoint = `${tenant}/odata/Schedules`
+
+  try {
+    const response = await api.get<ODataResponse<ScheduleResponseDto>>(endpoint)
+    console.log(`getSchedulesODataTotal for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching Schedules for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
+}
 
 /**
  * Get schedule by ID

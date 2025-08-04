@@ -22,6 +22,7 @@ interface DataTableToolbarProps<TData> {
   readonly onSearch?: (value: string) => void
   readonly onTypeChange?: (value: string) => void
   readonly searchValue?: string
+  readonly typeFilterValue?: string // Add explicit type filter value prop
   readonly isFiltering?: boolean
   readonly isPending?: boolean
 }
@@ -32,6 +33,7 @@ export function DataTableToolbar<TData>({
   onSearch,
   onTypeChange,
   searchValue = '',
+  typeFilterValue: propTypeFilterValue,
   isFiltering = false,
   isPending = false,
 }: DataTableToolbarProps<TData>) {
@@ -78,11 +80,16 @@ export function DataTableToolbar<TData>({
     }
   }
 
-  // Type filter value handling
+  // Type filter value handling - use prop if provided, otherwise derive from table state
+  const columnFilters = table.getState().columnFilters
   const typeFilterValue = useMemo(() => {
-    const typeFilter = table.getState().columnFilters.find((filter) => filter.id === 'type')
-    return typeFilter ? (typeFilter.value as string) : 'all'
-  }, [table])
+    if (propTypeFilterValue !== undefined) {
+      return propTypeFilterValue
+    }
+    const typeFilter = columnFilters.find((filter) => filter.id === 'type')
+    const value = typeFilter ? (typeFilter.value as string) : 'all'
+    return value
+  }, [propTypeFilterValue, columnFilters, table])
 
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">

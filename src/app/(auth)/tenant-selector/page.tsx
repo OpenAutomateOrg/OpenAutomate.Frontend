@@ -198,7 +198,7 @@ function TenantSelectorContent() {
 
             {/* Organization list */}
             <div className="space-y-4">
-              {organizationUnits.map((org) => (
+              {(Array.isArray(organizationUnits) ? organizationUnits : []).map((org) => (
                 <Card
                   key={org.id}
                   className="hover:bg-accent transition-colors cursor-pointer"
@@ -234,7 +234,7 @@ function TenantSelectorContent() {
                     Create a new organization unit to manage your automation processes.
                   </DialogDescription>
                 </DialogHeader>
-                <CreateOrganizationUnitForm 
+                <CreateOrganizationUnitForm
                   onSuccess={handleOrganizationCreated}
                   onCancel={() => setIsDialogOpen(false)}
                 />

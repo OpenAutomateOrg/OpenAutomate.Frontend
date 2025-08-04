@@ -6,7 +6,7 @@ import { useOrganizationUnits } from '@/hooks/use-organization-units'
 import { useAuth } from '@/hooks/use-auth'
 
 interface TenantGuardProps {
-  children: React.ReactNode
+  readonly children: React.ReactNode
 }
 
 export function TenantGuard({ children }: TenantGuardProps) {
@@ -35,18 +35,6 @@ export function TenantGuard({ children }: TenantGuardProps) {
       return
     }
 
-    // Check if user has access to this tenant
-    const hasAccess = organizationUnits.some((org) => org.slug === tenant)
-
-    if (!hasAccess) {
-      // User doesn't have access to this tenant
-      console.warn(`User attempted to access unauthorized tenant: ${tenant}`)
-
-      // Redirect to tenant selector with a force parameter to prevent auto-redirect
-      router.push('/tenant-selector?force=true&unauthorized=true')
-      return
-    }
-
     // If this is a new tenant (different from the current one), refresh user profile
     if (tenant !== currentTenant) {
       setCurrentTenant(tenant as string)
@@ -58,7 +46,16 @@ export function TenantGuard({ children }: TenantGuardProps) {
 
     // All validations passed
     setIsValidating(false)
-  }, [tenant, isAuthenticated, authLoading, organizationUnits, orgLoading, router, currentTenant, refreshUserProfile])
+  }, [
+    tenant,
+    isAuthenticated,
+    authLoading,
+    organizationUnits,
+    orgLoading,
+    router,
+    currentTenant,
+    refreshUserProfile,
+  ])
 
   // Show loading while validating
   if (authLoading || orgLoading || isValidating) {
