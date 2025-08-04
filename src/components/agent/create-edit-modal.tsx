@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Copy, Edit, PlusCircle, AlertCircle, X, Check, Plus } from 'lucide-react'
 import {
   Dialog,
@@ -11,23 +11,28 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/components/ui/use-toast'
 import {
   createBotAgent,
-  type BotAgentResponseDto,
   updateBotAgent,
   getBotAgentById,
+  checkAgentNameExists,
+  type BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
-import { Label } from '@/components/ui/label'
 
 interface ItemModalProps {
-  isOpen: boolean
-  onClose: () => void
-  mode: 'create' | 'edit'
-  agent?: BotAgentResponseDto | null
-  onSuccess?: (agent: BotAgentResponseDto) => void
+  readonly isOpen: boolean
+  readonly onClose: () => void
+  readonly mode: 'create' | 'edit'
+  readonly agent?: BotAgentResponseDto | null
+  readonly onSuccess?: (agent: BotAgentResponseDto) => void
 }
 
 export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: ItemModalProps) {
+  const { toast } = useToast()
+
+  // ✅ Initialize state based on props (automatically reset via dynamic key in parent)
   const [name, setName] = useState(agent?.name || '')
   const [machineName, setMachineName] = useState(agent?.machineName || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -36,37 +41,46 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [errorDialogMsg, setErrorDialogMsg] = useState('')
 
-  useEffect(() => {
-    if (agent) {
-      setName(agent.name)
-      setMachineName(agent.machineName)
-    }
-  }, [agent])
-
   const isEditing = mode === 'edit'
 
-  const validateForm = () => {
+  // ✅ Validate form and check name uniqueness only when submitting
+  const validateForm = async (): Promise<boolean> => {
+    // Reset errors
+    setError(null)
+
+    if (!name.trim() || !machineName.trim()) {
+      setError('Please fill in all required fields')
+      return false
+    }
+
     if (isEditing) {
-      if (
-        (name === agent?.name || !name.trim()) &&
-        (machineName === agent?.machineName || !machineName.trim())
-      ) {
+      if (name === agent?.name && machineName === agent?.machineName) {
         setError('Please change at least one field to update.')
         return false
       }
-      return true
-    } else {
-      if (!name.trim() || !machineName.trim()) {
-        setError('Please fill in all required fields')
+    }
+
+    // ✅ Check name uniqueness only when submitting
+    if (name !== agent?.name) {
+      try {
+        const nameExists = await checkAgentNameExists(name, agent?.id)
+        if (nameExists) {
+          setError('Agent name already exists')
+          return false
+        }
+      } catch (error) {
+        console.error('Error checking name:', error)
+        setError('Failed to check name availability')
         return false
       }
-      return true
     }
+
+    return true
   }
 
   // Format error messages from different error types
   const formatErrorMessage = (err: unknown): string => {
-    let errorMessage = 'Failed to create agent. Please try again.'
+    let errorMessage = isEditing ? 'Failed to update agent. Please try again.' : 'Failed to create agent. Please try again.'
 
     if (typeof err === 'object' && err !== null) {
       if ('message' in err) {
@@ -89,7 +103,8 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    const isValid = await validateForm()
+    if (!isValid) {
       return
     }
     setIsLoading(true)
@@ -109,8 +124,16 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
           name: name !== agent!.name ? name : undefined,
           machineName: machineName !== agent!.machineName ? machineName : undefined,
         })
+        toast({
+          title: 'Success',
+          description: 'Agent updated successfully'
+        })
       } else {
         updated = await createBotAgent({ name, machineName })
+        toast({
+          title: 'Success',
+          description: 'Agent created successfully'
+        })
       }
       setCreatedAgent(updated)
       if (onSuccess) onSuccess(updated)
@@ -123,7 +146,10 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    console.log('Copied to clipboard')
+    toast({
+      title: 'Copied',
+      description: 'Machine key copied to clipboard',
+    })
   }
 
   const resetForm = () => {
@@ -163,19 +189,13 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
               <Input
                 id="name"
                 value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
-                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20 mb-2"
+                className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 spellCheck="false"
-                onFocus={(e) => {
-                  setTimeout(() => {
-                    const len = e.target.value.length
-                    e.target.setSelectionRange(len, len)
-                  }, 0)
-                }}
               />
-              {error && error.includes('Name') && (
+              {error && error === 'Agent name already exists' && (
                 <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                   <AlertCircle className="w-4 h-4" />
                   {error}
@@ -195,14 +215,8 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 autoComplete="off"
                 spellCheck="false"
               />
-              {error && error.includes('Machine') && (
-                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
-              )}
             </div>
-            {error && !error.includes('Name') && !error.includes('Machine') && (
+            {error && error !== 'Agent name already exists' && (
               <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                 <AlertCircle className="w-4 h-4" />
                 {error}
@@ -255,7 +269,10 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
           {!createdAgent && (
             <Button onClick={handleSubmit} disabled={isLoading} className="flex items-center gap-1">
               {isEditing ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {isEditing ? 'Save Changes' : 'Add Agent'}
+              {(() => {
+                if (isLoading) return 'Saving...'
+                return isEditing ? 'Save Changes' : 'Add Agent'
+              })()}
             </Button>
           )}
         </DialogFooter>
