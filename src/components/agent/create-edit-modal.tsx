@@ -17,7 +17,6 @@ import {
   createBotAgent,
   updateBotAgent,
   getBotAgentById,
-  checkAgentNameExists,
   checkMachineNameExists,
   type BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
@@ -61,22 +60,7 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
       }
     }
 
-    // ✅ Check name uniqueness only when submitting
-    if (name !== agent?.name) {
-      try {
-        const nameExists = await checkAgentNameExists(name, agent?.id)
-        if (nameExists) {
-          setError('Agent name already exists')
-          return false
-        }
-      } catch (error) {
-        console.error('Error checking agent name:', error)
-        setError('Failed to check name availability')
-        return false
-      }
-    }
-
-    // ✅ Check machine name uniqueness
+    // ✅ Check machine name uniqueness only (name can be duplicate)
     if (machineName !== agent?.machineName) {
       try {
         const machineNameExists = await checkMachineNameExists(machineName, agent?.id)
@@ -211,12 +195,6 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 autoComplete="off"
                 spellCheck="false"
               />
-              {error && error === 'Agent name already exists' && (
-                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
-              )}
             </div>
             <div>
               <Label htmlFor="machine-name" className="flex items-center gap-1 mb-2">
@@ -238,7 +216,7 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 </div>
               )}
             </div>
-            {error && !['Agent name already exists', 'Machine name already exists'].includes(error) && (
+            {error && error !== 'Machine name already exists' && (
               <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                 <AlertCircle className="w-4 h-4" />
                 {error}
