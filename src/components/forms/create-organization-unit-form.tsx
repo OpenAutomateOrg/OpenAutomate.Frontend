@@ -81,7 +81,12 @@ export function CreateOrganizationUnitForm({
       console.error('Organization unit creation failed', err)
 
       let errorMessage = 'Failed to create organization. Please try again.'
-      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'status' in err &&
+        (err as { status: number }).status === 403
+      ) {
         errorMessage = 'You do not have permission to perform this action'
       } else if (err instanceof Error) {
         errorMessage = err.message

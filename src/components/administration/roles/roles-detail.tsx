@@ -85,16 +85,22 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
       // Check if the error is related to users having this role assigned
       const lowerMessage = errorMessage.toLowerCase()
-      if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
+      if (
+        lowerMessage.includes('user') ||
+        lowerMessage.includes('assign') ||
+        lowerMessage.includes('reference')
+      ) {
         toast({
           title: 'Cannot Delete Role',
-          description: 'This role cannot be deleted because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.',
+          description:
+            'This role cannot be deleted because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.',
           variant: 'destructive',
         })
       } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
         toast({
           title: 'Cannot Delete Role',
-          description: 'This role cannot be deleted because it is currently assigned to users. Please unassign this role from all users first.',
+          description:
+            'This role cannot be deleted because it is currently assigned to users. Please unassign this role from all users first.',
           variant: 'destructive',
         })
       } else {

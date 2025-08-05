@@ -193,7 +193,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
                   {formatUtcToLocal(asset.createdAt, {
                     dateStyle: 'medium',
                     timeStyle: undefined,
-                    fallback: '-'
+                    fallback: '-',
                   })}
                 </div>
               </div>

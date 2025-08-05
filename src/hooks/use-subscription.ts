@@ -12,7 +12,7 @@ export function useSubscription() {
       // Revalidate more frequently for subscription status
       refreshInterval: 30000, // 30 seconds
       revalidateOnFocus: true,
-    }
+    },
   )
 
   return {

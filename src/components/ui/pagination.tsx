@@ -74,8 +74,7 @@ export function Pagination({
       <div className="flex-1 text-sm text-muted-foreground">
         {totalCount > 0 ? (
           <>
-            {Math.min((currentPage - 1) * pageSize + 1, totalCount)}-
-            {Math.min(currentPage * pageSize, totalCount)} of {totalCount} {rowsLabel}
+            Total: {totalCount} {rowsLabel}
           </>
         ) : (
           'No results'

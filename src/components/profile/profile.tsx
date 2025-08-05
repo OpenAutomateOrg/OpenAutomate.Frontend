@@ -65,7 +65,12 @@ export default function Profile() {
       setIsEditing(false)
     } catch (error) {
       let errorMessage = 'Failed to update profile'
-      if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 403) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        (error as { status: number }).status === 403
+      ) {
         errorMessage = 'You do not have permission to perform this action'
       } else if (error instanceof Error) {
         errorMessage = error.message

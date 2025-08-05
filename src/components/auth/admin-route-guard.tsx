@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { ReactNode, useEffect } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -34,17 +34,35 @@ export function AdminRouteGuard({
   redirectPath = '/tenant-selector',
   loadingComponent,
 }: AdminRouteGuardProps) {
-  const { isSystemAdmin, isLoading, isLogout } = useAuth()
+  const { isSystemAdmin, isLoading, isLogout, isAuthenticated, user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // Only redirect after loading completes and we know user is not an admin
-    if (!isLoading && !isSystemAdmin) {
-      router.push(redirectPath)
-    } else if (isLogout) {
+    // Don't redirect while still loading
+    if (isLoading) return
+
+    // Handle logout state
+    if (isLogout) {
       router.push('/login')
+      return
     }
-  }, [isSystemAdmin, isLoading, router, redirectPath, isLogout])
+
+    // If not authenticated, redirect to login
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
+    // If authenticated but not a system admin, redirect to tenant selector
+    if (isAuthenticated && user && !isSystemAdmin) {
+      console.warn('Non-admin user attempting to access admin route:', {
+        userId: user.id,
+        email: user.email,
+        systemRole: user.systemRole,
+      })
+      router.push(redirectPath)
+    }
+  }, [isSystemAdmin, isLoading, router, redirectPath, isLogout, isAuthenticated, user])
 
   // If still loading, show loading component
   if (isLoading) {
@@ -59,6 +77,6 @@ export function AdminRouteGuard({
     )
   }
 
-  // If user is admin, show the protected content
-  return isSystemAdmin ? <>{children}</> : null
+  // If user is authenticated and is a system admin, show the protected content
+  return isAuthenticated && isSystemAdmin ? <>{children}</> : null
 }

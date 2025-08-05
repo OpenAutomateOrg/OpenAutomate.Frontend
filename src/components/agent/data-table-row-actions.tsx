@@ -73,7 +73,12 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
       setShowConfirm(false)
 
       let errorMessage = 'Failed to delete agent.'
-      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'status' in err &&
+        (err as { status: number }).status === 403
+      ) {
         errorMessage = 'You do not have permission to perform this action'
       } else if (err instanceof Error) {
         errorMessage = err.message

@@ -1,9 +1,9 @@
-import { isValid } from 'date-fns';
-import { parseISO } from 'date-fns';
+import { isValid } from 'date-fns'
+import { parseISO } from 'date-fns'
 
 /**
  * Datetime utility functions for handling timezone conversions and formatting
- * 
+ *
  * Key principles:
  * - Receive UTC from backend, display in user's local timezone
  * - Send UTC to backend from user's local input
@@ -21,14 +21,13 @@ function getBrowserLocale(): string {
   return 'en-US'
 }
 
-
 /**
  * Default date format options for displaying dates
  */
 export const DEFAULT_DATE_FORMAT = 'MMM dd, yyyy, h:mm a' // Jul 26, 2024, 5:17 PM
 export const SHORT_DATE_FORMAT = 'MMM dd, yyyy' // Jul 26, 2024
 export const TIME_FORMAT = 'h:mm a' // 5:17 PM
-export const FULL_DATE_FORMAT = 'EEEE, MMMM dd, yyyy \'at\' h:mm a' // Monday, July 26, 2024 at 5:17 PM
+export const FULL_DATE_FORMAT = "EEEE, MMMM dd, yyyy 'at' h:mm a" // Monday, July 26, 2024 at 5:17 PM
 
 /**
  * Format options interface for customizing date display
@@ -62,11 +61,11 @@ export interface DateFormatOptions {
 
 /**
  * Convert a UTC date string or Date object to a formatted local time string
- * 
+ *
  * @param utcDate - UTC ISO string (e.g., '2024-07-26T10:00:00Z') or Date object
  * @param options - Formatting options
  * @returns Formatted local time string or fallback value
- * 
+ *
  * @example
  * formatUtcToLocal('2024-07-26T10:00:00Z') // 'Jul 26, 2024, 5:00 AM' (for UTC-5)
  * formatUtcToLocal('2024-07-26T10:00:00Z', { dateStyle: 'short' }) // '7/26/24'
@@ -75,14 +74,14 @@ export interface DateFormatOptions {
  */
 export function formatUtcToLocal(
   utcDate: string | Date | null | undefined,
-  options: DateFormatOptions = {}
+  options: DateFormatOptions = {},
 ): string {
-  const { 
-    dateStyle = 'medium', 
-    timeStyle = 'short', 
+  const {
+    dateStyle = 'medium',
+    timeStyle = 'short',
     fallback = 'N/A',
     customFormat,
-    locale = getBrowserLocale()
+    locale = getBrowserLocale(),
   } = options
 
   if (!utcDate) {
@@ -101,7 +100,7 @@ export function formatUtcToLocal(
         dateString = dateString.replace(/(\.\d+)?$/, '$1Z')
         console.debug(`Corrected UTC date format: ${utcDate} -> ${dateString}`)
       }
-      
+
       // Create Date object from UTC string - this automatically converts to local timezone
       date = new Date(dateString)
     } else {
@@ -140,33 +139,45 @@ function formatWithCustomPattern(date: Date, pattern: string): string {
   const day = date.getDate()
   const hours = date.getHours()
   const minutes = date.getMinutes()
-  
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  
+
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+
   const formatMap: { [key: string]: string } = {
-    'yyyy': year.toString(),
-    'MMM': monthNames[month - 1],
-    'dd': day.toString().padStart(2, '0'),
-    'h': (hours % 12 || 12).toString(),
-    'mm': minutes.toString().padStart(2, '0'),
-    'a': hours >= 12 ? 'PM' : 'AM'
+    yyyy: year.toString(),
+    MMM: monthNames[month - 1],
+    dd: day.toString().padStart(2, '0'),
+    h: (hours % 12 || 12).toString(),
+    mm: minutes.toString().padStart(2, '0'),
+    a: hours >= 12 ? 'PM' : 'AM',
   }
-  
+
   let result = pattern
   Object.entries(formatMap).forEach(([key, value]) => {
     result = result.replace(new RegExp(key, 'g'), value)
   })
-  
+
   return result
 }
 
 /**
  * Convert a local Date object to a UTC ISO string for backend submission
- * 
+ *
  * @param localDate - Date object in local timezone
  * @returns UTC ISO string (e.g., '2024-07-26T10:00:00.000Z') or null if invalid
- * 
+ *
  * @example
  * const userSelectedDate = new Date('2024-07-26 17:00') // Local time
  * formatLocalToUtc(userSelectedDate) // '2024-07-26T22:00:00.000Z' (for UTC-5)
@@ -182,10 +193,10 @@ export function formatLocalToUtc(localDate: Date | null | undefined): string | n
 /**
  * Parse a UTC date string into a Date object (in local timezone)
  * Useful for working with Date objects while maintaining timezone awareness
- * 
+ *
  * @param utcDateString - UTC ISO string
  * @returns Date object or null if invalid
- * 
+ *
  * @example
  * const date = parseUtcDate('2024-07-26T10:00:00Z')
  * // Returns Date object that will display as local time when formatted
@@ -207,9 +218,9 @@ export function parseUtcDate(utcDateString: string | null | undefined): Date | n
 /**
  * Get current date/time as UTC ISO string
  * Useful for timestamps that need to be sent to the backend
- * 
+ *
  * @returns Current UTC ISO string
- * 
+ *
  * @example
  * const now = getCurrentUtcIsoString() // '2024-07-26T15:30:45.123Z'
  */
@@ -220,7 +231,7 @@ export function getCurrentUtcIsoString(): string {
 /**
  * Format a relative time string (e.g., "2 hours ago", "in 3 days")
  * This is a placeholder for future implementation with date-fns formatDistanceToNow
- * 
+ *
  * @param utcDate - UTC date string or Date object
  * @returns Relative time string
  */
@@ -242,7 +253,7 @@ export function formatRelativeTime(utcDate: string | Date | null | undefined): s
 /**
  * Validation helper to check if a date string appears to be UTC
  * Logs a warning if the date doesn't end with 'Z' (UTC indicator)
- * 
+ *
  * @param dateString - Date string to validate
  * @returns true if appears to be UTC format
  */
@@ -250,7 +261,7 @@ export function validateUtcFormat(dateString: string): boolean {
   if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('T')) {
     console.warn(
       `Date string '${dateString}' may not be in UTC format. ` +
-      'Expected format: 2024-07-26T10:00:00Z'
+        'Expected format: 2024-07-26T10:00:00Z',
     )
     return false
   }

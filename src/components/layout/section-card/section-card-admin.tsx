@@ -48,7 +48,9 @@ export function SectionCardsAdmin({
           <CardTitle>Total Revenue</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(revenueStatistics)}
+              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                revenueStatistics,
+              )}
             </CardDescription>
           </div>
         </CardHeader>

@@ -155,7 +155,12 @@ export default function SetRoleModal({
       console.error('Failed to update roles:', err)
 
       let errorMessage = 'Failed to update roles.'
-      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'status' in err &&
+        (err as { status: number }).status === 403
+      ) {
         errorMessage = 'You do not have permission to perform this action'
       }
 
@@ -255,10 +260,9 @@ export default function SetRoleModal({
                                 variant="ghost"
                                 onClick={() => handleRemoveRole(role.id)}
                                 disabled={addedRoles.length <= 1}
-                                className={`text-red-400 hover:text-red-600 ${addedRoles.length <= 1
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : ''
-                                  }`}
+                                className={`text-red-400 hover:text-red-600 ${
+                                  addedRoles.length <= 1 ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                               >
                                 <Trash className="w-4 h-4" />
                               </Button>
@@ -266,8 +270,7 @@ export default function SetRoleModal({
                             <TooltipContent>
                               {addedRoles.length <= 1
                                 ? 'Cannot remove the last role. Each user must have at least one role.'
-                                : 'Remove this role'
-                              }
+                                : 'Remove this role'}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

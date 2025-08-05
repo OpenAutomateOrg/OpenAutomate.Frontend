@@ -77,8 +77,20 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     },
     [],
   )
-  // Computed property for system admin status
-  const isSystemAdmin = user?.systemRole === SystemRole.Admin || user?.systemRole === 'Admin'
+
+  // Computed property for system admin status with better type safety
+  const isSystemAdmin = useMemo(() => {
+    if (!user) return false
+
+    // Handle both enum and string values for backwards compatibility
+    const userRole = user.systemRole
+    return (
+      userRole === SystemRole.Admin ||
+      userRole === 'Admin' ||
+      userRole === 'SystemAdmin' ||
+      userRole === 'ADMIN'
+    )
+  }, [user])
 
   // Helper function to check permissions for a specific resource and tenant
   const hasPermission = useCallback(
@@ -293,9 +305,13 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
 
-        // Always redirect to organization selector first
-        // This lets the user choose which tenant to access
-        router.push(config.paths.defaultRedirect)
+        // For system admins, redirect to system admin dashboard
+        if (userData.systemRole === SystemRole.Admin || userData.systemRole === 'Admin') {
+          router.push('/systemAdmin/dashboard')
+        } else {
+          // For regular users, redirect to tenant selector to choose organization
+          router.push(config.paths.auth.organizationSelector)
+        }
 
         return userData
       } catch (err: unknown) {

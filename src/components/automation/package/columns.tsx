@@ -128,10 +128,10 @@ export const createPackageColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
-      const formattedDate = formatUtcToLocal(createdAt, { 
+      const formattedDate = formatUtcToLocal(createdAt, {
         dateStyle: 'medium',
         timeStyle: undefined, // Only show date, no time
-        fallback: 'Invalid date' 
+        fallback: 'Invalid date',
       })
 
       return (

@@ -50,10 +50,12 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
         typeof (err as Record<string, unknown>).message === 'string'
       ) {
         const errorMessage = (err as Record<string, unknown>).message as string
-        if (errorMessage.includes('403') ||
+        if (
+          errorMessage.includes('403') ||
           errorMessage.includes('Forbidden') ||
           errorMessage.includes('forbidden') ||
-          errorMessage.includes('permission')) {
+          errorMessage.includes('permission')
+        ) {
           message = 'You do not have permission to perform this action.'
         } else {
           message = errorMessage
