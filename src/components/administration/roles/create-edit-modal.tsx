@@ -180,7 +180,10 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       if (errorWithMessage.message.includes('validation')) {
         return 'Please check your input and try again.'
       }
-      if (errorWithMessage.message.includes('permission')) {
+      if (errorWithMessage.message.includes('permission') ||
+        errorWithMessage.message.includes('403') ||
+        errorWithMessage.message.includes('Forbidden') ||
+        errorWithMessage.message.includes('forbidden')) {
         return 'You do not have permission to perform this action.'
       }
       return errorWithMessage.message

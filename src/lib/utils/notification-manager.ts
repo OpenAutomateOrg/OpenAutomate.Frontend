@@ -92,62 +92,60 @@ export class NotificationManager {
   }
 
   /**
-   * Smart error handler that determines error type and shows appropriate notification
+   * Extract error details from different error types
    */
-  static handleError(error: unknown, context?: string) {
+  private static extractErrorDetails(error: unknown): { message: string; title: string } {
     let message = 'An unexpected error occurred'
     let title = 'Error'
 
-    // Extract error message using the same logic as before
     if (typeof error === 'string') {
-      message = error
-    } else if (error && typeof error === 'object') {
-      // Handle API errors
+      return { message: error, title }
+    }
+
+    if (error && typeof error === 'object') {
       if ('status' in error && 'message' in error) {
         const apiError = error as { status: number; message: string }
-        
-        // Customize title based on status code
-        switch (apiError.status) {
-          case 400:
-            title = 'Invalid Request'
-            break
-          case 401:
-            title = 'Authentication Required'
-            break
-          case 403:
-            title = 'Access Denied'
-            break
-          case 404:
-            title = 'Not Found'
-            break
-          case 409:
-            title = 'Conflict'
-            break
-          case 422:
-            title = 'Validation Error'
-            break
-          case 429:
-            title = 'Rate Limited'
-            break
-          case 500:
-          case 502:
-          case 503:
-            title = 'Server Error'
-            break
-          default:
-            title = 'Error'
-        }
-        
-        message = apiError.message
+        title = this.getTitleByStatus(apiError.status)
+        message = apiError.status === 403
+          ? 'You do not have permission to perform this action'
+          : apiError.message
       } else if ('message' in error && typeof (error as { message: unknown }).message === 'string') {
         message = (error as { message: string }).message
       }
     }
 
-    // Add context if provided
-    if (context) {
-      title = `${context} Failed`
+    return { message, title }
+  }
+
+  /**
+   * Get appropriate title based on HTTP status code
+   */
+  private static getTitleByStatus(status: number): string {
+    switch (status) {
+      case 400: return 'Invalid Request'
+      case 401: return 'Authentication Required'
+      case 403: return 'Permission Denied'
+      case 404: return 'Not Found'
+      case 409: return 'Conflict'
+      case 422: return 'Validation Error'
+      case 429: return 'Rate Limited'
+      case 500:
+      case 502:
+      case 503: return 'Server Error'
+      default: return 'Error'
     }
+  }
+
+  /**
+   * Smart error handler that determines error type and shows appropriate notification
+   */
+  static handleError(error: unknown, context?: string) {
+    const { message, title: baseTitle } = this.extractErrorDetails(error)
+
+    // Add context if provided
+    const title = context
+      ? `${context.charAt(0).toUpperCase() + context.slice(1)} Failed`
+      : baseTitle
 
     this.error(message, { title })
   }
@@ -156,10 +154,13 @@ export class NotificationManager {
    * Handle success operations with consistent messaging
    */
   static handleSuccess(operation: string, itemName?: string) {
-    const message = itemName 
+    // Capitalize first letter of operation for proper message formatting
+    const capitalizedOperation = operation.charAt(0).toUpperCase() + operation.slice(1)
+
+    const message = itemName
       ? `${itemName} ${operation} successfully`
-      : `${operation} completed successfully`
-    
+      : `${capitalizedOperation} completed successfully`
+
     this.success(message, {
       title: 'Success'
     })

@@ -36,26 +36,41 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
   const [name, setName] = useState(agent?.name || '')
   const [machineName, setMachineName] = useState(agent?.machineName || '')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [machineNameError, setMachineNameError] = useState<string | null>(null)
   const [createdAgent, setCreatedAgent] = useState<BotAgentResponseDto | null>(null)
-  const [showErrorDialog, setShowErrorDialog] = useState(false)
-  const [errorDialogMsg, setErrorDialogMsg] = useState('')
 
   const isEditing = mode === 'edit'
 
   // ✅ Validate form and check name uniqueness only when submitting
   const validateForm = async (): Promise<boolean> => {
     // Reset errors
-    setError(null)
+    setNameError(null)
+    setMachineNameError(null)
 
-    if (!name.trim() || !machineName.trim()) {
-      setError('Please fill in all required fields')
+    let isValid = true
+
+    if (!name.trim()) {
+      setNameError('Name is required')
+      isValid = false
+    }
+
+    if (!machineName.trim()) {
+      setMachineNameError('Machine name is required')
+      isValid = false
+    }
+
+    if (!isValid) {
       return false
     }
 
     if (isEditing) {
       if (name === agent?.name && machineName === agent?.machineName) {
-        setError('Please change at least one field to update.')
+        toast({
+          title: 'No Changes',
+          description: 'Please change at least one field to update.',
+          variant: 'destructive',
+        })
         return false
       }
     }
@@ -65,12 +80,16 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
       try {
         const machineNameExists = await checkMachineNameExists(machineName, agent?.id)
         if (machineNameExists) {
-          setError('Machine name already exists')
+          setMachineNameError('Machine name already exists')
           return false
         }
       } catch (error) {
         console.error('Error checking machine name:', error)
-        setError('Failed to check machine name availability')
+        toast({
+          title: 'Validation Error',
+          description: 'Failed to check machine name availability',
+          variant: 'destructive',
+        })
         return false
       }
     }
@@ -78,67 +97,75 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
     return true
   }
 
-  // Format error messages from different error types
-  const formatErrorMessage = (err: unknown): string => {
-    let errorMessage = isEditing ? 'Failed to update agent. Please try again.' : 'Failed to create agent. Please try again.'
+  const checkAgentStatusForEdit = async (): Promise<boolean> => {
+    if (!isEditing || !agent) return true
 
-    if (typeof err === 'object' && err !== null) {
-      if ('message' in err) {
-        errorMessage = String(err.message)
-      }
+    const latest = await getBotAgentById(agent.id)
+    if (latest.status !== 'Disconnected') {
+      toast({
+        title: 'Cannot Edit Agent',
+        description: 'You can only edit an agent when its status is "Disconnected".',
+        variant: 'destructive',
+      })
+      return false
+    }
+    return true
+  }
 
-      if ('status' in err) {
-        errorMessage += ` (Status: ${(err as { status: string }).status})`
-      }
+  const performAgentOperation = async (): Promise<BotAgentResponseDto> => {
+    if (isEditing && agent) {
+      const updated = await updateBotAgent(agent.id, {
+        name: name !== agent.name ? name : undefined,
+        machineName: machineName !== agent.machineName ? machineName : undefined,
+      })
+      toast({
+        title: 'Success',
+        description: 'Agent updated successfully'
+      })
+      return updated
+    } else {
+      const created = await createBotAgent({ name, machineName })
+      toast({
+        title: 'Success',
+        description: 'Agent created successfully'
+      })
+      return created
+    }
+  }
 
-      if ('details' in err) {
-        errorMessage += ` - ${(err as { details: string }).details}`
-      }
+  const handleAgentError = (err: unknown) => {
+    let errorMessage = isEditing ? 'Failed to update agent' : 'Failed to create agent'
 
-      // Log more details for debugging
-      console.error('Error details:', JSON.stringify(err, null, 2))
+    if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+      errorMessage = 'You do not have permission to perform this action'
+    } else if (err && typeof err === 'object' && 'message' in err) {
+      errorMessage = String((err as { message: string }).message)
     }
 
-    return errorMessage
+    toast({
+      title: isEditing ? 'Update Failed' : 'Creation Failed',
+      description: errorMessage,
+      variant: 'destructive',
+    })
   }
 
   const handleSubmit = async () => {
     const isValid = await validateForm()
-    if (!isValid) {
-      return
-    }
+    if (!isValid) return
+
     setIsLoading(true)
-    setError(null)
     try {
-      let updated: BotAgentResponseDto
-      if (isEditing) {
-        // Always re-fetch agent status before update
-        const latest = await getBotAgentById(agent!.id)
-        if (latest.status !== 'Disconnected') {
-          setErrorDialogMsg('You can only edit an agent when its status is "Disconnected".')
-          setShowErrorDialog(true)
-          setIsLoading(false)
-          return
-        }
-        updated = await updateBotAgent(agent!.id, {
-          name: name !== agent!.name ? name : undefined,
-          machineName: machineName !== agent!.machineName ? machineName : undefined,
-        })
-        toast({
-          title: 'Success',
-          description: 'Agent updated successfully'
-        })
-      } else {
-        updated = await createBotAgent({ name, machineName })
-        toast({
-          title: 'Success',
-          description: 'Agent created successfully'
-        })
+      const canProceed = await checkAgentStatusForEdit()
+      if (!canProceed) {
+        setIsLoading(false)
+        return
       }
+
+      const updated = await performAgentOperation()
       setCreatedAgent(updated)
       if (onSuccess) onSuccess(updated)
     } catch (err) {
-      setError(formatErrorMessage(err))
+      handleAgentError(err)
     } finally {
       setIsLoading(false)
     }
@@ -155,7 +182,8 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
   const resetForm = () => {
     setName('')
     setMachineName('')
-    setError(null)
+    setNameError(null)
+    setMachineNameError(null)
     setCreatedAgent(null)
   }
 
@@ -189,12 +217,21 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setNameError(null)
+                }}
                 disabled={isLoading}
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 spellCheck="false"
               />
+              {nameError && (
+                <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {nameError}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="machine-name" className="flex items-center gap-1 mb-2">
@@ -203,25 +240,22 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
               <Input
                 id="machine-name"
                 value={machineName}
-                onChange={(e) => setMachineName(e.target.value)}
+                onChange={(e) => {
+                  setMachineName(e.target.value)
+                  setMachineNameError(null)
+                }}
                 disabled={isLoading}
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 spellCheck="false"
               />
-              {error && error === 'Machine name already exists' && (
+              {machineNameError && (
                 <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
                   <AlertCircle className="w-4 h-4" />
-                  {error}
+                  {machineNameError}
                 </div>
               )}
             </div>
-            {error && error !== 'Machine name already exists' && (
-              <div className="flex items-center gap-1 text-red-500 text-sm mt-1">
-                <AlertCircle className="w-4 h-4" />
-                {error}
-              </div>
-            )}
           </form>
         ) : (
           // Success state giữ nguyên
@@ -276,18 +310,6 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
             </Button>
           )}
         </DialogFooter>
-        {/* Error Dialog for status check */}
-        <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Error</DialogTitle>
-            </DialogHeader>
-            <div>{errorDialogMsg}</div>
-            <DialogFooter>
-              <Button onClick={() => setShowErrorDialog(false)}>OK</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </DialogContent>
     </Dialog>
   )

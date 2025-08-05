@@ -29,8 +29,6 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
 
@@ -60,12 +58,24 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
       setShowConfirm(false)
-      if (err instanceof Error) {
-        setErrorMsg(err.message)
-      } else {
-        setErrorMsg('Failed to delete package.')
+      let message = 'Failed to delete package.'
+      if (err && typeof err === 'object' && 'message' in err) {
+        const errorMessage = (err as { message: unknown }).message
+        if (typeof errorMessage === 'string' && (
+          errorMessage.includes('403') ||
+          errorMessage.includes('Forbidden') ||
+          errorMessage.includes('forbidden') ||
+          errorMessage.includes('permission'))) {
+          message = 'You do not have permission to perform this action.'
+        } else if (typeof errorMessage === 'string') {
+          message = errorMessage
+        }
       }
-      setShowError(true)
+      toast({
+        title: 'Delete Failed',
+        description: message,
+        variant: 'destructive',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -84,8 +94,11 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
         description: `Downloading package: ${row.original.name} version: ${latestVersion.versionNumber}`,
       })
     } else {
-      setErrorMsg('No versions available to download.')
-      setShowError(true)
+      toast({
+        title: 'Download Failed',
+        description: 'No versions available to download.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -138,25 +151,6 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
               disabled={isDeleting}
             >
               Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Dialog */}
-      <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Error</DialogTitle>
-          </DialogHeader>
-          <div>{errorMsg}</div>
-          <DialogFooter>
-            <Button
-              variant="destructive"
-              className="text-white dark:text-neutral-900"
-              onClick={() => setShowError(false)}
-            >
-              OK
             </Button>
           </DialogFooter>
         </DialogContent>

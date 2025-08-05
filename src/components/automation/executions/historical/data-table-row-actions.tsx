@@ -52,9 +52,22 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
       if (onDeleted) onDeleted()
     } catch (error) {
       console.error('Delete failed:', error)
+      let message = 'Failed to delete execution. Please try again.'
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as { message: unknown }).message
+        if (typeof errorMessage === 'string' && (
+          errorMessage.includes('403') ||
+          errorMessage.includes('Forbidden') ||
+          errorMessage.includes('forbidden') ||
+          errorMessage.includes('permission'))) {
+          message = 'You do not have permission to perform this action.'
+        } else if (typeof errorMessage === 'string') {
+          message = errorMessage
+        }
+      }
       toast({
         title: 'Delete Failed',
-        description: 'Failed to delete execution. Please try again.',
+        description: message,
         variant: 'destructive',
       })
     } finally {

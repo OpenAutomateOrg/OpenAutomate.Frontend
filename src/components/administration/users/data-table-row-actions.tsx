@@ -49,16 +49,20 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
         'message' in err &&
         typeof (err as Record<string, unknown>).message === 'string'
       ) {
-        message = (err as Record<string, unknown>).message as string
+        const errorMessage = (err as Record<string, unknown>).message as string
+        if (errorMessage.includes('403') ||
+          errorMessage.includes('Forbidden') ||
+          errorMessage.includes('forbidden') ||
+          errorMessage.includes('permission')) {
+          message = 'You do not have permission to perform this action.'
+        } else {
+          message = errorMessage
+        }
       }
       toast({
-        title: 'Delete User Failed',
+        title: 'Delete Failed',
         description: message,
         variant: 'destructive',
-        style: {
-          background: '#ff6a6a',
-          color: '#fff',
-        },
       })
     } finally {
       setDeleting(false)

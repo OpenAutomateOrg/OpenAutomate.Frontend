@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
@@ -48,6 +55,18 @@ export default function PackageDetail() {
 
   // UI state
   const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)
+  const [deleteVersionDialog, setDeleteVersionDialog] = useState<{ open: boolean; version: PackageVersionResponseDto | null }>({ open: false, version: null })
+  const [deletePackageDialog, setDeletePackageDialog] = useState(false)
+
+  // Reset version when dialog is fully closed to prevent version disappearing during animation
+  useEffect(() => {
+    if (!deleteVersionDialog.open && deleteVersionDialog.version) {
+      const timer = setTimeout(() => {
+        setDeleteVersionDialog(prev => ({ ...prev, version: null }))
+      }, 200) // Allow animation to complete
+      return () => clearTimeout(timer)
+    }
+  }, [deleteVersionDialog.open, deleteVersionDialog.version])
 
   // ✅ Error handling in dedicated effect (guideline #3)
   // Client-only: Requires toast notifications for user feedback
@@ -85,13 +104,17 @@ export default function PackageDetail() {
   }
 
   const handleDeleteVersion = async (version: PackageVersionResponseDto) => {
-    if (!confirm(`Are you sure you want to delete version ${version.versionNumber}?`)) {
-      return
-    }
+    setDeleteVersionDialog({ open: true, version })
+  }
+
+  const confirmDeleteVersion = async () => {
+    const version = deleteVersionDialog.version
+    if (!version) return
 
     try {
       await deletePackageVersion(packageId, version.versionNumber)
       mutate() // ✅ Use SWR's mutate for cache invalidation
+      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
 
       // Success toast
       toast({
@@ -102,16 +125,18 @@ export default function PackageDetail() {
     } catch (err) {
       console.error('Error deleting version:', err)
       toast(createErrorToast(err))
+      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
     }
   }
 
   const handleDeletePackage = async () => {
-    if (!confirm(`Are you sure you want to delete this package and all its versions?`)) {
-      return
-    }
+    setDeletePackageDialog(true)
+  }
 
+  const confirmDeletePackage = async () => {
     try {
       await deleteAutomationPackage(packageId)
+      setDeletePackageDialog(false)
 
       // Success toast
       toast({
@@ -124,6 +149,7 @@ export default function PackageDetail() {
     } catch (err) {
       console.error('Error deleting package:', err)
       toast(createErrorToast(err))
+      setDeletePackageDialog(false)
     }
   }
 
@@ -333,6 +359,46 @@ export default function PackageDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Delete Version Dialog */}
+      <Dialog open={deleteVersionDialog.open} onOpenChange={(open) => setDeleteVersionDialog(prev => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Version</DialogTitle>
+          </DialogHeader>
+          <div>
+            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}? This action cannot be undone.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteVersionDialog(prev => ({ ...prev, open: false }))}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteVersion}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Package Dialog */}
+      <Dialog open={deletePackageDialog} onOpenChange={setDeletePackageDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Package</DialogTitle>
+          </DialogHeader>
+          <div>
+            Are you sure you want to delete this package and all its versions? This action cannot be undone.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePackageDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeletePackage}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
