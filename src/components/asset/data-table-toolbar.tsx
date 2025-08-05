@@ -89,7 +89,7 @@ export function DataTableToolbar<TData>({
     const typeFilter = columnFilters.find((filter) => filter.id === 'type')
     const value = typeFilter ? (typeFilter.value as string) : 'all'
     return value
-  }, [propTypeFilterValue, columnFilters, table])
+  }, [propTypeFilterValue, columnFilters])
 
   return (
     <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">

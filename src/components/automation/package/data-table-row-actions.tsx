@@ -60,13 +60,14 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
       setShowConfirm(false)
       let message = 'Failed to delete package.'
       if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err as any).message
-        if (errorMessage.includes('403') ||
+        const errorMessage = (err as { message: unknown }).message
+        if (typeof errorMessage === 'string' && (
+          errorMessage.includes('403') ||
           errorMessage.includes('Forbidden') ||
           errorMessage.includes('forbidden') ||
-          errorMessage.includes('permission')) {
+          errorMessage.includes('permission'))) {
           message = 'You do not have permission to perform this action.'
-        } else {
+        } else if (typeof errorMessage === 'string') {
           message = errorMessage
         }
       }
