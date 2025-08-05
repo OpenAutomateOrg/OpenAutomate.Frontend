@@ -105,7 +105,7 @@ export class NotificationManager {
       // Handle API errors
       if ('status' in error && 'message' in error) {
         const apiError = error as { status: number; message: string }
-        
+
         // Customize title based on status code
         switch (apiError.status) {
           case 400:
@@ -115,7 +115,7 @@ export class NotificationManager {
             title = 'Authentication Required'
             break
           case 403:
-            title = 'Access Denied'
+            title = 'Permission Denied'
             break
           case 404:
             title = 'Not Found'
@@ -137,8 +137,13 @@ export class NotificationManager {
           default:
             title = 'Error'
         }
-        
-        message = apiError.message
+
+        // Override message for 403 errors to ensure consistent permission message
+        if (apiError.status === 403) {
+          message = 'You do not have permission to perform this action'
+        } else {
+          message = apiError.message
+        }
       } else if ('message' in error && typeof (error as { message: unknown }).message === 'string') {
         message = (error as { message: string }).message
       }
@@ -146,7 +151,9 @@ export class NotificationManager {
 
     // Add context if provided
     if (context) {
-      title = `${context} Failed`
+      // Capitalize first letter of context for proper title formatting
+      const capitalizedContext = context.charAt(0).toUpperCase() + context.slice(1)
+      title = `${capitalizedContext} Failed`
     }
 
     this.error(message, { title })
@@ -156,10 +163,13 @@ export class NotificationManager {
    * Handle success operations with consistent messaging
    */
   static handleSuccess(operation: string, itemName?: string) {
-    const message = itemName 
+    // Capitalize first letter of operation for proper message formatting
+    const capitalizedOperation = operation.charAt(0).toUpperCase() + operation.slice(1)
+
+    const message = itemName
       ? `${itemName} ${operation} successfully`
-      : `${operation} completed successfully`
-    
+      : `${capitalizedOperation} completed successfully`
+
     this.success(message, {
       title: 'Success'
     })

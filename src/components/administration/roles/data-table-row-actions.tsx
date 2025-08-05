@@ -31,8 +31,6 @@ interface DataTableRowActionsProps {
 
 export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const { toast } = useToast()
@@ -42,8 +40,11 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
-      setErrorMsg('This role cannot be edited. It is either a system role or a default role.')
-      setShowError(true)
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be edited. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowEdit(true)
@@ -52,8 +53,11 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
   const handleDelete = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
-      setErrorMsg('This role cannot be deleted. It is either a system role or a default role.')
-      setShowError(true)
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be deleted. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowConfirm(true)
@@ -79,8 +83,10 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
         errorMessage = err.message
       } else if (err && typeof err === 'object') {
         // Handle API error responses
-        const apiError = err as { message?: string; error?: string; details?: string }
-        if (apiError.message) {
+        const apiError = err as { message?: string; error?: string; details?: string; status?: number }
+        if (apiError.status === 403) {
+          errorMessage = 'You do not have permission to perform this action'
+        } else if (apiError.message) {
           errorMessage = apiError.message
         } else if (apiError.error) {
           errorMessage = apiError.error
@@ -91,15 +97,20 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
 
       // Check if the error is related to users having this role assigned
       const lowerMessage = errorMessage.toLowerCase()
+      let description: string
       if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
-        setErrorMsg(`Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.`)
+        description = 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
       } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
-        setErrorMsg(`Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.`)
+        description = 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
       } else {
-        setErrorMsg(errorMessage)
+        description = errorMessage
       }
 
-      setShowError(true)
+      toast({
+        title: 'Delete Failed',
+        description,
+        variant: 'destructive',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -173,19 +184,6 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Dialog */}
-      <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Cannot Delete Role</DialogTitle>
-          </DialogHeader>
-          <div>{errorMsg}</div>
-          <DialogFooter>
-            <Button onClick={() => setShowError(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

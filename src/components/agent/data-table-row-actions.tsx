@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { deleteBotAgent } from '@/lib/api/bot-agents'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,17 +29,19 @@ interface DataTableRowActionsProps {
 }
 
 export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTableRowActionsProps) {
+  const { toast } = useToast()
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
   // ✅ Simple edit handler using parent callback
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (row.original.status !== 'Disconnected') {
-      setErrorMsg('You can only edit an agent when its status is "Disconnected".')
-      setShowError(true)
+      toast({
+        title: 'Cannot Edit Agent',
+        description: 'You can only edit an agent when its status is "Disconnected".',
+        variant: 'destructive',
+      })
       return
     }
     if (onEdit) {
@@ -60,17 +63,27 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
         if (onRefresh) onRefresh()
       } else {
         setShowConfirm(false)
-        setErrorMsg('You can only delete an agent when its status is "Disconnected".')
-        setShowError(true)
+        toast({
+          title: 'Cannot Delete Agent',
+          description: 'You can only delete an agent when its status is "Disconnected".',
+          variant: 'destructive',
+        })
       }
     } catch (err: unknown) {
       setShowConfirm(false)
-      if (err instanceof Error) {
-        setErrorMsg(err.message)
-      } else {
-        setErrorMsg('Failed to delete agent.')
+
+      let errorMessage = 'Failed to delete agent.'
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+        errorMessage = 'You do not have permission to perform this action'
+      } else if (err instanceof Error) {
+        errorMessage = err.message
       }
-      setShowError(true)
+
+      toast({
+        title: 'Delete Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -125,25 +138,6 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
               disabled={isDeleting}
             >
               Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Dialog */}
-      <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Error</DialogTitle>
-          </DialogHeader>
-          <div>{errorMsg}</div>
-          <DialogFooter>
-            <Button
-              variant="destructive"
-              className="text-white dark:text-neutral-900"
-              onClick={() => setShowError(false)}
-            >
-              OK
             </Button>
           </DialogFooter>
         </DialogContent>
