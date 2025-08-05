@@ -31,8 +31,6 @@ interface DataTableRowActionsProps {
 
 export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const { toast } = useToast()
@@ -42,8 +40,11 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
-      setErrorMsg('This role cannot be edited. It is either a system role or a default role.')
-      setShowError(true)
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be edited. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowEdit(true)
@@ -52,11 +53,44 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
   const handleDelete = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
-      setErrorMsg('This role cannot be deleted. It is either a system role or a default role.')
-      setShowError(true)
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be deleted. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowConfirm(true)
+  }
+
+  const extractErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      return err.message
+    }
+
+    if (err && typeof err === 'object') {
+      const apiError = err as { message?: string; error?: string; details?: string; status?: number }
+      if (apiError.status === 403) {
+        return 'You do not have permission to perform this action'
+      }
+      return apiError.message || apiError.error || apiError.details || 'Failed to delete role.'
+    }
+
+    return 'Failed to delete role.'
+  }
+
+  const getErrorDescription = (errorMessage: string): string => {
+    const lowerMessage = errorMessage.toLowerCase()
+
+    if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
+      return 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
+    }
+
+    if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
+      return 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
+    }
+
+    return errorMessage
   }
 
   const confirmDelete = async () => {
@@ -71,35 +105,14 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
       setShowConfirm(false)
+      const errorMessage = extractErrorMessage(err)
+      const description = getErrorDescription(errorMessage)
 
-      // Extract error message with better handling for role deletion specific errors
-      let errorMessage = 'Failed to delete role.'
-
-      if (err instanceof Error) {
-        errorMessage = err.message
-      } else if (err && typeof err === 'object') {
-        // Handle API error responses
-        const apiError = err as { message?: string; error?: string; details?: string }
-        if (apiError.message) {
-          errorMessage = apiError.message
-        } else if (apiError.error) {
-          errorMessage = apiError.error
-        } else if (apiError.details) {
-          errorMessage = apiError.details
-        }
-      }
-
-      // Check if the error is related to users having this role assigned
-      const lowerMessage = errorMessage.toLowerCase()
-      if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
-        setErrorMsg(`Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.`)
-      } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
-        setErrorMsg(`Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.`)
-      } else {
-        setErrorMsg(errorMessage)
-      }
-
-      setShowError(true)
+      toast({
+        title: 'Delete Failed',
+        description,
+        variant: 'destructive',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -173,19 +186,6 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Dialog */}
-      <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Cannot Delete Role</DialogTitle>
-          </DialogHeader>
-          <div>{errorMsg}</div>
-          <DialogFooter>
-            <Button onClick={() => setShowError(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

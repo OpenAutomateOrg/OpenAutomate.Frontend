@@ -153,7 +153,13 @@ export default function SetRoleModal({
       /// Show error toast to user, do not rethrow because error is already handled for UX.
       // Log error for debugging and SonarQube compliance
       console.error('Failed to update roles:', err)
-      toast({ title: 'Error', description: 'Failed to update roles.', variant: 'destructive' })
+
+      let errorMessage = 'Failed to update roles.'
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+        errorMessage = 'You do not have permission to perform this action'
+      }
+
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' })
     } finally {
       setSaving(false)
     }

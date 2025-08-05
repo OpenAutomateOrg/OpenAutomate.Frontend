@@ -125,6 +125,8 @@ export const swrKeys = {
   standardUsers: () => ['system-roles', 'user'] as const,
   usersByRole: (role: string) => ['system-roles', 'users', role] as const,
   adminAllOrganizationUnits: () => ['system-roles', 'organization-units'] as const,
+  adminAllTotals: () => ['system-roles', 'all-totals'] as const,
+  revenueStatistics: () => ['system-roles', 'revenue-statistics'] as const,
 
   // Schedules
   schedules: () => ['schedules'] as const,
@@ -147,7 +149,7 @@ export const createSWRErrorMessage = (error: unknown): string => {
       return 'Authentication required. Please log in again.'
     }
     if (statusError.status === 403) {
-      return 'You do not have permission to access this resource.'
+      return 'You do not have permission to perform this action.'
     }
     if (statusError.status === 404) {
       return 'The requested resource was not found.'

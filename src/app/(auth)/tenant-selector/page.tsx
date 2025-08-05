@@ -140,7 +140,7 @@ function TenantSelectorContent() {
         {/* Unauthorized access warning */}
         {unauthorized && (
           <div className="mb-4 p-4 bg-destructive/10 rounded-md text-destructive text-center">
-            <p className="font-medium">Access Denied</p>
+            <p className="font-medium">You do not have permission to perform this action</p>
             <p className="text-sm">You do not have permission to access that organization unit.</p>
           </div>
         )}

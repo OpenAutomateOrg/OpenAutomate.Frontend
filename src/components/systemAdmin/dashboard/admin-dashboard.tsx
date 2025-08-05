@@ -2,7 +2,7 @@
 
 import { SectionCardsAdmin } from '@/components/layout/section-card/section-card-admin'
 import { ChartBarInteractive } from '@/components/layout/charts/chart-bar-interactive'
-import { ChartBarMultiple } from '@/components/layout/charts/chart-bar-multiple'
+import { ChartBarActive } from '@/components/layout/charts/Chart-bar-active'
 import { adminApi } from '@/lib/api/admin'
 import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
@@ -15,9 +15,12 @@ export default function AdminDashBoardInterface() {
     adminApi.getAllOrganizationUnits(),
   )
 
+  const { data: totals } = useSWR(swrKeys.adminAllTotals(), () => adminApi.getSystemStatistics())
+  const { data: revenueStatistics } = useSWR(swrKeys.revenueStatistics(), () =>
+    adminApi.getRevenueStatistics(),
+  )
+
   // Calculate totals
-  const totalUsers = allUsers?.length ?? 0
-  const totalOrganizationUnits = allOrganizationUnits?.length ?? 0
 
   return (
     <div className="flex flex-1 flex-col bg-muted/20 min-h-screen">
@@ -25,8 +28,9 @@ export default function AdminDashBoardInterface() {
         {/* Section Cards */}
         <div className="rounded-xl">
           <SectionCardsAdmin
-            totalUsers={totalUsers}
-            totalOrganizationUnits={totalOrganizationUnits}
+            totalUsers={totals?.totalUsers}
+            totalOrganizationUnits={totals?.totalOrganizationUnits}
+            revenueStatistics={revenueStatistics?.totalRevenue}
           />
         </div>
         {/* Pie Charts */}
@@ -34,7 +38,7 @@ export default function AdminDashBoardInterface() {
           <ChartBarInteractive users={allUsers} organizationUnits={allOrganizationUnits} />
         </div>
         <div className="@container/main flex flex-1 flex-col gap-4 p-2 sm:p-4 lg:p-0 dark:bg-black/60">
-          <ChartBarMultiple />
+          <ChartBarActive revenueStatistics={revenueStatistics} />
         </div>
       </div>
     </div>
