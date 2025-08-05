@@ -183,7 +183,7 @@ export function DataTable<TData, TValue>({
                           data-column-id={cell.column.id}
                           className={cellClass}
                         >
-                          <div className="truncate max-w-[200px] sm:max-w-none">
+                          <div className="truncate max-w-[150px] md:max-w-[200px] lg:max-w-none">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </div>
                         </TableCell>
