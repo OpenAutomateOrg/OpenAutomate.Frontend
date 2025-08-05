@@ -55,14 +55,17 @@ export default function PackageDetail() {
 
   // UI state
   const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)
-  const [deleteVersionDialog, setDeleteVersionDialog] = useState<{ open: boolean; version: PackageVersionResponseDto | null }>({ open: false, version: null })
+  const [deleteVersionDialog, setDeleteVersionDialog] = useState<{
+    open: boolean
+    version: PackageVersionResponseDto | null
+  }>({ open: false, version: null })
   const [deletePackageDialog, setDeletePackageDialog] = useState(false)
 
   // Reset version when dialog is fully closed to prevent version disappearing during animation
   useEffect(() => {
     if (!deleteVersionDialog.open && deleteVersionDialog.version) {
       const timer = setTimeout(() => {
-        setDeleteVersionDialog(prev => ({ ...prev, version: null }))
+        setDeleteVersionDialog((prev) => ({ ...prev, version: null }))
       }, 200) // Allow animation to complete
       return () => clearTimeout(timer)
     }
@@ -114,7 +117,7 @@ export default function PackageDetail() {
     try {
       await deletePackageVersion(packageId, version.versionNumber)
       mutate() // ✅ Use SWR's mutate for cache invalidation
-      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
+      setDeleteVersionDialog((prev) => ({ ...prev, open: false }))
 
       // Success toast
       toast({
@@ -125,7 +128,7 @@ export default function PackageDetail() {
     } catch (err) {
       console.error('Error deleting version:', err)
       toast(createErrorToast(err))
-      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
+      setDeleteVersionDialog((prev) => ({ ...prev, open: false }))
     }
   }
 
@@ -361,16 +364,23 @@ export default function PackageDetail() {
       </div>
 
       {/* Delete Version Dialog */}
-      <Dialog open={deleteVersionDialog.open} onOpenChange={(open) => setDeleteVersionDialog(prev => ({ ...prev, open }))}>
+      <Dialog
+        open={deleteVersionDialog.open}
+        onOpenChange={(open) => setDeleteVersionDialog((prev) => ({ ...prev, open }))}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Version</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}? This action cannot be undone.
+            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}?
+            This action cannot be undone.
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteVersionDialog(prev => ({ ...prev, open: false }))}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteVersionDialog((prev) => ({ ...prev, open: false }))}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDeleteVersion}>
@@ -387,7 +397,8 @@ export default function PackageDetail() {
             <DialogTitle>Delete Package</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete this package and all its versions? This action cannot be undone.
+            Are you sure you want to delete this package and all its versions? This action cannot be
+            undone.
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletePackageDialog(false)}>

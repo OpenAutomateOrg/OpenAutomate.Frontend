@@ -278,9 +278,8 @@ export const updateBotAgent = async (
 export const checkAgentNameExists = async (name: string, excludeId?: string): Promise<boolean> => {
   try {
     const agents = await getAllBotAgents()
-    return agents.some(agent =>
-      agent.name.toLowerCase() === name.toLowerCase() &&
-      agent.id !== excludeId
+    return agents.some(
+      (agent) => agent.name.toLowerCase() === name.toLowerCase() && agent.id !== excludeId,
     )
   } catch (error) {
     console.error('Error checking agent name:', error)
@@ -291,12 +290,15 @@ export const checkAgentNameExists = async (name: string, excludeId?: string): Pr
 /**
  * Check if machine name exists (for machine name validation)
  */
-export const checkMachineNameExists = async (machineName: string, excludeId?: string): Promise<boolean> => {
+export const checkMachineNameExists = async (
+  machineName: string,
+  excludeId?: string,
+): Promise<boolean> => {
   try {
     const agents = await getAllBotAgents()
-    return agents.some(agent =>
-      agent.machineName.toLowerCase() === machineName.toLowerCase() &&
-      agent.id !== excludeId
+    return agents.some(
+      (agent) =>
+        agent.machineName.toLowerCase() === machineName.toLowerCase() && agent.id !== excludeId,
     )
   } catch (error) {
     console.error('Error checking machine name:', error)

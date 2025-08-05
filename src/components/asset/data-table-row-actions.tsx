@@ -44,12 +44,19 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
       })
     } catch (err: unknown) {
       let message = 'Failed to delete asset.'
-      if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as { message: unknown }).message === 'string'
+      ) {
         const errorMessage = (err as { message: string }).message
-        if (errorMessage.includes('403') ||
+        if (
+          errorMessage.includes('403') ||
           errorMessage.includes('Forbidden') ||
           errorMessage.includes('forbidden') ||
-          errorMessage.includes('permission')) {
+          errorMessage.includes('permission')
+        ) {
           message = 'You do not have permission to perform this action.'
         } else {
           message = errorMessage

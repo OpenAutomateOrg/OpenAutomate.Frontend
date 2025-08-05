@@ -106,13 +106,9 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
       const formatted = formatUtcToLocal(date, {
         dateStyle: 'medium',
         timeStyle: undefined, // Only show date, no time
-        fallback: 'Invalid date'
+        fallback: 'Invalid date',
       })
-      return (
-        <div className="text-sm text-muted-foreground">
-          {formatted}
-        </div>
-      )
+      return <div className="text-sm text-muted-foreground">{formatted}</div>
     },
   },
 ]

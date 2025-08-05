@@ -671,13 +671,13 @@ export default function ExecutionsInterface() {
   }, [hasExactCount, executionsData.length, pagination.pageSize])
 
   // Define columns based on tab
-  let columns;
+  let columns
   if (tab === 'inprogress') {
-    columns = ProgressColumns;
+    columns = ProgressColumns
   } else if (tab === 'scheduled') {
-    columns = ScheduledColumns;
+    columns = ScheduledColumns
   } else {
-    columns = HistoricalColumns;
+    columns = HistoricalColumns
   }
 
   const table = useReactTable({
@@ -934,13 +934,6 @@ export default function ExecutionsInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Executions</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} execution{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             {/* Only show Create Execution button for In Progress tab */}
             {tab === 'inprogress' && (
               <Button onClick={handleCreateClick} className="flex items-center justify-center">

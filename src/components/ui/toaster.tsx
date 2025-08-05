@@ -9,12 +9,7 @@ import {
   ToastViewport,
 } from '@/components/ui/toast'
 import { useToast } from '@/components/ui/use-toast'
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  Info, 
-  AlertTriangle
-} from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils/utils'
 
 const getToastIcon = (variant?: string) => {
@@ -50,41 +45,33 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(({ id, title, description, action, variant, ...props }) => {
         const toastId = id || crypto.randomUUID()
-        
+
         return (
-          <Toast 
-            key={toastId} 
+          <Toast
+            key={toastId}
             {...props}
             className={cn(
               'group pointer-events-auto relative flex w-full items-start space-x-3 overflow-hidden rounded-lg border p-4 shadow-lg transition-all duration-300 hover:shadow-xl',
-              getToastStyles(variant)
+              getToastStyles(variant),
             )}
           >
-            <div className="flex-shrink-0 pt-0.5">
-              {getToastIcon(variant)}
-            </div>
-            
+            <div className="flex-shrink-0 pt-0.5">{getToastIcon(variant)}</div>
+
             <div className="flex-1 min-w-0">
               {title && (
-                <ToastTitle className="text-sm font-semibold leading-5 mb-1">
-                  {title}
-                </ToastTitle>
+                <ToastTitle className="text-sm font-semibold leading-5 mb-1">{title}</ToastTitle>
               )}
               {description && (
                 <ToastDescription className="text-sm leading-5 opacity-90">
                   {description}
                 </ToastDescription>
               )}
-              {action && (
-                <div className="mt-3">
-                  {action}
-                </div>
-              )}
+              {action && <div className="mt-3">{action}</div>}
             </div>
-            
-            <ToastClose 
+
+            <ToastClose
               className="absolute right-2 top-2 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              onClick={() => dismiss(toastId)} 
+              onClick={() => dismiss(toastId)}
             />
           </Toast>
         )

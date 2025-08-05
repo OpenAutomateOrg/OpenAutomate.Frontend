@@ -287,10 +287,7 @@ export const getAutomationPackagesODataTotal = async (
 
   try {
     const response = await api.get<ODataResponse<AutomationPackageResponseDto>>(endpoint)
-    console.log(
-      `getAutomationPackagesODataTotal for tenant ${tenant}:`,
-      response,
-    )
+    console.log(`getAutomationPackagesODataTotal for tenant ${tenant}:`, response)
     return processODataResponse(response)
   } catch (error) {
     console.error(`Error fetching Automation Packages for tenant ${tenant}:`, error)

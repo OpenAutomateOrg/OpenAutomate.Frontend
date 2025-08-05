@@ -31,7 +31,6 @@ export function StatisticalStatus() {
   const { data: executionsResponse } = useSWR(swrKeys.executionsODataTotal(tenant), () =>
     getExecutionsODataTotal(tenant),
   )
-
   // Count executions by status
   const jobStatuses = useMemo(() => {
     if (!executionsResponse?.value) {

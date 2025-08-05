@@ -19,7 +19,7 @@ const createEndpoints = () => {
   if (!tenant) {
     throw new Error('No tenant context available')
   }
-  
+
   return {
     status: `${tenant}/api/subscription/status`,
     startTrial: `${tenant}/api/subscription/start-trial`,

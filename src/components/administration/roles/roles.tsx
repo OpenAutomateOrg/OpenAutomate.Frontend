@@ -322,13 +322,6 @@ export default function RolesInterface() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} role{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button onClick={handleCreateRole} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Role

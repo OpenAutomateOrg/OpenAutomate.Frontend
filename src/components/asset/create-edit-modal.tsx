@@ -165,7 +165,8 @@ export function CreateEditModal({
   const handleDuplicateKeyError = (err: unknown) => {
     if (err && typeof err === 'object' && 'message' in err) {
       const errorMessage = (err as { message: string }).message
-      const isDuplicateError = errorMessage.toLowerCase().includes('duplicate') ||
+      const isDuplicateError =
+        errorMessage.toLowerCase().includes('duplicate') ||
         errorMessage.toLowerCase().includes('already exists') ||
         errorMessage.toLowerCase().includes('unique')
 

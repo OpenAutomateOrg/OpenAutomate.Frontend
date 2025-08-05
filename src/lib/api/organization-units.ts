@@ -33,5 +33,33 @@ export const organizationUnitApi = {
   ): Promise<OrganizationUnit> => {
     const response = await api.put<OrganizationUnit>(`/api/ou/${id}`, data)
     return response
-  }
+  },
+  // Request deletion of an organization unit
+  requestDeletion: async (id: string): Promise<{ remainingSeconds: number }> => {
+    const response = await api.post<{ remainingSeconds: number }>(
+      `/api/ou/${id}/request-deletion`,
+      {},
+    )
+    return response
+  },
+  // Cancel pending deletion of an organization unit
+  cancelDeletion: async (id: string): Promise<{ success: boolean }> => {
+    const response = await api.post<{ success: boolean }>(`/api/ou/${id}/cancel-deletion`, {})
+    return response
+  },
+  // Get deletion status of an organization unit
+  getDeletionStatus: async (
+    id: string,
+  ): Promise<{
+    isDeletionPending: boolean
+    remainingSeconds: number | null
+    scheduledDeletionAt: string | null
+  }> => {
+    const response = await api.get<{
+      isDeletionPending: boolean
+      remainingSeconds: number | null
+      scheduledDeletionAt: string | null
+    }>(`/api/ou/${id}/deletion-status`)
+    return response
+  },
 }

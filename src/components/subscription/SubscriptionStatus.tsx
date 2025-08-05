@@ -18,15 +18,15 @@ export function SubscriptionStatus() {
 
   const handleStartTrial = async () => {
     if (isStartingTrial) return // Prevent multiple clicks
-    
+
     setIsStartingTrial(true)
-    
+
     // Show immediate feedback
     toast({
       title: 'Starting Trial...',
       description: 'Please wait while we activate your free trial.',
     })
-    
+
     try {
       const response = await subscriptionApi.startTrial()
       if (response.success) {
@@ -44,7 +44,8 @@ export function SubscriptionStatus() {
         })
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while starting your trial.'
+      const errorMessage =
+        error instanceof Error ? error.message : 'An error occurred while starting your trial.'
       toast({
         title: 'Error Starting Trial',
         description: errorMessage,
@@ -74,9 +75,7 @@ export function SubscriptionStatus() {
             <AlertCircle className="h-5 w-5 text-gray-500" />
             Loading...
           </CardTitle>
-          <CardDescription>
-            Checking subscription status...
-          </CardDescription>
+          <CardDescription>Checking subscription status...</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -108,7 +107,7 @@ export function SubscriptionStatus() {
       // Parse as UTC and convert to local time for display
       const trialEndTime = new Date(subscription.trialEndsAt + 'Z') // Add Z to ensure UTC parsing
       const now = new Date()
-      
+
       if (trialEndTime > now) {
         const expiresIn = formatDistanceToNow(trialEndTime, { addSuffix: true })
         return `Trial expires ${expiresIn}`
@@ -145,8 +144,8 @@ export function SubscriptionStatus() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={handleStartTrial} 
+            <Button
+              onClick={handleStartTrial}
               disabled={isStartingTrial}
               className="w-full transition-all duration-200"
             >
@@ -177,9 +176,7 @@ export function SubscriptionStatus() {
               </div>
               {getStatusBadge()}
             </CardTitle>
-            <CardDescription>
-              {getExpirationText()}
-            </CardDescription>
+            <CardDescription>{getExpirationText()}</CardDescription>
           </CardHeader>
         </Card>
       )
@@ -197,9 +194,7 @@ export function SubscriptionStatus() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">
-              Upgrade to Premium
-            </Button>
+            <Button className="w-full">Upgrade to Premium</Button>
           </CardContent>
         </Card>
       )
@@ -213,13 +208,12 @@ export function SubscriptionStatus() {
               Trial Not Available
             </CardTitle>
             <CardDescription>
-              Free trial is only available on your first organization unit. Upgrade to access premium features.
+              Free trial is only available on your first organization unit. Upgrade to access
+              premium features.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">
-              Upgrade to Premium
-            </Button>
+            <Button className="w-full">Upgrade to Premium</Button>
           </CardContent>
         </Card>
       )

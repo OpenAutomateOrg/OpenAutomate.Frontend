@@ -69,7 +69,12 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
     }
 
     if (err && typeof err === 'object') {
-      const apiError = err as { message?: string; error?: string; details?: string; status?: number }
+      const apiError = err as {
+        message?: string
+        error?: string
+        details?: string
+        status?: number
+      }
       if (apiError.status === 403) {
         return 'You do not have permission to perform this action'
       }
@@ -82,7 +87,11 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
   const getErrorDescription = (errorMessage: string): string => {
     const lowerMessage = errorMessage.toLowerCase()
 
-    if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
+    if (
+      lowerMessage.includes('user') ||
+      lowerMessage.includes('assign') ||
+      lowerMessage.includes('reference')
+    ) {
       return 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
     }
 

@@ -47,11 +47,7 @@ export const Resources = {
 /**
  * Default role names that cannot be edited or deleted
  */
-export const PROTECTED_ROLES = [
-  'OWNER',
-  'DEVELOPER',
-  'USER'
-] as const
+export const PROTECTED_ROLES = ['OWNER', 'DEVELOPER', 'USER'] as const
 
 /**
  * Permission levels (matching backend Permissions.cs)
