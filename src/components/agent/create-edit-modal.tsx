@@ -97,57 +97,75 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
     return true
   }
 
+  const checkAgentStatusForEdit = async (): Promise<boolean> => {
+    if (!isEditing || !agent) return true
+
+    const latest = await getBotAgentById(agent.id)
+    if (latest.status !== 'Disconnected') {
+      toast({
+        title: 'Cannot Edit Agent',
+        description: 'You can only edit an agent when its status is "Disconnected".',
+        variant: 'destructive',
+      })
+      return false
+    }
+    return true
+  }
+
+  const performAgentOperation = async (): Promise<BotAgentResponseDto> => {
+    if (isEditing && agent) {
+      const updated = await updateBotAgent(agent.id, {
+        name: name !== agent.name ? name : undefined,
+        machineName: machineName !== agent.machineName ? machineName : undefined,
+      })
+      toast({
+        title: 'Success',
+        description: 'Agent updated successfully'
+      })
+      return updated
+    } else {
+      const created = await createBotAgent({ name, machineName })
+      toast({
+        title: 'Success',
+        description: 'Agent created successfully'
+      })
+      return created
+    }
+  }
+
+  const handleAgentError = (err: unknown) => {
+    let errorMessage = isEditing ? 'Failed to update agent' : 'Failed to create agent'
+
+    if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+      errorMessage = 'You do not have permission to perform this action'
+    } else if (err && typeof err === 'object' && 'message' in err) {
+      errorMessage = String((err as { message: string }).message)
+    }
+
+    toast({
+      title: isEditing ? 'Update Failed' : 'Creation Failed',
+      description: errorMessage,
+      variant: 'destructive',
+    })
+  }
+
   const handleSubmit = async () => {
     const isValid = await validateForm()
-    if (!isValid) {
-      return
-    }
+    if (!isValid) return
+
     setIsLoading(true)
     try {
-      let updated: BotAgentResponseDto
-      if (isEditing) {
-        // Always re-fetch agent status before update
-        const latest = await getBotAgentById(agent!.id)
-        if (latest.status !== 'Disconnected') {
-          toast({
-            title: 'Cannot Edit Agent',
-            description: 'You can only edit an agent when its status is "Disconnected".',
-            variant: 'destructive',
-          })
-          setIsLoading(false)
-          return
-        }
-        updated = await updateBotAgent(agent!.id, {
-          name: name !== agent!.name ? name : undefined,
-          machineName: machineName !== agent!.machineName ? machineName : undefined,
-        })
-        toast({
-          title: 'Success',
-          description: 'Agent updated successfully'
-        })
-      } else {
-        updated = await createBotAgent({ name, machineName })
-        toast({
-          title: 'Success',
-          description: 'Agent created successfully'
-        })
+      const canProceed = await checkAgentStatusForEdit()
+      if (!canProceed) {
+        setIsLoading(false)
+        return
       }
+
+      const updated = await performAgentOperation()
       setCreatedAgent(updated)
       if (onSuccess) onSuccess(updated)
     } catch (err) {
-      let errorMessage = isEditing ? 'Failed to update agent' : 'Failed to create agent'
-
-      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
-        errorMessage = 'You do not have permission to perform this action'
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage = String((err as { message: string }).message)
-      }
-
-      toast({
-        title: isEditing ? 'Update Failed' : 'Creation Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      })
+      handleAgentError(err)
     } finally {
       setIsLoading(false)
     }

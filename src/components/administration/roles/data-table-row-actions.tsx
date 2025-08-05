@@ -63,6 +63,36 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
     setShowConfirm(true)
   }
 
+  const extractErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      return err.message
+    }
+
+    if (err && typeof err === 'object') {
+      const apiError = err as { message?: string; error?: string; details?: string; status?: number }
+      if (apiError.status === 403) {
+        return 'You do not have permission to perform this action'
+      }
+      return apiError.message || apiError.error || apiError.details || 'Failed to delete role.'
+    }
+
+    return 'Failed to delete role.'
+  }
+
+  const getErrorDescription = (errorMessage: string): string => {
+    const lowerMessage = errorMessage.toLowerCase()
+
+    if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
+      return 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
+    }
+
+    if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
+      return 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
+    }
+
+    return errorMessage
+  }
+
   const confirmDelete = async () => {
     setIsDeleting(true)
     try {
@@ -75,36 +105,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
       setShowConfirm(false)
-
-      // Extract error message with better handling for role deletion specific errors
-      let errorMessage = 'Failed to delete role.'
-
-      if (err instanceof Error) {
-        errorMessage = err.message
-      } else if (err && typeof err === 'object') {
-        // Handle API error responses
-        const apiError = err as { message?: string; error?: string; details?: string; status?: number }
-        if (apiError.status === 403) {
-          errorMessage = 'You do not have permission to perform this action'
-        } else if (apiError.message) {
-          errorMessage = apiError.message
-        } else if (apiError.error) {
-          errorMessage = apiError.error
-        } else if (apiError.details) {
-          errorMessage = apiError.details
-        }
-      }
-
-      // Check if the error is related to users having this role assigned
-      const lowerMessage = errorMessage.toLowerCase()
-      let description: string
-      if (lowerMessage.includes('user') || lowerMessage.includes('assign') || lowerMessage.includes('reference')) {
-        description = 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
-      } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
-        description = 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
-      } else {
-        description = errorMessage
-      }
+      const errorMessage = extractErrorMessage(err)
+      const description = getErrorDescription(errorMessage)
 
       toast({
         title: 'Delete Failed',
