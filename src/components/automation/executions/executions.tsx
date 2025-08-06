@@ -884,7 +884,20 @@ export default function ExecutionsInterface() {
 
   const handleRowClick = (row: ExecutionsRow) => {
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/executions/${row.id}` : `/${tenant}/executions/${row.id}`
+    const baseRoute = isAdmin ? `/admin/executions` : `/${tenant}/automation/executions`
+
+    // Route to appropriate tab based on current tab or execution status
+    let route = `${baseRoute}/${row.id}`
+
+    // If we have a specific tab active, route to that tab's detail page
+    if (tab === 'historical') {
+      route = `${baseRoute}/historical/${row.id}`
+    } else if (tab === 'inprogress') {
+      route = `${baseRoute}/inprogress/${row.id}`
+    } else if (tab === 'scheduled') {
+      route = `${baseRoute}/scheduled/${row.id}`
+    }
+
     router.push(route)
   }
 
