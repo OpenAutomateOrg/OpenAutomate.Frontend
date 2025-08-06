@@ -334,39 +334,6 @@ export default function PackageDetail() {
                   <Upload className="h-4 w-4 mr-2" />
                   {uploading ? 'Uploading...' : 'Upload New Version'}
                 </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".zip,.tar,.tar.gz,.rar,.7z"
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                />
-                <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Upload New Package Version</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block mb-1 font-medium">Version Number</label>
-                        <Input
-                          value={uploadVersion}
-                          onChange={e => setUploadVersion(e.target.value)}
-                          placeholder="Enter version number"
-                          disabled={uploading}
-                        />
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>
-                          {uploading ? 'Uploading...' : 'Upload'}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -481,6 +448,39 @@ export default function PackageDetail() {
               Delete
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".zip,.tar,.tar.gz,.rar,.7z"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload New Package Version</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium">Version Number</label>
+              <Input
+                value={uploadVersion}
+                onChange={e => setUploadVersion(e.target.value)}
+                placeholder="Enter version number"
+                disabled={uploading}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
+                Cancel
+              </Button>
+              <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>
+                {uploading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
