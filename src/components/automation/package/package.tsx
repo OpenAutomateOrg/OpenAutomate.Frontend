@@ -310,7 +310,7 @@ export default function PackageInterface() {
   // Setup table instance with optimized configuration
   const table = useReactTable({
     data: packages,
-    columns: createPackageColumns(refreshPackages),
+    columns: createPackageColumns(),
     state: {
       sorting,
       columnVisibility,
@@ -472,7 +472,7 @@ export default function PackageInterface() {
 
         <DataTable
           data={packages}
-          columns={createPackageColumns(refreshPackages)}
+          columns={createPackageColumns()}
           onRowClick={handleRowClick}
           table={table}
           isLoading={isLoading}

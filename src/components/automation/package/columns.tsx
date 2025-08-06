@@ -8,12 +8,9 @@ import {
   PackageVersionResponseDto,
 } from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import { DataTableRowActions } from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 
-export const createPackageColumns = (
-  onRefresh?: () => void,
-): ColumnDef<AutomationPackageResponseDto>[] => [
+export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
