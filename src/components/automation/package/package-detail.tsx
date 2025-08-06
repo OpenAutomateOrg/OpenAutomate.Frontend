@@ -37,6 +37,7 @@ import {
   uploadPackageVersion,
 } from '@/lib/api/automation-packages'
 import { createErrorToast } from '@/lib/utils/error-utils'
+import { Input } from '@/components/ui/input'
 
 export default function PackageDetail() {
   const params = useParams()
@@ -63,6 +64,9 @@ export default function PackageDetail() {
   const [deletePackageDialog, setDeletePackageDialog] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadVersion, setUploadVersion] = useState('')
 
   // Reset version when dialog is fully closed to prevent version disappearing during animation
   useEffect(() => {
@@ -163,25 +167,32 @@ export default function PackageDetail() {
     fileInputRef.current?.click()
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const version = window.prompt('Enter version number for the new package version:')
-    if (!version) return
+    setUploadFile(file)
+    setUploadDialogOpen(true)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleUploadVersion = async () => {
+    if (!uploadFile || !uploadVersion) return
     setUploading(true)
     try {
-      await uploadPackageVersion(packageId, { file, version })
+      await uploadPackageVersion(packageId, { file: uploadFile, version: uploadVersion })
       await mutate()
       toast({
         title: 'Upload Successful',
-        description: `Version ${version} uploaded successfully`,
+        description: `Version ${uploadVersion} uploaded successfully`,
         variant: 'default',
       })
+      setUploadDialogOpen(false)
+      setUploadFile(null)
+      setUploadVersion('')
     } catch (err) {
       toast(createErrorToast(err))
     } finally {
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -330,6 +341,32 @@ export default function PackageDetail() {
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
                 />
+                <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upload New Package Version</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block mb-1 font-medium">Version Number</label>
+                        <Input
+                          value={uploadVersion}
+                          onChange={e => setUploadVersion(e.target.value)}
+                          placeholder="Enter version number"
+                          disabled={uploading}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>
+                          {uploading ? 'Uploading...' : 'Upload'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
