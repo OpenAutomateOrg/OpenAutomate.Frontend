@@ -161,14 +161,14 @@ export function useScheduleFormatting(schedule: ScheduleResponseDto | null) {
         if (!schedule) return null
 
         return {
-            createdDate: new Date(schedule.createdAt).toLocaleDateString('en-US', {
+            createdDate: new Date(schedule.createdAt).toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
             }),
-            updatedDate: new Date(schedule.updatedAt).toLocaleDateString('en-US', {
+            updatedDate: new Date(schedule.updatedAt).toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -176,7 +176,7 @@ export function useScheduleFormatting(schedule: ScheduleResponseDto | null) {
                 minute: '2-digit',
             }),
             nextRunDate: schedule.nextRunTime
-                ? new Date(schedule.nextRunTime).toLocaleDateString('en-US', {
+                ? new Date(schedule.nextRunTime).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -185,7 +185,7 @@ export function useScheduleFormatting(schedule: ScheduleResponseDto | null) {
                 })
                 : null,
             oneTimeDate: schedule.oneTimeExecution
-                ? new Date(schedule.oneTimeExecution).toLocaleDateString('en-US', {
+                ? new Date(schedule.oneTimeExecution).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
