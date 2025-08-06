@@ -40,11 +40,6 @@ export const createPackageColumns = (
     enableHiding: false,
   },
   {
-    id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} onRefresh={onRefresh} />,
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-  },
-  {
     accessorKey: 'name',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (

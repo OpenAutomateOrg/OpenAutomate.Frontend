@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { swrKeys, createSWRErrorMessage } from '@/lib/config/swr-config'
 import { useParams, useRouter } from 'next/navigation'
@@ -34,6 +34,7 @@ import {
   getPackageDownloadUrl,
   deleteAutomationPackage,
   deletePackageVersion,
+  uploadPackageVersion,
 } from '@/lib/api/automation-packages'
 import { createErrorToast } from '@/lib/utils/error-utils'
 
@@ -60,6 +61,8 @@ export default function PackageDetail() {
     version: PackageVersionResponseDto | null
   }>({ open: false, version: null })
   const [deletePackageDialog, setDeletePackageDialog] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Reset version when dialog is fully closed to prevent version disappearing during animation
   useEffect(() => {
@@ -153,6 +156,32 @@ export default function PackageDetail() {
       console.error('Error deleting package:', err)
       toast(createErrorToast(err))
       setDeletePackageDialog(false)
+    }
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const version = window.prompt('Enter version number for the new package version:')
+    if (!version) return
+    setUploading(true)
+    try {
+      await uploadPackageVersion(packageId, { file, version })
+      await mutate()
+      toast({
+        title: 'Upload Successful',
+        description: `Version ${version} uploaded successfully`,
+        variant: 'default',
+      })
+    } catch (err) {
+      toast(createErrorToast(err))
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -290,10 +319,17 @@ export default function PackageDetail() {
                   <FileText className="h-5 w-5 mr-2" />
                   Package Versions
                 </div>
-                <Button size="sm">
+                <Button size="sm" onClick={handleUploadClick} disabled={uploading}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload New Version
+                  {uploading ? 'Uploading...' : 'Upload New Version'}
                 </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".zip,.tar,.tar.gz,.rar,.7z"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
