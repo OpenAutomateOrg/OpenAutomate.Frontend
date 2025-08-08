@@ -145,8 +145,7 @@ export default function AgentDetail({ id }: AgentDetailProps) {
             size="sm"
             className="gap-1"
             onClick={() => {
-              window.location.href =
-                'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+              window.location.href = config.downloads.agentInstallerUrl
             }}
           >
             <Download className="h-4 w-4" />

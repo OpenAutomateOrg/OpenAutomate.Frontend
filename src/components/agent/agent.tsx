@@ -33,6 +33,7 @@ import { useAgentStatus } from '@/hooks/use-agent-status'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { config } from '@/lib/config/config'
 
 export const agentSchema = z.object({
   id: z.string(),
@@ -478,8 +479,7 @@ export default function AgentInterface() {
             <Button
               variant="outline"
               onClick={() => {
-                window.location.href =
-                  'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+                window.location.href = config.downloads.agentInstallerUrl
               }}
               className="flex items-center justify-center"
             >
