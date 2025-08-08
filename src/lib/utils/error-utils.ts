@@ -116,6 +116,10 @@ export function extractErrorMessage(error: unknown): string {
     if (error.status === 0) {
       return error.message || 'Network error. Please check your connection.'
     }
+    // Handle 403 Forbidden errors with consistent message
+    if (error.status === 403) {
+      return 'You do not have permission to perform this action'
+    }
     return extractApiErrorMessage(error)
   }
 

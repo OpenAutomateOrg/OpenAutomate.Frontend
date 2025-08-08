@@ -24,6 +24,7 @@ import {
 } from '@tanstack/react-table'
 import {
   getBotAgentsWithOData,
+  getBotAgentById,
   type ODataQueryOptions,
   BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
@@ -33,6 +34,7 @@ import { useAgentStatus } from '@/hooks/use-agent-status'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { config } from '@/lib/config/config'
 
 export const agentSchema = z.object({
   id: z.string(),
@@ -55,6 +57,7 @@ export default function AgentInterface() {
   // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [editingAgent, setEditingAgent] = useState<BotAgentResponseDto | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -350,10 +353,28 @@ export default function AgentInterface() {
     return !hasExactCount && agents.length === pagination.pageSize
   }, [hasExactCount, agents.length, pagination.pageSize])
 
+  // ✅ Edit handler
+  const handleEditAgent = async (agentRow: AgentRow) => {
+    try {
+      // Fetch full agent details for editing
+      const agentDetail = await getBotAgentById(agentRow.id)
+      setEditingAgent(agentDetail)
+      setModalMode('edit')
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error('Failed to fetch agent details:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load agent details for editing.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   // Setup table instance with real-time data and custom row ID
   const table = useReactTable({
     data: agentsWithRealtimeStatus,
-    columns: createAgentColumns(refreshAgents),
+    columns: createAgentColumns(refreshAgents, handleEditAgent),
     state: {
       sorting,
       columnVisibility,
@@ -456,6 +477,11 @@ export default function AgentInterface() {
   // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
   const handleAgentCreated = () => mutateAgents()
 
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setEditingAgent(null)
+  }
+
   const handleRowClick = (row: AgentRow) => {
     const isAdmin = pathname.startsWith('/admin')
     const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
@@ -468,18 +494,10 @@ export default function AgentInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Agents</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} agent{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button
               variant="outline"
               onClick={() => {
-                window.location.href =
-                  'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate.BotAgent.Installer.msi'
+                window.location.href = config.downloads.agentInstallerUrl
               }}
               className="flex items-center justify-center"
             >
@@ -488,6 +506,7 @@ export default function AgentInterface() {
             </Button>
             <Button
               onClick={() => {
+                setEditingAgent(null)
                 setModalMode('create')
                 setIsModalOpen(true)
               }}
@@ -526,7 +545,7 @@ export default function AgentInterface() {
 
         <DataTable
           data={agentsWithRealtimeStatus}
-          columns={createAgentColumns(refreshAgents)}
+          columns={createAgentColumns(refreshAgents, handleEditAgent)}
           table={table}
           onRowClick={handleRowClick}
           isLoading={isLoading}
@@ -563,10 +582,13 @@ export default function AgentInterface() {
         />
       </div>
 
+      {/* ✅ Dynamic key resets modal state */}
       <CreateEditModal
+        key={editingAgent?.id ?? 'new'}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         mode={modalMode}
+        agent={editingAgent}
         onSuccess={handleAgentCreated}
       />
     </>

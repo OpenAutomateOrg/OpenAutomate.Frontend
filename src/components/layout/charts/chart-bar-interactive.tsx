@@ -52,12 +52,25 @@ export function ChartBarInteractive({
 
     // Group users and org units by creation date
     const usersByDate = users.reduce(
-      (acc) => {
-        // Since users don't have createdAt, we'll distribute them evenly or use a fallback
-        // For demo purposes, we'll create sample data
-        const randomIndex = Math.floor(50 * last30Days.length)
-        const date = last30Days[randomIndex]
-        acc[date] = (acc[date] || 0) + 1
+      (acc, user) => {
+        let createdDate: string
+        try {
+          if (user.createdAt) {
+            // If the date contains microseconds, truncate to milliseconds for better parsing
+            const dateStr = user.createdAt.includes('.')
+              ? user.createdAt.split('.')[0] + 'Z'
+              : user.createdAt
+            createdDate = new Date(dateStr).toISOString().split('T')[0]
+          } else {
+            createdDate = new Date().toISOString().split('T')[0]
+          }
+        } catch {
+          createdDate = new Date().toISOString().split('T')[0]
+        }
+
+        if (last30Days.includes(createdDate)) {
+          acc[createdDate] = (acc[createdDate] || 0) + 1
+        }
         return acc
       },
       {} as Record<string, number>,

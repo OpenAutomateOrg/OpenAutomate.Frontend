@@ -81,11 +81,22 @@ export const createColumns = (
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type')
-      return <span>{typeValue === 0 || typeValue === '0' ? 'String' : 'Secret'}</span>
+      // Handle both number and string types from API
+      if (typeValue === 0 || typeValue === '0' || typeValue === 'String') {
+        return <span>String</span>
+      }
+      return <span>Secret</span>
     },
     filterFn: (row, id, value) => {
-      const rowValue = String(row.getValue(id))
-      return rowValue === String(value)
+      const rowValue = row.getValue(id)
+      const stringValue = String(value)
+
+      // Convert the row value to the same format as filter value for comparison
+      if (rowValue === 0 || rowValue === '0' || rowValue === 'String') {
+        return stringValue === '0' || stringValue === 'String'
+      } else {
+        return stringValue === '1' || stringValue === 'Secret'
+      }
     },
   },
   {

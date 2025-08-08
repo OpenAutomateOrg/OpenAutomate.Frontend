@@ -9,6 +9,7 @@ import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import ExecutionStatusBadge from '../execution-status-badge'
 import DataTableRowAction from './data-table-row-actions'
+import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface CreateHistoricalColumnsProps {
   onDeleted?: () => void
@@ -105,21 +106,61 @@ export const createColumns = ({
     accessorKey: 'startTime',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Start Time" />,
     cell: ({ row }) => {
-      const value = row.getValue('startTime')
-      console.log('StartTime column value:', { value, type: typeof value, rowId: row.original.id })
-      // The value is already formatted in the transformation function
-      return <span>{typeof value === 'string' ? value : ''}</span>
+      const value = row.getValue('startTime') as string
+      const formatted = formatUtcToLocal(value, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        fallback: 'N/A',
+      })
+      return (
+        <div className="flex items-center">
+          <span>{formatted}</span>
+        </div>
+      )
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId) as string)
+      const dateB = new Date(rowB.getValue(columnId) as string)
+
+      // Handle invalid dates
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
+      if (isNaN(dateA.getTime())) return 1
+      if (isNaN(dateB.getTime())) return -1
+
+      // Sort by timestamp (newer first by default when desc=true)
+      return dateA.getTime() - dateB.getTime()
+    },
+    enableSorting: true,
   },
   {
     accessorKey: 'endTime',
     header: ({ column }) => <DataTableColumnHeader column={column} title="End Time" />,
     cell: ({ row }) => {
-      const value = row.getValue('endTime')
-      console.log('EndTime column value:', { value, type: typeof value, rowId: row.original.id })
-      // The value is already formatted in the transformation function
-      return <span>{typeof value === 'string' ? value : ''}</span>
+      const value = row.getValue('endTime') as string
+      const formatted = formatUtcToLocal(value, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        fallback: 'N/A',
+      })
+      return (
+        <div className="flex items-center">
+          <span>{formatted}</span>
+        </div>
+      )
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId) as string)
+      const dateB = new Date(rowB.getValue(columnId) as string)
+
+      // Handle invalid dates and null/undefined values
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
+      if (isNaN(dateA.getTime())) return 1 // Push invalid dates to bottom
+      if (isNaN(dateB.getTime())) return -1
+
+      // Sort by timestamp (newer first by default when desc=true)
+      return dateA.getTime() - dateB.getTime()
+    },
+    enableSorting: true,
   },
   {
     accessorKey: 'source',

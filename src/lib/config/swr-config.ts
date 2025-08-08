@@ -83,6 +83,7 @@ export const swrKeys = {
   executions: () => ['executions'] as const,
   executionsWithOData: (params: Record<string, unknown>) => ['executions', 'odata', params],
   executionById: (id: string) => ['executions', id] as const,
+  executionsODataTotal: (tenant: string) => ['executions', 'odata', tenant] as const,
 
   // Roles/Authorities
   roles: () => ['roles'] as const,
@@ -93,20 +94,27 @@ export const swrKeys = {
   agents: () => ['agents'] as const,
   agentsWithOData: (options?: Record<string, unknown>) => ['agents', 'odata', options] as const,
   agentById: (id: string) => ['agents', id] as const,
+  agentsWithTotal: (tenant: string) => ['agents', 'odata', tenant] as const,
 
   // Packages
   packages: () => ['packages'] as const,
   packagesWithOData: (options?: Record<string, unknown>) => ['packages', 'odata', options] as const,
   packageById: (id: string) => ['packages', id] as const,
   packageVersions: (id: string) => ['packages', id, 'versions'] as const,
+  packagesWithTotal: (tenant: string) => ['packages', 'odata', tenant] as const,
 
   // Organization Units
   organizationUnits: () => ['organization-units'] as const,
-  organizationUnitDeletionStatus: (id: string) => ['organization-units', id, 'deletion-status'] as const,
+  organizationUnitDeletionStatus: (id: string) =>
+    ['organization-units', id, 'deletion-status'] as const,
+  organizationUnitUsersWithOData: (options?: Record<string, unknown>) =>
+    ['organization-units', 'odata', options] as const,
+  organizationUnitUsersTotal: (tenant: string) => ['organization-units', 'odata', tenant] as const,
 
   // Assets
   assets: () => ['assets'] as const,
   assetsWithOData: (options?: Record<string, unknown>) => ['assets', 'odata', options] as const,
+  assetsWithTotal: (tenant: string) => ['assets', 'odata', tenant] as const,
   assetById: (id: string) => ['assets', id] as const,
   assetAgents: (id: string) => ['assets', id, 'agents'] as const,
 
@@ -117,12 +125,15 @@ export const swrKeys = {
   standardUsers: () => ['system-roles', 'user'] as const,
   usersByRole: (role: string) => ['system-roles', 'users', role] as const,
   adminAllOrganizationUnits: () => ['system-roles', 'organization-units'] as const,
+  adminAllTotals: () => ['system-roles', 'all-totals'] as const,
+  revenueStatistics: () => ['system-roles', 'revenue-statistics'] as const,
 
   // Schedules
   schedules: () => ['schedules'] as const,
   schedulesWithOData: (options?: Record<string, unknown>) =>
     ['schedules', 'odata', options] as const,
   scheduleById: (id: string) => ['schedules', id] as const,
+  schedulesWithTotal: (tenant: string) => ['schedules', 'odata', tenant] as const,
 
   // Subscription
   subscription: () => ['subscription'] as const,
@@ -138,7 +149,7 @@ export const createSWRErrorMessage = (error: unknown): string => {
       return 'Authentication required. Please log in again.'
     }
     if (statusError.status === 403) {
-      return 'You do not have permission to access this resource.'
+      return 'You do not have permission to perform this action.'
     }
     if (statusError.status === 404) {
       return 'The requested resource was not found.'

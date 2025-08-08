@@ -2,10 +2,11 @@
 
 import { Info } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getExecutionsWithOData } from '@/lib/api/executions'
+import { getExecutionsODataTotal } from '@/lib/api/executions'
 import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
+import { usePathname } from 'next/navigation'
 
 // Helper function to get status-specific colors
 const getStatusColor = (status: string): string => {
@@ -24,12 +25,12 @@ const getStatusColor = (status: string): string => {
 }
 
 export function StatisticalStatus() {
+  const pathname = usePathname()
+  const tenant = pathname.split('/')[1]
   // Fetch executions data for status counting
-  const { data: executionsResponse } = useSWR(
-    swrKeys.executionsWithOData({ $count: true, $top: 1000 }), // Get more data to count accurately
-    () => getExecutionsWithOData({ $count: true, $top: 1000 }),
+  const { data: executionsResponse } = useSWR(swrKeys.executionsODataTotal(tenant), () =>
+    getExecutionsODataTotal(tenant),
   )
-
   // Count executions by status
   const jobStatuses = useMemo(() => {
     if (!executionsResponse?.value) {
