@@ -38,7 +38,7 @@ import { useToast } from '@/components/ui/use-toast'
 export const assetSchema = z.object({
   id: z.string(),
   key: z.string(),
-  type: z.number(),
+  type: z.union([z.number(), z.string()]), // Allow both number and string
   description: z.string(),
   createdBy: z.string(),
 })
@@ -130,15 +130,15 @@ export default function AssetInterface() {
 
     // Type filter
     const typeFilter = columnFilters.find((filter) => filter.id === 'type')
-    const enumMap: Record<string, string> = {
-      '0': 'String',
-      '1': 'Secret',
-    }
-
     const typeValue = typeFilter?.value as string
 
-    if (typeValue && enumMap[typeValue]) {
-      filters.push(`type eq '${enumMap[typeValue]}'`)
+    if (typeValue) {
+      // Handle filter mapping - convert UI filter values to API expected values
+      if (typeValue === '0' || typeValue === 'String') {
+        filters.push(`type eq 'String'`)
+      } else if (typeValue === '1' || typeValue === 'Secret') {
+        filters.push(`type eq 'Secret'`)
+      }
     }
 
     if (filters.length > 0) {
@@ -165,7 +165,7 @@ export default function AssetInterface() {
     return assetsResponse.value.map((asset: AssetRow) => ({
       id: asset.id,
       key: asset.key,
-      type: asset.type,
+      type: asset.type, // Keep the original type value from API (can be string or number)
       description: asset.description,
       createdBy: asset.createdBy,
     }))
@@ -249,9 +249,18 @@ export default function AssetInterface() {
           id: agent.id,
           name: agent.name,
         }))
+
+        // Convert type to number for editing modal consistency
+        let typeAsNumber: number
+        if (asset.type === 'String' || asset.type === 0 || asset.type === '0') {
+          typeAsNumber = 0
+        } else {
+          typeAsNumber = 1
+        }
+
         const updatedAsset = {
           ...asset,
-          type: typeof asset.type === 'number' ? asset.type : Number(asset.type) || 0,
+          type: typeAsNumber,
           value: assetDetail.value ?? '',
           agents: formattedAgents.length > 0 ? formattedAgents : [],
         }
@@ -386,6 +395,12 @@ export default function AssetInterface() {
     [updateUrl, pathname],
   )
 
+  // Calculate current type filter value for UI display
+  const currentTypeFilterValue = useMemo(() => {
+    const typeFilter = columnFilters.find((filter) => filter.id === 'type')
+    return typeFilter ? (typeFilter.value as string) : 'all'
+  }, [columnFilters])
+
   // Handle type filter changes
   const handleTypeFilterChange = useCallback(
     (value: string) => {
@@ -426,13 +441,6 @@ export default function AssetInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Assets</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} asset{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button
               onClick={() => {
                 setModalMode('create')
@@ -466,6 +474,7 @@ export default function AssetInterface() {
           onSearch={handleSearch}
           onTypeChange={handleTypeFilterChange}
           searchValue={searchValue}
+          typeFilterValue={currentTypeFilterValue}
           isFiltering={isLoading}
           isPending={isPending}
         />

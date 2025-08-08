@@ -118,7 +118,11 @@ function OrganizationUnitAdminInterfaceContent() {
   }, [fetchOrganizationUnits])
 
   // Sort comparison function
-  const sortData = (a: OrganizationUnit, b: OrganizationUnit, sort: { id: string; desc: boolean }) => {
+  const sortData = (
+    a: OrganizationUnit,
+    b: OrganizationUnit,
+    sort: { id: string; desc: boolean },
+  ) => {
     let aValue = a[sort.id as keyof OrganizationUnit]
     let bValue = b[sort.id as keyof OrganizationUnit]
 
@@ -157,7 +161,7 @@ function OrganizationUnitAdminInterfaceContent() {
         filtered = filtered.filter(
           (item) =>
             item.name.toLowerCase().includes(searchTerm) ||
-            item.slug.toLowerCase().includes(searchTerm)
+            item.slug.toLowerCase().includes(searchTerm),
         )
       }
 
@@ -213,7 +217,7 @@ function OrganizationUnitAdminInterfaceContent() {
           page: '1',
         })
       }
-      setPagination(prev => ({ ...prev, pageIndex: 0 }))
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
     },
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -244,7 +248,7 @@ function OrganizationUnitAdminInterfaceContent() {
 
   // Calculate statistics
   const totalUnits = data.length
-  const activeUnits = data.filter(unit => unit.isActive).length
+  const activeUnits = data.filter((unit) => unit.isActive).length
   const inactiveUnits = totalUnits - activeUnits
 
   const handleRetry = useCallback(() => {
@@ -288,7 +292,7 @@ function OrganizationUnitAdminInterfaceContent() {
           })
         }
 
-        setPagination(prev => ({ ...prev, pageIndex: 0 }))
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }))
         setIsPending(false)
       }, 500)
     },
@@ -309,7 +313,7 @@ function OrganizationUnitAdminInterfaceContent() {
           page: '1', // Reset to page 1 when filter changes
         })
       }
-      setPagination(prev => ({ ...prev, pageIndex: 0 }))
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
     },
     [table, updateUrl, pathname],
   )
@@ -336,28 +340,34 @@ function OrganizationUnitAdminInterfaceContent() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Total Organization Units</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Total Organization Units
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{totalUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{totalUnits}</div>
               <p className="text-xs text-muted-foreground">Organization units managed</p>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Active Organization Units</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Active Organization Units
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{activeUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{activeUnits}</div>
               <p className="text-xs text-muted-foreground">Currently operational</p>
             </CardContent>
           </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Inactive Organization Units</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Inactive Organization Units
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{inactiveUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{inactiveUnits}</div>
               <p className="text-xs text-muted-foreground">Pending deletion</p>
             </CardContent>
           </Card>
@@ -378,12 +388,9 @@ function OrganizationUnitAdminInterfaceContent() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-xl font-bold tracking-tight">Organization Units</CardTitle>
-                {totalCount > 0 && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Total: {totalCount} unit{totalCount !== 1 ? 's' : ''}
-                  </p>
-                )}
+                <CardTitle className="text-xl font-bold tracking-tight">
+                  Organization Units
+                </CardTitle>
               </div>
             </div>
           </CardHeader>
@@ -444,7 +451,12 @@ function OrganizationUnitAdminInterfaceContent() {
 
             {!loading && paginatedData.length === 0 && !error && (
               <div className="text-center py-10 text-muted-foreground">
-                <p>No organization units found. {searchValue || columnFilters.some(f => f.id === 'isActive' && f.value) ? 'Try adjusting your filters.' : 'No units available.'}</p>
+                <p>
+                  No organization units found.{' '}
+                  {searchValue || columnFilters.some((f) => f.id === 'isActive' && f.value)
+                    ? 'Try adjusting your filters.'
+                    : 'No units available.'}
+                </p>
               </div>
             )}
           </CardContent>

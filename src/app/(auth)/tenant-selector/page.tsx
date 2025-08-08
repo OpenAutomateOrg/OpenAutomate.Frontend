@@ -140,7 +140,7 @@ function TenantSelectorContent() {
         {/* Unauthorized access warning */}
         {unauthorized && (
           <div className="mb-4 p-4 bg-destructive/10 rounded-md text-destructive text-center">
-            <p className="font-medium">Access Denied</p>
+            <p className="font-medium">You do not have permission to perform this action</p>
             <p className="text-sm">You do not have permission to access that organization unit.</p>
           </div>
         )}
@@ -198,7 +198,7 @@ function TenantSelectorContent() {
 
             {/* Organization list */}
             <div className="space-y-4">
-              {organizationUnits.map((org) => (
+              {(Array.isArray(organizationUnits) ? organizationUnits : []).map((org) => (
                 <Card
                   key={org.id}
                   className="hover:bg-accent transition-colors cursor-pointer"
@@ -234,7 +234,7 @@ function TenantSelectorContent() {
                     Create a new organization unit to manage your automation processes.
                   </DialogDescription>
                 </DialogHeader>
-                <CreateOrganizationUnitForm 
+                <CreateOrganizationUnitForm
                   onSuccess={handleOrganizationCreated}
                   onCancel={() => setIsDialogOpen(false)}
                 />

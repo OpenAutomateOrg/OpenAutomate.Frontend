@@ -189,6 +189,21 @@ export const getBotAgentsWithOData = async (
     return { value: [] }
   }
 }
+// This function retrieves the total count of bot agents using OData query capabilities.
+export const getBotAgentsODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<BotAgentResponseDto>> => {
+  const endpoint = `${tenant}/odata/BotAgents`
+
+  try {
+    const response = await api.get<ODataResponse<BotAgentResponseDto>>(endpoint)
+    console.log(`getBotAgentsODataTotal for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching BotAgents for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
+  }
+}
 
 /**
  * Get a specific bot agent by ID with OData query options
@@ -255,4 +270,38 @@ export const updateBotAgent = async (
     data,
   )
   return response
+}
+
+/**
+ * Check if agent name exists (for display name validation)
+ */
+export const checkAgentNameExists = async (name: string, excludeId?: string): Promise<boolean> => {
+  try {
+    const agents = await getAllBotAgents()
+    return agents.some(
+      (agent) => agent.name.toLowerCase() === name.toLowerCase() && agent.id !== excludeId,
+    )
+  } catch (error) {
+    console.error('Error checking agent name:', error)
+    throw error // ❌ Throw error instead of masking it
+  }
+}
+
+/**
+ * Check if machine name exists (for machine name validation)
+ */
+export const checkMachineNameExists = async (
+  machineName: string,
+  excludeId?: string,
+): Promise<boolean> => {
+  try {
+    const agents = await getAllBotAgents()
+    return agents.some(
+      (agent) =>
+        agent.machineName.toLowerCase() === machineName.toLowerCase() && agent.id !== excludeId,
+    )
+  } catch (error) {
+    console.error('Error checking machine name:', error)
+    throw error // ❌ Throw error instead of masking it
+  }
 }

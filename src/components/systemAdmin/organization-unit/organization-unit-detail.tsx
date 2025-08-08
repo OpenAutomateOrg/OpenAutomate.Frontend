@@ -24,7 +24,6 @@ import type { ReactNode } from 'react'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
-import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface OrganizationUnitDetailProps {
   readonly id: string
@@ -335,20 +334,14 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
   const handleRequestDeletion = async () => {
     setIsRequestingDeletion(true)
     try {
-      await adminApi.deleteOrganizationUnit(id)
+      await organizationUnitApi.requestDeletion(id)
+      await mutateDeletionStatus()
       toast({
-        title: 'Success',
-        description: `Organization unit "${orgUnit?.name}" has been deleted successfully.`,
+        title: 'Deletion Requested',
+        description: 'Organization unit deletion has been initiated.',
       })
-      // Navigate back to organization units list
-      router.push('/system-admin/org-unit-management')
-    } catch (error) {
-      console.error('Failed to delete organization unit:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to delete organization unit. Please try again.',
-        variant: 'destructive',
-      })
+    } catch {
+      toast({ title: 'Error', description: 'Failed to request deletion.', variant: 'destructive' })
     } finally {
       setIsRequestingDeletion(false)
       setShowDeleteDialog(false)
@@ -500,12 +493,24 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DetailBlock label="Created At">
-                {formatUtcToLocal(orgUnit.createdAt)}
+                {new Date(orgUnit.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </DetailBlock>
 
               {orgUnit.updatedAt && (
                 <DetailBlock label="Last Updated">
-                  {formatUtcToLocal(orgUnit.updatedAt)}
+                  {new Date(orgUnit.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </DetailBlock>
               )}
             </div>

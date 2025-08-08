@@ -82,19 +82,27 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
   // This ensures component remounts and state resets when switching between create/edit modes
   const [roleName, setRoleName] = useState(editingRole?.name ?? '')
   const [roleDescription, setRoleDescription] = useState(editingRole?.description ?? '')
-  const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>(() => {
-    // ✅ Lazy initial state to avoid dependency on memoized value
-    if (!editingRole?.permissions || !availableResources) return []
+  const [resourcePermissions, setResourcePermissions] = useState<ResourcePermission[]>([])
 
-    return editingRole.permissions.map((p) => {
-      const resource = availableResources.find((r) => r.resourceName === p.resourceName)
-      return {
-        resourceName: p.resourceName,
-        permission: p.permission,
-        displayName: resource?.displayName ?? p.resourceName,
-      }
-    })
-  })
+  // ✅ Update resourcePermissions when both editingRole and availableResources are available
+  useEffect(() => {
+    if (editingRole?.permissions && availableResources) {
+      console.log('Loading permissions for edit role:', editingRole.name, editingRole.permissions)
+      const permissions = editingRole.permissions.map((p) => {
+        const resource = availableResources.find((r) => r.resourceName === p.resourceName)
+        return {
+          resourceName: p.resourceName,
+          permission: p.permission,
+          displayName: resource?.displayName ?? p.resourceName,
+        }
+      })
+      setResourcePermissions(permissions)
+      console.log('Mapped permissions:', permissions)
+    } else if (!editingRole) {
+      // Reset for create mode
+      setResourcePermissions([])
+    }
+  }, [editingRole, availableResources])
 
   const handleAddResourcePermission = () => {
     if (!selectedResource || !selectedPermission) {
@@ -155,6 +163,10 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     if (roleDescription.length > 200) {
       return 'Description cannot exceed 200 characters.'
     }
+    // Only require permissions for new roles, allow existing roles to have zero permissions
+    if (!editingRole && resourcePermissions.length === 0) {
+      return 'At least one resource permission must be added.'
+    }
     return null
   }
 
@@ -168,7 +180,12 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       if (errorWithMessage.message.includes('validation')) {
         return 'Please check your input and try again.'
       }
-      if (errorWithMessage.message.includes('permission')) {
+      if (
+        errorWithMessage.message.includes('permission') ||
+        errorWithMessage.message.includes('403') ||
+        errorWithMessage.message.includes('Forbidden') ||
+        errorWithMessage.message.includes('forbidden')
+      ) {
         return 'You do not have permission to perform this action.'
       }
       return errorWithMessage.message
@@ -343,9 +360,15 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
 
               {/* Current Resource Permissions */}
               <div className="space-y-2">
-                {resourcePermissions.length > 0 ? (
+                {loadingResources && editingRole ? (
+                  <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg border-dashed">
+                    Loading existing permissions...
+                  </div>
+                ) : resourcePermissions.length > 0 ? (
                   <div className="grid gap-2">
-                    <div className="text-sm font-medium">Current Permissions:</div>
+                    <div className="text-sm font-medium">
+                      {editingRole ? 'Current Permissions:' : 'Assigned Permissions:'}
+                    </div>
                     {resourcePermissions.map((perm) => (
                       <div
                         key={perm.resourceName}

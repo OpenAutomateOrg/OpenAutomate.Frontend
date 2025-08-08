@@ -828,13 +828,6 @@ export default function ScheduleInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Schedules</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} schedule{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button onClick={handleCreateClick} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Schedule

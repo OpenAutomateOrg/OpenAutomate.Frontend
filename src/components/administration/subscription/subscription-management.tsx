@@ -8,25 +8,25 @@ import { TrialStatus } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Loader2, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  CreditCard, 
+import {
+  Loader2,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  CreditCard,
   Calendar,
   Users,
   Building2,
-  Sparkles
+  Sparkles,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
 
 // Helper function to render trial management content
 const renderTrialManagement = (
-  subscription: { hasSubscription?: boolean; userTrialStatus?: TrialStatus } | null, 
-  isStartingTrial: boolean, 
-  handleStartTrial: () => void
+  subscription: { hasSubscription?: boolean; userTrialStatus?: TrialStatus } | null,
+  isStartingTrial: boolean,
+  handleStartTrial: () => void,
 ) => {
   if (!subscription?.userTrialStatus) {
     return null
@@ -39,8 +39,8 @@ const renderTrialManagement = (
           <p className="text-sm text-muted-foreground">
             You can start a free trial to explore all premium features.
           </p>
-          <Button 
-            onClick={handleStartTrial} 
+          <Button
+            onClick={handleStartTrial}
             disabled={isStartingTrial}
             className="w-full transition-all duration-200"
           >
@@ -81,7 +81,8 @@ const renderTrialManagement = (
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Free trial is only available on your first organization unit. Upgrade to access premium features.
+            Free trial is only available on your first organization unit. Upgrade to access premium
+            features.
           </p>
           <Button className="w-full">Upgrade to Premium</Button>
         </div>
@@ -105,15 +106,15 @@ export default function SubscriptionManagement() {
 
   const handleStartTrial = async () => {
     if (isStartingTrial) return // Prevent multiple clicks
-    
+
     setIsStartingTrial(true)
-    
+
     // Show immediate feedback
     toast({
       title: 'Starting Trial...',
       description: 'Please wait while we activate your free trial.',
     })
-    
+
     try {
       const response = await subscriptionApi.startTrial()
       if (response.success) {
@@ -131,7 +132,8 @@ export default function SubscriptionManagement() {
         })
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while starting your trial.'
+      const errorMessage =
+        error instanceof Error ? error.message : 'An error occurred while starting your trial.'
       toast({
         title: 'Error Starting Trial',
         description: errorMessage,
@@ -154,12 +156,24 @@ export default function SubscriptionManagement() {
 
   const getStatusBadge = () => {
     if (subscription?.isInTrial) {
-      return <Badge variant="secondary" className="ml-2">Trial</Badge>
+      return (
+        <Badge variant="secondary" className="ml-2">
+          Trial
+        </Badge>
+      )
     }
     if (subscription?.isActive) {
-      return <Badge variant="default" className="ml-2">Active</Badge>
+      return (
+        <Badge variant="default" className="ml-2">
+          Active
+        </Badge>
+      )
     }
-    return <Badge variant="destructive" className="ml-2">Expired</Badge>
+    return (
+      <Badge variant="destructive" className="ml-2">
+        Expired
+      </Badge>
+    )
   }
 
   if (isLoading) {
@@ -213,9 +227,7 @@ export default function SubscriptionManagement() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {subscription?.planName || 'No Plan'}
-            </div>
+            <div className="text-2xl font-bold">{subscription?.planName || 'No Plan'}</div>
           </CardContent>
         </Card>
 
@@ -225,9 +237,7 @@ export default function SubscriptionManagement() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {subscription?.daysRemaining ?? 'N/A'}
-            </div>
+            <div className="text-2xl font-bold">{subscription?.daysRemaining ?? 'N/A'}</div>
           </CardContent>
         </Card>
 
@@ -238,9 +248,13 @@ export default function SubscriptionManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {subscription?.userTrialStatus === TrialStatus.Eligible ? 'Available' : 
-               subscription?.userTrialStatus === TrialStatus.Used ? 'Used' : 
-               subscription?.userTrialStatus === TrialStatus.Active ? 'Active' : 'Not Available'}
+              {subscription?.userTrialStatus === TrialStatus.Eligible
+                ? 'Available'
+                : subscription?.userTrialStatus === TrialStatus.Used
+                  ? 'Used'
+                  : subscription?.userTrialStatus === TrialStatus.Active
+                    ? 'Active'
+                    : 'Not Available'}
             </div>
           </CardContent>
         </Card>
@@ -255,9 +269,7 @@ export default function SubscriptionManagement() {
               <Building2 className="h-5 w-5" />
               Current Subscription
             </CardTitle>
-            <CardDescription>
-              Details about your current subscription status
-            </CardDescription>
+            <CardDescription>Details about your current subscription status</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {subscription?.hasSubscription ? (
@@ -269,7 +281,7 @@ export default function SubscriptionManagement() {
                     {getStatusBadge()}
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Plan:</span>
                   <span>{subscription.planName}</span>
@@ -313,9 +325,7 @@ export default function SubscriptionManagement() {
               <Sparkles className="h-5 w-5" />
               Free Trial
             </CardTitle>
-            <CardDescription>
-              Start your free trial to access all features
-            </CardDescription>
+            <CardDescription>Start your free trial to access all features</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {renderTrialManagement(subscription, isStartingTrial, handleStartTrial)}
@@ -330,9 +340,7 @@ export default function SubscriptionManagement() {
             <Users className="h-5 w-5" />
             Account Information
           </CardTitle>
-          <CardDescription>
-            Information about your account and trial usage
-          </CardDescription>
+          <CardDescription>Information about your account and trial usage</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">

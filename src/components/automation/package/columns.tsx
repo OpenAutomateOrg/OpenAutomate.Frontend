@@ -8,12 +8,9 @@ import {
   PackageVersionResponseDto,
 } from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
-import { DataTableRowActions } from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 
-export const createPackageColumns = (
-  onRefresh?: () => void,
-): ColumnDef<AutomationPackageResponseDto>[] => [
+export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -38,11 +35,6 @@ export const createPackageColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} onRefresh={onRefresh} />,
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
   },
   {
     accessorKey: 'name',
@@ -128,10 +120,10 @@ export const createPackageColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
-      const formattedDate = formatUtcToLocal(createdAt, { 
+      const formattedDate = formatUtcToLocal(createdAt, {
         dateStyle: 'medium',
         timeStyle: undefined, // Only show date, no time
-        fallback: 'Invalid date' 
+        fallback: 'Invalid date',
       })
 
       return (

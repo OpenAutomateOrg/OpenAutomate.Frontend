@@ -8,7 +8,10 @@ import { DataTableColumnHeader } from '@/components/layout/table/data-table-colu
 import DataTableRowAction from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 
-export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[] => [
+export const createAgentColumns = (
+  onRefresh?: () => void,
+  onEdit?: (agent: AgentRow) => void,
+): ColumnDef<AgentRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -35,7 +38,7 @@ export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[
   {
     id: 'actions',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
+    cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} onEdit={onEdit} />,
   },
   {
     accessorKey: 'name',
@@ -95,8 +98,9 @@ export const createAgentColumns = (onRefresh?: () => void): ColumnDef<AgentRow>[
     ),
     cell: ({ row }: { row: Row<AgentRow> }) => {
       const rawValue = row.getValue('lastConnected')
-      const lastConnected = typeof rawValue === 'string' ? rawValue : rawValue ? String(rawValue) : null
-      
+      const lastConnected =
+        typeof rawValue === 'string' ? rawValue : rawValue ? String(rawValue) : null
+
       const formattedDate = formatUtcToLocal(lastConnected, { fallback: 'Never' })
 
       return (

@@ -106,11 +106,30 @@ export default function SetRoleModal({
 
   // Remove a role from the table
   const handleRemoveRole = (roleId: string): void => {
+    // Prevent removing the last role
+    if (addedRoles.length <= 1) {
+      toast({
+        title: 'Cannot Remove Role',
+        description: 'Each user must have at least one role assigned.',
+        variant: 'destructive',
+      })
+      return
+    }
     setAddedRoles((prev: RoleDto[]) => prev.filter((r: RoleDto) => r.id !== roleId))
   }
 
   // Save roles (send list of role IDs to backend)
   const handleSave = async (): Promise<void> => {
+    // Validate that user has at least one role
+    if (addedRoles.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Each user must have at least one role assigned.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setSaving(true)
     try {
       await organizationUnitUserApi.assignRolesBulk(
@@ -134,7 +153,18 @@ export default function SetRoleModal({
       /// Show error toast to user, do not rethrow because error is already handled for UX.
       // Log error for debugging and SonarQube compliance
       console.error('Failed to update roles:', err)
-      toast({ title: 'Error', description: 'Failed to update roles.', variant: 'destructive' })
+
+      let errorMessage = 'Failed to update roles.'
+      if (
+        err &&
+        typeof err === 'object' &&
+        'status' in err &&
+        (err as { status: number }).status === 403
+      ) {
+        errorMessage = 'You do not have permission to perform this action'
+      }
+
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -191,7 +221,7 @@ export default function SetRoleModal({
               {!isUserRolesLoading && addedRoles.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    No roles added
+                    No roles assigned. Please add at least one role for this user.
                   </TableCell>
                 </TableRow>
               )}
@@ -222,14 +252,28 @@ export default function SetRoleModal({
                         ) : null}
                       </TableCell>
                       <TableCell className="w-1/3 text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleRemoveRole(role.id)}
-                          className="text-red-400 hover:text-red-600"
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleRemoveRole(role.id)}
+                                disabled={addedRoles.length <= 1}
+                                className={`text-red-400 hover:text-red-600 ${
+                                  addedRoles.length <= 1 ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {addedRoles.length <= 1
+                                ? 'Cannot remove the last role. Each user must have at least one role.'
+                                : 'Remove this role'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -244,7 +288,7 @@ export default function SetRoleModal({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={saving || isLoading || isUserRolesLoading}
+            disabled={saving || isLoading || isUserRolesLoading || addedRoles.length === 0}
             type="button"
           >
             {saving ? 'Saving...' : 'Save'}

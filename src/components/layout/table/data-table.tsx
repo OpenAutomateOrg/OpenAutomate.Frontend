@@ -134,65 +134,73 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border relative">
+      <div className="rounded-md border grid overflow-x-auto">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
           </div>
         )}
-        <Table className="dark:bg-neutral-900">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header: Header<TData, unknown>) => {
-                  return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row: Row<TData>) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className={onRowClick ? 'cursor-pointer hover:bg-muted/50 ' : ''}
-                  onClick={(e) => onRowClick && handleRowClick(e, row.original)}
-                >
-                  {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {
-                    let cellClass = ''
-                    if (cell.column.id === 'select') {
-                      cellClass = 'w-12 min-w-[48px] max-w-[48px] px-2'
-                    } else if (cell.column.id === 'actions') {
-                      cellClass = 'w-16 min-w-[60px] max-w-[60px] px-2'
-                    }
+        <div className="overflow-x-auto">
+          <Table className="dark:bg-neutral-900 w-full min-w-full">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header: Header<TData, unknown>) => {
                     return (
-                      <TableCell
-                        key={cell.id}
-                        data-column-id={cell.column.id}
-                        className={cellClass}
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className="whitespace-nowrap px-2 sm:px-4"
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
                     )
                   })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  {isLoading ? 'Loading...' : 'No results.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row: Row<TData>) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={onRowClick ? 'cursor-pointer hover:bg-muted/50 ' : ''}
+                    onClick={(e) => onRowClick && handleRowClick(e, row.original)}
+                  >
+                    {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {
+                      let cellClass = 'px-2 sm:px-4 whitespace-nowrap'
+                      if (cell.column.id === 'select') {
+                        cellClass = 'w-12 min-w-[48px] max-w-[48px] px-1 sm:px-2'
+                      } else if (cell.column.id === 'actions') {
+                        cellClass = 'w-16 min-w-[60px] max-w-[60px] px-1 sm:px-2'
+                      }
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          data-column-id={cell.column.id}
+                          className={cellClass}
+                        >
+                          <div className="truncate max-w-[150px] md:max-w-[200px] lg:max-w-none">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </div>
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center px-2 sm:px-4">
+                    {isLoading ? 'Loading...' : 'No results.'}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       {/* Commented out the built-in pagination component since we're using a custom one */}
       {/* <DataTablePagination table={table} totalCount={totalCount} /> */}

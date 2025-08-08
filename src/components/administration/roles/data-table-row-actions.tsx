@@ -22,6 +22,7 @@ import {
 import { RolesRow } from './roles'
 import { CreateEditModal } from './create-edit-modal'
 import { useToast } from '@/components/ui/use-toast'
+import { canModifyRole } from '@/lib/constants/resources'
 
 interface DataTableRowActionsProps {
   readonly row: Row<RolesRow>
@@ -30,17 +31,20 @@ interface DataTableRowActionsProps {
 
 export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showError, setShowError] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const { toast } = useToast()
 
+  const canModify = canModifyRole(row.original)
+
   const handleEdit = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (row.original.isSystemAuthority) {
-      setErrorMsg('System roles cannot be edited.')
-      setShowError(true)
+    if (!canModifyRole(row.original)) {
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be edited. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowEdit(true)
@@ -48,12 +52,54 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
 
   const handleDelete = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (row.original.isSystemAuthority) {
-      setErrorMsg('System roles cannot be deleted.')
-      setShowError(true)
+    if (!canModifyRole(row.original)) {
+      toast({
+        title: 'Permission Denied',
+        description: 'This role cannot be deleted. It is either a system role or a default role.',
+        variant: 'destructive',
+      })
       return
     }
     setShowConfirm(true)
+  }
+
+  const extractErrorMessage = (err: unknown): string => {
+    if (err instanceof Error) {
+      return err.message
+    }
+
+    if (err && typeof err === 'object') {
+      const apiError = err as {
+        message?: string
+        error?: string
+        details?: string
+        status?: number
+      }
+      if (apiError.status === 403) {
+        return 'You do not have permission to perform this action'
+      }
+      return apiError.message || apiError.error || apiError.details || 'Failed to delete role.'
+    }
+
+    return 'Failed to delete role.'
+  }
+
+  const getErrorDescription = (errorMessage: string): string => {
+    const lowerMessage = errorMessage.toLowerCase()
+
+    if (
+      lowerMessage.includes('user') ||
+      lowerMessage.includes('assign') ||
+      lowerMessage.includes('reference')
+    ) {
+      return 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
+    }
+
+    if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
+      return 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
+    }
+
+    return errorMessage
   }
 
   const confirmDelete = async () => {
@@ -68,12 +114,14 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
       setShowConfirm(false)
-      if (err instanceof Error) {
-        setErrorMsg(err.message)
-      } else {
-        setErrorMsg('Failed to delete role.')
-      }
-      setShowError(true)
+      const errorMessage = extractErrorMessage(err)
+      const description = getErrorDescription(errorMessage)
+
+      toast({
+        title: 'Delete Failed',
+        description,
+        variant: 'destructive',
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -93,14 +141,19 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
           className="w-[160px]"
           onClick={(e) => e.stopPropagation()}
         >
-          <DropdownMenuItem onClick={handleEdit}>
+          <DropdownMenuItem
+            onClick={handleEdit}
+            disabled={!canModify}
+            className={!canModify ? 'cursor-not-allowed opacity-50' : ''}
+          >
             <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            className={`text-destructive focus:text-destructive ${!canModify ? 'cursor-not-allowed opacity-50' : ''}`}
             onClick={handleDelete}
+            disabled={!canModify}
           >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
             <span>Delete</span>
@@ -142,19 +195,6 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Dialog */}
-      <Dialog open={showError} onOpenChange={setShowError}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Error</DialogTitle>
-          </DialogHeader>
-          <div>{errorMsg}</div>
-          <DialogFooter>
-            <Button onClick={() => setShowError(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

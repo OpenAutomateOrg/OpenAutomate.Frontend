@@ -10,7 +10,6 @@ import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { rolesApi, getPermissionDescription } from '@/lib/api/roles'
 import { useToast } from '@/components/ui/use-toast'
-import { createErrorToast } from '@/lib/utils/error-utils'
 import { format } from 'date-fns'
 import { CreateEditModal } from './create-edit-modal'
 
@@ -38,7 +37,11 @@ export default function RolesDetail({ id }: RolesDetailProps) {
   useEffect(() => {
     if (error) {
       console.error('Failed to load role:', error)
-      toast(createErrorToast(error))
+      toast({
+        title: 'Error',
+        description: 'Failed to load role details. Please try again.',
+        variant: 'destructive',
+      })
     }
   }, [error, toast])
 
@@ -62,7 +65,51 @@ export default function RolesDetail({ id }: RolesDetailProps) {
       router.back()
     } catch (error) {
       console.error('Failed to delete role:', error)
-      toast(createErrorToast(error))
+
+      // Extract error message with better handling for role deletion specific errors
+      let errorMessage = 'Failed to delete role.'
+
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (error && typeof error === 'object') {
+        // Handle API error responses
+        const apiError = error as { message?: string; error?: string; details?: string }
+        if (apiError.message) {
+          errorMessage = apiError.message
+        } else if (apiError.error) {
+          errorMessage = apiError.error
+        } else if (apiError.details) {
+          errorMessage = apiError.details
+        }
+      }
+
+      // Check if the error is related to users having this role assigned
+      const lowerMessage = errorMessage.toLowerCase()
+      if (
+        lowerMessage.includes('user') ||
+        lowerMessage.includes('assign') ||
+        lowerMessage.includes('reference')
+      ) {
+        toast({
+          title: 'Cannot Delete Role',
+          description:
+            'This role cannot be deleted because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.',
+          variant: 'destructive',
+        })
+      } else if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
+        toast({
+          title: 'Cannot Delete Role',
+          description:
+            'This role cannot be deleted because it is currently assigned to users. Please unassign this role from all users first.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Cannot Delete Role',
+          description: errorMessage,
+          variant: 'destructive',
+        })
+      }
     }
   }
 

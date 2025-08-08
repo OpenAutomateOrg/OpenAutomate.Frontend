@@ -39,7 +39,6 @@ export function DataTableToolbar<TData>({
   isFiltering = false,
   isPending = false,
   searchPlaceholder = 'Search schedules...',
-  totalCount = 0,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -153,13 +152,6 @@ export function DataTableToolbar<TData>({
 
       {/* Right side - View Options and Total Count */}
       <div className="flex items-center space-x-2">
-        {totalCount > 0 && (
-          <div className="text-sm text-muted-foreground">
-            <span>
-              {totalCount} schedule{totalCount !== 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
         <DataTableViewOptions table={table} />
       </div>
     </div>

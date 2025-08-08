@@ -17,7 +17,7 @@ export interface UpdateAssetDto {
 export interface AssetResponseDto {
   id: string
   key: string
-  type: number
+  type: number | string // Allow both number and string type from API
   description: string
   createdBy: string
   createdAt?: string
@@ -50,7 +50,7 @@ export interface AssetDetailDto {
   id: string
   key: string
   description: string
-  type: number
+  type: number | string // Allow both number and string type from API
   value?: string
   createdAt?: string
   createdById?: string
@@ -217,6 +217,22 @@ export const getAssetsWithOData = async (
     console.error('Error fetching assets with OData:', error)
     // Return empty response on error
     return { value: [] }
+  }
+}
+
+// This function retrieves the total count of assets using OData query capabilities.
+export const getAssetsODataTotal = async (
+  tenant: string,
+): Promise<ODataResponse<AssetResponseDto>> => {
+  const endpoint = `${tenant}/odata/Assets`
+
+  try {
+    const response = await api.get<ODataResponse<AssetResponseDto>>(endpoint)
+    console.log(`getAssetsODataTotal for tenant ${tenant}:`, response)
+    return processODataResponse(response)
+  } catch (error) {
+    console.error(`Error fetching Assets for tenant ${tenant}:`, error)
+    return { value: [], '@odata.count': 0 }
   }
 }
 

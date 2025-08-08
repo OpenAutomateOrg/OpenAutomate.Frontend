@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog'
+import { useToast } from '@/components/ui/use-toast'
 
 interface DataTableRowActionProps {
   readonly asset: AssetRow
@@ -28,6 +29,7 @@ interface DataTableRowActionProps {
 export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTableRowActionProps) {
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const { toast } = useToast()
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -36,8 +38,35 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
       await deleteAsset(asset.id)
       setOpen(false)
       if (onDeleted) onDeleted()
-    } catch {
-      alert('Delete failed!')
+      toast({
+        title: 'Success',
+        description: 'Asset deleted successfully.',
+      })
+    } catch (err: unknown) {
+      let message = 'Failed to delete asset.'
+      if (
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as { message: unknown }).message === 'string'
+      ) {
+        const errorMessage = (err as { message: string }).message
+        if (
+          errorMessage.includes('403') ||
+          errorMessage.includes('Forbidden') ||
+          errorMessage.includes('forbidden') ||
+          errorMessage.includes('permission')
+        ) {
+          message = 'You do not have permission to perform this action.'
+        } else {
+          message = errorMessage
+        }
+      }
+      toast({
+        title: 'Delete Failed',
+        description: message,
+        variant: 'destructive',
+      })
     } finally {
       setDeleting(false)
     }

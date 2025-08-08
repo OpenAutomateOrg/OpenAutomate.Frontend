@@ -23,7 +23,7 @@ export function SiteHeader() {
         <Link className="font-bold text-xl text-orange-600" href="">
           OpenAutomate
         </Link>
-        <div className="w-full sm:ml-auto sm:w-auto">
+        <div className="w-full flex items-center justify-end sm:ml-auto sm:w-auto">
           <LanguageSwitcher />
           <ThemeToggle />
         </div>

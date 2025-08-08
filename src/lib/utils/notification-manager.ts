@@ -18,11 +18,14 @@ export class NotificationManager {
   /**
    * Show error notification with consistent styling and behavior
    */
-  static error(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static error(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -30,18 +33,21 @@ export class NotificationManager {
       description: message,
       variant: 'destructive',
       duration: options?.duration || 8000, // Longer for errors so users can read them
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show success notification with consistent styling and behavior
    */
-  static success(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static success(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -49,18 +55,21 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 4000, // Shorter for success messages
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show warning notification with consistent styling and behavior
    */
-  static warning(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static warning(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -68,18 +77,21 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 6000, // Medium duration for warnings
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show info notification with consistent styling and behavior
    */
-  static info(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static info(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -87,67 +99,78 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 5000, // Medium duration for info
-      action: options?.action
+      action: options?.action,
     })
+  }
+
+  /**
+   * Extract error details from different error types
+   */
+  private static extractErrorDetails(error: unknown): { message: string; title: string } {
+    let message = 'An unexpected error occurred'
+    let title = 'Error'
+
+    if (typeof error === 'string') {
+      return { message: error, title }
+    }
+
+    if (error && typeof error === 'object') {
+      if ('status' in error && 'message' in error) {
+        const apiError = error as { status: number; message: string }
+        title = this.getTitleByStatus(apiError.status)
+        message =
+          apiError.status === 403
+            ? 'You do not have permission to perform this action'
+            : apiError.message
+      } else if (
+        'message' in error &&
+        typeof (error as { message: unknown }).message === 'string'
+      ) {
+        message = (error as { message: string }).message
+      }
+    }
+
+    return { message, title }
+  }
+
+  /**
+   * Get appropriate title based on HTTP status code
+   */
+  private static getTitleByStatus(status: number): string {
+    switch (status) {
+      case 400:
+        return 'Invalid Request'
+      case 401:
+        return 'Authentication Required'
+      case 403:
+        return 'Permission Denied'
+      case 404:
+        return 'Not Found'
+      case 409:
+        return 'Conflict'
+      case 422:
+        return 'Validation Error'
+      case 429:
+        return 'Rate Limited'
+      case 500:
+      case 502:
+      case 503:
+        return 'Server Error'
+      default:
+        return 'Error'
+    }
   }
 
   /**
    * Smart error handler that determines error type and shows appropriate notification
    */
   static handleError(error: unknown, context?: string) {
-    let message = 'An unexpected error occurred'
-    let title = 'Error'
-
-    // Extract error message using the same logic as before
-    if (typeof error === 'string') {
-      message = error
-    } else if (error && typeof error === 'object') {
-      // Handle API errors
-      if ('status' in error && 'message' in error) {
-        const apiError = error as { status: number; message: string }
-        
-        // Customize title based on status code
-        switch (apiError.status) {
-          case 400:
-            title = 'Invalid Request'
-            break
-          case 401:
-            title = 'Authentication Required'
-            break
-          case 403:
-            title = 'Access Denied'
-            break
-          case 404:
-            title = 'Not Found'
-            break
-          case 409:
-            title = 'Conflict'
-            break
-          case 422:
-            title = 'Validation Error'
-            break
-          case 429:
-            title = 'Rate Limited'
-            break
-          case 500:
-          case 502:
-          case 503:
-            title = 'Server Error'
-            break
-          default:
-            title = 'Error'
-        }
-        
-        message = apiError.message
-      } else if ('message' in error && typeof (error as { message: unknown }).message === 'string') {
-        message = (error as { message: string }).message
-      }
-    }
+    const { message, title: baseTitle } = this.extractErrorDetails(error)
 
     // Add context if provided
-    if (context) {
-      title = `${context} Failed`
-    }
+    const title = context
+      ? `${context.charAt(0).toUpperCase() + context.slice(1)} Failed`
+      : baseTitle
 
     this.error(message, { title })
   }
@@ -156,12 +179,15 @@ export class NotificationManager {
    * Handle success operations with consistent messaging
    */
   static handleSuccess(operation: string, itemName?: string) {
-    const message = itemName 
+    // Capitalize first letter of operation for proper message formatting
+    const capitalizedOperation = operation.charAt(0).toUpperCase() + operation.slice(1)
+
+    const message = itemName
       ? `${itemName} ${operation} successfully`
-      : `${operation} completed successfully`
-    
+      : `${capitalizedOperation} completed successfully`
+
     this.success(message, {
-      title: 'Success'
+      title: 'Success',
     })
   }
 
@@ -182,5 +208,5 @@ export const notify = {
   warning: NotificationManager.warning.bind(NotificationManager),
   info: NotificationManager.info.bind(NotificationManager),
   handleError: NotificationManager.handleError.bind(NotificationManager),
-  handleSuccess: NotificationManager.handleSuccess.bind(NotificationManager)
+  handleSuccess: NotificationManager.handleSuccess.bind(NotificationManager),
 }
