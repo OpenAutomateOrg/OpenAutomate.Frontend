@@ -120,14 +120,14 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
       })
       toast({
         title: 'Success',
-        description: 'Agent updated successfully'
+        description: 'Agent updated successfully',
       })
       return updated
     } else {
       const created = await createBotAgent({ name, machineName })
       toast({
         title: 'Success',
-        description: 'Agent created successfully'
+        description: 'Agent created successfully',
       })
       return created
     }
@@ -136,7 +136,12 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
   const handleAgentError = (err: unknown) => {
     let errorMessage = isEditing ? 'Failed to update agent' : 'Failed to create agent'
 
-    if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 403) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'status' in err &&
+      (err as { status: number }).status === 403
+    ) {
       errorMessage = 'You do not have permission to perform this action'
     } else if (err && typeof err === 'object' && 'message' in err) {
       errorMessage = String((err as { message: string }).message)

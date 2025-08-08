@@ -18,11 +18,14 @@ export class NotificationManager {
   /**
    * Show error notification with consistent styling and behavior
    */
-  static error(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static error(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -30,18 +33,21 @@ export class NotificationManager {
       description: message,
       variant: 'destructive',
       duration: options?.duration || 8000, // Longer for errors so users can read them
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show success notification with consistent styling and behavior
    */
-  static success(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static success(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -49,18 +55,21 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 4000, // Shorter for success messages
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show warning notification with consistent styling and behavior
    */
-  static warning(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static warning(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -68,18 +77,21 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 6000, // Medium duration for warnings
-      action: options?.action
+      action: options?.action,
     })
   }
 
   /**
    * Show info notification with consistent styling and behavior
    */
-  static info(message: string, options?: {
-    title?: string
-    duration?: number
-    action?: ToastActionElement
-  }) {
+  static info(
+    message: string,
+    options?: {
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    },
+  ) {
     if (!this.toastFunction) return
 
     this.toastFunction({
@@ -87,7 +99,7 @@ export class NotificationManager {
       description: message,
       variant: 'default',
       duration: options?.duration || 5000, // Medium duration for info
-      action: options?.action
+      action: options?.action,
     })
   }
 
@@ -106,10 +118,14 @@ export class NotificationManager {
       if ('status' in error && 'message' in error) {
         const apiError = error as { status: number; message: string }
         title = this.getTitleByStatus(apiError.status)
-        message = apiError.status === 403
-          ? 'You do not have permission to perform this action'
-          : apiError.message
-      } else if ('message' in error && typeof (error as { message: unknown }).message === 'string') {
+        message =
+          apiError.status === 403
+            ? 'You do not have permission to perform this action'
+            : apiError.message
+      } else if (
+        'message' in error &&
+        typeof (error as { message: unknown }).message === 'string'
+      ) {
         message = (error as { message: string }).message
       }
     }
@@ -122,17 +138,26 @@ export class NotificationManager {
    */
   private static getTitleByStatus(status: number): string {
     switch (status) {
-      case 400: return 'Invalid Request'
-      case 401: return 'Authentication Required'
-      case 403: return 'Permission Denied'
-      case 404: return 'Not Found'
-      case 409: return 'Conflict'
-      case 422: return 'Validation Error'
-      case 429: return 'Rate Limited'
+      case 400:
+        return 'Invalid Request'
+      case 401:
+        return 'Authentication Required'
+      case 403:
+        return 'Permission Denied'
+      case 404:
+        return 'Not Found'
+      case 409:
+        return 'Conflict'
+      case 422:
+        return 'Validation Error'
+      case 429:
+        return 'Rate Limited'
       case 500:
       case 502:
-      case 503: return 'Server Error'
-      default: return 'Error'
+      case 503:
+        return 'Server Error'
+      default:
+        return 'Error'
     }
   }
 
@@ -162,7 +187,7 @@ export class NotificationManager {
       : `${capitalizedOperation} completed successfully`
 
     this.success(message, {
-      title: 'Success'
+      title: 'Success',
     })
   }
 
@@ -183,5 +208,5 @@ export const notify = {
   warning: NotificationManager.warning.bind(NotificationManager),
   info: NotificationManager.info.bind(NotificationManager),
   handleError: NotificationManager.handleError.bind(NotificationManager),
-  handleSuccess: NotificationManager.handleSuccess.bind(NotificationManager)
+  handleSuccess: NotificationManager.handleSuccess.bind(NotificationManager),
 }

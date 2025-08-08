@@ -188,7 +188,16 @@ export const getExecutionsODataTotal = async (
   try {
     const response = await api.get<ODataResponse<ExecutionResponseDto>>(endpoint)
     console.log(`getExecutionsODataTotal for tenant ${tenant}:`, response)
-    return processODataResponse(response)
+    // Check if response is a plain array (not wrapped in OData format)
+    if (Array.isArray(response)) {
+      console.log('Converting array response to OData format')
+      return {
+        value: response as ExecutionResponseDto[],
+        '@odata.count': response.length,
+      }
+    }
+
+    return processODataResponse<ExecutionResponseDto>(response)
   } catch (error) {
     console.error(`Error fetching Executions for tenant ${tenant}:`, error)
     return { value: [], '@odata.count': 0 }

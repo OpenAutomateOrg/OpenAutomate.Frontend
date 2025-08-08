@@ -35,7 +35,6 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
-  totalCount = 0,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -150,16 +149,6 @@ export function DataTableToolbar<TData>({
             </Select>
           </div>
         )}
-
-        {/* Total Count Display */}
-        {totalCount > 0 && (
-          <div className="text-sm font-medium ml-2">
-            <span>
-              Total: {totalCount} package{totalCount !== 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
-
         {/* Active Filter Count Badge */}
         {activeFilterCount > 0 && (
           <Badge variant="secondary" className="rounded-sm px-1">

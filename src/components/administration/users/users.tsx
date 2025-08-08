@@ -222,13 +222,6 @@ export default function UsersInterface() {
           <div className="flex justify-between items-center w-full flex-wrap gap-2">
             <h2 className="text-2xl font-bold tracking-tight">Users</h2>
             <div className="flex items-center space-x-2">
-              {totalCount > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  <span>
-                    Total: {totalCount} user{totalCount !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
               <Button
                 onClick={() => setInviteOpen(true)}
                 className="flex items-center justify-center"

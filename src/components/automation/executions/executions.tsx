@@ -740,13 +740,13 @@ export default function ExecutionsInterface() {
   }, [hasExactCount, executionsData.length, pagination.pageSize])
 
   // Define columns based on tab
-  let columns;
+  let columns
   if (tab === 'inprogress') {
-    columns = ProgressColumns;
+    columns = ProgressColumns
   } else if (tab === 'scheduled') {
-    columns = ScheduledColumns;
+    columns = ScheduledColumns
   } else {
-    columns = HistoricalColumns;
+    columns = HistoricalColumns
   }
 
   const table = useReactTable({
@@ -954,7 +954,20 @@ export default function ExecutionsInterface() {
 
   const handleRowClick = (row: ExecutionsRow) => {
     const isAdmin = pathname.startsWith('/admin')
-    const route = isAdmin ? `/admin/executions/${row.id}` : `/${tenant}/executions/${row.id}`
+    const baseRoute = isAdmin ? `/admin/executions` : `/${tenant}/automation/executions`
+
+    // Route to appropriate tab based on current tab or execution status
+    let route = `${baseRoute}/${row.id}`
+
+    // If we have a specific tab active, route to that tab's detail page
+    if (tab === 'historical') {
+      route = `${baseRoute}/historical/${row.id}`
+    } else if (tab === 'inprogress') {
+      route = `${baseRoute}/inprogress/${row.id}`
+    } else if (tab === 'scheduled') {
+      route = `${baseRoute}/scheduled/${row.id}`
+    }
+
     router.push(route)
   }
 
@@ -1021,13 +1034,6 @@ export default function ExecutionsInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Executions</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} execution{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             {/* Only show Create Execution button for In Progress tab */}
             {tab === 'inprogress' && (
               <Button onClick={handleCreateClick} className="flex items-center justify-center">

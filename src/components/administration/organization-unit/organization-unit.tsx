@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import * as React from 'react'
+import { ChangeEvent, useEffect, useState, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useParams } from 'next/navigation'
@@ -13,12 +14,32 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash } from 'lucide-react'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/config/swr-config'
 
 interface OrganizationUnit {
   id: string
   name: string
   description: string
+}
+
+interface DeletionStatusResponse {
+  // Handle both possible API response formats
+  isPendingDeletion?: boolean
+  isDeletionPending?: boolean
+  scheduledDeletionAt: string | null
+  daysUntilDeletion?: number
+  hoursUntilDeletion?: number
+  remainingSeconds?: number | null
+  canCancel?: boolean
+}
+
+interface DeletionStatus {
+  isPendingDeletion: boolean
+  remainingSeconds: number | null
+  scheduledDeletionAt: string | null
+  canCancel: boolean
 }
 
 export default function OrganizationUnitProfile() {
@@ -32,9 +53,12 @@ export default function OrganizationUnitProfile() {
   const [editedDescription, setEditedDescription] = useState('')
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false)
   const [pendingSave, setPendingSave] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const { toast } = useToast()
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [showCancelDeletionConfirmation, setShowCancelDeletionConfirmation] = useState(false)
+  const countdownInitialized = useRef(false)
 
-  // Step 1: Get OU id from slug
   useEffect(() => {
     if (!slug) {
       setOrganizationUnitId(null)
@@ -50,7 +74,6 @@ export default function OrganizationUnitProfile() {
       })
   }, [slug])
 
-  // Step 2: Get OU info by id
   useEffect(() => {
     if (!organizationUnitId) return
     organizationUnitApi
@@ -147,61 +170,247 @@ export default function OrganizationUnitProfile() {
     }
   }
 
+  const handleDelete = () => {
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!organizationUnitId) return
+    setShowDeleteConfirmation(false)
+    try {
+      await organizationUnitApi.requestDeletion(organizationUnitId)
+
+      mutateDeletionStatus()
+
+      toast({
+        title: 'Deletion Requested',
+        description: 'Organization unit deletion has been initiated.',
+      })
+    } catch (error: unknown) {
+      let message = 'Failed to request deletion.'
+      if (error instanceof Error) {
+        message = error.message
+      }
+
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const confirmCancelDeletion = async () => {
+    if (!organizationUnitId) return
+    try {
+      await organizationUnitApi.cancelDeletion(organizationUnitId)
+      mutateDeletionStatus()
+      toast({
+        title: 'Deletion Cancelled',
+        description: 'Organization unit deletion has been cancelled.',
+      })
+    } catch (error: unknown) {
+      let message = 'Failed to cancel deletion.'
+      if (error instanceof Error) {
+        message = error.message
+      }
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      })
+    } finally {
+      setShowCancelDeletionConfirmation(false)
+    }
+  }
+
+  // Fetch deletion status from API
+  const fetchDeletionStatus = async (): Promise<DeletionStatus> => {
+    if (!organizationUnitId) throw new Error('Missing ID')
+    const result = await organizationUnitApi.getDeletionStatus(organizationUnitId)
+    // Handle both possible API response formats
+    const status = result as unknown as DeletionStatusResponse
+
+    // Determine deletion pending status (handle both property names)
+    const isPendingDeletion = status.isPendingDeletion ?? status.isDeletionPending ?? false
+
+    // Calculate remainingSeconds (prefer direct value, fallback to calculation from hours)
+    let remainingSeconds: number | null = null
+    if (typeof status.remainingSeconds === 'number') {
+      remainingSeconds = status.remainingSeconds
+    } else if (typeof status.hoursUntilDeletion === 'number') {
+      remainingSeconds = status.hoursUntilDeletion * 3600
+    }
+
+    return {
+      isPendingDeletion,
+      remainingSeconds,
+      scheduledDeletionAt: status.scheduledDeletionAt,
+      canCancel: status.canCancel ?? false,
+    }
+  }
+
+  // SWR hook for automatic status refetching
+  const { data: deletionStatusData, mutate: mutateDeletionStatus } = useSWR(
+    organizationUnitId ? swrKeys.organizationUnitDeletionStatus(organizationUnitId) : null,
+    fetchDeletionStatus,
+    {
+      refreshInterval: 60000, // Only called once every minute
+      refreshWhenHidden: true, // Continue refreshing when tab is hidden
+    },
+  )
+
+  // Update countdown based on remainingSeconds
+  useEffect(() => {
+    if (!deletionStatusData?.isPendingDeletion) {
+      setCountdown(null)
+      countdownInitialized.current = false
+      return
+    }
+
+    // Initialize countdown with server data only once per deletion session
+    // Use >= 0 to handle case where remainingSeconds is 0
+    if (
+      !countdownInitialized.current &&
+      typeof deletionStatusData.remainingSeconds === 'number' &&
+      deletionStatusData.remainingSeconds >= 0
+    ) {
+      setCountdown(deletionStatusData.remainingSeconds)
+      countdownInitialized.current = true
+    }
+
+    // Update countdown every second
+    const interval = setInterval(() => {
+      setCountdown((current: number | null) => {
+        if (current === null || current <= 0) return 0
+        return current - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [deletionStatusData?.isPendingDeletion, deletionStatusData?.remainingSeconds])
+
+  const showDeletionStatus = Boolean(deletionStatusData?.isPendingDeletion)
+
+  // Format remaining time
+  const formatTimeRemaining = (seconds: number): string => {
+    if (seconds <= 0) return 'Deleting...'
+    const days = Math.floor(seconds / (24 * 60 * 60))
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60))
+    const minutes = Math.floor((seconds % (60 * 60)) / 60)
+    const remainingSeconds = seconds % 60
+
+    const parts = []
+    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`)
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`)
+    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`)
+    if (remainingSeconds > 0 && parts.length === 0)
+      parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`)
+
+    return parts.join(', ')
+  }
+
   return (
     <div className="flex justify-center pt-8">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-2xl shadow border border-gray-200 px-8 py-7">
+        <div className="bg-background rounded-2xl shadow border border-border px-8 py-7">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Organization Unit Information</h2>
-              <div className="text-sm text-gray-400">Details of your organization unit</div>
+              <h2 className="text-lg font-bold">Organization Unit Information</h2>
+              <div className="text-sm text-muted-foreground">Details of your organization unit</div>
             </div>
-            {!isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
-                onClick={handleEdit}
-              >
-                <Pencil className="h-4 w-4" />
-                Edit Profile
-              </Button>
+            {!isEditing && !showDeletionStatus && (
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
+                  onClick={handleEdit}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600 hover:text-red-600"
+                  onClick={handleDelete}
+                >
+                  <Trash className="h-4 w-4 text-red-600" />
+                  Delete
+                </Button>
+              </div>
             )}
           </div>
+
+          {showDeletionStatus && (
+            <div className="flex items-center justify-between dark:bg-orange-950/50 bg-orange-50 border border-orange-300 dark:border-orange-800/50 rounded-lg px-4 py-3 my-4">
+              <div className="text-orange-700 dark:text-orange-400 font-semibold">
+                {typeof countdown === 'number' && countdown > 0
+                  ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
+                  : 'Deleting organization unit...'}
+              </div>
+              {deletionStatusData?.canCancel && (
+                <Button
+                  variant="outline"
+                  className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
+                  onClick={() => setShowCancelDeletionConfirmation(true)}
+                >
+                  Cancel Deletion
+                </Button>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+              <label
+                htmlFor="ou-name"
+                className="block text-xs font-semibold text-muted-foreground mb-1"
+              >
+                Name
+              </label>
               {isEditing ? (
                 <Input
+                  id="ou-name"
                   value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedName(e.target.value)}
+                  className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit name"
                 />
               ) : (
-                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">
+                <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">
                   {organizationUnit?.name}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+              <label
+                htmlFor="ou-description"
+                className="block text-xs font-semibold text-muted-foreground mb-1"
+              >
+                Description
+              </label>
               {isEditing ? (
                 <Input
+                  id="ou-description"
                   value={editedDescription}
-                  onChange={(e) => setEditedDescription(e.target.value)}
-                  className="rounded-lg border-gray-200 bg-gray-50 focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setEditedDescription(e.target.value)
+                  }
+                  className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
                   placeholder="Organization unit description"
                 />
               ) : (
-                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base text-gray-900 border border-gray-100">
+                <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">
                   {organizationUnit?.description || (
-                    <span className="italic text-gray-400">No description</span>
+                    <span className="italic text-muted-foreground">No description</span>
                   )}
                 </div>
               )}
             </div>
           </div>
+
           {isEditing && (
             <div className="flex justify-end gap-2 mt-8">
               <Button
@@ -222,7 +431,7 @@ export default function OrganizationUnitProfile() {
             </div>
           )}
         </div>
-        {/* Name change warning dialog */}
+
         <Dialog open={showNameChangeWarning} onOpenChange={setShowNameChangeWarning}>
           <DialogContent>
             <DialogHeader>
@@ -246,6 +455,51 @@ export default function OrganizationUnitProfile() {
                 className="bg-[#FF6A1A] text-white hover:bg-orange-500"
               >
                 Accept
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+            </DialogHeader>
+            <div>
+              Are you sure you want to delete this organization unit? It will be deleted in 7 days.
+            </div>
+            <DialogFooter className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmDelete}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={showCancelDeletionConfirmation}
+          onOpenChange={setShowCancelDeletionConfirmation}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancel Deletion</DialogTitle>
+            </DialogHeader>
+            <div>Are you sure you want to cancel the deletion of this organization unit?</div>
+            <DialogFooter className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowCancelDeletionConfirmation(false)}>
+                No
+              </Button>
+              <Button
+                onClick={confirmCancelDeletion}
+                className="bg-[#FF6A1A] text-white hover:bg-orange-500"
+              >
+                Cancel Deletion
               </Button>
             </DialogFooter>
           </DialogContent>

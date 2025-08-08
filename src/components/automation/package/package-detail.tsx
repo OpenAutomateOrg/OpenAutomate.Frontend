@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { swrKeys, createSWRErrorMessage } from '@/lib/config/swr-config'
 import { useParams, useRouter } from 'next/navigation'
@@ -34,8 +34,10 @@ import {
   getPackageDownloadUrl,
   deleteAutomationPackage,
   deletePackageVersion,
+  uploadPackageVersion,
 } from '@/lib/api/automation-packages'
 import { createErrorToast } from '@/lib/utils/error-utils'
+import { Input } from '@/components/ui/input'
 
 export default function PackageDetail() {
   const params = useParams()
@@ -55,14 +57,22 @@ export default function PackageDetail() {
 
   // UI state
   const [downloadingVersion, setDownloadingVersion] = useState<string | null>(null)
-  const [deleteVersionDialog, setDeleteVersionDialog] = useState<{ open: boolean; version: PackageVersionResponseDto | null }>({ open: false, version: null })
+  const [deleteVersionDialog, setDeleteVersionDialog] = useState<{
+    open: boolean
+    version: PackageVersionResponseDto | null
+  }>({ open: false, version: null })
   const [deletePackageDialog, setDeletePackageDialog] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadVersion, setUploadVersion] = useState('')
 
   // Reset version when dialog is fully closed to prevent version disappearing during animation
   useEffect(() => {
     if (!deleteVersionDialog.open && deleteVersionDialog.version) {
       const timer = setTimeout(() => {
-        setDeleteVersionDialog(prev => ({ ...prev, version: null }))
+        setDeleteVersionDialog((prev) => ({ ...prev, version: null }))
       }, 200) // Allow animation to complete
       return () => clearTimeout(timer)
     }
@@ -114,7 +124,7 @@ export default function PackageDetail() {
     try {
       await deletePackageVersion(packageId, version.versionNumber)
       mutate() // ✅ Use SWR's mutate for cache invalidation
-      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
+      setDeleteVersionDialog((prev) => ({ ...prev, open: false }))
 
       // Success toast
       toast({
@@ -125,7 +135,7 @@ export default function PackageDetail() {
     } catch (err) {
       console.error('Error deleting version:', err)
       toast(createErrorToast(err))
-      setDeleteVersionDialog(prev => ({ ...prev, open: false }))
+      setDeleteVersionDialog((prev) => ({ ...prev, open: false }))
     }
   }
 
@@ -150,6 +160,39 @@ export default function PackageDetail() {
       console.error('Error deleting package:', err)
       toast(createErrorToast(err))
       setDeletePackageDialog(false)
+    }
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadFile(file)
+    setUploadDialogOpen(true)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleUploadVersion = async () => {
+    if (!uploadFile || !uploadVersion) return
+    setUploading(true)
+    try {
+      await uploadPackageVersion(packageId, { file: uploadFile, version: uploadVersion })
+      await mutate()
+      toast({
+        title: 'Upload Successful',
+        description: `Version ${uploadVersion} uploaded successfully`,
+        variant: 'default',
+      })
+      setUploadDialogOpen(false)
+      setUploadFile(null)
+      setUploadVersion('')
+    } catch (err) {
+      toast(createErrorToast(err))
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -287,9 +330,9 @@ export default function PackageDetail() {
                   <FileText className="h-5 w-5 mr-2" />
                   Package Versions
                 </div>
-                <Button size="sm">
+                <Button size="sm" onClick={handleUploadClick} disabled={uploading}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload New Version
+                  {uploading ? 'Uploading...' : 'Upload New Version'}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -361,16 +404,23 @@ export default function PackageDetail() {
       </div>
 
       {/* Delete Version Dialog */}
-      <Dialog open={deleteVersionDialog.open} onOpenChange={(open) => setDeleteVersionDialog(prev => ({ ...prev, open }))}>
+      <Dialog
+        open={deleteVersionDialog.open}
+        onOpenChange={(open) => setDeleteVersionDialog((prev) => ({ ...prev, open }))}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Version</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}? This action cannot be undone.
+            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}?
+            This action cannot be undone.
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteVersionDialog(prev => ({ ...prev, open: false }))}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteVersionDialog((prev) => ({ ...prev, open: false }))}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDeleteVersion}>
@@ -387,7 +437,8 @@ export default function PackageDetail() {
             <DialogTitle>Delete Package</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete this package and all its versions? This action cannot be undone.
+            Are you sure you want to delete this package and all its versions? This action cannot be
+            undone.
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletePackageDialog(false)}>
@@ -397,6 +448,39 @@ export default function PackageDetail() {
               Delete
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".zip,.tar,.tar.gz,.rar,.7z"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload New Package Version</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium">Version Number</label>
+              <Input
+                value={uploadVersion}
+                onChange={e => setUploadVersion(e.target.value)}
+                placeholder="Enter version number"
+                disabled={uploading}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
+                Cancel
+              </Button>
+              <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>
+                {uploading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

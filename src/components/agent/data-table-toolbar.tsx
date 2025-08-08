@@ -83,7 +83,6 @@ export function DataTableToolbar<TData>({
       <div className="flex flex-1 items-center space-x-2">
         <div className="relative w-full md:w-auto md:flex-1 max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-
           <Input
             ref={searchInputRef}
             placeholder="Search by Name or Machine Name..."
@@ -113,7 +112,7 @@ export function DataTableToolbar<TData>({
 
         {/* Status Filter */}
         {table.getColumn('status') && (
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             <Select
               onValueChange={(value) => {
                 if (onStatusChange) {

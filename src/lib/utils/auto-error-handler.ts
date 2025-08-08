@@ -13,17 +13,17 @@ export function setupAutoErrorHandling() {
   window.addEventListener('unhandledrejection', (event) => {
     // Check if this is an API error that should be shown to the user
     const error = event.reason
-    
+
     // Only handle API errors, not other types of errors
     if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
       // Skip 401 errors as they are handled by auth flow
       if ((error as { status: number }).status === 401) {
         return
       }
-      
+
       // Prevent the default browser console error
       event.preventDefault()
-      
+
       // Show the error to the user
       handleGlobalError(error)
     }

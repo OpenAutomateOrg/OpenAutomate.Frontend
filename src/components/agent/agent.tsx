@@ -493,13 +493,6 @@ export default function AgentInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">Agents</h2>
           <div className="flex items-center space-x-2">
-            {totalCount > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <span>
-                  Total: {totalCount} agent{totalCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
             <Button
               variant="outline"
               onClick={() => {

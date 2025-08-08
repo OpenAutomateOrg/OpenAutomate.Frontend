@@ -2,7 +2,7 @@ export enum TrialStatus {
   Eligible = 'Eligible',
   Active = 'Active',
   Used = 'Used',
-  NotEligible = 'NotEligible'
+  NotEligible = 'NotEligible',
 }
 
 export interface SubscriptionStatus {

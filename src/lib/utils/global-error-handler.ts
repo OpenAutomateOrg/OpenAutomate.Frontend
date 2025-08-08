@@ -19,11 +19,14 @@ export function setGlobalToastFunction(toastFn: (props: ToastType) => void) {
  * Global error handler that shows user-friendly toast notifications
  * Can be used anywhere in the app for consistent error handling
  */
-export function handleGlobalError(error: unknown, options?: { 
-  skipToast?: boolean 
-  skipAuth?: boolean 
-  context?: string
-}) {
+export function handleGlobalError(
+  error: unknown,
+  options?: {
+    skipToast?: boolean
+    skipAuth?: boolean
+    context?: string
+  },
+) {
   // Skip toast if explicitly requested
   if (options?.skipToast) {
     return
@@ -48,7 +51,7 @@ export function handleGlobalError(error: unknown, options?: {
 export async function safeFetchApi<T>(
   endpoint: string,
   options?: RequestInit,
-  data?: unknown
+  data?: unknown,
 ): Promise<T | null> {
   try {
     const { fetchApi } = await import('@/lib/api/client')

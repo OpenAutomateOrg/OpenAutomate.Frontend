@@ -79,8 +79,8 @@ export const config = {
     },
 
     /**
-     * Default redirect after login
+     * Default redirect after login (for tenant selector)
      */
-    defaultRedirect: '/dashboard',
+    defaultRedirect: '/tenant-selector',
   },
 }

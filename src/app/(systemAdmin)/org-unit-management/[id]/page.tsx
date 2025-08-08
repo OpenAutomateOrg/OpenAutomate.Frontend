@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import OrganizationUnitDetail from '@/components/systemAdmin/organizationUnit/organization-unit-detail'
+import OrganizationUnitDetail from '@/components/systemAdmin/organization-unit/organization-unit-detail'
 
 export default function Page() {
   const params = useParams()
