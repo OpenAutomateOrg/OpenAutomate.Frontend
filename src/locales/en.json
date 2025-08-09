@@ -13,6 +13,282 @@
     "user": "User",
     "schedules": "Schedules",
     "assets": "Assets",
-    "agent": "Agent"
+    "agent": "Agent",
+    "totalUsers": "Total organization users",
+    "packages": "Packages",
+    "totalPackages": "Total organization packages",
+    "totalAgents": "Total organization agents",
+    "totalAssets": "Total organization assets",
+    "totalSchedules": "Scheduled tasks"
+  },
+  "executions": {
+    "title": "Executions",
+    "createExecution": "Create Execution",
+    "tabs": {
+      "inProgress": "In Progress",
+      "scheduled": "Scheduled",
+      "historical": "Historical"
+    },
+    "status": {
+      "running": "Running",
+      "pending": "Pending",
+      "scheduled": "Scheduled",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "loadFailed": "Failed to load executions. Please try again.",
+      "retry": "Retry"
+    },
+    "modal": {
+      "title": "Create New Execution",
+      "description": "Select a package, version, and agent to execute immediately.",
+      "loading": "Loading packages and agents...",
+      "package": "Package",
+      "version": "Version",
+      "agent": "Agent",
+      "selectPackage": "Select a package",
+      "selectVersion": "Select a version",
+      "selectAgent": "Select an agent",
+      "uploaded": "Uploaded",
+      "unknownDate": "Unknown date",
+      "cancel": "Cancel",
+      "startExecution": "Start Execution",
+      "starting": "Starting...",
+      "executionStarted": "Execution Started",
+      "executionStartedDesc": "Execution started successfully"
+    }
+  },
+  "package": {
+    "title": "Automation Packages",
+    "create": "Create",
+    "refresh": "Refresh",
+    "loadError": "Failed to load packages. Please try again.",
+    "retry": "Retry",
+    "rowsLabel": "packages",
+    "modal": {
+      "createTitle": "Create Package",
+      "editTitle": "Edit Package",
+      "name": "Name",
+      "description": "Description",
+      "isActive": "Active",
+      "cancel": "Cancel",
+      "save": "Save",
+      "creating": "Creating...",
+      "updating": "Updating..."
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "schedule": {
+    "title": "Schedules",
+    "createSchedule": "Create Schedule",
+    "loadError": "Failed to load schedules. Please try again.",
+    "retry": "Retry",
+    "searchPlaceholder": "Search schedules by name...",
+    "rowsLabel": "schedules",
+    "days": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "recurrence": {
+      "once": "Once",
+      "minutes": "Every X Minutes",
+      "hourly": "Hourly",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "modal": {
+      "createTitle": "Create Schedule",
+      "editTitle": "Edit Schedule",
+      "name": "Name",
+      "package": "Package",
+      "agent": "Agent",
+      "timezone": "Timezone",
+      "recurrenceType": "Recurrence Type",
+      "cancel": "Cancel",
+      "save": "Save",
+      "creating": "Creating...",
+      "updating": "Updating..."
+    }
+  },
+  "auth": {
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Update your password to keep your account secure",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changePasswordButton": "Change Password",
+      "updating": "Updating...",
+      "errors": {
+        "passwordMismatch": "New passwords do not match",
+        "passwordTooShort": "Password must be at least 8 characters long",
+        "updateFailed": "Failed to update password"
+      },
+      "success": {
+        "title": "Password Changed",
+        "description": "Your password has been successfully updated"
+      }
+    },
+    "emailVerification": {
+      "resendButton": "Resend verification email",
+      "sending": "Sending...",
+      "success": {
+        "title": "Verification email sent!",
+        "description": "Please check your inbox."
+      },
+      "error": {
+        "title": "Failed to resend",
+        "description": "Failed to resend. Please try again."
+      }
+    },
+    "guards": {
+      "loading": "Loading...",
+      "accessDenied": "Access denied. You don't have permission to view this page.",
+      "adminRequired": "Admin access required",
+      "loginRequired": "Please sign in to continue"
+    }
+  },
+  "forms": {
+    "validation": {
+      "emailRequired": "Please enter a valid email",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordRequired": "Password is required",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match",
+      "nameRequired": "Name is required",
+      "organizationRequired": "Organization name is required"
+    },
+    "labels": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "organizationName": "Organization Name",
+      "rememberMe": "Remember me"
+    },
+    "placeholders": {
+      "enterEmail": "Enter your email",
+      "enterPassword": "Enter your password",
+      "confirmPassword": "Confirm your password",
+      "enterFirstName": "Enter your first name",
+      "enterLastName": "Enter your last name",
+      "enterOrganization": "Enter organization name"
+    },
+    "buttons": {
+      "signIn": "Sign In",
+      "signUp": "Sign Up",
+      "signInWith": "Sign in with",
+      "sendResetLink": "Send Reset Link",
+      "resetPassword": "Reset Password",
+      "createAccount": "Create Account",
+      "createOrganization": "Create Organization"
+    },
+    "messages": {
+      "signingIn": "Signing in...",
+      "signingUp": "Creating account...",
+      "sendingResetLink": "Sending reset link...",
+      "resettingPassword": "Resetting password...",
+      "sessionExpired": "Your session has expired. Please sign in again.",
+      "emailVerificationRequired": "Please verify your email before signing in.",
+      "resetLinkSent": "Password reset link has been sent to your email.",
+      "passwordResetSuccess": "Your password has been reset successfully."
+    }
+  },
+  "agent": {
+    "title": "Agents",
+    "downloadAgent": "Download Agent",
+    "create": "Create",
+    "loadError": "Failed to load agent details.",
+    "retry": "Retry",
+    "agentNotFound": "Agent not found",
+    "connectionInfo": "Connection Information",
+    "connectionUrl": "Connection URL",
+    "connectionDescription": "Use this URL to connect your bot agent to the OpenAutomate platform.",
+    "labels": {
+      "name": "Name",
+      "machineName": "Machine name",
+      "status": "Status"
+    },
+    "modal": {
+      "createTitle": "Create Agent",
+      "editTitle": "Edit Agent",
+      "name": "Name",
+      "machineName": "Machine Name",
+      "cancel": "Cancel",
+      "save": "Save",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "errors": {
+        "nameRequired": "Name is required",
+        "machineNameRequired": "Machine name is required",
+        "machineNameExists": "Machine name already exists",
+        "noChanges": "Please change at least one field to update.",
+        "validationError": "Failed to check machine name availability"
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Are you sure you want to delete this agent?",
+      "deleteWarning": "This action cannot be undone."
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "automation": "Automation",
+    "executions": "Executions",
+    "schedule": "Schedule",
+    "package": "Package",
+    "agent": "Agent",
+    "asset": "Asset",
+    "administration": "Administration",
+    "users": "Users",
+    "roles": "Roles",
+    "subscription": "Subscription",
+    "organizationUnits": "Organization Units",
+    "help": "Help",
+    "support": "Support",
+    "settings": "Settings",
+    "subscription": "Subscription"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "executionStatus": "Execution Status",
+    "realTimeDistribution": "Real-time execution distribution",
+    "successRate": "success rate",
+    "total": "total",
+    "statisticalStatus": {
+      "title": "Execution Status",
+      "running": "RUNNING",
+      "pending": "PENDING",
+      "completed": "COMPLETED",
+      "failed": "FAILED",
+      "runningJobs": "running jobs",
+      "pendingJobs": "pending jobs",
+      "completedJobs": "completed jobs",
+      "failedJobs": "failed jobs"
+    },
+    "charts": {
+      "systemStatistics": "System Statistics",
+      "users": "Users",
+      "organizationUnits": "Organization Units",
+      "executions": "Executions"
+    }
   }
 }

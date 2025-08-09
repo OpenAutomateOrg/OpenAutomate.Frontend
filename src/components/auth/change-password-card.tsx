@@ -9,8 +9,10 @@ import { useToast } from '@/components/ui/use-toast'
 import { Eye, EyeOff, LoaderCircle, LockKeyhole } from 'lucide-react'
 import { authApi } from '@/lib/api/auth'
 import { handleGlobalError } from '@/lib/utils/global-error-handler'
+import { useLocale } from '@/providers/locale-provider'
 
 export function ChangePasswordCard() {
+  const { t } = useLocale()
   const [isLoading, setIsLoading] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -35,7 +37,7 @@ export function ChangePasswordCard() {
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
         title: 'Error',
-        description: 'New passwords do not match',
+        description: t('auth.changePassword.errors.passwordMismatch'),
         variant: 'destructive',
       })
       return
@@ -44,7 +46,7 @@ export function ChangePasswordCard() {
     if (formData.newPassword.length < 8) {
       toast({
         title: 'Error',
-        description: 'Password must be at least 8 characters long',
+        description: t('auth.changePassword.errors.passwordTooShort'),
         variant: 'destructive',
       })
       return
@@ -61,8 +63,8 @@ export function ChangePasswordCard() {
       })
 
       toast({
-        title: 'Success',
-        description: 'Password changed successfully',
+        title: t('auth.changePassword.success.title'),
+        description: t('auth.changePassword.success.description'),
       })
 
       // Reset form
@@ -84,15 +86,15 @@ export function ChangePasswordCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LockKeyhole className="h-5 w-5" />
-          Change Password
+          {t('auth.changePassword.title')}
         </CardTitle>
-        <CardDescription>Update your account password for enhanced security</CardDescription>
+        <CardDescription>{t('auth.changePassword.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Current Password */}
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
+            <Label htmlFor="currentPassword">{t('auth.changePassword.currentPassword')}</Label>
             <div className="relative">
               <Input
                 id="currentPassword"
@@ -117,7 +119,7 @@ export function ChangePasswordCard() {
 
           {/* New Password */}
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword">{t('auth.changePassword.newPassword')}</Label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -142,7 +144,7 @@ export function ChangePasswordCard() {
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">{t('auth.changePassword.confirmPassword')}</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -172,7 +174,9 @@ export function ChangePasswordCard() {
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              Change Password
+              {isLoading
+                ? t('auth.changePassword.updating')
+                : t('auth.changePassword.changePasswordButton')}
             </Button>
           </div>
         </form>

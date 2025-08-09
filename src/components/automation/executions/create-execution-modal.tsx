@@ -36,6 +36,7 @@ import { getAllAutomationPackages } from '@/lib/api/automation-packages'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 import { getAllBotAgents, BotAgentResponseDto } from '@/lib/api/bot-agents'
 import { triggerExecution, TriggerExecutionDto } from '@/lib/api/executions'
+import { useLocale } from '@/providers/locale-provider'
 
 const createExecutionSchema = z.object({
   packageId: z.string().min(1, 'Package is required'),
@@ -56,6 +57,7 @@ export default function CreateExecutionModal({
   onClose,
   onSuccess,
 }: CreateExecutionModalProps) {
+  const { t } = useLocale()
   const { toast } = useToast()
 
   // SWR for data fetching - replaces manual state management
@@ -202,8 +204,8 @@ export default function CreateExecutionModal({
       const result = await triggerExecution(executionData)
 
       toast({
-        title: 'Execution Started',
-        description: `Execution started successfully (ID: ${result.id.substring(0, 8)}...)`,
+        title: t('executions.modal.executionStarted'),
+        description: `${t('executions.modal.executionStartedDesc')} (ID: ${result.id.substring(0, 8)}...)`,
       })
       form.reset()
       onClose()
@@ -232,17 +234,15 @@ export default function CreateExecutionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Play className="h-5 w-5" />
-            Create New Execution
+            {t('executions.modal.title')}
           </DialogTitle>
-          <DialogDescription>
-            Select a package, version, and agent to execute immediately.
-          </DialogDescription>
+          <DialogDescription>{t('executions.modal.description')}</DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading packages and agents...</span>
+            <span className="ml-2">{t('executions.modal.loading')}</span>
           </div>
         ) : (
           <Form {...form}>
@@ -253,11 +253,11 @@ export default function CreateExecutionModal({
                 name="packageId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Package</FormLabel>
+                    <FormLabel>{t('executions.modal.package')}</FormLabel>
                     <Select data-size="sm" onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full py-8">
-                          <SelectValue placeholder="Select a package" />
+                          <SelectValue placeholder={t('executions.modal.selectPackage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -286,7 +286,7 @@ export default function CreateExecutionModal({
                 name="version"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Version</FormLabel>
+                    <FormLabel>{t('executions.modal.version')}</FormLabel>
                     <Select
                       data-size="sm"
                       onValueChange={field.onChange}
@@ -295,7 +295,7 @@ export default function CreateExecutionModal({
                     >
                       <FormControl>
                         <SelectTrigger className="w-full py-8">
-                          <SelectValue placeholder="Select a version" />
+                          <SelectValue placeholder={t('executions.modal.selectVersion')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -304,11 +304,11 @@ export default function CreateExecutionModal({
                             <div className="flex flex-col text-left">
                               <span className="font-medium">v{version.versionNumber}</span>
                               <span className="text-sm text-muted-foreground">
-                                Uploaded{' '}
+                                {t('executions.modal.uploaded')}{' '}
                                 {formatUtcToLocal(version.uploadedAt, {
                                   dateStyle: 'medium',
                                   timeStyle: undefined,
-                                  fallback: 'Unknown date',
+                                  fallback: t('executions.modal.unknownDate'),
                                 })}
                               </span>
                             </div>
@@ -327,11 +327,11 @@ export default function CreateExecutionModal({
                 name="botAgentId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Agent</FormLabel>
+                    <FormLabel>{t('executions.modal.agent')}</FormLabel>
                     <Select data-size="sm" onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full py-8">
-                          <SelectValue placeholder="Select an agent" />
+                          <SelectValue placeholder={t('executions.modal.selectAgent')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -378,18 +378,18 @@ export default function CreateExecutionModal({
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancel
+                  {t('executions.modal.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Starting...
+                      {t('executions.modal.starting')}
                     </>
                   ) : (
                     <>
                       <Play className="mr-2 h-4 w-4" />
-                      Start Execution
+                      {t('executions.modal.startExecution')}
                     </>
                   )}
                 </Button>
