@@ -17,7 +17,6 @@ import {
   createBotAgent,
   updateBotAgent,
   getBotAgentById,
-  checkMachineNameExists,
   type BotAgentResponseDto,
 } from '@/lib/api/bot-agents'
 
@@ -69,25 +68,6 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
         toast({
           title: 'No Changes',
           description: 'Please change at least one field to update.',
-          variant: 'destructive',
-        })
-        return false
-      }
-    }
-
-    // ✅ Check machine name uniqueness only (name can be duplicate)
-    if (machineName !== agent?.machineName) {
-      try {
-        const machineNameExists = await checkMachineNameExists(machineName, agent?.id)
-        if (machineNameExists) {
-          setMachineNameError('Machine name already exists')
-          return false
-        }
-      } catch (error) {
-        console.error('Error checking machine name:', error)
-        toast({
-          title: 'Validation Error',
-          description: 'Failed to check machine name availability',
           variant: 'destructive',
         })
         return false

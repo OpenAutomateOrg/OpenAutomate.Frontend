@@ -2,9 +2,21 @@
 
 import { useState } from 'react'
 import { useSubscription } from '@/hooks/use-subscription'
-import { subscriptionApi } from '@/lib/api/subscription'
+// merged import below for subscriptionApi and PaymentItem
 import { TrialStatus } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
+import { ExternalLink } from 'lucide-react'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/config/swr-config'
+import { subscriptionApi, type PaymentItem } from '@/lib/api/subscription'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Clock, CheckCircle, AlertCircle } from 'lucide-react'
@@ -15,6 +27,11 @@ export function SubscriptionStatus() {
   const { subscription, isLoading, mutate } = useSubscription()
   const [isStartingTrial, setIsStartingTrial] = useState(false)
   const { toast } = useToast()
+  // Optional: lightweight recent payments preview for user dashboard
+  const { data: paymentsData } = useSWR(
+    swrKeys.subscription(),
+    () => subscriptionApi.getPayments(1, 5),
+  )
 
   const handleStartTrial = async () => {
     if (isStartingTrial) return // Prevent multiple clicks
@@ -61,6 +78,30 @@ export function SubscriptionStatus() {
       <Card className="w-full">
         <CardContent className="flex items-center justify-center p-6">
           <Loader2 className="h-6 w-6 animate-spin" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // If subscription is active (paid or trial), hide any trial upgrade prompts
+  if (subscription?.isActive) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            {subscription.planName || 'Pro'} Plan Active
+          </CardTitle>
+          {subscription.renewsAt ? (
+            <CardDescription>
+              Renews {formatDistanceToNow(new Date(subscription.renewsAt + 'Z'), { addSuffix: true })}
+            </CardDescription>
+          ) : null}
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="w-full" onClick={() => subscriptionApi.openCustomerPortal()}>
+            Manage Billing
+          </Button>
         </CardContent>
       </Card>
     )
@@ -178,6 +219,42 @@ export function SubscriptionStatus() {
             </CardTitle>
             <CardDescription>{getExpirationText()}</CardDescription>
           </CardHeader>
+          {paymentsData?.items?.length ? (
+            <CardContent>
+              <div className="text-sm font-medium mb-2">Recent invoices</div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Invoice</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paymentsData.items.map((p: PaymentItem) => (
+                    <TableRow key={p.orderId}>
+                      <TableCell>{new Date(p.paymentDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{p.isRefunded ? 'Refunded' : 'Paid'}</TableCell>
+                      <TableCell className="text-right">
+                        {p.amount.toLocaleString(undefined, { style: 'currency', currency: p.currency })}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => subscriptionApi.openInvoice(p.orderId)}
+                          className="inline-flex items-center gap-2"
+                        >
+                          View <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          ) : null}
         </Card>
       )
 
@@ -194,7 +271,9 @@ export function SubscriptionStatus() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Upgrade to Premium</Button>
+            <Button className="w-full" onClick={() => subscriptionApi.openCheckoutOverlay()}>
+              Upgrade to Pro
+            </Button>
           </CardContent>
         </Card>
       )
@@ -213,7 +292,9 @@ export function SubscriptionStatus() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Upgrade to Premium</Button>
+            <Button className="w-full" onClick={() => subscriptionApi.openCheckoutOverlay()}>
+              Upgrade to Pro
+            </Button>
           </CardContent>
         </Card>
       )
