@@ -9,16 +9,16 @@ export default function LandingPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading, isSystemAdmin } = useAuth()
   useEffect(() => {
-    // If the user is already authenticated, redirect them to organization selector
-    // Otherwise, redirect to login page
+    // Only redirect after loading is complete to check authentication status
     if (!isLoading) {
       if (isSystemAdmin) {
         router.push('/dashboard')
       } else if (isAuthenticated) {
         router.push(config.paths.defaultRedirect)
+      } else {
+        // User is not authenticated, redirect to login
+        router.push(config.paths.auth.login)
       }
-    } else {
-      router.push(config.paths.auth.login)
     }
   }, [isLoading, isAuthenticated, router, isSystemAdmin])
 
