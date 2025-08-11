@@ -37,6 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        {/* Lemon Squeezy overlay script for embedded checkout */}
+        <script src="https://assets.lemonsqueezy.com/lemon.js" defer />
         <LocaleProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <ToastProvider>

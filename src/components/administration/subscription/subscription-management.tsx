@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useSubscription } from '@/hooks/use-subscription'
-import { subscriptionApi } from '@/lib/api/subscription'
+// merged import below for subscriptionApi and PaymentItem
 import { TrialStatus } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +21,18 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
+import useSWR from 'swr'
+import { swrKeys } from '@/lib/config/swr-config'
+import { subscriptionApi, type PaymentItem } from '@/lib/api/subscription'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ExternalLink } from 'lucide-react'
 
 // Helper function to render trial management content
 const renderTrialManagement = (
@@ -71,9 +83,11 @@ const renderTrialManagement = (
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            You have already used your free trial. Upgrade to continue using premium features.
+            You have already used your free trial. Upgrade to continue using Pro features.
           </p>
-          <Button className="w-full">Upgrade to Premium</Button>
+          <Button className="w-full" onClick={() => subscriptionApi.openCheckoutOverlay()}>
+            Upgrade to Pro
+          </Button>
         </div>
       )
 
@@ -81,10 +95,11 @@ const renderTrialManagement = (
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Free trial is only available on your first organization unit. Upgrade to access premium
-            features.
+            Free trial is only available on your first organization unit. Upgrade to access Pro features.
           </p>
-          <Button className="w-full">Upgrade to Premium</Button>
+          <Button className="w-full" onClick={() => subscriptionApi.openCheckoutOverlay()}>
+            Upgrade to Pro
+          </Button>
         </div>
       )
 
@@ -103,6 +118,12 @@ export default function SubscriptionManagement() {
   const { subscription, isLoading, mutate } = useSubscription()
   const [isStartingTrial, setIsStartingTrial] = useState(false)
   const { toast } = useToast()
+
+  // Billing history (SWR per guide, no manual useEffect)
+  const { data: paymentsData, isLoading: isPaymentsLoading } = useSWR(
+    swrKeys.subscription(),
+    () => subscriptionApi.getPayments(1, 50),
+  )
 
   const handleStartTrial = async () => {
     if (isStartingTrial) return // Prevent multiple clicks
@@ -303,7 +324,11 @@ export default function SubscriptionManagement() {
 
                 {subscription.isActive && (
                   <div className="pt-2">
-                    <Button className="w-full" variant="outline">
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => subscriptionApi.openCustomerPortal()}
+                    >
                       Manage Billing
                     </Button>
                   </div>
@@ -318,20 +343,69 @@ export default function SubscriptionManagement() {
           </CardContent>
         </Card>
 
-        {/* Trial Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              Free Trial
-            </CardTitle>
-            <CardDescription>Start your free trial to access all features</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {renderTrialManagement(subscription, isStartingTrial, handleStartTrial)}
-          </CardContent>
-        </Card>
+        {/* Trial Management - hidden when subscription is active */}
+        {!subscription?.isActive && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Free Trial
+              </CardTitle>
+              <CardDescription>Start your free trial to access all features</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {renderTrialManagement(subscription, isStartingTrial, handleStartTrial)}
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Billing History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Billing History</CardTitle>
+          <CardDescription>Your recent invoices and receipts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isPaymentsLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Invoice</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(paymentsData?.items ?? []).map((p: PaymentItem) => (
+                  <TableRow key={p.orderId}>
+                    <TableCell>{format(new Date(p.paymentDate), 'PP')}</TableCell>
+                    <TableCell>{p.isRefunded ? 'Refunded' : 'Paid'}</TableCell>
+                    <TableCell className="text-right">
+                      {p.amount.toLocaleString(undefined, { style: 'currency', currency: p.currency })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => subscriptionApi.openInvoice(p.orderId)}
+                        className="inline-flex items-center gap-2"
+                      >
+                        View <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Account Information */}
       <Card>
