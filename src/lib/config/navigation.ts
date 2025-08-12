@@ -13,6 +13,25 @@ import {
 } from 'lucide-react'
 import { Resources, Permissions } from '@/lib/constants/resources'
 
+// Translation keys for navigation items
+export const NAVIGATION_KEYS = {
+  home: 'navigation.home',
+  automation: 'navigation.automation',
+  executions: 'navigation.executions',
+  schedule: 'navigation.schedule',
+  package: 'navigation.package',
+  agent: 'navigation.agent',
+  asset: 'navigation.asset',
+  administration: 'navigation.administration',
+  users: 'navigation.users',
+  roles: 'navigation.roles',
+  organizationUnits: 'navigation.organizationUnits',
+  subscription: 'navigation.subscription',
+  help: 'navigation.help',
+  support: 'navigation.support',
+  settings: 'navigation.settings',
+} as const
+
 /**
  * Interface for navigation items with permission requirements
  * Compatible with NavMain component interface
@@ -57,6 +76,121 @@ export interface UserNavigationItem {
   url: string
   icon: LucideIcon
 }
+
+/**
+ * Helper function to create translated navigation items
+ */
+export const createTranslatedUserNavItems = (
+  createTenantUrl: (path: string) => string,
+  t: (key: string) => string
+): NavigationItem[] => [
+  {
+    title: t(NAVIGATION_KEYS.home),
+    url: createTenantUrl('/dashboard'),
+    icon: House,
+    isActive: true,
+  },
+  {
+    title: t(NAVIGATION_KEYS.automation),
+    icon: Cog,
+    items: [
+      {
+        title: t(NAVIGATION_KEYS.executions),
+        url: createTenantUrl('/automation/executions'),
+        permission: {
+          resource: Resources.EXECUTION,
+          level: Permissions.VIEW,
+        },
+      },
+      {
+        title: t(NAVIGATION_KEYS.schedule),
+        url: createTenantUrl('/automation/schedule'),
+        permission: {
+          resource: Resources.SCHEDULE,
+          level: Permissions.VIEW,
+        },
+      },
+      {
+        title: t(NAVIGATION_KEYS.package),
+        url: createTenantUrl('/automation/package'),
+        permission: {
+          resource: Resources.PACKAGE,
+          level: Permissions.VIEW,
+        },
+      },
+    ],
+  },
+  {
+    title: t(NAVIGATION_KEYS.agent),
+    url: createTenantUrl('/agent'),
+    icon: Bot,
+    permission: {
+      resource: Resources.AGENT,
+      level: Permissions.VIEW,
+    },
+    items: [
+      {
+        title: t(NAVIGATION_KEYS.agent),
+        url: createTenantUrl('/agent'),
+        permission: {
+          resource: Resources.AGENT,
+          level: Permissions.VIEW,
+        },
+      },
+    ],
+  },
+  {
+    title: t(NAVIGATION_KEYS.asset),
+    url: createTenantUrl('/asset'),
+    icon: FileKey2,
+    permission: {
+      resource: Resources.ASSET,
+      level: Permissions.VIEW,
+    },
+  },
+  {
+    title: t(NAVIGATION_KEYS.administration),
+    icon: Settings2,
+    permission: {
+      resource: Resources.ORGANIZATION_UNIT,
+      level: Permissions.VIEW,
+    },
+    items: [
+      {
+        title: t(NAVIGATION_KEYS.users),
+        url: createTenantUrl('/administration/users'),
+        permission: {
+          resource: Resources.USER,
+          level: Permissions.VIEW,
+        },
+      },
+      {
+        title: t(NAVIGATION_KEYS.roles),
+        url: createTenantUrl('/administration/roles'),
+        permission: {
+          resource: Resources.USER,
+          level: Permissions.VIEW,
+        },
+      },
+      {
+        title: t(NAVIGATION_KEYS.organizationUnits),
+        url: createTenantUrl('/administration/organization-unit'),
+        permission: {
+          resource: Resources.ORGANIZATION_UNIT,
+          level: Permissions.VIEW,
+        },
+      },
+      {
+        title: t(NAVIGATION_KEYS.subscription),
+        url: createTenantUrl('/administration/subscription'),
+        permission: {
+          resource: Resources.SUBSCRIPTION,
+          level: Permissions.VIEW,
+        },
+      },
+    ],
+  },
+]
 
 /**
  * Common navigation items for all users with tenant context
