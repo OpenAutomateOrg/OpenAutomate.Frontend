@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, Clock, Play } from 'lucide-react'
+import { useLocale } from '@/providers/locale-provider'
 
 interface ExecutionStatusBadgeProps {
   status: string
@@ -7,41 +8,43 @@ interface ExecutionStatusBadgeProps {
 }
 
 export default function ExecutionStatusBadge({ status, className }: ExecutionStatusBadgeProps) {
+  const { t } = useLocale()
+
   const getStatusConfig = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
         return {
           variant: 'secondary' as const,
           icon: Clock,
-          label: 'Pending',
+          label: t('executions.status.pending'),
           className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
         }
       case 'running':
         return {
           variant: 'default' as const,
           icon: Loader2,
-          label: 'Running',
+          label: t('executions.status.running'),
           className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
         }
       case 'completed':
         return {
           variant: 'default' as const,
           icon: CheckCircle,
-          label: 'Completed',
+          label: t('executions.status.completed'),
           className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
         }
       case 'failed':
         return {
           variant: 'destructive' as const,
           icon: XCircle,
-          label: 'Failed',
+          label: t('executions.status.failed'),
           className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
         }
       case 'cancelled':
         return {
           variant: 'outline' as const,
           icon: XCircle,
-          label: 'Cancelled',
+          label: t('executions.status.cancelled'),
           className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
         }
       default:

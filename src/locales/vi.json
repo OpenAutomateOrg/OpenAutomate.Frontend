@@ -11,8 +11,284 @@
   },
   "sectionCard": {
     "user": "Người dùng",
-    "schedules": "Lịch trình",
+    "schedules": "Lịch",
     "assets": " Tài sản",
-    "agent": "Máy"
+    "agent": "Agent",
+    "packages": "Gói",
+    "totalUsers": "Tổng số người dùng trong tổ chức",
+    "totalPackages": "Tổng số gói trong tổ chức",
+    "totalAgents": "Tổng số Agents trong tổ chức",
+    "totalAssets": "Tổng số Assets trong tổ chức",
+    "totalSchedules": "Tổng số lịch đã được tạo"
+  },
+  "executions": {
+    "title": "Thực thi",
+    "createExecution": "Tạo thực thi",
+    "tabs": {
+      "inProgress": "Đang thực hiện",
+      "scheduled": "Đã lên lịch",
+      "historical": "Lịch sử"
+    },
+    "status": {
+      "running": "Đang chạy",
+      "pending": "Đang chờ",
+      "scheduled": "Đã lên lịch",
+      "completed": "Hoàn thành",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy"
+    },
+    "errors": {
+      "loadFailed": "Không thể tải danh sách thực thi. Vui lòng thử lại.",
+      "retry": "Thử lại"
+    },
+    "modal": {
+      "title": "Tạo thực thi mới",
+      "description": "Chọn gói, phiên bản và agent để thực hiện ngay lập tức.",
+      "loading": "Đang tải gói và agents...",
+      "package": "Gói",
+      "version": "Phiên bản",
+      "agent": "Agent",
+      "selectPackage": "Chọn một gói",
+      "selectVersion": "Chọn phiên bản",
+      "selectAgent": "Chọn một agent",
+      "uploaded": "Đã tải lên",
+      "unknownDate": "Không rõ ngày",
+      "cancel": "Hủy",
+      "startExecution": "Bắt đầu thực thi",
+      "starting": "Đang bắt đầu...",
+      "executionStarted": "Đã bắt đầu thực thi",
+      "executionStartedDesc": "Thực thi đã bắt đầu thành công"
+    }
+  },
+  "package": {
+    "title": "Gói tự động hóa",
+    "create": "Tạo mới",
+    "refresh": "Làm mới",
+    "loadError": "Không thể tải danh sách gói. Vui lòng thử lại.",
+    "retry": "Thử lại",
+    "rowsLabel": "gói",
+    "modal": {
+      "createTitle": "Tạo gói mới",
+      "editTitle": "Chỉnh sửa gói",
+      "name": "Tên",
+      "description": "Mô tả",
+      "isActive": "Hoạt động",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "creating": "Đang tạo...",
+      "updating": "Đang cập nhật..."
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động"
+    }
+  },
+  "schedule": {
+    "title": "Lịch trình",
+    "createSchedule": "Tạo lịch trình",
+    "loadError": "Không thể tải danh sách lịch trình. Vui lòng thử lại.",
+    "retry": "Thử lại",
+    "searchPlaceholder": "Tìm kiếm lịch trình theo tên...",
+    "rowsLabel": "lịch trình",
+    "days": {
+      "sunday": "Chủ nhật",
+      "monday": "Thứ hai",
+      "tuesday": "Thứ ba",
+      "wednesday": "Thứ tư",
+      "thursday": "Thứ năm",
+      "friday": "Thứ sáu",
+      "saturday": "Thứ bảy"
+    },
+    "recurrence": {
+      "once": "Một lần",
+      "minutes": "Mỗi X phút",
+      "hourly": "Hàng giờ",
+      "daily": "Hàng ngày",
+      "weekly": "Hàng tuần",
+      "monthly": "Hàng tháng"
+    },
+    "status": {
+      "enabled": "Đã bật",
+      "disabled": "Đã tắt"
+    },
+    "modal": {
+      "createTitle": "Tạo lịch trình",
+      "editTitle": "Chỉnh sửa lịch trình",
+      "name": "Tên",
+      "package": "Gói",
+      "agent": "Agent",
+      "timezone": "Múi giờ",
+      "recurrenceType": "Loại lặp lại",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "creating": "Đang tạo...",
+      "updating": "Đang cập nhật..."
+    }
+  },
+  "auth": {
+    "changePassword": {
+      "title": "Đổi mật khẩu",
+      "description": "Cập nhật mật khẩu để bảo mật tài khoản của bạn",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu mới",
+      "changePasswordButton": "Đổi mật khẩu",
+      "updating": "Đang cập nhật...",
+      "errors": {
+        "passwordMismatch": "Mật khẩu mới không khớp",
+        "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+        "updateFailed": "Không thể cập nhật mật khẩu"
+      },
+      "success": {
+        "title": "Đã đổi mật khẩu",
+        "description": "Mật khẩu của bạn đã được cập nhật thành công"
+      }
+    },
+    "emailVerification": {
+      "resendButton": "Gửi lại email xác thực",
+      "sending": "Đang gửi...",
+      "success": {
+        "title": "Đã gửi email xác thực!",
+        "description": "Vui lòng kiểm tra hộp thư đến."
+      },
+      "error": {
+        "title": "Không thể gửi lại",
+        "description": "Không thể gửi lại. Vui lòng thử lại."
+      }
+    },
+    "guards": {
+      "loading": "Đang tải...",
+      "accessDenied": "Truy cập bị từ chối. Bạn không có quyền xem trang này.",
+      "adminRequired": "Yêu cầu quyền quản trị viên",
+      "loginRequired": "Vui lòng đăng nhập để tiếp tục"
+    }
+  },
+  "forms": {
+    "validation": {
+      "emailRequired": "Vui lòng nhập email hợp lệ",
+      "passwordMinLength": "Mật khẩu phải có ít nhất 6 ký tự",
+      "passwordRequired": "Yêu cầu mật khẩu",
+      "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+      "passwordMismatch": "Mật khẩu không khớp",
+      "nameRequired": "Yêu cầu tên",
+      "organizationRequired": "Yêu cầu tên tổ chức"
+    },
+    "labels": {
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "organizationName": "Tên tổ chức",
+      "rememberMe": "Ghi nhớ đăng nhập"
+    },
+    "placeholders": {
+      "enterEmail": "Nhập email của bạn",
+      "enterPassword": "Nhập mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "enterFirstName": "Nhập tên của bạn",
+      "enterLastName": "Nhập họ của bạn",
+      "enterOrganization": "Nhập tên tổ chức"
+    },
+    "buttons": {
+      "signIn": "Đăng nhập",
+      "signUp": "Đăng ký",
+      "signInWith": "Đăng nhập bằng",
+      "sendResetLink": "Gửi liên kết đặt lại",
+      "resetPassword": "Đặt lại mật khẩu",
+      "createAccount": "Tạo tài khoản",
+      "createOrganization": "Tạo tổ chức"
+    },
+    "messages": {
+      "signingIn": "Đang đăng nhập...",
+      "signingUp": "Đang tạo tài khoản...",
+      "sendingResetLink": "Đang gửi liên kết...",
+      "resettingPassword": "Đang đặt lại mật khẩu...",
+      "sessionExpired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
+      "emailVerificationRequired": "Vui lòng xác thực email trước khi đăng nhập.",
+      "resetLinkSent": "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn.",
+      "passwordResetSuccess": "Mật khẩu của bạn đã được đặt lại thành công."
+    }
+  },
+  "agent": {
+    "title": "Agents",
+    "downloadAgent": "Tải Agent",
+    "create": "Tạo mới",
+    "loadError": "Không thể tải thông tin agent.",
+    "retry": "Thử lại",
+    "agentNotFound": "Không tìm thấy agent",
+    "connectionInfo": "Thông tin kết nối",
+    "connectionUrl": "URL kết nối",
+    "connectionDescription": "Sử dụng URL này để kết nối bot agent của bạn với nền tảng OpenAutomate.",
+    "labels": {
+      "name": "Tên",
+      "machineName": "Tên máy",
+      "status": "Trạng thái"
+    },
+    "modal": {
+      "createTitle": "Tạo Agent",
+      "editTitle": "Chỉnh sửa Agent",
+      "name": "Tên",
+      "machineName": "Tên máy",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "creating": "Đang tạo...",
+      "updating": "Đang cập nhật...",
+      "errors": {
+        "nameRequired": "Yêu cầu tên",
+        "machineNameRequired": "Yêu cầu tên máy",
+        "machineNameExists": "Tên máy đã tồn tại",
+        "noChanges": "Vui lòng thay đổi ít nhất một trường để cập nhật.",
+        "validationError": "Không thể kiểm tra tình khả dụng của tên máy"
+      }
+    },
+    "actions": {
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "confirmDelete": "Bạn có chắc chắn muốn xóa agent này không?",
+      "deleteWarning": "Hành động này không thể hoàn tác."
+    }
+  },
+  "navigation": {
+    "home": "Trang chủ",
+    "automation": "Tự động hóa",
+    "executions": "Thực thi",
+    "schedule": "Lịch trình",
+    "package": "Gói",
+    "agent": "Agent",
+    "asset": "Tài sản",
+    "administration": "Quản trị",
+    "users": "Người dùng",
+    "roles": "Vai trò",
+    "subscription": "Gói dịch vụ",
+    "organizationUnits": "Đơn vị tổ chức",
+    "help": "Trợ giúp",
+    "support": "Hỗ trợ",
+    "settings": "Cài đặt",
+    "subscription": "Gói dịch vụ"
+  },
+  "dashboard": {
+    "title": "Trang chủ",
+    "executionStatus": "Trạng thái thực thi",
+    "realTimeDistribution": "Phân bố thực thi theo thời gian thực",
+    "successRate": "tỷ lệ thành công",
+    "total": "tổng cộng",
+    "statisticalStatus": {
+      "title": "Trạng thái thực thi",
+      "running": "ĐANG CHẠY",
+      "pending": "ĐANG CHỞ",
+      "completed": "HOÀN THÀNH",
+      "failed": "THẤT BẠI",
+      "runningJobs": "công việc đang chạy",
+      "pendingJobs": "công việc đang chờ",
+      "completedJobs": "công việc hoàn thành",
+      "failedJobs": "công việc thất bại"
+    },
+    "charts": {
+      "systemStatistics": "Thống kê hệ thống",
+      "users": "Người dùng",
+      "organizationUnits": "Đơn vị tổ chức",
+      "executions": "Thực thi"
+    }
   }
 }

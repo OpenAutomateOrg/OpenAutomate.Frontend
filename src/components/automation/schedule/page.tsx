@@ -25,6 +25,7 @@ import { swrKeys } from '@/lib/config/swr-config'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { createErrorToast } from '@/lib/utils/error-utils'
+import { useLocale } from '@/providers/locale-provider'
 
 import {
   useReactTable,
@@ -143,6 +144,7 @@ function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): Sche
 }
 
 export default function ScheduleInterface() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -812,8 +814,8 @@ export default function ScheduleInterface() {
 
   // Status filter options
   const statusOptions = [
-    { value: 'enabled', label: 'Enabled' },
-    { value: 'disabled', label: 'Disabled' },
+    { value: 'enabled', label: t('schedule.status.enabled') },
+    { value: 'disabled', label: t('schedule.status.disabled') },
   ]
 
   // Recurrence type filter options
@@ -826,22 +828,20 @@ export default function ScheduleInterface() {
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">Schedules</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('schedule.title')}</h2>
           <div className="flex items-center space-x-2">
             <Button onClick={handleCreateClick} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Create Schedule
+              {t('schedule.createSchedule')}
             </Button>
           </div>
         </div>
 
         {schedulesError && !fallbackSchedules && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">
-              Failed to load schedules. Please try again.
-            </p>
+            <p className="text-red-800 dark:text-red-300">{t('schedule.loadError')}</p>
             <Button variant="outline" className="mt-2" onClick={() => mutateSchedules()}>
-              Retry
+              {t('schedule.retry')}
             </Button>
           </div>
         )}
@@ -856,7 +856,7 @@ export default function ScheduleInterface() {
           searchValue={searchValue}
           isFiltering={isDataLoading}
           isPending={isPending}
-          searchPlaceholder="Search schedules by name..."
+          searchPlaceholder={t('schedule.searchPlaceholder')}
           totalCount={totalCount}
         />
 

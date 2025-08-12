@@ -32,6 +32,7 @@ import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 export const packageSchema = z.object({
   id: z.string(),
@@ -44,6 +45,7 @@ export const packageSchema = z.object({
 export type PackageRow = z.infer<typeof packageSchema>
 
 export default function PackageInterface() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -421,19 +423,19 @@ export default function PackageInterface() {
 
   const statusOptions = [
     { value: 'all', label: 'Show All' },
-    { value: 'true', label: 'Active' },
-    { value: 'false', label: 'Inactive' },
+    { value: 'true', label: t('package.status.active') },
+    { value: 'false', label: t('package.status.inactive') },
   ]
 
   return (
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">Automation Packages</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('package.title')}</h2>
           <div className="flex items-center space-x-2">
             <Button variant="outline" onClick={refreshPackages} disabled={isLoading || isPending}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Refresh
+              {t('package.refresh')}
             </Button>
             <Button
               onClick={() => {
@@ -443,18 +445,16 @@ export default function PackageInterface() {
               className="flex items-center justify-center"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Create
+              {t('package.create')}
             </Button>
           </div>
         </div>
 
         {packagesError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">
-              Failed to load packages. Please try again.
-            </p>
+            <p className="text-red-800 dark:text-red-300">{t('package.loadError')}</p>
             <Button variant="outline" className="mt-2" onClick={() => mutatePackages()}>
-              Retry
+              {t('package.retry')}
             </Button>
           </div>
         )}
@@ -487,7 +487,7 @@ export default function PackageInterface() {
           isLoading={isLoading}
           isChangingPageSize={isChangingPageSize}
           isUnknownTotalCount={isUnknownTotalCount}
-          rowsLabel="packages"
+          rowsLabel={t('package.rowsLabel')}
           onPageChange={(page: number) => {
             const currentPage = pagination.pageIndex + 1
             if (page !== currentPage) {

@@ -7,6 +7,7 @@ import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
 import { usePathname } from 'next/navigation'
+import { useLocale } from '@/providers/locale-provider'
 
 import {
   Card,
@@ -46,6 +47,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ChartPieLabel() {
+  const { t } = useLocale()
   const pathname = usePathname()
   const tenant = pathname.split('/')[1]
   // Fetch executions data for status counting
@@ -99,8 +101,8 @@ export function ChartPieLabel() {
     <div className="  grid grid-cols-1 gap-4  dark:*:data-[slot=card]:bg-neutral-900">
       <Card className="flex flex-col  h-full flex-1">
         <CardHeader className="items-center pb-0">
-          <CardTitle>Execution Status</CardTitle>
-          <CardDescription>Real-time execution distribution</CardDescription>
+          <CardTitle>{t('dashboard.executionStatus')}</CardTitle>
+          <CardDescription>{t('dashboard.realTimeDistribution')}</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0 ">
           <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[350px]">
@@ -112,7 +114,8 @@ export function ChartPieLabel() {
         </CardContent>
         <CardFooter className="flex-col gap-2 text-sm">
           <div className="flex items-center gap-2 font-medium leading-none">
-            {successRate}% success rate ({totalExecutions} total) <TrendingUp className="h-7 w-4" />
+            {successRate}% {t('dashboard.successRate')} ({totalExecutions} {t('dashboard.total')}){' '}
+            <TrendingUp className="h-7 w-4" />
           </div>
         </CardFooter>
       </Card>

@@ -27,6 +27,7 @@ import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import { useExecutionStatus } from '@/hooks/use-execution-status'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
+import { useLocale } from '@/providers/locale-provider'
 
 import {
   useReactTable,
@@ -77,6 +78,7 @@ export const executionsSchema = z.object({
 export type ExecutionsRow = z.infer<typeof executionsSchema>
 
 export default function ExecutionsInterface() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -1010,7 +1012,7 @@ export default function ExecutionsInterface() {
               type="button"
               onClick={() => handleTabChange('inprogress')}
             >
-              In Progress
+              {t('executions.tabs.inProgress')}
             </button>
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -1018,7 +1020,7 @@ export default function ExecutionsInterface() {
               type="button"
               onClick={() => handleTabChange('scheduled')}
             >
-              Scheduled
+              {t('executions.tabs.scheduled')}
             </button>
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -1026,19 +1028,19 @@ export default function ExecutionsInterface() {
               type="button"
               onClick={() => handleTabChange('historical')}
             >
-              Historical
+              {t('executions.tabs.historical')}
             </button>
           </nav>
         </div>
 
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">Executions</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('executions.title')}</h2>
           <div className="flex items-center space-x-2">
             {/* Only show Create Execution button for In Progress tab */}
             {tab === 'inprogress' && (
               <Button onClick={handleCreateClick} className="flex items-center justify-center">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Create Execution
+                {t('executions.createExecution')}
               </Button>
             )}
           </div>
@@ -1046,11 +1048,9 @@ export default function ExecutionsInterface() {
 
         {executionsError && !fallbackExecutions && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">
-              Failed to load executions. Please try again.
-            </p>
+            <p className="text-red-800 dark:text-red-300">{t('executions.errors.loadFailed')}</p>
             <Button variant="outline" className="mt-2" onClick={() => mutateExecutions()}>
-              Retry
+              {t('executions.errors.retry')}
             </Button>
           </div>
         )}
@@ -1061,8 +1061,8 @@ export default function ExecutionsInterface() {
             <ProgressToolbar
               table={table}
               statuses={[
-                { value: 'Running', label: 'Running' },
-                { value: 'Pending', label: 'Pending' },
+                { value: 'Running', label: t('executions.status.running') },
+                { value: 'Pending', label: t('executions.status.pending') },
               ]}
               onSearch={handleSearch}
               onStatusChange={handleStatusFilterChange}
@@ -1084,7 +1084,7 @@ export default function ExecutionsInterface() {
           <>
             <ScheduledToolbar
               table={table}
-              statuses={[{ value: 'Scheduled', label: 'Scheduled' }]}
+              statuses={[{ value: 'Scheduled', label: t('executions.status.scheduled') }]}
               onSearch={handleSearch}
               onStatusChange={handleStatusFilterChange}
               searchValue={searchValue}
@@ -1106,9 +1106,9 @@ export default function ExecutionsInterface() {
             <HistoricalToolbar
               table={table}
               statuses={[
-                { value: 'Completed', label: 'Completed' },
-                { value: 'Failed', label: 'Failed' },
-                { value: 'Cancelled', label: 'Cancelled' },
+                { value: 'Completed', label: t('executions.status.completed') },
+                { value: 'Failed', label: t('executions.status.failed') },
+                { value: 'Cancelled', label: t('executions.status.cancelled') },
               ]}
               onSearch={handleSearch}
               onStatusChange={handleStatusFilterChange}
