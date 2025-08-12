@@ -61,6 +61,19 @@ export const config = {
   },
 
   /**
+   * Download endpoints for client installers and tools
+   */
+  downloads: {
+    /**
+     * Public URL to download the desktop agent installer
+     * Can be overridden via NEXT_PUBLIC_AGENT_DOWNLOAD_URL for different environments/domains
+     */
+    agentInstallerUrl:
+      process.env.NEXT_PUBLIC_AGENT_DOWNLOAD_URL ||
+      'https://openautomate-agent.s3.ap-southeast-1.amazonaws.com/OpenAutomate-Agent-Setup.exe',
+  },
+
+  /**
    * URL paths
    */
   paths: {

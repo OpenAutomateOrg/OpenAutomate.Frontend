@@ -139,7 +139,31 @@ export default function UserManagementPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Total Accounts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600 text-right">
+                {users ? users.length : 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Total Admins
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600 text-right">
+                {users ? users.filter(isUserAdmin).length : 0}
+              </div>
+            </CardContent>
+          </Card>
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-card-foreground">
@@ -147,41 +171,9 @@ export default function UserManagementPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">2,847</div>
-              <p className="text-xs text-muted-foreground">+12.5% from last month</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
-                Active Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">2,234</div>
-              <p className="text-xs text-muted-foreground">+8.1% from last month</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
-                Pending Invites
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">156</div>
-              <p className="text-xs text-muted-foreground">+3.2% from last month</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
-                Inactive Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">457</div>
-              <p className="text-xs text-muted-foreground">-2.1% from last month</p>
+              <div className="text-2xl font-bold text-orange-600 text-right">
+                {users ? users.filter((user) => !isUserAdmin(user)).length : 0}
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -98,7 +98,6 @@ export function formatUtcToLocal(
       if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
         // Add 'Z' to indicate UTC timezone
         dateString = dateString.replace(/(\.\d+)?$/, '$1Z')
-        console.debug(`Corrected UTC date format: ${utcDate} -> ${dateString}`)
       }
 
       // Create Date object from UTC string - this automatically converts to local timezone

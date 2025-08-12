@@ -345,7 +345,7 @@ function OrganizationUnitAdminInterfaceContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{totalUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{totalUnits}</div>
               <p className="text-xs text-muted-foreground">Organization units managed</p>
             </CardContent>
           </Card>
@@ -356,7 +356,7 @@ function OrganizationUnitAdminInterfaceContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{activeUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{activeUnits}</div>
               <p className="text-xs text-muted-foreground">Currently operational</p>
             </CardContent>
           </Card>
@@ -367,7 +367,7 @@ function OrganizationUnitAdminInterfaceContent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{inactiveUnits}</div>
+              <div className="text-2xl font-bold text-orange-600 text-right">{inactiveUnits}</div>
               <p className="text-xs text-muted-foreground">Pending deletion</p>
             </CardContent>
           </Card>
