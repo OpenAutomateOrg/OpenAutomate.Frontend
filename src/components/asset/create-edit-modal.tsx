@@ -22,6 +22,7 @@ import { useParams } from 'next/navigation'
 import { createAsset, updateAsset, getAllAgents } from '@/lib/api/assets'
 import { notify } from '@/lib/utils/notification-manager'
 import type { AssetEditRow } from './asset'
+import { useLocale } from '@/providers/locale-provider'
 import {
   PlusCircle,
   Edit,
@@ -54,6 +55,7 @@ export function CreateEditModal({
   existingKeys = [],
   asset,
 }: ItemModalProps) {
+  const { t } = useLocale()
   const [value, setValue] = useState('')
   const [key, setKey] = useState('')
   const [type, setType] = useState<number>(0)
@@ -136,26 +138,26 @@ export function CreateEditModal({
       /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/
 
     if (!key.trim()) {
-      setKeyError('Key is required.')
+      setKeyError(t('asset.form.keyRequired'))
       valid = false
     } else if (vietnameseRegex.test(key)) {
-      setKeyError('Key must not contain Vietnamese characters or accents.')
+      setKeyError(t('asset.form.keyVietnameseError'))
       valid = false
     } else if (!isEditing && existingKeys.includes(key.trim())) {
-      setKeyError('Key already exists. Please choose a unique key.')
+      setKeyError(t('asset.form.keyExistsError'))
       valid = false
     } else if (isEditing && existingKeys.includes(key.trim()) && key.trim() !== asset?.key) {
-      setKeyError('Key already exists. Please choose a unique key.')
+      setKeyError(t('asset.form.keyExistsError'))
       valid = false
     }
 
     if (!isEditing && !type.toString().trim()) {
-      setTypeError('Type is required.')
+      setTypeError(t('asset.form.typeRequired'))
       valid = false
     }
 
     if (!value.trim()) {
-      setValueError('Value is required.')
+      setValueError(t('asset.form.valueRequired'))
       valid = false
     }
 
@@ -172,8 +174,8 @@ export function CreateEditModal({
 
       if (isDuplicateError) {
         const errorMsg = isEditing
-          ? 'This key is already used by another asset. Please choose a different key.'
-          : 'Key already exists. Please choose a unique key.'
+          ? t('asset.form.keyExistsEditError')
+          : t('asset.form.keyExistsError')
         setKeyError(errorMsg)
         return true
       }
@@ -251,11 +253,11 @@ export function CreateEditModal({
     setAddedAgents(updatedAgents)
   }
 
-  let buttonText = 'Add Item'
+  let buttonText = t('asset.form.create')
   if (submitting) {
-    buttonText = 'Submitting...'
+    buttonText = t('common.saving')
   } else if (isEditing) {
-    buttonText = 'Save Changes'
+    buttonText = t('asset.form.save')
   }
 
   let inputType: string
@@ -281,7 +283,7 @@ export function CreateEditModal({
             <PlusCircle className="w-5 h-5 text-primary" />
           )}
           <DialogTitle className="text-xl font-bold">
-            {isEditing ? 'Edit Asset' : 'Create a new Asset'}
+            {isEditing ? t('asset.form.editAsset') : t('asset.form.createAsset')}
           </DialogTitle>
         </DialogHeader>
         <div className="px-6 py-4 flex-1 overflow-y-auto">
@@ -289,7 +291,8 @@ export function CreateEditModal({
             <div className="space-y-4">
               <Label htmlFor="key" className="text-sm font-medium flex items-center gap-1">
                 <Key className="w-4 h-4 text-muted-foreground" />
-                Key<span className="text-red-500">*</span>
+                {t('asset.form.key')}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="key"
@@ -312,7 +315,7 @@ export function CreateEditModal({
               )}
               <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1">
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                Description
+                {t('asset.form.description')}
               </Label>
               <Input
                 id="description"
@@ -321,7 +324,7 @@ export function CreateEditModal({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setDescription(e.target.value)
                 }
-                placeholder="Enter description (optional)"
+                placeholder={t('asset.form.descriptionPlaceholder')}
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
                 onFocus={handleInputFocus}
@@ -331,12 +334,15 @@ export function CreateEditModal({
             <div className="space-y-4">
               <Label htmlFor="type" className="text-sm font-medium flex items-center gap-1">
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                Type<span className="text-red-500">*</span>
+                {t('asset.form.type')}
+                <span className="text-red-500">*</span>
               </Label>
               {isEditing ? (
                 <div className="flex items-center border rounded-xl px-3 py-2 text-sm bg-muted">
-                  {type === 0 ? 'String' : 'Secret'}{' '}
-                  <span className="text-muted-foreground ml-2 text-xs">(Cannot be changed)</span>
+                  {type === 0 ? t('asset.types.string') : t('asset.types.secret')}{' '}
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    {t('asset.form.typeCannotChange')}
+                  </span>
                 </div>
               ) : (
                 <>
@@ -348,11 +354,11 @@ export function CreateEditModal({
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={t('asset.form.selectType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">String</SelectItem>
-                      <SelectItem value="1">Secret</SelectItem>
+                      <SelectItem value="0">{t('asset.types.string')}</SelectItem>
+                      <SelectItem value="1">{t('asset.types.secret')}</SelectItem>
                     </SelectContent>
                   </Select>
                   {typeError && (
@@ -365,7 +371,8 @@ export function CreateEditModal({
               )}
               <Label htmlFor="value" className="text-sm font-medium flex items-center gap-1">
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                Value<span className="text-red-500">*</span>
+                {t('asset.form.value')}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="value"
@@ -375,7 +382,7 @@ export function CreateEditModal({
                   setValue(e.target.value)
                   setValueError(null)
                 }}
-                placeholder="Type a string value"
+                placeholder={t('asset.form.valuePlaceholder')}
                 type={inputType}
                 className="bg-white text-black dark:text-white border rounded-xl shadow focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoComplete="off"
@@ -480,7 +487,7 @@ export function CreateEditModal({
             disabled={submitting}
             className="flex items-center gap-1"
           >
-            <X className="w-4 h-4" /> Cancel
+            <X className="w-4 h-4" /> {t('asset.form.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={submitting} className="flex items-center gap-1">
             {isEditing ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}

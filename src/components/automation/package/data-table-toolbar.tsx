@@ -7,6 +7,7 @@ import { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ export function DataTableToolbar<TData>({
   isFiltering = false,
   isPending = false,
 }: DataTableToolbarProps<TData>) {
+  const { t } = useLocale()
   const isFiltered = table.getState().columnFilters.length > 0
 
   // Get active filter count
@@ -87,7 +89,7 @@ export function DataTableToolbar<TData>({
 
           <Input
             ref={searchInputRef}
-            placeholder="Search by name or description..."
+            placeholder={t('common.search.byNameOrDescription')}
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 w-full pr-8"

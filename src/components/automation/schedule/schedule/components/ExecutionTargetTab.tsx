@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search, Server, Wifi, WifiOff } from 'lucide-react'
+import { useLocale } from '@/providers/locale-provider'
 import { swrKeys } from '@/lib/config/swr-config'
 import { getAllBotAgents } from '@/lib/api/bot-agents'
 
@@ -22,6 +23,7 @@ interface ExecutionTargetTabProps {
 }
 
 export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: ExecutionTargetTabProps) {
+  const { t } = useLocale()
   const [searchTerm, setSearchTerm] = useState('')
 
   // ✅ SWR for agent data fetching
@@ -126,7 +128,7 @@ export function ExecutionTargetTab({ selectedAgentId, onAgentSelect }: Execution
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search agents by name or machine..."
+          placeholder={t('common.search.agentsByNameOrMachine')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"

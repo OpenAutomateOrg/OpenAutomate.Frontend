@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ interface ItemModalProps {
 }
 
 export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
+  const { t } = useLocale()
   const isEditing = mode === 'edit'
   const defaultTab = 'agent'
 
@@ -89,7 +91,7 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
           <TabsContent value="agent" className="pt-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Search" className="pl-8" />
+              <Input type="search" placeholder={t('common.search.placeholder')} className="pl-8" />
             </div>
             <div className="mt-4 border rounded-md">
               <Table>

@@ -7,6 +7,7 @@ import React, { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectContent,
@@ -40,8 +41,9 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
-  searchPlaceholder = 'Search by ID or Agent...',
+  searchPlaceholder,
 }: DataTableToolbarProps<TData>) {
+  const { t } = useLocale()
   const isFiltered = table.getState().columnFilters.length > 0
 
   const [date, setDate] = React.useState<Date | undefined>(undefined)
@@ -126,7 +128,7 @@ export function DataTableToolbar<TData>({
         <div className="relative">
           <Input
             ref={searchInputRef}
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || t('common.search.placeholder')}
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 pr-8 w-full"

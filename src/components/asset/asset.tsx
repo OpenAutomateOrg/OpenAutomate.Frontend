@@ -34,6 +34,7 @@ import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 export const assetSchema = z.object({
   id: z.string(),
@@ -47,6 +48,7 @@ export type AssetRow = z.infer<typeof assetSchema>
 export type AssetEditRow = AssetRow & { value?: string; agents?: { id: string; name: string }[] }
 
 export default function AssetInterface() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -312,8 +314,8 @@ export default function AssetInterface() {
   }, [mutateAssets])
 
   const tableColumns = useMemo(
-    () => createColumns(handleEditAsset, refreshAssets),
-    [handleEditAsset, refreshAssets],
+    () => createColumns(handleEditAsset, refreshAssets, t),
+    [handleEditAsset, refreshAssets, t],
   )
 
   // Setup table instance
@@ -439,7 +441,7 @@ export default function AssetInterface() {
     <>
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">Assets</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('asset.title')}</h2>
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => {
@@ -456,11 +458,9 @@ export default function AssetInterface() {
 
         {assetsError && (
           <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-300">
-              Failed to load assets. Please try again.
-            </p>
+            <p className="text-red-800 dark:text-red-300">{t('asset.loadError')}</p>
             <Button variant="outline" className="mt-2" onClick={() => mutateAssets()}>
-              Retry
+              {t('asset.retry')}
             </Button>
           </div>
         )}
@@ -468,8 +468,8 @@ export default function AssetInterface() {
         <DataTableToolbar
           table={table}
           types={[
-            { value: '0', label: 'String' },
-            { value: '1', label: 'Secret' },
+            { value: '0', label: t('asset.types.string') },
+            { value: '1', label: t('asset.types.secret') },
           ]}
           onSearch={handleSearch}
           onTypeChange={handleTypeFilterChange}
@@ -499,7 +499,7 @@ export default function AssetInterface() {
           isLoading={isLoading}
           isChangingPageSize={isChangingPageSize}
           isUnknownTotalCount={isUnknownTotalCount}
-          rowsLabel="assets"
+          rowsLabel={t('asset.rowsLabel')}
           onPageChange={(page: number) => {
             setPagination({ ...pagination, pageIndex: page - 1 })
             updateUrl(pathname, { page: page.toString() })

@@ -12,6 +12,7 @@ type EditFunctionType = (asset: AssetRow) => void
 export const createColumns = (
   onEdit?: EditFunctionType,
   onDeleted?: () => void,
+  t?: (key: string) => string,
 ): ColumnDef<AssetRow>[] => [
   {
     id: 'select',
@@ -54,7 +55,7 @@ export const createColumns = (
   {
     id: 'actions',
     header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Actions" />
+      <DataTableColumnHeader column={column} title={t ? t('asset.columns.actions') : 'Actions'} />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       return <DataTableRowAction asset={row.original} onEdit={onEdit} onDeleted={onDeleted} />
@@ -63,7 +64,11 @@ export const createColumns = (
   {
     accessorKey: 'key',
     header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Key" className="font-bold text-base" />
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('asset.columns.key') : 'Key'}
+        className="font-bold text-base"
+      />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       return <span className="font-medium truncate">{row.getValue('key')}</span>
@@ -77,15 +82,19 @@ export const createColumns = (
   {
     accessorKey: 'type',
     header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Type" className="font-bold text-base" />
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('asset.columns.type') : 'Type'}
+        className="font-bold text-base"
+      />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const typeValue = row.getValue('type')
       // Handle both number and string types from API
       if (typeValue === 0 || typeValue === '0' || typeValue === 'String') {
-        return <span>String</span>
+        return <span>{t ? t('asset.types.string') : 'String'}</span>
       }
-      return <span>Secret</span>
+      return <span>{t ? t('asset.types.secret') : 'Secret'}</span>
     },
     filterFn: (row, id, value) => {
       const rowValue = row.getValue(id)
@@ -102,7 +111,11 @@ export const createColumns = (
   {
     accessorKey: 'description',
     header: ({ column }: { column: Column<AssetRow, unknown> }) => (
-      <DataTableColumnHeader column={column} title="Description" className="font-bold text-base" />
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('asset.columns.description') : 'Description'}
+        className="font-bold text-base"
+      />
     ),
     cell: ({ row }: { row: Row<AssetRow> }) => {
       const desc = row.getValue('description')

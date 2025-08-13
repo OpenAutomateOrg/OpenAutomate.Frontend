@@ -16,7 +16,20 @@
     "close": "Close",
     "yes": "Yes",
     "no": "No",
-    "accept": "Accept"
+    "accept": "Accept",
+    "search": {
+      "placeholder": "Search",
+      "byName": "Search by Name",
+      "byEmail": "Search by Email",
+      "byFirstName": "By First Name",
+      "byLastName": "By Last Name",
+      "byKey": "Search by key...",
+      "byNameOrMachine": "Search by Name or Machine Name...",
+      "byNameOrDescription": "Search by name or description...",
+      "agentsByNameOrMachine": "Search agents by name or machine...",
+      "roles": "Search roles...",
+      "organizationUnits": "Search"
+    }
   },
   "login": {
     "title": "Sign In",
@@ -454,7 +467,7 @@
       },
       "search": {
         "placeholder": "Search organization units...",
-        "noResults": "No organization units found"
+        "noResults": "No Description"
       },
       "deletion": {
         "willBeDeleted": "This organization unit will be deleted in",
@@ -577,6 +590,79 @@
           "details": "Details"
         }
       }
+    }
+  },
+  "asset": {
+    "title": "Assets",
+    "create": "Create Asset",
+    "loadError": "Failed to load assets. Please try again.",
+    "retry": "Retry",
+    "rowsLabel": "assets",
+    "types": {
+      "string": "String",
+      "secret": "Secret",
+      "all": "All Types",
+      "filter": "Filter type"
+    },
+    "columns": {
+      "actions": "Actions",
+      "key": "Key",
+      "type": "Type",
+      "description": "Description"
+    },
+    "form": {
+      "key": "Key",
+      "keyRequired": "Key is required",
+      "keyPlaceholder": "Enter asset key",
+      "keyVietnameseError": "Key must not contain Vietnamese characters or accents.",
+      "keyExistsError": "Key already exists. Please choose a unique key.",
+      "keyExistsEditError": "This key is already used by another asset. Please choose a different key.",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter description (optional)",
+      "type": "Type",
+      "typeRequired": "Type is required",
+      "selectType": "Select type",
+      "typeCannotChange": "(Cannot be changed)",
+      "value": "Value",
+      "valueRequired": "Value is required",
+      "valuePlaceholder": "Type a string value",
+      "save": "Save",
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update",
+      "createAsset": "Create Asset",
+      "editAsset": "Edit Asset"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "openMenu": "Open menu"
+    },
+    "messages": {
+      "saveSuccess": "Asset saved successfully",
+      "saveError": "Failed to save asset",
+      "deleteSuccess": "Asset deleted successfully",
+      "deleteError": "Failed to delete asset",
+      "loadError": "Failed to load asset details"
+    },
+    "dialogs": {
+      "deleteConfirm": {
+        "title": "Delete Asset",
+        "message": "Are you sure you want to delete this asset? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "detail": {
+      "title": "Asset Details",
+      "key": "Key:",
+      "type": "Type:",
+      "description": "Description:",
+      "createdBy": "Created By:",
+      "value": "Value:",
+      "connectedAgents": "Connected Agents",
+      "noAgents": "No agents connected to this asset",
+      "noDescription": "No description provided"
     }
   }
 }

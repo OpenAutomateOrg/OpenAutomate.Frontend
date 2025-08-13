@@ -19,6 +19,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 interface DataTableRowActionProps {
   readonly asset: AssetRow
@@ -27,6 +28,7 @@ interface DataTableRowActionProps {
 }
 
 export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTableRowActionProps) {
+  const { t } = useLocale()
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const { toast } = useToast()
@@ -84,7 +86,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
           <Button
             variant="ghost"
             className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-            aria-label="Open menu"
+            aria-label={t('asset.actions.openMenu')}
             onClick={stopPropagation}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -105,7 +107,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
             }}
           >
             <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span>Edit</span>
+            <span>{t('asset.actions.edit')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -116,7 +118,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
             }}
           >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
-            <span>Delete</span>
+            <span>{t('asset.actions.delete')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -127,11 +129,9 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
             <span className="sr-only">Close</span>
           </DialogClose>
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>{t('asset.dialogs.deleteConfirm.title')}</DialogTitle>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete this asset <b>{asset.key}</b>?
-          </div>
+          <div>{t('asset.dialogs.deleteConfirm.message')}</div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"
@@ -141,7 +141,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
               }}
               disabled={deleting}
             >
-              Cancel
+              {t('asset.dialogs.deleteConfirm.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -153,7 +153,7 @@ export default function DataTableRowAction({ asset, onEdit, onDeleted }: DataTab
               disabled={deleting}
             >
               {deleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? t('common.deleting') : t('asset.dialogs.deleteConfirm.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

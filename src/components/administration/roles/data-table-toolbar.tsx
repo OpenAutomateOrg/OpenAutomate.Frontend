@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
 import { Badge } from '@/components/ui/badge'
+import { useLocale } from '@/providers/locale-provider'
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -24,6 +25,7 @@ export function DataTableToolbar<TData>({
   isFiltering = false,
   isPending = false,
 }: DataTableToolbarProps<TData>) {
+  const { t } = useLocale()
   const isFiltered = table.getState().columnFilters.length > 0
 
   // Get active filter count
@@ -75,7 +77,7 @@ export function DataTableToolbar<TData>({
 
           <Input
             ref={searchInputRef}
-            placeholder="Search roles..."
+            placeholder={t('common.search.roles')}
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 w-full pr-8"

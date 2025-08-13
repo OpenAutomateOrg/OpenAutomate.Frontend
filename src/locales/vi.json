@@ -16,7 +16,20 @@
     "close": "Đóng",
     "yes": "Có",
     "no": "Không",
-    "accept": "Chấp nhận"
+    "accept": "Chấp nhận",
+    "search": {
+      "placeholder": "Tìm kiếm",
+      "byName": "Tìm kiếm theo tên",
+      "byEmail": "Tìm kiếm theo email",
+      "byFirstName": "Tìm kiếm theo tên",
+      "byLastName": "Tìm kiếm theo họ",
+      "byKey": "Tìm kiếm theo khóa...",
+      "byNameOrMachine": "Tìm kiếm theo tên hoặc tên máy...",
+      "byNameOrDescription": "Tìm kiếm theo tên hoặc mô tả...",
+      "agentsByNameOrMachine": "Tìm kiếm agent theo tên hoặc tên máy...",
+      "roles": "Tìm kiếm vai trò...",
+      "organizationUnits": "Tìm kiếm"
+    }
   },
   "login": {
     "title": "Đăng nhập",
@@ -454,7 +467,7 @@
       },
       "search": {
         "placeholder": "Tìm kiếm đơn vị tổ chức...",
-        "noResults": "Không tìm thấy đơn vị tổ chức"
+        "noResults": "Không có mô tả"
       },
       "deletion": {
         "willBeDeleted": "Đơn vị tổ chức này sẽ được xóa trong",
@@ -577,6 +590,79 @@
           "details": "Chi tiết"
         }
       }
+    }
+  },
+  "asset": {
+    "title": "Tài nguyên",
+    "create": "Tạo tài nguyên",
+    "loadError": "Không thể tải tài nguyên. Vui lòng thử lại.",
+    "retry": "Thử lại",
+    "rowsLabel": "tài nguyên",
+    "types": {
+      "string": "Chuỗi",
+      "secret": "Bí mật",
+      "all": "Tất cả loại",
+      "filter": "Lọc loại"
+    },
+    "columns": {
+      "actions": "Thao tác",
+      "key": "Khóa",
+      "type": "Loại",
+      "description": "Mô tả"
+    },
+    "form": {
+      "key": "Khóa",
+      "keyRequired": "Khóa là bắt buộc",
+      "keyPlaceholder": "Nhập khóa tài nguyên",
+      "keyVietnameseError": "Khóa không được chứa ký tự tiếng Việt có dấu.",
+      "keyExistsError": "Khóa đã tồn tại. Vui lòng chọn khóa khác.",
+      "keyExistsEditError": "Khóa này đã được sử dụng bởi tài nguyên khác. Vui lòng chọn khóa khác.",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Nhập mô tả (tùy chọn)",
+      "type": "Loại",
+      "typeRequired": "Loại là bắt buộc",
+      "selectType": "Chọn loại",
+      "typeCannotChange": "(Không thể thay đổi)",
+      "value": "Giá trị",
+      "valueRequired": "Giá trị là bắt buộc",
+      "valuePlaceholder": "Nhập giá trị chuỗi",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "create": "Tạo",
+      "update": "Cập nhật",
+      "createAsset": "Tạo tài nguyên",
+      "editAsset": "Chỉnh sửa tài nguyên"
+    },
+    "actions": {
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "openMenu": "Mở menu"
+    },
+    "messages": {
+      "saveSuccess": "Lưu tài nguyên thành công",
+      "saveError": "Không thể lưu tài nguyên",
+      "deleteSuccess": "Xóa tài nguyên thành công",
+      "deleteError": "Không thể xóa tài nguyên",
+      "loadError": "Không thể tải chi tiết tài nguyên"
+    },
+    "dialogs": {
+      "deleteConfirm": {
+        "title": "Xóa tài nguyên",
+        "message": "Bạn có chắc chắn muốn xóa tài nguyên này? Hành động này không thể hoàn tác.",
+        "confirm": "Xóa",
+        "cancel": "Hủy"
+      }
+    },
+    "detail": {
+      "title": "Chi tiết tài nguyên",
+      "key": "Khóa:",
+      "type": "Loại:",
+      "description": "Mô tả:",
+      "createdBy": "Tạo bởi:",
+      "value": "Giá trị:",
+      "connectedAgents": "Agents kết nối",
+      "noAgents": "Không có agent nào kết nối với tài nguyên này",
+      "noDescription": "Không có mô tả"
     }
   }
 }
