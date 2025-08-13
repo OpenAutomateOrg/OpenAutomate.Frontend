@@ -10,7 +10,15 @@ import DataTableRowAction from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 import { isProtectedRole, canModifyRole } from '@/lib/constants/resources'
 
-export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[] => [
+interface CreateRolesColumnsProps {
+  onRefresh?: () => void
+  t?: (key: string) => string
+}
+
+export const createRolesColumns = ({
+  onRefresh,
+  t,
+}: CreateRolesColumnsProps = {}): ColumnDef<RolesRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -39,23 +47,33 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
   },
   {
     id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.roles.columns.actions') : 'Actions'}
+      />
+    ),
     cell: ({ row }) => <DataTableRowAction row={row} onRefresh={onRefresh} />,
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.roles.columns.name') : 'Name'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center space-x-2">
         <span className="font-medium">{row.getValue('name')}</span>
         {row.original.isSystemAuthority && (
           <Badge variant="secondary" className="text-xs">
-            System
+            {t ? t('administration.roles.badges.system') : 'System'}
           </Badge>
         )}
         {isProtectedRole(row.original.name) && (
           <Badge variant="outline" className="text-xs border-orange-500 text-orange-600">
-            Default
+            {t ? t('administration.roles.badges.default') : 'Default'}
           </Badge>
         )}
       </div>
@@ -63,18 +81,29 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
   },
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.roles.columns.description') : 'Description'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="max-w-[300px]">
         <span className="text-sm text-muted-foreground">
-          {row.getValue('description') || 'No description'}
+          {row.getValue('description') ||
+            (t ? t('administration.roles.placeholders.noDescription') : 'No description')}
         </span>
       </div>
     ),
   },
   {
     accessorKey: 'permissions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Permissions" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.roles.columns.permissions') : 'Permissions'}
+      />
+    ),
     cell: ({ row }) => {
       const permissions = row.original.permissions || []
       return (
@@ -86,11 +115,14 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
               </Badge>
             ))
           ) : (
-            <span className="text-xs text-muted-foreground">No permissions</span>
+            <span className="text-xs text-muted-foreground">
+              {t ? t('administration.roles.placeholders.noPermissions') : 'No permissions'}
+            </span>
           )}
           {permissions.length > 3 && (
             <Badge variant="outline" className="text-xs">
-              +{permissions.length - 3} more
+              +{permissions.length - 3}{' '}
+              {t ? t('administration.roles.tooltips.morePermissions') : 'more'}
             </Badge>
           )}
         </div>
@@ -100,7 +132,12 @@ export const createRolesColumns = (onRefresh?: () => void): ColumnDef<RolesRow>[
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.roles.columns.created') : 'Created'}
+      />
+    ),
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string
       const formatted = formatUtcToLocal(date, {

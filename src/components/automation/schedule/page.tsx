@@ -562,6 +562,7 @@ export default function ScheduleInterface() {
   const columns = useMemo(
     () =>
       createScheduleColumns({
+        t,
         onDeleted: () => {
           mutateSchedules()
           mutateFallbackSchedules()
@@ -594,7 +595,7 @@ export default function ScheduleInterface() {
           setIsCreateModalOpen(true)
         },
       }),
-    [mutateSchedules, mutateFallbackSchedules, toast],
+    [mutateSchedules, mutateFallbackSchedules, toast, t],
   )
 
   const table = useReactTable({

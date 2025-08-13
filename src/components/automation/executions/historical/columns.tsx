@@ -13,10 +13,12 @@ import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface CreateHistoricalColumnsProps {
   onDeleted?: () => void
+  t?: (key: string) => string
 }
 
 export const createColumns = ({
   onDeleted,
+  t,
 }: CreateHistoricalColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
@@ -58,14 +60,21 @@ export const createColumns = ({
   },
   {
     id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.actions') : 'Actions'} />
+    ),
     cell: ({ row }) => <DataTableRowAction execution={row.original} onDeleted={onDeleted} />,
     enableSorting: false,
     enableHiding: false,
   },
   {
     accessorKey: 'packageName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Package Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.packageName') : 'Package Name'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span className="font-medium">{row.getValue('packageName') || 'N/A'}</span>
@@ -74,7 +83,12 @@ export const createColumns = ({
   },
   {
     accessorKey: 'Version',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Package Version" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.packageVersion') : 'Package Version'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('Version') || 'N/A'}</span>
@@ -83,7 +97,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'agent',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.agent') : 'Agent'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('agent')}</span>
@@ -92,7 +108,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'state',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="State" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.state') : 'State'} />
+    ),
     cell: ({ row }) => {
       const state = String(row.getValue('state'))
       return (
@@ -104,7 +122,12 @@ export const createColumns = ({
   },
   {
     accessorKey: 'startTime',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Start Time" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.startTime') : 'Start Time'}
+      />
+    ),
     cell: ({ row }) => {
       const value = row.getValue('startTime') as string
       const formatted = formatUtcToLocal(value, {
@@ -134,7 +157,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'endTime',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="End Time" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.endTime') : 'End Time'} />
+    ),
     cell: ({ row }) => {
       const value = row.getValue('endTime') as string
       const formatted = formatUtcToLocal(value, {
@@ -164,7 +189,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'source',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Source" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.source') : 'Source'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('source')}</span>
@@ -173,7 +200,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'command',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Command" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.command') : 'Command'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('command')}</span>
@@ -182,7 +211,12 @@ export const createColumns = ({
   },
   {
     accessorKey: 'schedules',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Schedules" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.schedules') : 'Schedules'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('schedules')}</span>
@@ -191,7 +225,9 @@ export const createColumns = ({
   },
   {
     accessorKey: 'taskId',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Task Id" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.taskId') : 'Task Id'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('taskId')}</span>

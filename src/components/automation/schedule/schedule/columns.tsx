@@ -22,6 +22,7 @@ interface CreateScheduleColumnsProps {
   onDeleted?: () => void
   onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
   onEdit?: (schedule: ScheduleResponseDto) => void
+  t?: (key: string) => string
 }
 
 // Enhanced Switch component with loading state
@@ -80,6 +81,7 @@ export const createScheduleColumns = ({
   onDeleted,
   onToggleEnabled,
   onEdit,
+  t,
 }: CreateScheduleColumnsProps = {}): ColumnDef<ScheduleResponseDto>[] => [
   {
     id: 'select',
@@ -121,7 +123,9 @@ export const createScheduleColumns = ({
   },
   {
     id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.actions') : 'Actions'} />
+    ),
     cell: ({ row }) => (
       <DataTableRowAction
         schedule={row.original}
@@ -135,7 +139,12 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Schedule Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.scheduleName') : 'Schedule Name'}
+      />
+    ),
     cell: ({ row }) => {
       const schedule = row.original
       return (
@@ -150,7 +159,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'isEnabled',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.status') : 'Status'} />
+    ),
     cell: ({ row }) => {
       const schedule = row.original
       return <EnhancedSwitch schedule={schedule} onToggleEnabled={onToggleEnabled} />
@@ -158,7 +169,12 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'recurrenceType',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Recurrence" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.recurrence') : 'Recurrence'}
+      />
+    ),
     cell: ({ row }) => {
       const recurrenceType = row.getValue('recurrenceType') as RecurrenceType
       return (
@@ -170,7 +186,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'automationPackageName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Package" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.package') : 'Package'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('automationPackageName') || 'N/A'}</span>
@@ -179,7 +197,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'botAgentName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.agent') : 'Agent'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('botAgentName') || 'N/A'}</span>
@@ -188,7 +208,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'nextRunTime',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Next Run" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.nextRun') : 'Next Run'} />
+    ),
     cell: ({ row }) => {
       const nextRunTime = row.getValue('nextRunTime') as string | undefined
       return (
@@ -200,7 +222,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'timeZoneId',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Timezone" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.timezone') : 'Timezone'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span className="text-sm text-muted-foreground">{row.getValue('timeZoneId') || 'UTC'}</span>
@@ -209,7 +233,9 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.created') : 'Created'} />
+    ),
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
       const formatted = formatUtcToLocal(createdAt, { fallback: '-' })
@@ -218,7 +244,12 @@ export const createScheduleColumns = ({
   },
   {
     accessorKey: 'cronExpression',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Cron Expression" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.cronExpression') : 'Cron Expression'}
+      />
+    ),
     cell: ({ row }) => {
       const cronExpression = row.getValue('cronExpression') as string | undefined
       const recurrenceType = row.original.recurrenceType

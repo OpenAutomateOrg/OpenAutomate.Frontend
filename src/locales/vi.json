@@ -1,4 +1,23 @@
 {
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "delete": "Xóa",
+    "deleting": "Đang xóa...",
+    "edit": "Chỉnh sửa",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "confirm": "Xác nhận",
+    "retry": "Thử lại",
+    "close": "Đóng",
+    "yes": "Có",
+    "no": "Không",
+    "accept": "Chấp nhận"
+  },
   "login": {
     "title": "Đăng nhập",
     "description": "Nhập email và mật khẩu để tiếp tục",
@@ -260,12 +279,11 @@
     "administration": "Quản trị",
     "users": "Người dùng",
     "roles": "Vai trò",
-    "subscription": "Gói dịch vụ",
     "organizationUnits": "Đơn vị tổ chức",
+    "subscription": "Dịch vụ",
     "help": "Trợ giúp",
     "support": "Hỗ trợ",
-    "settings": "Cài đặt",
-    "subscription": "Gói dịch vụ"
+    "settings": "Cài đặt"
   },
   "dashboard": {
     "title": "Trang chủ",
@@ -289,6 +307,276 @@
       "users": "Người dùng",
       "organizationUnits": "Đơn vị tổ chức",
       "executions": "Thực thi"
+    }
+  },
+  "table": {
+    "columns": {
+      "actions": "Hành động",
+      "name": "Tên",
+      "description": "Mô tả",
+      "latestVersion": "Phiên bản mới nhất",
+      "versionCount": "Số lượng phiên bản",
+      "status": "Trạng thái",
+      "createdDate": "Ngày tạo",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "agent": "Agent",
+      "state": "Trạng thái",
+      "startTime": "Thời gian bắt đầu",
+      "endTime": "Thời gian kết thúc",
+      "duration": "Thời lượng",
+      "scheduleName": "Tên lịch trình",
+      "recurrence": "Chu kỳ lặp",
+      "package": "Gói",
+      "nextRun": "Lần chạy tiếp theo",
+      "nextRunTime": "Thời gian chạy tiếp theo",
+      "timezone": "Múi giờ",
+      "created": "Đã tạo",
+      "cronExpression": "Biểu thức Cron",
+      "schedule": "Lịch trình",
+      "source": "Nguồn",
+      "command": "Lệnh",
+      "schedules": "Lịch trình",
+      "taskId": "ID tác vụ"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "noVersions": "Không có phiên bản"
+    }
+  },
+  "administration": {
+    "users": {
+      "title": "Người dùng",
+      "inviteUser": "Mời người dùng",
+      "emailPlaceholder": "Nhập email",
+      "firstNamePlaceholder": "Nhập tên",
+      "lastNamePlaceholder": "Nhập họ",
+      "searchRole": "Tìm theo vai trò",
+      "allRoles": "Tất cả vai trò",
+      "tabs": {
+        "users": "Người dùng",
+        "invitations": "Lời mời"
+      },
+      "columns": {
+        "action": "Hành động",
+        "email": "Email",
+        "firstName": "Tên",
+        "lastName": "Họ",
+        "roles": "Vai trò",
+        "joinedAt": "Ngày tham gia"
+      },
+      "tooltips": {
+        "moreRoles": "khác"
+      }
+    },
+    "roles": {
+      "title": "Vai trò",
+      "createRole": "Tạo vai trò",
+      "columns": {
+        "actions": "Hành động",
+        "name": "Tên",
+        "description": "Mô tả",
+        "permissions": "Quyền",
+        "created": "Ngày tạo"
+      },
+      "badges": {
+        "system": "Hệ thống",
+        "default": "Mặc định"
+      },
+      "placeholders": {
+        "noDescription": "Không có mô tả",
+        "noPermissions": "Không có quyền"
+      },
+      "tooltips": {
+        "morePermissions": "khác"
+      }
+    },
+    "organizationUnits": {
+      "title": "Đơn vị tổ chức",
+      "createUnit": "Tạo đơn vị",
+      "editUnit": "Chỉnh sửa đơn vị",
+      "deleteUnit": "Xóa đơn vị",
+      "columns": {
+        "action": "Hành động",
+        "name": "Tên",
+        "description": "Mô tả"
+      },
+      "form": {
+        "name": "Tên",
+        "nameRequired": "Tên là bắt buộc",
+        "namePlaceholder": "Nhập tên đơn vị tổ chức",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Nhập mô tả",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "create": "Tạo",
+        "update": "Cập nhật"
+      },
+      "actions": {
+        "edit": "Chỉnh sửa",
+        "delete": "Xóa",
+        "cancelDeletion": "Hủy xóa"
+      },
+      "messages": {
+        "saveSuccess": "Lưu đơn vị tổ chức thành công",
+        "saveError": "Không thể lưu đơn vị tổ chức",
+        "deleteSuccess": "Xóa đơn vị tổ chức thành công",
+        "deleteError": "Không thể xóa đơn vị tổ chức",
+        "loadError": "Không thể tải đơn vị tổ chức",
+        "deletionPending": "Đơn vị tổ chức được lên lịch xóa",
+        "deletionCancelled": "Hủy xóa thành công"
+      },
+      "dialogs": {
+        "deleteConfirm": {
+          "title": "Xóa đơn vị tổ chức",
+          "message": "Bạn có chắc chắn muốn xóa đơn vị tổ chức này? Hành động này không thể hoàn tác.",
+          "confirm": "Xóa",
+          "cancel": "Hủy"
+        },
+        "nameChangeWarning": {
+          "title": "Thay đổi tên tổ chức",
+          "message": "Thay đổi tên tổ chức sẽ ảnh hưởng đến cách người dùng truy cập tổ chức này. Bạn có chắc chắn muốn tiếp tục?",
+          "confirm": "Có, thay đổi tên",
+          "cancel": "Hủy"
+        },
+        "cancelDeletionConfirm": {
+          "title": "Hủy xóa",
+          "message": "Bạn có chắc chắn muốn hủy xóa đơn vị tổ chức này?",
+          "confirm": "Có, hủy xóa",
+          "cancel": "Không, giữ nguyên lịch xóa"
+        }
+      },
+      "status": {
+        "pending": "Đang chờ",
+        "active": "Hoạt động",
+        "deleting": "Đang xóa"
+      },
+      "search": {
+        "placeholder": "Tìm kiếm đơn vị tổ chức...",
+        "noResults": "Không tìm thấy đơn vị tổ chức"
+      },
+      "deletion": {
+        "willBeDeleted": "Đơn vị tổ chức này sẽ được xóa trong",
+        "deleting": "Đang xóa đơn vị tổ chức..."
+      }
+    },
+    "subscription": {
+      "title": "Quản lý dịch vụ",
+      "description": "Quản lý dịch vụ và thanh toán của tổ chức bạn",
+      "loading": {
+        "title": "Quản lý dịch vụ",
+        "description": "Quản lý dịch vụ và thanh toán của tổ chức bạn"
+      },
+      "cards": {
+        "status": "Trạng thái",
+        "plan": "Gói dịch vụ",
+        "daysRemaining": "Số ngày còn lại",
+        "trialStatus": "Trạng thái dùng thử"
+      },
+      "placeholders": {
+        "noSubscription": "Không có đăng ký",
+        "noPlan": "Không có gói",
+        "notAvailable": "Không có",
+        "available": "Có sẵn",
+        "used": "Đã sử dụng",
+        "active": "Đang hoạt động",
+        "notAvailableStatus": "Không có sẵn"
+      },
+      "currentSubscription": {
+        "title": "Dịch vụ hiện tại",
+        "description": "Chi tiết về trạng thái dịch vụ hiện tại của bạn",
+        "status": "Trạng thái:",
+        "plan": "Gói dịch vụ:",
+        "trialEnds": "Dùng thử kết thúc:",
+        "nextBilling": "Thanh toán tiếp theo:",
+        "manageBilling": "Quản lý thanh toán",
+        "noActiveSubscription": "Không có dịch vụ đang hoạt động"
+      },
+      "freeTrial": {
+        "title": "Dùng thử miễn phí",
+        "description": "Bắt đầu dùng thử miễn phí để truy cập tất cả tính năng"
+      },
+      "badges": {
+        "trial": "Dùng thử",
+        "active": "Hoạt động",
+        "expired": "Hết hạn"
+      },
+      "trialManagement": "Quản lý dùng thử",
+      "eligible": {
+        "description": "Bạn có thể bắt đầu dùng thử miễn phí để khám phá tất cả tính năng cao cấp.",
+        "startTrial": "Bắt đầu dùng thử",
+        "activating": "Đang kích hoạt dùng thử..."
+      },
+      "active": {
+        "description": "Bạn có gói dùng thử đang hoạt động"
+      },
+      "expired": {
+        "description": "Thời gian dùng thử đã hết hạn. Nâng cấp để tiếp tục sử dụng tính năng cao cấp.",
+        "upgrade": "Nâng cấp ngay"
+      },
+      "used": {
+        "description": "Bạn đã sử dụng hết dùng thử miễn phí. Nâng cấp để tiếp tục sử dụng tính năng Pro.",
+        "upgradeButton": "Nâng cấp lên Pro"
+      },
+      "notEligible": {
+        "description": "Dùng thử miễn phí chỉ có sẵn cho đơn vị tổ chức đầu tiên của bạn. Nâng cấp để truy cập tính năng Pro.",
+        "upgradeButton": "Nâng cấp lên Pro"
+      },
+      "unknown": {
+        "description": "Không thể xác định trạng thái dùng thử"
+      },
+      "toast": {
+        "startingTrial": {
+          "title": "Đang bắt đầu dùng thử...",
+          "description": "Vui lòng đợi trong khi chúng tôi kích hoạt dùng thử miễn phí của bạn."
+        },
+        "trialStarted": {
+          "title": "Bắt đầu dùng thử thành công!",
+          "description": "Dùng thử miễn phí của bạn đã được kích hoạt. Đang làm mới trạng thái dịch vụ..."
+        },
+        "trialFailed": {
+          "title": "Không thể bắt đầu dùng thử",
+          "description": "Không thể bắt đầu dùng thử. Vui lòng thử lại."
+        },
+        "trialError": {
+          "title": "Lỗi khi bắt đầu dùng thử"
+        }
+      },
+      "billingHistory": {
+        "title": "Lịch sử thanh toán",
+        "description": "Hóa đơn và biên lai gần đây của bạn",
+        "tableHeaders": {
+          "date": "Ngày",
+          "status": "Trạng thái",
+          "amount": "Số tiền",
+          "invoice": "Hóa đơn"
+        },
+        "statuses": {
+          "refunded": "Đã hoàn tiền",
+          "paid": "Đã thanh toán"
+        },
+        "view": "Xem"
+      },
+      "accountInformation": {
+        "title": "Thông tin tài khoản",
+        "description": "Thông tin về tài khoản và việc sử dụng dùng thử của bạn",
+        "accountEmail": "Email tài khoản:",
+        "fullName": "Họ và tên:",
+        "trialUsed": "Đã sử dụng thử:",
+        "organizationUnits": "Đơn vị tổ chức:"
+      },
+      "paymentHistory": {
+        "title": "Lịch sử thanh toán",
+        "noPayments": "Không có lịch sử thanh toán",
+        "columns": {
+          "id": "ID",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "date": "Ngày",
+          "details": "Chi tiết"
+        }
+      }
     }
   }
 }

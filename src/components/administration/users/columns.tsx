@@ -9,7 +9,11 @@ import type { UsersRow } from './users'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
 
-export const columns: ColumnDef<UsersRow>[] = [
+interface CreateUsersColumnsProps {
+  t?: (key: string) => string
+}
+
+export const createUsersColumns = ({ t }: CreateUsersColumnsProps = {}): ColumnDef<UsersRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -37,27 +41,47 @@ export const columns: ColumnDef<UsersRow>[] = [
   },
   {
     id: 'actions',
-    header: 'Action',
+    header: t ? t('administration.users.columns.action') : 'Action',
     cell: ({ row }) => <DataTableRowAction row={row} />,
   },
   {
     accessorKey: 'email',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.users.columns.email') : 'Email'}
+      />
+    ),
     cell: ({ row }) => <span>{row.getValue('email')}</span>,
   },
   {
     accessorKey: 'firstName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.users.columns.firstName') : 'First Name'}
+      />
+    ),
     cell: ({ row }) => <span>{row.getValue('firstName')}</span>,
   },
   {
     accessorKey: 'lastName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.users.columns.lastName') : 'Last Name'}
+      />
+    ),
     cell: ({ row }) => <span>{row.getValue('lastName')}</span>,
   },
   {
     accessorKey: 'roles',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Roles" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.users.columns.roles') : 'Roles'}
+      />
+    ),
     cell: ({ row }) => {
       const value = row.getValue('roles')
       let roles: string[] = []
@@ -86,7 +110,8 @@ export const columns: ColumnDef<UsersRow>[] = [
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-xs text-gray-500 cursor-pointer">
-                    +{roles.length - maxShow} more
+                    +{roles.length - maxShow}{' '}
+                    {t ? t('administration.users.tooltips.moreRoles') : 'more'}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>{roles.slice(maxShow).join(', ')}</TooltipContent>
@@ -99,7 +124,15 @@ export const columns: ColumnDef<UsersRow>[] = [
   },
   {
     accessorKey: 'joinedAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Joined At" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.users.columns.joinedAt') : 'Joined At'}
+      />
+    ),
     cell: ({ row }) => <span>{row.getValue('joinedAt')}</span>,
   },
 ]
+
+// Export backward compatibility
+export const columns = createUsersColumns()

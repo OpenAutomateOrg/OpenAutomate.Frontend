@@ -80,136 +80,29 @@ export interface UserNavigationItem {
 /**
  * Helper function to create translated navigation items
  */
-export const createTranslatedUserNavItems = (
-  createTenantUrl: (path: string) => string,
-  t: (key: string) => string
-): NavigationItem[] => [
-  {
-    title: t(NAVIGATION_KEYS.home),
-    url: createTenantUrl('/dashboard'),
-    icon: House,
-    isActive: true,
-  },
-  {
-    title: t(NAVIGATION_KEYS.automation),
-    icon: Cog,
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.executions),
-        url: createTenantUrl('/automation/executions'),
-        permission: {
-          resource: Resources.EXECUTION,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.schedule),
-        url: createTenantUrl('/automation/schedule'),
-        permission: {
-          resource: Resources.SCHEDULE,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.package),
-        url: createTenantUrl('/automation/package'),
-        permission: {
-          resource: Resources.PACKAGE,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: t(NAVIGATION_KEYS.agent),
-    url: createTenantUrl('/agent'),
-    icon: Bot,
-    permission: {
-      resource: Resources.AGENT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.agent),
-        url: createTenantUrl('/agent'),
-        permission: {
-          resource: Resources.AGENT,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: t(NAVIGATION_KEYS.asset),
-    url: createTenantUrl('/asset'),
-    icon: FileKey2,
-    permission: {
-      resource: Resources.ASSET,
-      level: Permissions.VIEW,
-    },
-  },
-  {
-    title: t(NAVIGATION_KEYS.administration),
-    icon: Settings2,
-    permission: {
-      resource: Resources.ORGANIZATION_UNIT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.users),
-        url: createTenantUrl('/administration/users'),
-        permission: {
-          resource: Resources.USER,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.roles),
-        url: createTenantUrl('/administration/roles'),
-        permission: {
-          resource: Resources.USER,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.organizationUnits),
-        url: createTenantUrl('/administration/organization-unit'),
-        permission: {
-          resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.subscription),
-        url: createTenantUrl('/administration/subscription'),
-        permission: {
-          resource: Resources.SUBSCRIPTION,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-]
+
 
 /**
  * Common navigation items for all users with tenant context
  * Each item specifies the minimum permission required to view it
  */
-export const createUserNavItems = (createTenantUrl: (path: string) => string): NavigationItem[] => [
+export const createUserNavItems = (
+  createTenantUrl: (path: string) => string,
+  t?: (key: string) => string
+): NavigationItem[] => [
   {
-    title: 'Home',
+    title: t ? t(NAVIGATION_KEYS.home) : 'Home',
     url: createTenantUrl('/dashboard'),
     icon: House,
     isActive: true,
     // Dashboard requires no specific permission - available to all authenticated users
   },
   {
-    title: 'Automation',
+    title: t ? t(NAVIGATION_KEYS.automation) : 'Automation',
     icon: Cog,
     items: [
       {
-        title: 'Executions',
+        title: t ? t(NAVIGATION_KEYS.executions) : 'Executions',
         url: createTenantUrl('/automation/executions'),
         permission: {
           resource: Resources.EXECUTION,
@@ -217,7 +110,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
         },
       },
       {
-        title: 'Schedule',
+        title: t ? t(NAVIGATION_KEYS.schedule) : 'Schedule',
         url: createTenantUrl('/automation/schedule'),
         permission: {
           resource: Resources.SCHEDULE,
@@ -225,7 +118,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
         },
       },
       {
-        title: 'Package',
+        title: t ? t(NAVIGATION_KEYS.package) : 'Package',
         url: createTenantUrl('/automation/package'),
         permission: {
           resource: Resources.PACKAGE,
@@ -235,7 +128,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
     ],
   },
   {
-    title: 'Agent',
+    title: t ? t(NAVIGATION_KEYS.agent) : 'Agent',
     url: createTenantUrl('/agent'),
     icon: Bot,
     permission: {
@@ -244,7 +137,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
     },
     items: [
       {
-        title: 'Agent',
+        title: t ? t(NAVIGATION_KEYS.agent) : 'Agent',
         url: createTenantUrl('/agent'),
         permission: {
           resource: Resources.AGENT,
@@ -254,7 +147,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
     ],
   },
   {
-    title: 'Asset',
+    title: t ? t(NAVIGATION_KEYS.asset) : 'Asset',
     url: createTenantUrl('/asset'),
     icon: FileKey2,
     permission: {
@@ -263,7 +156,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
     },
   },
   {
-    title: 'Administration',
+    title: t ? t(NAVIGATION_KEYS.administration) : 'Administration',
     icon: Settings2,
     permission: {
       resource: Resources.ORGANIZATION_UNIT,
@@ -271,7 +164,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
     },
     items: [
       {
-        title: 'Users',
+        title: t ? t(NAVIGATION_KEYS.users) : 'Users',
         url: createTenantUrl('/administration/users'),
         permission: {
           resource: Resources.USER,
@@ -279,7 +172,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
         },
       },
       {
-        title: 'Roles',
+        title: t ? t(NAVIGATION_KEYS.roles) : 'Roles',
         url: createTenantUrl('/administration/roles'),
         permission: {
           resource: Resources.ORGANIZATION_UNIT,
@@ -287,7 +180,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
         },
       },
       {
-        title: 'Organization Unit',
+        title: t ? t(NAVIGATION_KEYS.organizationUnits) : 'Organization Units',
         url: createTenantUrl('/administration/organizationUnit'),
         permission: {
           resource: Resources.ORGANIZATION_UNIT,
@@ -295,7 +188,7 @@ export const createUserNavItems = (createTenantUrl: (path: string) => string): N
         },
       },
       {
-        title: 'Subscription',
+        title: t ? t(NAVIGATION_KEYS.subscription) : 'Subscription',
         url: createTenantUrl('/administration/subscription'),
         permission: {
           resource: Resources.ORGANIZATION_UNIT,

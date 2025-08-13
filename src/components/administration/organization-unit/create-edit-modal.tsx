@@ -12,6 +12,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ interface ItemModalProps {
 }
 
 export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
+  const { t } = useLocale()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [selectedUser, setSelectedUser] = useState('')
@@ -59,33 +61,34 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
-          <DialogTitle>Create new roles</DialogTitle>
+          <DialogTitle>{t('administration.organizationUnits.createUnit')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-              Name<span className="text-red-500">*</span>
+              {t('administration.organizationUnits.form.name')}
+              <span className="text-red-500">*</span>
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full"
-              placeholder="Enter organization unit name"
+              placeholder={t('administration.organizationUnits.form.namePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-              Description
+              {t('administration.organizationUnits.form.description')}
             </Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full min-h-[80px]"
-              placeholder="Enter description"
+              placeholder={t('administration.organizationUnits.form.descriptionPlaceholder')}
             />
           </div>
 
@@ -111,7 +114,7 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                 variant="secondary"
                 className="bg-gray-200 text-gray-600 hover:bg-gray-300"
               >
-                Add
+                {t('common.create')}
               </Button>
             </div>
           </div>
@@ -122,7 +125,9 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                 <Table>
                   <TableHeader className="bg-gray-50">
                     <TableRow>
-                      <TableHead className="text-gray-600 font-medium">Action</TableHead>
+                      <TableHead className="text-gray-600 font-medium">
+                        {t('administration.organizationUnits.columns.action')}
+                      </TableHead>
                       <TableHead className="text-gray-600 font-medium">Login</TableHead>
                       <TableHead className="text-gray-600 font-medium">Email</TableHead>
                     </TableRow>
@@ -144,7 +149,7 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
 
         <DialogFooter className="pt-6">
           <Button variant="outline" type="button" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -157,7 +162,7 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
               onClose()
             }}
           >
-            {isLoading ? 'Saving…' : 'Save'}
+            {isLoading ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

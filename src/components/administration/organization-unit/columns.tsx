@@ -14,7 +14,13 @@ export type OrganizationUnitTableRow = {
   description?: string
 }
 
-export const columns: ColumnDef<OrganizationUnitTableRow>[] = [
+interface CreateOrganizationUnitColumnsProps {
+  t?: (key: string) => string
+}
+
+export const createOrganizationUnitColumns = ({
+  t,
+}: CreateOrganizationUnitColumnsProps = {}): ColumnDef<OrganizationUnitTableRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -37,11 +43,16 @@ export const columns: ColumnDef<OrganizationUnitTableRow>[] = [
   {
     id: 'actions',
     // cell: ({ row }) => <DataTableRowActions row={row} />,
-    header: 'Action',
+    header: t ? t('administration.organizationUnits.columns.action') : 'Action',
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('administration.organizationUnits.columns.name') : 'Name'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('name')}</span>
@@ -49,3 +60,6 @@ export const columns: ColumnDef<OrganizationUnitTableRow>[] = [
     ),
   },
 ]
+
+// Export backward compatibility
+export const columns = createOrganizationUnitColumns()

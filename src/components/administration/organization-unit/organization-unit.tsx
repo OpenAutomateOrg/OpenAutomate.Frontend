@@ -17,6 +17,7 @@ import {
 import { Pencil, Trash } from 'lucide-react'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
+import { useLocale } from '@/providers/locale-provider'
 
 interface OrganizationUnit {
   id: string
@@ -43,6 +44,7 @@ interface DeletionStatus {
 }
 
 export default function OrganizationUnitProfile() {
+  const { t } = useLocale()
   const params = useParams()
   const slug = params.tenant as string | undefined
   const [organizationUnitId, setOrganizationUnitId] = useState<string | null>(null)
@@ -206,8 +208,8 @@ export default function OrganizationUnitProfile() {
       await organizationUnitApi.cancelDeletion(organizationUnitId)
       mutateDeletionStatus()
       toast({
-        title: 'Deletion Cancelled',
-        description: 'Organization unit deletion has been cancelled.',
+        title: t('common.success'),
+        description: t('administration.organizationUnits.messages.deletionCancelled'),
       })
     } catch (error: unknown) {
       let message = 'Failed to cancel deletion.'
@@ -316,8 +318,10 @@ export default function OrganizationUnitProfile() {
         <div className="bg-background rounded-2xl shadow border border-border px-8 py-7">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-lg font-bold">Organization Unit Information</h2>
-              <div className="text-sm text-muted-foreground">Details of your organization unit</div>
+              <h2 className="text-lg font-bold">{t('administration.organizationUnits.title')}</h2>
+              <div className="text-sm text-muted-foreground">
+                {t('administration.organizationUnits.form.description')}
+              </div>
             </div>
             {!isEditing && !showDeletionStatus && (
               <div className="flex gap-2 ml-auto">
@@ -328,7 +332,7 @@ export default function OrganizationUnitProfile() {
                   onClick={handleEdit}
                 >
                   <Pencil className="h-4 w-4" />
-                  Edit
+                  {t('administration.organizationUnits.actions.edit')}
                 </Button>
                 <Button
                   variant="outline"
@@ -337,7 +341,7 @@ export default function OrganizationUnitProfile() {
                   onClick={handleDelete}
                 >
                   <Trash className="h-4 w-4 text-red-600" />
-                  Delete
+                  {t('administration.organizationUnits.actions.delete')}
                 </Button>
               </div>
             )}
@@ -347,8 +351,8 @@ export default function OrganizationUnitProfile() {
             <div className="flex items-center justify-between dark:bg-orange-950/50 bg-orange-50 border border-orange-300 dark:border-orange-800/50 rounded-lg px-4 py-3 my-4">
               <div className="text-orange-700 dark:text-orange-400 font-semibold">
                 {typeof countdown === 'number' && countdown > 0
-                  ? `This organization unit will be deleted in ${formatTimeRemaining(countdown)}`
-                  : 'Deleting organization unit...'}
+                  ? `${t('administration.organizationUnits.deletion.willBeDeleted')} ${formatTimeRemaining(countdown)}`
+                  : t('administration.organizationUnits.deletion.deleting')}
               </div>
               {deletionStatusData?.canCancel && (
                 <Button
@@ -356,7 +360,7 @@ export default function OrganizationUnitProfile() {
                   className="ml-4 border-orange-600 text-orange-700 hover:bg-orange-100"
                   onClick={() => setShowCancelDeletionConfirmation(true)}
                 >
-                  Cancel Deletion
+                  {t('administration.organizationUnits.actions.cancelDeletion')}
                 </Button>
               )}
             </div>
@@ -368,7 +372,7 @@ export default function OrganizationUnitProfile() {
                 htmlFor="ou-name"
                 className="block text-xs font-semibold text-muted-foreground mb-1"
               >
-                Name
+                {t('administration.organizationUnits.form.name')}
               </label>
               {isEditing ? (
                 <Input
@@ -376,7 +380,7 @@ export default function OrganizationUnitProfile() {
                   value={editedName}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedName(e.target.value)}
                   className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
-                  placeholder="Organization unit name"
+                  placeholder={t('administration.organizationUnits.form.namePlaceholder')}
                 />
               ) : (
                 <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">
@@ -389,7 +393,7 @@ export default function OrganizationUnitProfile() {
                 htmlFor="ou-description"
                 className="block text-xs font-semibold text-muted-foreground mb-1"
               >
-                Description
+                {t('administration.organizationUnits.form.description')}
               </label>
               {isEditing ? (
                 <Input
@@ -399,12 +403,14 @@ export default function OrganizationUnitProfile() {
                     setEditedDescription(e.target.value)
                   }
                   className="rounded-lg border-input bg-background focus:border-[#FF6A1A] focus:ring-[#FF6A1A]/30"
-                  placeholder="Organization unit description"
+                  placeholder={t('administration.organizationUnits.form.descriptionPlaceholder')}
                 />
               ) : (
                 <div className="rounded-lg bg-muted px-3 py-2 text-base border border-border">
                   {organizationUnit?.description || (
-                    <span className="italic text-muted-foreground">No description</span>
+                    <span className="italic text-muted-foreground">
+                      {t('administration.organizationUnits.search.noResults')}
+                    </span>
                   )}
                 </div>
               )}
@@ -419,14 +425,14 @@ export default function OrganizationUnitProfile() {
                 disabled={isSaving}
                 className="rounded-lg"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="rounded-lg bg-[#FF6A1A] text-white hover:bg-orange-500"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? t('common.saving') : t('administration.organizationUnits.form.save')}
               </Button>
             </div>
           )}
@@ -435,26 +441,25 @@ export default function OrganizationUnitProfile() {
         <Dialog open={showNameChangeWarning} onOpenChange={setShowNameChangeWarning}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Warning</DialogTitle>
+              <DialogTitle>
+                {t('administration.organizationUnits.dialogs.nameChangeWarning.title')}
+              </DialogTitle>
             </DialogHeader>
-            <div>
-              If you change the name, the tenant will also change, which will result in a changed
-              URL and the Bot agent will be disconnected. Do you still want to proceed?
-            </div>
+            <div>{t('administration.organizationUnits.dialogs.nameChangeWarning.message')}</div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
                 onClick={() => setShowNameChangeWarning(false)}
                 disabled={pendingSave}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleAcceptNameChange}
                 disabled={pendingSave}
                 className="bg-[#FF6A1A] text-white hover:bg-orange-500"
               >
-                Accept
+                {t('common.accept')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -463,20 +468,20 @@ export default function OrganizationUnitProfile() {
         <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogTitle>
+                {t('administration.organizationUnits.dialogs.deleteConfirm.title')}
+              </DialogTitle>
             </DialogHeader>
-            <div>
-              Are you sure you want to delete this organization unit? It will be deleted in 7 days.
-            </div>
+            <div>{t('administration.organizationUnits.dialogs.deleteConfirm.message')}</div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleConfirmDelete}
                 className="bg-red-600 text-white hover:bg-red-700"
               >
-                Delete
+                {t('common.delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -488,18 +493,20 @@ export default function OrganizationUnitProfile() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Cancel Deletion</DialogTitle>
+              <DialogTitle>
+                {t('administration.organizationUnits.dialogs.cancelDeletionConfirm.title')}
+              </DialogTitle>
             </DialogHeader>
-            <div>Are you sure you want to cancel the deletion of this organization unit?</div>
+            <div>{t('administration.organizationUnits.dialogs.cancelDeletionConfirm.message')}</div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowCancelDeletionConfirmation(false)}>
-                No
+                {t('administration.organizationUnits.dialogs.cancelDeletionConfirm.cancel')}
               </Button>
               <Button
                 onClick={confirmCancelDeletion}
                 className="bg-[#FF6A1A] text-white hover:bg-orange-500"
               >
-                Cancel Deletion
+                {t('administration.organizationUnits.dialogs.cancelDeletionConfirm.confirm')}
               </Button>
             </DialogFooter>
           </DialogContent>

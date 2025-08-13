@@ -10,7 +10,13 @@ import {
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 
-export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[] => [
+interface CreatePackageColumnsProps {
+  t?: (key: string) => string
+}
+
+export const createPackageColumns = ({
+  t,
+}: CreatePackageColumnsProps = {}): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -38,7 +44,9 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.name') : 'Name'} />
+    ),
     cell: ({ row }) => (
       <div className="flex space-x-2">
         <span className="max-w-[500px] truncate font-medium">{row.getValue('name')}</span>
@@ -47,7 +55,12 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   },
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.description') : 'Description'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span className="max-w-md truncate" title={row.getValue('description') as string}>
@@ -58,7 +71,12 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   },
   {
     accessorKey: 'versions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Version" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.latestVersion') : 'Latest Version'}
+      />
+    ),
     cell: ({ row }) => {
       const versions = row.getValue('versions') as PackageVersionResponseDto[]
       const latestVersion =
@@ -71,7 +89,11 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
       return (
         <div className="flex items-center">
           <Badge variant="secondary">
-            {latestVersion ? latestVersion.versionNumber : 'No versions'}
+            {latestVersion
+              ? latestVersion.versionNumber
+              : t
+                ? t('table.status.noVersions')
+                : 'No versions'}
           </Badge>
         </div>
       )
@@ -81,7 +103,12 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   {
     accessorKey: 'versions',
     id: 'versionCount',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version Count" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.versionCount') : 'Version Count'}
+      />
+    ),
     cell: ({ row }) => {
       const versions = row.getValue('versions') as PackageVersionResponseDto[]
       const count = versions ? versions.length : 0
@@ -96,7 +123,9 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   },
   {
     accessorKey: 'isActive',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.status') : 'Status'} />
+    ),
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean
 
@@ -109,7 +138,13 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
                 : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
             }`}
           >
-            {isActive ? 'Active' : 'Inactive'}
+            {isActive
+              ? t
+                ? t('table.status.active')
+                : 'Active'
+              : t
+                ? t('table.status.inactive')
+                : 'Inactive'}
           </span>
         </div>
       )
@@ -117,7 +152,12 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.createdDate') : 'Created Date'}
+      />
+    ),
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string
       const formattedDate = formatUtcToLocal(createdAt, {

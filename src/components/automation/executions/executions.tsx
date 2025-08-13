@@ -4,7 +4,7 @@ import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createColumns as createHistoricalColumns } from './historical/columns'
 import { createInProgressColumns } from './inProgress/columns'
-import { columns as ScheduledColumns } from './scheduled/columns'
+import { createScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import CreateExecutionModal from './create-execution-modal'
@@ -375,21 +375,25 @@ export default function ExecutionsInterface() {
   const ProgressColumns = useMemo(
     () =>
       createInProgressColumns({
+        t,
         onDeleted: () => {
           void mutateExecutions()
         },
       }),
-    [mutateExecutions],
+    [mutateExecutions, t],
   )
+
+  const ScheduledColumns = useMemo(() => createScheduledColumns({ t }), [t])
 
   const HistoricalColumns = useMemo(
     () =>
       createHistoricalColumns({
+        t,
         onDeleted: () => {
           void mutateExecutions()
         },
       }),
-    [mutateExecutions],
+    [mutateExecutions, t],
   )
 
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed

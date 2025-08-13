@@ -8,7 +8,13 @@ import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
-export const columns: ColumnDef<ExecutionsRow>[] = [
+interface CreateScheduledColumnsProps {
+  t?: (key: string) => string
+}
+
+export const createScheduledColumns = ({
+  t,
+}: CreateScheduledColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -36,7 +42,12 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
   },
   {
     accessorKey: 'packageName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Package name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.packageName') : 'Package name'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('packageName')}</span>
@@ -45,7 +56,9 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
   },
   {
     accessorKey: 'agent',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Agent" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.agent') : 'Agent'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('agent')}</span>
@@ -54,7 +67,12 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
   },
   {
     accessorKey: 'nextRunTime',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Next Run Time" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title={t ? t('table.columns.nextRunTime') : 'Next Run Time'}
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('nextRunTime')}</span>
@@ -63,7 +81,9 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
   },
   {
     accessorKey: 'schedule',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Schedule" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t ? t('table.columns.schedule') : 'Schedule'} />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center">
         <span>{row.getValue('schedule')}</span>
@@ -71,3 +91,6 @@ export const columns: ColumnDef<ExecutionsRow>[] = [
     ),
   },
 ]
+
+// Export backward compatibility
+export const columns = createScheduledColumns()
