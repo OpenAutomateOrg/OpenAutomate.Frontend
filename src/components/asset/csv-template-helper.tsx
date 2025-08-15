@@ -9,14 +9,14 @@ export function CsvTemplateHelper() {
   const { toast } = useToast()
 
   const downloadTemplate = () => {
-    const csvContent = `Key,Value,Description,Type,BotAgentNames
-example_api_key,your_api_key_value,API key for external service,String,Agent1
-db_password,secure_password123,Database connection password,Secret,"Agent1,Agent2"
-config_url,https://api.example.com,Configuration URL,String,
-smtp_server,mail.example.com,,String,
-basic_key,simple_value,,String,
-encryption_key,my_secret_key_123,Encryption key for data,Secret,TestAgent
-empty_description_asset,test_value,,Secret,
+    const csvContent = `Key,Value,Description,Type
+example_api_key,your_api_key_value,API key for external service,String
+db_password,secure_password123,Database connection password,Secret
+config_url,https://api.example.com,Configuration URL,String
+smtp_server,mail.example.com,,String
+basic_key,simple_value,,String
+encryption_key,my_secret_key_123,Encryption key for data,Secret
+empty_description_asset,test_value,,Secret
 `
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

@@ -181,7 +181,7 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                     <strong>Required columns:</strong> Key, Value, Type
                   </div>
                   <div>
-                    <strong>Optional columns:</strong> Description, BotAgentNames
+                    <strong>Optional columns:</strong> Description
                   </div>
                   <div>
                     <strong>Type values:</strong> &quot;String&quot; or &quot;Secret&quot; (defaults to &quot;String&quot; if empty)
@@ -189,15 +189,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                   <div>
                     <strong>Description:</strong> Can be empty or up to 500 characters
                   </div>
-                  <div>
-                    <strong>BotAgentNames:</strong> Comma-separated list of exact bot agent names (can be empty)
-                  </div>
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
                     <strong>🔄 Update Behavior:</strong> If an asset with the same Key already exists, it will be updated with new values.
-                  </div>
-                  <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
-                    <strong>⚠️ Important:</strong> If BotAgentNames are specified, all names must exist in the system.
-                    Import will fail for rows with invalid bot agent names.
                   </div>
                   <div className="mt-2">
                     <CsvTemplateHelper />

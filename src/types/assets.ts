@@ -86,5 +86,4 @@ export interface AssetCsvDto {
   value: string
   description: string
   type: string
-  botAgentNames: string
 }
