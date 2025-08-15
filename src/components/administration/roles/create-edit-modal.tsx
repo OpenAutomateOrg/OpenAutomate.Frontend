@@ -77,7 +77,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
         variant: 'destructive',
       })
     }
-  }, [resourcesError, toast])
+  }, [resourcesError, toast, t])
 
   // ✅ Initialize form state directly from props (following guideline #4: use dynamic key to reset state)
   // Note: Parent component uses dynamic key: key={editingRole?.id ?? 'new'}
