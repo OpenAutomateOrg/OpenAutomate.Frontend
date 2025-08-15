@@ -9,6 +9,7 @@ import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { DataTableToolbar } from './data-table-toolbar'
+import { CsvImportExport } from './csv-import-export'
 import {
   useReactTable,
   getCoreRowModel,
@@ -29,6 +30,7 @@ import {
   getAssetDetail,
   getAssetAgents,
 } from '@/lib/api/assets'
+import type { CsvImportResultDto } from '@/types/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
@@ -443,6 +445,15 @@ export default function AssetInterface() {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold tracking-tight">{t('asset.title')}</h2>
           <div className="flex items-center space-x-2">
+            <CsvImportExport
+              onImportComplete={(result: CsvImportResultDto) => {
+                mutateAssets()
+                toast({
+                  title: 'Import Completed',
+                  description: `${result.successfulImports} assets imported successfully`,
+                })
+              }}
+            />
             <Button
               onClick={() => {
                 setModalMode('create')
