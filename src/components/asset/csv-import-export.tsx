@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/use-toast'
@@ -13,6 +19,7 @@ import { Download, Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-
 import { exportAssetsToCsv, importAssetsFromCsv } from '@/lib/api/assets'
 import type { CsvImportResultDto } from '@/types/assets'
 import { CsvTemplateHelper } from './csv-template-helper'
+import { useLocale } from '@/providers/locale-provider'
 
 interface CsvImportExportProps {
   onImportComplete?: (result: CsvImportResultDto) => void
@@ -20,6 +27,7 @@ interface CsvImportExportProps {
 
 export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
   const { toast } = useToast()
+  const { t } = useLocale()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // States for export
@@ -56,13 +64,13 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
 
       setShowExportDialog(false)
       toast({
-        title: 'Success',
-        description: 'Assets exported successfully',
+        title: t('common.success'),
+        description: t('asset.csv.exportSuccess'),
       })
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to export assets',
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('asset.csv.exportFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -75,17 +83,18 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
     if (file) {
       if (!file.name.endsWith('.csv')) {
         toast({
-          title: 'Invalid File',
-          description: 'Please select a CSV file',
+          title: t('asset.csv.invalidFile'),
+          description: t('asset.csv.selectCsvFile'),
           variant: 'destructive',
         })
         return
       }
 
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
+        // 10MB limit
         toast({
-          title: 'File Too Large',
-          description: 'File size must be less than 10MB',
+          title: t('asset.csv.fileTooLarge'),
+          description: t('asset.csv.fileSizeLimit'),
           variant: 'destructive',
         })
         return
@@ -184,13 +193,15 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                     <strong>Optional columns:</strong> Description
                   </div>
                   <div>
-                    <strong>Type values:</strong> &quot;String&quot; or &quot;Secret&quot; (defaults to &quot;String&quot; if empty)
+                    <strong>Type values:</strong> &quot;String&quot; or &quot;Secret&quot; (defaults
+                    to &quot;String&quot; if empty)
                   </div>
                   <div>
                     <strong>Description:</strong> Can be empty or up to 500 characters
                   </div>
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                    <strong>🔄 Update Behavior:</strong> If an asset with the same Key already exists, it will be updated with new values.
+                    <strong>🔄 Update Behavior:</strong> If an asset with the same Key already
+                    exists, it will be updated with new values.
                   </div>
                   <div className="mt-2">
                     <CsvTemplateHelper />
@@ -226,10 +237,7 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleImport}
-              disabled={!selectedFile || isImporting}
-            >
+            <Button onClick={handleImport} disabled={!selectedFile || isImporting}>
               {isImporting ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -303,7 +311,10 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                   <AlertDescription>
                     <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
                       {importResult.errors.map((error, index) => (
-                        <div key={index} className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-500">
+                        <div
+                          key={index}
+                          className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-500"
+                        >
                           {error}
                         </div>
                       ))}
@@ -315,9 +326,7 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
           )}
 
           <DialogFooter>
-            <Button onClick={() => setShowResultDialog(false)}>
-              Close
-            </Button>
+            <Button onClick={() => setShowResultDialog(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -346,7 +355,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Security Warning</AlertTitle>
                 <AlertDescription>
-                  Secret values will be exported in plain text. Ensure the CSV file is handled securely and not shared inappropriately.
+                  Secret values will be exported in plain text. Ensure the CSV file is handled
+                  securely and not shared inappropriately.
                 </AlertDescription>
               </Alert>
             )}
@@ -356,7 +366,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                 <FileText className="h-4 w-4" />
                 <AlertTitle>Default Export</AlertTitle>
                 <AlertDescription>
-                  Secret values will be exported as <code>***ENCRYPTED***</code> placeholders for security.
+                  Secret values will be exported as <code>***ENCRYPTED***</code> placeholders for
+                  security.
                 </AlertDescription>
               </Alert>
             )}

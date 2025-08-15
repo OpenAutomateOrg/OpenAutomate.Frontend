@@ -4,9 +4,11 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 export function CsvTemplateHelper() {
   const { toast } = useToast()
+  const { t } = useLocale()
 
   const downloadTemplate = () => {
     const csvContent = `Key,Value,Description,Type
@@ -22,18 +24,18 @@ empty_description_asset,test_value,,Secret
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
-    
+
     link.setAttribute('href', url)
     link.setAttribute('download', 'assets_template.csv')
     link.style.visibility = 'hidden'
-    
+
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     toast({
-      title: 'Template Downloaded',
-      description: 'CSV template has been downloaded to help you format your data correctly',
+      title: t('asset.csv.templateDownloaded'),
+      description: t('asset.csv.templateDownloadedDesc'),
     })
   }
 
@@ -45,7 +47,7 @@ empty_description_asset,test_value,,Secret
       className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
     >
       <Download className="h-3 w-3" />
-      Download Template
+      {t('asset.csv.downloadTemplate')}
     </Button>
   )
 }

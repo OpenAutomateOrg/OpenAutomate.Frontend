@@ -798,7 +798,22 @@
       "value": "Value:",
       "connectedAgents": "Connected Agents",
       "noAgents": "No agents connected to this asset",
-      "noDescription": "No description provided"
+      "noDescription": "No description provided",
+      "loading": "Loading asset details...",
+      "notFound": "Asset not found",
+      "hideSecret": "Hide secret",
+      "showSecret": "Show secret"
+    },
+    "csv": {
+      "exportSuccess": "Assets exported successfully",
+      "exportFailed": "Failed to export assets",
+      "invalidFile": "Invalid File",
+      "selectCsvFile": "Please select a CSV file",
+      "fileTooLarge": "File Too Large",
+      "fileSizeLimit": "File size must be less than 10MB",
+      "templateDownloaded": "Template Downloaded",
+      "templateDownloadedDesc": "CSV template has been downloaded to help you format your data correctly",
+      "downloadTemplate": "Download Template"
     }
   }
 }

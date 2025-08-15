@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createColumns } from './columns'
+import { useColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
@@ -315,10 +315,7 @@ export default function AssetInterface() {
     await mutateAssets()
   }, [mutateAssets])
 
-  const tableColumns = useMemo(
-    () => createColumns(handleEditAsset, refreshAssets, t),
-    [handleEditAsset, refreshAssets, t],
-  )
+  const tableColumns = useColumns({ onEdit: handleEditAsset, onDeleted: refreshAssets })
 
   // Setup table instance
   const table = useReactTable({
@@ -462,7 +459,7 @@ export default function AssetInterface() {
               className="flex items-center justify-center"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Create
+              {t('asset.create')}
             </Button>
           </div>
         </div>

@@ -798,7 +798,22 @@
       "value": "Giá trị:",
       "connectedAgents": "Agents kết nối",
       "noAgents": "Không có agent nào kết nối với tài nguyên này",
-      "noDescription": "Không có mô tả"
+      "noDescription": "Không có mô tả",
+      "loading": "Đang tải chi tiết tài nguyên...",
+      "notFound": "Không tìm thấy tài nguyên",
+      "hideSecret": "Ẩn bí mật",
+      "showSecret": "Hiện bí mật"
+    },
+    "csv": {
+      "exportSuccess": "Xuất tài nguyên thành công",
+      "exportFailed": "Không thể xuất tài nguyên",
+      "invalidFile": "File không hợp lệ",
+      "selectCsvFile": "Vui lòng chọn file CSV",
+      "fileTooLarge": "File quá lớn",
+      "fileSizeLimit": "Kích thước file phải nhỏ hơn 10MB",
+      "templateDownloaded": "Đã tải mẫu",
+      "templateDownloadedDesc": "Mẫu CSV đã được tải xuống để giúp bạn định dạng dữ liệu chính xác",
+      "downloadTemplate": "Tải mẫu"
     }
   }
 }
