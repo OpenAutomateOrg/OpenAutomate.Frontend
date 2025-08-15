@@ -2,7 +2,7 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createRolesColumns } from './columns'
+import { useRolesColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from './create-edit-modal'
@@ -193,6 +193,9 @@ export default function RolesInterface() {
     await mutateRoles()
   }, [mutateRoles])
 
+  // Get columns with refresh handler
+  const columns = useRolesColumns({ onRefresh: refreshRoles })
+
   // Initialize URL with default params if needed
   useEffect(() => {
     if (shouldInitializeUrl.current) {
@@ -218,7 +221,7 @@ export default function RolesInterface() {
   // Setup table instance
   const table = useReactTable({
     data: rolesData,
-    columns: createRolesColumns({ onRefresh: refreshRoles, t }),
+    columns,
     state: {
       sorting,
       columnVisibility,
@@ -352,7 +355,7 @@ export default function RolesInterface() {
 
         <DataTable
           data={rolesData}
-          columns={createRolesColumns({ onRefresh: refreshRoles, t })}
+          columns={columns}
           table={table}
           onRowClick={handleRowClick}
           isLoading={isLoading}

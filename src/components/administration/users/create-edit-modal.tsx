@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 interface ItemModalProps {
   readonly isOpen: boolean
@@ -29,6 +30,7 @@ interface ItemModalProps {
 }
 
 export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
+  const { t } = useLocale()
   const [emails, setEmails] = useState<string[]>([])
   const [inputValue, setInputValue] = useState('')
   const [role, setRole] = useState('viewer')
@@ -50,8 +52,8 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
 
     if (emails.length === 0) {
       toast({
-        title: 'No emails added',
-        description: 'Please add at least one email address.',
+        title: t('administration.users.inviteModal.validation.noEmails'),
+        description: t('administration.users.inviteModal.validation.noEmailsDesc'),
         variant: 'destructive',
       })
       return
@@ -63,8 +65,8 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
     setTimeout(() => {
       setIsLoading(false)
       toast({
-        title: 'Invitations sent',
-        description: `Invitations sent to ${emails.length} user${emails.length > 1 ? 's' : ''}.`,
+        title: t('administration.users.inviteModal.success.title'),
+        description: `${t('administration.users.inviteModal.success.description')} ${emails.length} ${emails.length > 1 ? t('administration.users.inviteModal.users') : t('administration.users.inviteModal.user')}.`,
       })
       setEmails([])
       setInputValue('')
@@ -86,12 +88,12 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
-          <DialogTitle>Invite Users</DialogTitle>
+          <DialogTitle>{t('administration.users.inviteModal.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="emails">Email addresses</Label>
+              <Label htmlFor="emails">{t('administration.users.inviteModal.emailLabel')}</Label>
               <div className="flex flex-wrap gap-2 p-2 bg-background rounded-md border min-h-[80px]">
                 {emails.map((email, index) => (
                   <div
@@ -137,42 +139,52 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                     e.preventDefault()
                   }}
                   placeholder={
-                    emails.length === 0 ? 'Type or paste email addresses and press Enter' : ''
+                    emails.length === 0
+                      ? t('administration.users.inviteModal.emailPlaceholder')
+                      : ''
                   }
                   className="flex-1 bg-transparent border-none outline-none min-w-[180px] text-sm p-1"
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Press Enter or comma after each email. You can also paste multiple emails at once.
+                {t('administration.users.inviteModal.emailHint')}
               </p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="role">Permission</Label>
+              <Label htmlFor="role">{t('administration.users.inviteModal.permissionLabel')}</Label>
               <Select value={role} onValueChange={setRole}>
                 <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t('administration.users.inviteModal.selectRole')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="viewer">Viewer (Can view only)</SelectItem>
-                  <SelectItem value="editor">Editor (Can edit)</SelectItem>
-                  <SelectItem value="admin">Admin (Full access)</SelectItem>
+                  <SelectItem value="viewer">
+                    {t('administration.users.inviteModal.roles.viewer')}
+                  </SelectItem>
+                  <SelectItem value="editor">
+                    {t('administration.users.inviteModal.roles.editor')}
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    {t('administration.users.inviteModal.roles.admin')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="message">Add a message (optional)</Label>
+              <Label htmlFor="message">{t('administration.users.inviteModal.messageLabel')}</Label>
               <Textarea
                 id="message"
-                placeholder="Write a personal message..."
+                placeholder={t('administration.users.inviteModal.messagePlaceholder')}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 rounded-md border p-2">
               <div className="flex-1 text-sm">
-                <div className="font-medium">Share invite link</div>
+                <div className="font-medium">
+                  {t('administration.users.inviteModal.shareLink.title')}
+                </div>
                 <div className="text-muted-foreground">
-                  Anyone with this link can join your project
+                  {t('administration.users.inviteModal.shareLink.description')}
                 </div>
               </div>
               <Button
@@ -183,16 +195,20 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                 onClick={copyInviteLink}
               >
                 {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {linkCopied ? 'Copied' : 'Copy'}
+                {linkCopied
+                  ? t('administration.users.inviteModal.shareLink.copied')
+                  : t('administration.users.inviteModal.shareLink.copy')}
               </Button>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Send Invitations'}
+              {isLoading
+                ? t('administration.users.inviteModal.sending')
+                : t('administration.users.inviteModal.sendButton')}
             </Button>
           </DialogFooter>
         </form>

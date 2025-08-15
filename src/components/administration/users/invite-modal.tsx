@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 import { useParams } from 'next/navigation'
 import { organizationInvitationsApi } from '@/lib/api/organization-unit-invitations'
 
@@ -18,6 +19,7 @@ interface InviteModalProps {
 }
 
 export function InviteModal({ isOpen, onClose }: InviteModalProps) {
+  const { t } = useLocale()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -28,8 +30,8 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     e.preventDefault()
     if (!email.trim()) {
       toast({
-        title: 'No email entered',
-        description: 'Please enter an email address.',
+        title: t('administration.users.inviteModal.validation.noEmails'),
+        description: t('administration.users.inviteModal.validation.noEmailsDesc'),
         variant: 'destructive',
       })
       return
@@ -39,8 +41,8 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       const check = await organizationInvitationsApi.checkInvitation(tenant, email.trim())
       if (check.invited) {
         toast({
-          title: 'Email already invited',
-          description: `${email.trim()} has already been invited to this organization.`,
+          title: t('administration.users.inviteModal.alreadyInvited.title'),
+          description: `${email.trim()} ${t('administration.users.inviteModal.alreadyInvited.description')}`,
           variant: 'default',
         })
         setIsLoading(false)
@@ -48,8 +50,8 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       }
       await organizationInvitationsApi.inviteUser(tenant, email.trim())
       toast({
-        title: 'Invitation sent',
-        description: `Successfully sent invitation to ${email.trim()}`,
+        title: t('administration.users.inviteModal.success.title'),
+        description: `${t('administration.users.inviteModal.success.description')} ${email.trim()}`,
       })
       setEmail('')
       onClose()
@@ -64,10 +66,10 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         errorMsg = error
       }
       toast({
-        title: 'Failed to send invitation',
+        title: t('administration.users.inviteModal.sendFailed.title'),
         description: errorMsg?.includes('already a member of this organization')
-          ? 'This user is already a member of this organization.'
-          : errorMsg || 'An unknown error occurred',
+          ? t('administration.users.inviteModal.sendFailed.alreadyMember')
+          : errorMsg || t('administration.users.inviteModal.sendFailed.unknown'),
         variant: 'destructive',
         style: {
           background: '#ff6a6a',
@@ -83,18 +85,18 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[400px] p-6">
         <DialogHeader>
-          <DialogTitle>Invite User</DialogTitle>
+          <DialogTitle>{t('administration.users.inviteModal.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{t('administration.users.inviteModal.emailLabel')}</Label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
+                placeholder={t('administration.users.inviteModal.emailPlaceholder')}
                 className="flex-1 bg-background border rounded-md p-2 text-sm"
                 required
               />
@@ -102,10 +104,12 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           </div>
           <DialogFooter className="pt-4">
             <Button variant="outline" onClick={onClose} type="button">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Send Invitation'}
+              {isLoading
+                ? t('administration.users.inviteModal.sending')
+                : t('administration.users.inviteModal.sendButton')}
             </Button>
           </DialogFooter>
         </form>

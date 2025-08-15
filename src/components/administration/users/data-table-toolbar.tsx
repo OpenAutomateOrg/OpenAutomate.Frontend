@@ -176,14 +176,18 @@ export function UsersDataTableToolbar({
                     <Filter className="mr-2 h-4 w-4 shrink-0" />
                     <span
                       className="truncate"
-                      title={searchRole !== 'ALL' ? searchRole : 'All Roles'}
+                      title={
+                        searchRole !== 'ALL'
+                          ? searchRole
+                          : t('administration.users.filter.allRoles')
+                      }
                     >
-                      <SelectValue placeholder="All Roles" />
+                      <SelectValue placeholder={t('administration.users.filter.allRoles')} />
                     </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Roles</SelectItem>
+                  <SelectItem value="ALL">{t('administration.users.filter.allRoles')}</SelectItem>
                   {roleOptions.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role}
@@ -192,7 +196,9 @@ export function UsersDataTableToolbar({
                 </SelectContent>
               </Select>
             </TooltipTrigger>
-            <TooltipContent>{searchRole !== 'ALL' ? searchRole : 'All Roles'}</TooltipContent>
+            <TooltipContent>
+              {searchRole !== 'ALL' ? searchRole : t('administration.users.filter.allRoles')}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

@@ -17,6 +17,9 @@
     "yes": "Có",
     "no": "Không",
     "accept": "Chấp nhận",
+    "reset": "Đặt lại",
+    "openMenu": "Mở menu",
+    "back": "Quay lại",
     "search": {
       "placeholder": "Tìm kiếm",
       "byName": "Tìm kiếm theo tên",
@@ -90,6 +93,73 @@
       "starting": "Đang bắt đầu...",
       "executionStarted": "Đã bắt đầu thực thi",
       "executionStartedDesc": "Thực thi đã bắt đầu thành công"
+    },
+    "columns": {
+      "actions": "Hành động",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "agent": "Agent",
+      "state": "Trạng thái",
+      "startTime": "Thời gian bắt đầu",
+      "endTime": "Thời gian kết thúc",
+      "source": "Nguồn",
+      "command": "Lệnh",
+      "schedules": "Lịch trình",
+      "taskId": "ID tác vụ",
+      "nextRunTime": "Thời gian chạy tiếp theo",
+      "schedule": "Lịch trình"
+    },
+    "filters": {
+      "filterAgent": "Lọc agent",
+      "allAgents": "Tất cả Agents",
+      "filterPackage": "Lọc gói",
+      "allPackages": "Tất cả gói",
+      "filterState": "Lọc trạng thái",
+      "allStates": "Tất cả trạng thái",
+      "active": "hoạt động",
+      "filter": "bộ lọc",
+      "filters": "bộ lọc"
+    },
+    "actions": {
+      "deleteSimulation": "Mô phỏng xóa",
+      "deleteNotImplemented": "API xóa thực thi chưa được triển khai.",
+      "deleteFailed": "Không thể xóa thực thi. Vui lòng thử lại.",
+      "noPermission": "Bạn không có quyền thực hiện hành động này.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "noLogsTitle": "Không có logs",
+      "noLogsDesc": "Thực thi này không có logs để tải xuống.",
+      "downloadStarted": "Đã bắt đầu tải xuống",
+      "downloadStartedDesc": "Đã bắt đầu tải xuống logs thực thi.",
+      "downloading": "Đang tải xuống...",
+      "downloadLogs": "Tải xuống Logs",
+      "viewLogs": "Xem Logs",
+      "noLogs": "Không có Logs",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa thực thi này?",
+      "executionId": "ID thực thi"
+    },
+    "detail": {
+      "loading": "Đang tải chi tiết thực thi...",
+      "failedToLoad": "Không thể tải thực thi",
+      "notFound": "Không tìm thấy thực thi",
+      "package": "Gói",
+      "scheduledExecution": "Thực thi đã lên lịch",
+      "inProgressExecution": "Thực thi đang tiến hành",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "botAgent": "Bot Agent",
+      "status": "Trạng thái",
+      "scheduledTime": "Thời gian lên lịch",
+      "timeUntilExecution": "Thời gian đến khi thực thi",
+      "executionType": "Loại thực thi",
+      "priority": "Ưu tiên",
+      "created": "Đã tạo",
+      "expectedDuration": "Thời lượng dự kiến",
+      "startTime": "Thời gian bắt đầu",
+      "runningDuration": "Thời lượng chạy",
+      "endTime": "Thời gian kết thúc",
+      "duration": "Thời lượng",
+      "hasLogs": "Có Logs"
     }
   },
   "package": {
@@ -100,7 +170,7 @@
     "retry": "Thử lại",
     "rowsLabel": "gói",
     "modal": {
-      "createTitle": "Tạo gói mới",
+      "createTitle": "Tạo gói tự động hóa mới",
       "editTitle": "Chỉnh sửa gói",
       "name": "Tên",
       "description": "Mô tả",
@@ -108,11 +178,46 @@
       "cancel": "Hủy",
       "save": "Lưu",
       "creating": "Đang tạo...",
-      "updating": "Đang cập nhật..."
+      "updating": "Đang cập nhật...",
+      "selectFile": "Vui lòng chọn file gói",
+      "validationError": "Lỗi xác thực",
+      "uploadSuccess": "Gói \"{name}\" đã được tải lên thành công",
+      "selectFileText": "Nhấp để chọn file gói bot (.zip)",
+      "supportedFiles": "Hỗ trợ file ZIP chứa bot.py",
+      "createButton": "Tạo gói"
     },
     "status": {
       "active": "Hoạt động",
       "inactive": "Không hoạt động"
+    },
+    "filters": {
+      "active": "hoạt động",
+      "filter": "bộ lọc",
+      "filters": "bộ lọc"
+    },
+    "actions": {
+      "editPackage": "Chỉnh sửa gói",
+      "editingPackage": "Đang chỉnh sửa gói",
+      "packageDeleted": "Gói đã được xóa",
+      "packageName": "Gói",
+      "hasBeenDeleted": "đã được xóa",
+      "deleteFailed": "Không thể xóa gói.",
+      "noPermission": "Bạn không có quyền thực hiện hành động này.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "downloadingPackage": "Đang tải xuống gói",
+      "downloadingPackageDesc": "Đang tải xuống gói",
+      "version": "phiên bản",
+      "downloadFailed": "Tải xuống thất bại",
+      "noVersionsAvailable": "Không có phiên bản nào để tải xuống.",
+      "download": "Tải xuống",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa gói",
+      "deletePackage": "Xóa gói"
+    },
+    "detail": {
+      "loading": "Đang tải chi tiết gói...",
+      "notFound": "Không tìm thấy gói",
+      "packageInformation": "Thông tin gói"
     }
   },
   "schedule": {
@@ -121,6 +226,7 @@
     "loadError": "Không thể tải danh sách lịch trình. Vui lòng thử lại.",
     "retry": "Thử lại",
     "searchPlaceholder": "Tìm kiếm lịch trình theo tên...",
+    "clearSearch": "Xóa tìm kiếm",
     "rowsLabel": "lịch trình",
     "days": {
       "sunday": "Chủ nhật",
@@ -142,6 +248,30 @@
     "status": {
       "enabled": "Đã bật",
       "disabled": "Đã tắt"
+    },
+    "filters": {
+      "status": "Trạng thái",
+      "allStatuses": "Tất cả",
+      "type": "Loại",
+      "allTypes": "Tất cả loại"
+    },
+    "actions": {
+      "schedule": "Lịch trình",
+      "enabled": "Đã bật",
+      "disabled": "Đã tắt",
+      "hasBeenStatus": "đã được",
+      "enabledStatus": "bật",
+      "disabledStatus": "tắt",
+      "deleted": "Lịch trình đã xóa",
+      "deletedSuccessfully": "đã được xóa thành công",
+      "enable": "Bật",
+      "disable": "Tắt",
+      "enabling": "Đang bật",
+      "disabling": "Đang tắt",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa lịch trình này?",
+      "cannotBeUndone": "Hành động này không thể hoàn tác.",
+      "deleting": "Đang xóa..."
     },
     "modal": {
       "createTitle": "Tạo lịch trình",
@@ -296,7 +426,13 @@
     "subscription": "Dịch vụ",
     "help": "Trợ giúp",
     "support": "Hỗ trợ",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "profile": "Hồ sơ",
+    "notifications": "Thông báo",
+    "logout": "Đăng xuất",
+    "dashboard": "Trang chủ",
+    "userManagement": "Quản lý người dùng",
+    "agentManagement": "Quản lý Agent"
   },
   "dashboard": {
     "title": "Trang chủ",

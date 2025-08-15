@@ -15,17 +15,15 @@ import { useAuth } from '@/hooks/use-auth'
 
 // Import navigation configuration
 import {
-  createUserNavItems,
-  adminNavItems,
-  secondaryNavItems,
-  createUserManagementItems,
+  useUserNavItems,
+  useAdminNavItems,
+  useSecondaryNavItems,
+  useUserManagementItems,
   createOrganizationData,
   filterNavigationByPermissions,
 } from '@/lib/config/navigation'
-import { useLocale } from '@/providers/locale-provider'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { t } = useLocale()
   const { user, hasPermission, isSystemAdmin, userProfile } = useAuth()
   const params = useParams()
   const tenant = params.tenant as string
@@ -40,6 +38,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     [tenant],
   )
+
+  /**
+   * Navigation items using hooks
+   */
+  const userNavItems = useUserNavItems(createTenantUrl)
+  const adminNavItems = useAdminNavItems()
+  const secondaryNavItems = useSecondaryNavItems()
+  const userManagementItems = useUserManagementItems(createTenantUrl)
 
   /**
    * Organization data
@@ -66,17 +72,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Regular users get filtered navigation based on permissions
-    // Create user navigation items with translation support
-    const userItems = createUserNavItems(createTenantUrl, t)
-
     // Filter items based on permissions
-    const filteredUser = filterNavigationByPermissions(userItems, hasPermission)
+    const filteredUser = filterNavigationByPermissions(userNavItems, hasPermission)
 
     return {
-      user: filteredUser.length > 0 ? filteredUser : userItems, // Fallback to unfiltered if empty
+      user: filteredUser.length > 0 ? filteredUser : userNavItems, // Fallback to unfiltered if empty
       admin: [], // Regular users don't get admin items
     }
-  }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin, t])
+  }, [userNavItems, adminNavItems, hasPermission, userProfile, isSystemAdmin])
 
   /**
    * User data for the footer
@@ -94,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   /**
    * User navigation items for profile management
    */
-  const navUserItem = createUserManagementItems(createTenantUrl)
+  const navUserItem = userManagementItems
   /**
    * Show loading state while navigation is being determined
    */

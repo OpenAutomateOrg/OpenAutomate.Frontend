@@ -26,6 +26,7 @@ import {
   disableSchedule,
 } from '@/lib/api/schedules'
 import { createErrorToast } from '@/lib/utils/error-utils'
+import { useLocale } from '@/providers/locale-provider'
 
 interface DataTableRowActionsProps {
   readonly schedule: ScheduleResponseDto
@@ -44,6 +45,7 @@ export default function DataTableRowAction({
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState(false)
   const { toast } = useToast()
+  const { t } = useLocale()
 
   const handleEdit = () => {
     if (onEdit) onEdit()
@@ -55,8 +57,8 @@ export default function DataTableRowAction({
       await deleteSchedule(schedule.id)
 
       toast({
-        title: 'Schedule Deleted',
-        description: `Schedule "${schedule.name}" has been deleted successfully.`,
+        title: t('schedule.actions.deleted'),
+        description: `${t('schedule.actions.schedule')} "${schedule.name}" ${t('schedule.actions.deletedSuccessfully')}.`,
       })
 
       setDeleteDialogOpen(false)
@@ -83,8 +85,8 @@ export default function DataTableRowAction({
         : await enableSchedule(schedule.id)
 
       toast({
-        title: `Schedule ${updatedSchedule.isEnabled ? 'Enabled' : 'Disabled'}`,
-        description: `Schedule "${schedule.name}" has been ${updatedSchedule.isEnabled ? 'enabled' : 'disabled'}.`,
+        title: `${t('schedule.actions.schedule')} ${updatedSchedule.isEnabled ? t('schedule.actions.enabled') : t('schedule.actions.disabled')}`,
+        description: `${t('schedule.actions.schedule')} "${schedule.name}" ${t('schedule.actions.hasBeenStatus')} ${updatedSchedule.isEnabled ? t('schedule.actions.enabledStatus') : t('schedule.actions.disabledStatus')}.`,
       })
     } catch (error) {
       console.error('Toggle enable failed:', error)
@@ -106,7 +108,7 @@ export default function DataTableRowAction({
           <Button
             variant="ghost"
             className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-            aria-label="Open menu"
+            aria-label={t('common.openMenu')}
             onClick={stopPropagation}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -127,7 +129,7 @@ export default function DataTableRowAction({
             }}
           >
             <Edit className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span>Edit</span>
+            <span>{t('common.edit')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -146,10 +148,10 @@ export default function DataTableRowAction({
             )}
             <span>
               {toggling
-                ? `${schedule.isEnabled ? 'Disabling' : 'Enabling'}...`
+                ? `${schedule.isEnabled ? t('schedule.actions.disabling') : t('schedule.actions.enabling')}...`
                 : schedule.isEnabled
-                  ? 'Disable'
-                  : 'Enable'}
+                  ? t('schedule.actions.disable')
+                  : t('schedule.actions.enable')}
             </span>
           </DropdownMenuItem>
 
@@ -163,7 +165,7 @@ export default function DataTableRowAction({
             }}
           >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
-            <span>Delete</span>
+            <span>{t('common.delete')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -172,18 +174,20 @@ export default function DataTableRowAction({
         <DialogContent onInteractOutside={(e: Event) => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </DialogClose>
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>{t('schedule.actions.confirmDelete')}</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete this schedule? <br />
+            {t('schedule.actions.confirmDeleteMessage')} <br />
             <span className="text-sm text-muted-foreground">
-              Schedule: <b>{schedule.name}</b>
+              {t('schedule.actions.schedule')}: <b>{schedule.name}</b>
             </span>
             <br />
-            <span className="text-sm text-muted-foreground">This action cannot be undone.</span>
+            <span className="text-sm text-muted-foreground">
+              {t('schedule.actions.cannotBeUndone')}
+            </span>
           </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
@@ -194,7 +198,7 @@ export default function DataTableRowAction({
               }}
               disabled={deleting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -206,7 +210,7 @@ export default function DataTableRowAction({
               disabled={deleting}
             >
               {deleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? t('schedule.actions.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

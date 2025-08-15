@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { Loader2, Upload } from 'lucide-react'
 import { uploadPackageWithAutoCreation } from '@/lib/api/automation-packages'
 import { createErrorToast, extractErrorMessage } from '@/lib/utils/error-utils'
+import { useLocale } from '@/providers/locale-provider'
 
 interface ItemModalProps {
   isOpen: boolean
@@ -25,6 +26,7 @@ interface ItemModalProps {
 export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalProps) {
   const isEditing = mode === 'edit'
   const { toast } = useToast()
+  const { t } = useLocale()
   const [file, setFile] = useState<File | null>(null)
   const [version, setVersion] = useState('')
   const [loading, setLoading] = useState(false)
@@ -44,10 +46,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
       // File upload with auto-creation
       if (!file) {
-        const errorMsg = 'Please select a package file'
+        const errorMsg = t('package.modal.selectFile')
         setError(errorMsg)
         toast({
-          title: 'Validation Error',
+          title: t('package.modal.validationError'),
           description: errorMsg,
           variant: 'destructive',
         })
@@ -96,7 +98,9 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] p-6">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Package' : 'Create New Automation Package'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? t('package.modal.editTitle') : t('package.modal.createTitle')}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -109,11 +113,9 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="h-8 w-8 text-gray-400 mb-2" />
                 <p className="text-sm text-gray-500">
-                  {file ? file.name : 'Click to select a bot package file (.zip)'}
+                  {file ? file.name : t('package.modal.selectFileText')}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  ZIP files containing bot.py are supported
-                </p>
+                <p className="text-xs text-gray-400 mt-1">{t('package.modal.supportedFiles')}</p>
               </div>
               <input
                 id="file-upload"
@@ -135,16 +137,16 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={loading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={!isValid || loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {t('package.modal.creating')}
               </>
             ) : (
-              `Create Package`
+              t('package.modal.createButton')
             )}
           </Button>
         </DialogFooter>

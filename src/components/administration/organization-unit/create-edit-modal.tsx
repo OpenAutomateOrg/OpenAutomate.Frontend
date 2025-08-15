@@ -94,12 +94,12 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
 
           <div className="space-y-2">
             <Label htmlFor="user" className="text-sm font-medium text-gray-700">
-              User
+              {t('administration.users.title')}
             </Label>
             <div className="flex gap-2">
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue placeholder={t('common.search.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="john.doe">john.doe</SelectItem>
@@ -128,8 +128,12 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
                       <TableHead className="text-gray-600 font-medium">
                         {t('administration.organizationUnits.columns.action')}
                       </TableHead>
-                      <TableHead className="text-gray-600 font-medium">Login</TableHead>
-                      <TableHead className="text-gray-600 font-medium">Email</TableHead>
+                      <TableHead className="text-gray-600 font-medium">
+                        {t('administration.users.columns.firstName')}
+                      </TableHead>
+                      <TableHead className="text-gray-600 font-medium">
+                        {t('administration.users.columns.email')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

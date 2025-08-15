@@ -12,12 +12,14 @@ import { rolesApi, getPermissionDescription } from '@/lib/api/roles'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
 import { CreateEditModal } from './create-edit-modal'
+import { useLocale } from '@/providers/locale-provider'
 
 interface RolesDetailProps {
   id: string
 }
 
 export default function RolesDetail({ id }: RolesDetailProps) {
+  const { t } = useLocale()
   const router = useRouter()
   const { toast } = useToast()
 

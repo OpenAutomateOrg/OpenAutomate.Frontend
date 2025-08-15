@@ -35,13 +35,18 @@ import {
 import { ExternalLink } from 'lucide-react'
 import { useLocale } from '@/providers/locale-provider'
 
-// Helper function to render trial management content
-const renderTrialManagement = (
-  subscription: { hasSubscription?: boolean; userTrialStatus?: TrialStatus } | null,
-  isStartingTrial: boolean,
-  handleStartTrial: () => void,
-  t: (key: string) => string,
-) => {
+// Helper component to render trial management content
+function TrialManagementContent({
+  subscription,
+  isStartingTrial,
+  handleStartTrial,
+}: {
+  subscription: { hasSubscription?: boolean; userTrialStatus?: TrialStatus } | null
+  isStartingTrial: boolean
+  handleStartTrial: () => void
+}) {
+  const { t } = useLocale()
+
   if (!subscription?.userTrialStatus) {
     return null
   }
@@ -161,7 +166,9 @@ export default function SubscriptionManagement() {
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'An error occurred while starting your trial.'
+        error instanceof Error
+          ? error.message
+          : t('administration.subscription.toast.trialFailed.description')
       toast({
         title: t('administration.subscription.toast.trialError.title'),
         description: errorMessage,
@@ -390,7 +397,11 @@ export default function SubscriptionManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {renderTrialManagement(subscription, isStartingTrial, handleStartTrial, t)}
+              <TrialManagementContent
+                subscription={subscription}
+                isStartingTrial={isStartingTrial}
+                handleStartTrial={handleStartTrial}
+              />
             </CardContent>
           </Card>
         )}

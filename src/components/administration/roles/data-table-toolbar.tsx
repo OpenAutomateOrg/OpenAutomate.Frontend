@@ -105,7 +105,8 @@ export function DataTableToolbar<TData>({
         {/* Active Filter Count Badge */}
         {activeFilterCount > 0 && (
           <Badge variant="secondary" className="rounded-sm px-1">
-            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+            {activeFilterCount} {t('button.filter')}
+            {activeFilterCount === 1 ? '' : 's'}
           </Badge>
         )}
 
@@ -120,7 +121,7 @@ export function DataTableToolbar<TData>({
             className="h-8 px-2 lg:px-3"
             disabled={isFiltering}
           >
-            Reset
+            {t('button.clear')}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}

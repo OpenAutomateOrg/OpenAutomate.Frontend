@@ -17,6 +17,9 @@
     "yes": "Yes",
     "no": "No",
     "accept": "Accept",
+    "reset": "Reset",
+    "openMenu": "Open menu",
+    "back": "Back",
     "search": {
       "placeholder": "Search",
       "byName": "Search by Name",
@@ -90,6 +93,73 @@
       "starting": "Starting...",
       "executionStarted": "Execution Started",
       "executionStartedDesc": "Execution started successfully"
+    },
+    "columns": {
+      "actions": "Actions",
+      "packageName": "Package Name",
+      "packageVersion": "Package Version",
+      "agent": "Agent",
+      "state": "State",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "source": "Source",
+      "command": "Command",
+      "schedules": "Schedules",
+      "taskId": "Task ID",
+      "nextRunTime": "Next Run Time",
+      "schedule": "Schedule"
+    },
+    "filters": {
+      "filterAgent": "Filter agent",
+      "allAgents": "All Agents",
+      "filterPackage": "Filter package",
+      "allPackages": "All Packages",
+      "filterState": "Filter state",
+      "allStates": "All States",
+      "active": "active",
+      "filter": "filter",
+      "filters": "filters"
+    },
+    "actions": {
+      "deleteSimulation": "Delete Simulation",
+      "deleteNotImplemented": "Delete execution API not yet implemented.",
+      "deleteFailed": "Failed to delete execution. Please try again.",
+      "noPermission": "You do not have permission to perform this action.",
+      "deleteFailedTitle": "Delete Failed",
+      "noLogsTitle": "No Logs Available",
+      "noLogsDesc": "This execution does not have logs available for download.",
+      "downloadStarted": "Download Started",
+      "downloadStartedDesc": "Execution logs download has started.",
+      "downloading": "Downloading...",
+      "downloadLogs": "Download Logs",
+      "viewLogs": "View Logs",
+      "noLogs": "No Logs",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete this execution?",
+      "executionId": "Execution ID"
+    },
+    "detail": {
+      "loading": "Loading execution details...",
+      "failedToLoad": "Failed to Load Execution",
+      "notFound": "Execution Not Found",
+      "package": "Package",
+      "scheduledExecution": "Scheduled Execution",
+      "inProgressExecution": "In Progress Execution",
+      "packageName": "Package Name",
+      "packageVersion": "Package Version",
+      "botAgent": "Bot Agent",
+      "status": "Status",
+      "scheduledTime": "Scheduled Time",
+      "timeUntilExecution": "Time Until Execution",
+      "executionType": "Execution Type",
+      "priority": "Priority",
+      "created": "Created",
+      "expectedDuration": "Expected Duration",
+      "startTime": "Start Time",
+      "runningDuration": "Running Duration",
+      "endTime": "End Time",
+      "duration": "Duration",
+      "hasLogs": "Has Logs"
     }
   },
   "package": {
@@ -100,7 +170,7 @@
     "retry": "Retry",
     "rowsLabel": "packages",
     "modal": {
-      "createTitle": "Create Package",
+      "createTitle": "Create New Automation Package",
       "editTitle": "Edit Package",
       "name": "Name",
       "description": "Description",
@@ -108,11 +178,46 @@
       "cancel": "Cancel",
       "save": "Save",
       "creating": "Creating...",
-      "updating": "Updating..."
+      "updating": "Updating...",
+      "selectFile": "Please select a package file",
+      "validationError": "Validation Error",
+      "uploadSuccess": "Package \"{name}\" uploaded successfully",
+      "selectFileText": "Click to select a bot package file (.zip)",
+      "supportedFiles": "ZIP files containing bot.py are supported",
+      "createButton": "Create Package"
     },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "filters": {
+      "active": "active",
+      "filter": "filter",
+      "filters": "filters"
+    },
+    "actions": {
+      "editPackage": "Edit package",
+      "editingPackage": "Editing package",
+      "packageDeleted": "Package deleted",
+      "packageName": "Package",
+      "hasBeenDeleted": "has been deleted",
+      "deleteFailed": "Failed to delete package.",
+      "noPermission": "You do not have permission to perform this action.",
+      "deleteFailedTitle": "Delete Failed",
+      "downloadingPackage": "Downloading package",
+      "downloadingPackageDesc": "Downloading package",
+      "version": "version",
+      "downloadFailed": "Download Failed",
+      "noVersionsAvailable": "No versions available to download.",
+      "download": "Download",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete package",
+      "deletePackage": "Delete Package"
+    },
+    "detail": {
+      "loading": "Loading package details...",
+      "notFound": "Package not found",
+      "packageInformation": "Package Information"
     }
   },
   "schedule": {
@@ -121,6 +226,7 @@
     "loadError": "Failed to load schedules. Please try again.",
     "retry": "Retry",
     "searchPlaceholder": "Search schedules by name...",
+    "clearSearch": "Clear search",
     "rowsLabel": "schedules",
     "days": {
       "sunday": "Sunday",
@@ -142,6 +248,30 @@
     "status": {
       "enabled": "Enabled",
       "disabled": "Disabled"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All",
+      "type": "Type",
+      "allTypes": "All Types"
+    },
+    "actions": {
+      "schedule": "Schedule",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "hasBeenStatus": "has been",
+      "enabledStatus": "enabled",
+      "disabledStatus": "disabled",
+      "deleted": "Schedule Deleted",
+      "deletedSuccessfully": "has been deleted successfully",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabling": "Enabling",
+      "disabling": "Disabling",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete this schedule?",
+      "cannotBeUndone": "This action cannot be undone.",
+      "deleting": "Deleting..."
     },
     "modal": {
       "createTitle": "Create Schedule",
@@ -296,7 +426,13 @@
     "subscription": "Subscription",
     "help": "Help",
     "support": "Support",
-    "settings": "Settings"
+    "settings": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "dashboard": "Dashboard",
+    "userManagement": "User Management",
+    "agentManagement": "Agent Management"
   },
   "dashboard": {
     "title": "Dashboard",

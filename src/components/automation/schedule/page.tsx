@@ -2,7 +2,7 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createScheduleColumns } from './schedule/columns'
+import { useScheduleColumns } from './schedule/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { CreateEditModal as ScheduleModal } from './schedule/create-edit-modal'
@@ -150,6 +150,43 @@ export default function ScheduleInterface() {
   const searchParams = useSearchParams()
   const { updateUrl } = useUrlParams()
   const { toast } = useToast()
+
+  // Get column definitions using the new hook
+  const columns = useScheduleColumns({
+    onDeleted: () => {
+      mutateSchedules()
+      mutateFallbackSchedules()
+    },
+    onToggleEnabled: async (schedule: ScheduleResponseDto) => {
+      try {
+        const updatedSchedule = schedule.isEnabled
+          ? await disableSchedule(schedule.id)
+          : await enableSchedule(schedule.id)
+
+        console.log(`Toggle result:`, updatedSchedule)
+
+        // Show appropriate toast message
+        toast({
+          title: updatedSchedule.isEnabled
+            ? t('schedule.actions.enabled')
+            : t('schedule.actions.disabled'),
+          description: `${t('schedule.actions.schedule')} "${updatedSchedule.name}" ${t('schedule.actions.hasBeenStatus')} ${updatedSchedule.isEnabled ? t('schedule.actions.enabledStatus') : t('schedule.actions.disabledStatus')}.`,
+          variant: 'default',
+        })
+
+        // Force refresh data
+        mutateSchedules()
+        mutateFallbackSchedules()
+      } catch (error) {
+        console.error('Toggle failed:', error)
+        toast(createErrorToast(error))
+      }
+    },
+    onEdit: (schedule: ScheduleResponseDto) => {
+      setEditingSchedule(mapApiScheduleToEditingSchedule(schedule))
+      setIsCreateModalOpen(true)
+    },
+  })
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -557,46 +594,6 @@ export default function ScheduleInterface() {
   const isUnknownTotalCount = useMemo(() => {
     return !hasExactCount && schedules.length === pagination.pageSize
   }, [hasExactCount, schedules.length, pagination.pageSize])
-
-  // ✅ Create columns with proper handlers
-  const columns = useMemo(
-    () =>
-      createScheduleColumns({
-        t,
-        onDeleted: () => {
-          mutateSchedules()
-          mutateFallbackSchedules()
-        },
-        onToggleEnabled: async (schedule: ScheduleResponseDto) => {
-          try {
-            const updatedSchedule = schedule.isEnabled
-              ? await disableSchedule(schedule.id)
-              : await enableSchedule(schedule.id)
-
-            // Show success toast with subtle feedback
-            toast({
-              title: `Schedule ${updatedSchedule.isEnabled ? 'Enabled' : 'Disabled'}`,
-              description: `"${schedule.name}" is now ${updatedSchedule.isEnabled ? 'active' : 'inactive'}.`,
-              duration: 3000, // Show for 3 seconds
-            })
-
-            // Force immediate refresh of both data sources to ensure UI updates
-            console.log('Refreshing both data sources after toggle...')
-            await Promise.all([mutateSchedules(), mutateFallbackSchedules()])
-            console.log('Data refresh completed')
-          } catch (error) {
-            console.error('Toggle enable failed:', error)
-            toast(createErrorToast(error))
-            throw error // Re-throw to let the component handle the optimistic update reversion
-          }
-        },
-        onEdit: async (schedule: ScheduleResponseDto) => {
-          setEditingSchedule(mapApiScheduleToEditingSchedule(schedule))
-          setIsCreateModalOpen(true)
-        },
-      }),
-    [mutateSchedules, mutateFallbackSchedules, toast, t],
-  )
 
   const table = useReactTable({
     data: schedules,

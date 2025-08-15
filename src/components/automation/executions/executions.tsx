@@ -2,9 +2,9 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createColumns as createHistoricalColumns } from './historical/columns'
-import { createInProgressColumns } from './inProgress/columns'
-import { createScheduledColumns } from './scheduled/columns'
+import { useHistoricalColumns } from './historical/columns'
+import { useInProgressColumns } from './inProgress/columns'
+import { useScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import CreateExecutionModal from './create-execution-modal'
@@ -370,31 +370,21 @@ export default function ExecutionsInterface() {
     [executionStatuses],
   )
 
-  // ✅ Create columns with proper handlers
+  // ✅ Create columns with proper handlers using Direct Hook Usage
 
-  const ProgressColumns = useMemo(
-    () =>
-      createInProgressColumns({
-        t,
-        onDeleted: () => {
-          void mutateExecutions()
-        },
-      }),
-    [mutateExecutions, t],
-  )
+  const ProgressColumns = useInProgressColumns({
+    onDeleted: () => {
+      void mutateExecutions()
+    },
+  })
 
-  const ScheduledColumns = useMemo(() => createScheduledColumns({ t }), [t])
+  const ScheduledColumns = useScheduledColumns({})
 
-  const HistoricalColumns = useMemo(
-    () =>
-      createHistoricalColumns({
-        t,
-        onDeleted: () => {
-          void mutateExecutions()
-        },
-      }),
-    [mutateExecutions, t],
-  )
+  const HistoricalColumns = useHistoricalColumns({
+    onDeleted: () => {
+      void mutateExecutions()
+    },
+  })
 
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops

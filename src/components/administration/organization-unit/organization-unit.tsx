@@ -104,8 +104,8 @@ export default function OrganizationUnitProfile() {
   const handleSave = async () => {
     if (!editedName.trim()) {
       toast({
-        title: 'Error',
-        description: 'Organization unit name cannot be empty',
+        title: t('common.error'),
+        description: t('administration.organizationUnits.form.nameRequired'),
         variant: 'destructive',
       })
       return
@@ -124,13 +124,13 @@ export default function OrganizationUnitProfile() {
       setOrganizationUnit(updated)
       setIsEditing(false)
       toast({
-        title: 'Success',
-        description: 'Organization unit information updated successfully',
+        title: t('common.success'),
+        description: t('administration.organizationUnits.messages.saveSuccess'),
       })
     } catch {
       toast({
-        title: 'Error',
-        description: 'Update failed',
+        title: t('common.error'),
+        description: t('administration.organizationUnits.messages.saveError'),
         variant: 'destructive',
       })
     } finally {
@@ -141,8 +141,8 @@ export default function OrganizationUnitProfile() {
   const handleAcceptNameChange = async () => {
     if (!organizationUnitId) {
       toast({
-        title: 'Error',
-        description: 'Organization unit ID is missing. Please try again.',
+        title: t('common.error'),
+        description: t('administration.organizationUnits.messages.loadError'),
         variant: 'destructive',
       })
       return
@@ -157,14 +157,14 @@ export default function OrganizationUnitProfile() {
       setIsEditing(false)
       setShowNameChangeWarning(false)
       toast({
-        title: 'Success',
-        description: 'Organization unit information updated successfully',
+        title: t('common.success'),
+        description: t('administration.organizationUnits.messages.saveSuccess'),
       })
       window.location.href = '/tenant-selector'
     } catch {
       toast({
-        title: 'Error',
-        description: 'Update failed',
+        title: t('common.error'),
+        description: t('administration.organizationUnits.messages.saveError'),
         variant: 'destructive',
       })
     } finally {
@@ -185,17 +185,17 @@ export default function OrganizationUnitProfile() {
       mutateDeletionStatus()
 
       toast({
-        title: 'Deletion Requested',
-        description: 'Organization unit deletion has been initiated.',
+        title: t('administration.organizationUnits.messages.deletionPending'),
+        description: t('administration.organizationUnits.messages.deleteSuccess'),
       })
     } catch (error: unknown) {
-      let message = 'Failed to request deletion.'
+      let message = t('administration.organizationUnits.messages.deleteError')
       if (error instanceof Error) {
         message = error.message
       }
 
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: message,
         variant: 'destructive',
       })
@@ -212,12 +212,12 @@ export default function OrganizationUnitProfile() {
         description: t('administration.organizationUnits.messages.deletionCancelled'),
       })
     } catch (error: unknown) {
-      let message = 'Failed to cancel deletion.'
+      let message = t('administration.organizationUnits.messages.deleteError')
       if (error instanceof Error) {
         message = error.message
       }
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: message,
         variant: 'destructive',
       })
@@ -296,7 +296,7 @@ export default function OrganizationUnitProfile() {
 
   // Format remaining time
   const formatTimeRemaining = (seconds: number): string => {
-    if (seconds <= 0) return 'Deleting...'
+    if (seconds <= 0) return t('administration.organizationUnits.deletion.deleting')
     const days = Math.floor(seconds / (24 * 60 * 60))
     const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60))
     const minutes = Math.floor((seconds % (60 * 60)) / 60)

@@ -19,13 +19,11 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
-import {
-  getExecutionById,
-  downloadExecutionLogs
-} from '@/lib/api/executions'
+import { getExecutionById, downloadExecutionLogs } from '@/lib/api/executions'
 import { createErrorToast } from '@/lib/utils/error-utils'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 import { useExecutionNames } from '@/hooks/use-execution-names'
+import { useLocale } from '@/providers/locale-provider'
 
 interface ExecutionDetailProps {
   id: string
@@ -49,6 +47,7 @@ const getStatusBadgeClass = (status: string) => {
 }
 
 export default function HistoricalDetail({ id }: ExecutionDetailProps) {
+  const { t } = useLocale()
   const router = useRouter()
   const { toast } = useToast()
 
@@ -56,16 +55,13 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
   const {
     data: execution,
     error,
-    isLoading
-  } = useSWR(
-    swrKeys.executionById(id),
-    () => getExecutionById(id)
-  )
+    isLoading,
+  } = useSWR(swrKeys.executionById(id), () => getExecutionById(id))
 
   // ✅ Resolve package and bot agent names
   const { packageName, botAgentName } = useExecutionNames(
     execution?.packageId,
-    execution?.botAgentId
+    execution?.botAgentId,
   )
 
   // ✅ Error handling in dedicated effect
@@ -82,8 +78,8 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
   const handleDownloadLogs = async () => {
     if (!execution?.hasLogs) {
       toast({
-        title: 'No Logs Available',
-        description: 'This execution does not have logs available for download.',
+        title: t('executions.actions.noLogsTitle'),
+        description: t('executions.actions.noLogsDesc'),
         variant: 'destructive',
       })
       return
@@ -93,8 +89,8 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
       const fileName = `execution_${execution.id.substring(0, 8)}_logs.log`
       await downloadExecutionLogs(execution.id, fileName)
       toast({
-        title: 'Download Started',
-        description: 'Execution logs download has started.',
+        title: t('executions.actions.downloadStarted'),
+        description: t('executions.actions.downloadStartedDesc'),
       })
     } catch (error) {
       console.error('Failed to download logs:', error)
@@ -105,7 +101,7 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 px-4">
-        <LoadingState message="Loading execution details..." />
+        <LoadingState message={t('executions.detail.loading')} />
       </div>
     )
   }
@@ -116,7 +112,7 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
         <Card className="border rounded-md shadow-sm">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Failed to Load Execution</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('executions.detail.failedToLoad')}</h3>
             <p className="text-muted-foreground mb-4">
               Unable to load execution details. Please try again.
             </p>
@@ -132,7 +128,7 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
       <div className="container mx-auto py-6 px-4">
         <Card className="border rounded-md shadow-sm">
           <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-semibold mb-2">Execution Not Found</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('executions.detail.notFound')}</h3>
             <p className="text-muted-foreground mb-4">
               The requested execution could not be found.
             </p>
@@ -154,7 +150,10 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
             </Button>
             <div>
               <h1 className="text-xl font-semibold">
-                {packageName || execution.packageName || `Package ${execution.packageId?.substring(0, 8)}` || 'Historical Execution'}
+                {packageName ||
+                  execution.packageName ||
+                  `Package ${execution.packageId?.substring(0, 8)}` ||
+                  'Historical Execution'}
               </h1>
             </div>
           </div>
@@ -182,38 +181,43 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <DetailBlock label="Package Name" icon={Package}>
-                    {packageName || execution.packageName || execution.packageId?.substring(0, 8) || 'N/A'}
+                  <DetailBlock label={t('executions.detail.packageName')} icon={Package}>
+                    {packageName ||
+                      execution.packageName ||
+                      execution.packageId?.substring(0, 8) ||
+                      'N/A'}
                   </DetailBlock>
-                  <DetailBlock label="Package Version" icon={Package}>
+                  <DetailBlock label={t('executions.detail.packageVersion')} icon={Package}>
                     {execution.packageVersion || 'latest'}
                   </DetailBlock>
-                  <DetailBlock label="Bot Agent" icon={Bot}>
-                    {botAgentName || execution.botAgentName || execution.botAgentId?.substring(0, 8) || 'N/A'}
+                  <DetailBlock label={t('executions.detail.botAgent')} icon={Bot}>
+                    {botAgentName ||
+                      execution.botAgentName ||
+                      execution.botAgentId?.substring(0, 8) ||
+                      'N/A'}
                   </DetailBlock>
                 </div>
                 <div className="space-y-4">
-                  <DetailBlock label="Status" icon={CheckCircle}>
+                  <DetailBlock label={t('executions.detail.status')} icon={CheckCircle}>
                     <Badge variant="outline" className={getStatusBadgeClass(execution.status)}>
                       {execution.status}
                     </Badge>
                   </DetailBlock>
-                  <DetailBlock label="Start Time" icon={Clock}>
+                  <DetailBlock label={t('executions.detail.startTime')} icon={Clock}>
                     {formatUtcToLocal(execution.startTime, {
                       dateStyle: 'medium',
                       timeStyle: 'medium',
-                      fallback: 'N/A'
+                      fallback: 'N/A',
                     })}
                   </DetailBlock>
-                  <DetailBlock label="End Time" icon={Clock}>
+                  <DetailBlock label={t('executions.detail.endTime')} icon={Clock}>
                     {execution.endTime
                       ? formatUtcToLocal(execution.endTime, {
-                        dateStyle: 'medium',
-                        timeStyle: 'medium',
-                        fallback: 'N/A'
-                      })
-                      : 'N/A'
-                    }
+                          dateStyle: 'medium',
+                          timeStyle: 'medium',
+                          fallback: 'N/A',
+                        })
+                      : 'N/A'}
                   </DetailBlock>
                 </div>
               </div>
@@ -230,18 +234,19 @@ export default function HistoricalDetail({ id }: ExecutionDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <DetailBlock label="Duration" icon={Clock}>
+                <DetailBlock label={t('executions.detail.duration')} icon={Clock}>
                   {execution.startTime && execution.endTime
                     ? (() => {
-                      const durationMs = new Date(execution.endTime).getTime() - new Date(execution.startTime).getTime()
-                      const durationMin = Math.floor(durationMs / 60000)
-                      const durationSec = Math.floor((durationMs % 60000) / 1000)
-                      return `${durationMin}m ${durationSec}s`
-                    })()
-                    : 'N/A'
-                  }
+                        const durationMs =
+                          new Date(execution.endTime).getTime() -
+                          new Date(execution.startTime).getTime()
+                        const durationMin = Math.floor(durationMs / 60000)
+                        const durationSec = Math.floor((durationMs % 60000) / 1000)
+                        return `${durationMin}m ${durationSec}s`
+                      })()
+                    : 'N/A'}
                 </DetailBlock>
-                <DetailBlock label="Has Logs" icon={CheckCircle}>
+                <DetailBlock label={t('executions.detail.hasLogs')} icon={CheckCircle}>
                   <Badge variant={execution.hasLogs ? 'outline' : 'secondary'}>
                     {execution.hasLogs ? 'Available' : 'Not Available'}
                   </Badge>

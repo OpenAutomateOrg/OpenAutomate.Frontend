@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createUsersColumns } from './columns'
+import { useUsersColumns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { InviteModal } from './invite-modal'
@@ -179,13 +179,15 @@ export default function UsersInterface() {
   // Error state for display
   const [localError, setLocalError] = useState<string | null>(null)
   useEffect(() => {
-    if (error) setLocalError('Failed to load users')
+    if (error) setLocalError(t('administration.users.loadError'))
     else setLocalError(null)
-  }, [error])
+  }, [error, t])
 
-  // Create columns with translation and action handlers
+  // Get base columns using hook
+  const baseColumns = useUsersColumns()
+
+  // Create columns with action handlers
   const columnsWithAction: ColumnDef<UsersRow>[] = useMemo(() => {
-    const baseColumns = createUsersColumns({ t })
     return baseColumns.map((col) =>
       col.id === 'actions'
         ? {
@@ -196,7 +198,7 @@ export default function UsersInterface() {
           }
         : col,
     )
-  }, [t, mutate])
+  }, [baseColumns, mutate])
 
   return (
     <div className="flex flex-col h-full w-full space-y-8">

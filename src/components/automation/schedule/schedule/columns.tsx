@@ -17,12 +17,12 @@ import {
 } from '@/lib/api/schedules'
 import DataTableRowAction from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
+import { useLocale } from '@/providers/locale-provider'
 
-interface CreateScheduleColumnsProps {
+interface UseScheduleColumnsProps {
   onDeleted?: () => void
   onToggleEnabled?: (schedule: ScheduleResponseDto) => Promise<void>
   onEdit?: (schedule: ScheduleResponseDto) => void
-  t?: (key: string) => string
 }
 
 // Enhanced Switch component with loading state
@@ -77,195 +77,192 @@ const EnhancedSwitch = ({
   )
 }
 
-export const createScheduleColumns = ({
+export function useScheduleColumns({
   onDeleted,
   onToggleEnabled,
   onEdit,
-  t,
-}: CreateScheduleColumnsProps = {}): ColumnDef<ScheduleResponseDto>[] => [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value)
-        }
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => {
-      const stopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation()
-      }
+}: UseScheduleColumnsProps = {}): ColumnDef<ScheduleResponseDto>[] {
+  const { t } = useLocale()
 
-      return (
-        <span
-          onClick={stopPropagation}
-          onMouseDown={stopPropagation}
-          onPointerDown={stopPropagation}
-        >
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
-            aria-label="Select row"
-            className="translate-y-[2px]"
-            onClick={stopPropagation}
-          />
-        </span>
-      )
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    id: 'actions',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.actions') : 'Actions'} />
-    ),
-    cell: ({ row }) => (
-      <DataTableRowAction
-        schedule={row.original}
-        onDeleted={onDeleted}
-        onToggleEnabled={onToggleEnabled}
-        onEdit={onEdit ? () => onEdit(row.original) : undefined}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'name',
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title={t ? t('table.columns.scheduleName') : 'Schedule Name'}
-      />
-    ),
-    cell: ({ row }) => {
-      const schedule = row.original
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium">{schedule.name}</span>
-          {schedule.description && (
-            <span className="text-sm text-muted-foreground">{schedule.description}</span>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'isEnabled',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.status') : 'Status'} />
-    ),
-    cell: ({ row }) => {
-      const schedule = row.original
-      return <EnhancedSwitch schedule={schedule} onToggleEnabled={onToggleEnabled} />
-    },
-  },
-  {
-    accessorKey: 'recurrenceType',
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title={t ? t('table.columns.recurrence') : 'Recurrence'}
-      />
-    ),
-    cell: ({ row }) => {
-      const recurrenceType = row.getValue('recurrenceType') as RecurrenceType
-      return (
-        <div className="flex items-center">
-          <Badge variant="outline">{getRecurrenceTypeDisplayName(recurrenceType)}</Badge>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'automationPackageName',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.package') : 'Package'} />
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('automationPackageName') || 'N/A'}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'botAgentName',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.agent') : 'Agent'} />
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span>{row.getValue('botAgentName') || 'N/A'}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'nextRunTime',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.nextRun') : 'Next Run'} />
-    ),
-    cell: ({ row }) => {
-      const nextRunTime = row.getValue('nextRunTime') as string | undefined
-      return (
-        <div className="flex items-center">
-          <span className="text-sm">{formatNextRunTime(nextRunTime)}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'timeZoneId',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.timezone') : 'Timezone'} />
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <span className="text-sm text-muted-foreground">{row.getValue('timeZoneId') || 'UTC'}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'createdAt',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t ? t('table.columns.created') : 'Created'} />
-    ),
-    cell: ({ row }) => {
-      const createdAt = row.getValue('createdAt') as string
-      const formatted = formatUtcToLocal(createdAt, { fallback: '-' })
-      return <span className="text-sm">{formatted}</span>
-    },
-  },
-  {
-    accessorKey: 'cronExpression',
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title={t ? t('table.columns.cronExpression') : 'Cron Expression'}
-      />
-    ),
-    cell: ({ row }) => {
-      const cronExpression = row.getValue('cronExpression') as string | undefined
-      const recurrenceType = row.original.recurrenceType
+  return [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value: boolean | 'indeterminate') =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+          aria-label="Select all"
+          className="translate-y-[2px]"
+        />
+      ),
+      cell: ({ row }) => {
+        const stopPropagation = (e: React.MouseEvent) => {
+          e.stopPropagation()
+        }
 
-      if (recurrenceType === RecurrenceType.Advanced && cronExpression) {
         return (
-          <div className="flex items-center">
-            <code className="text-xs bg-muted px-2 py-1 rounded">{cronExpression}</code>
+          <span
+            onClick={stopPropagation}
+            onMouseDown={stopPropagation}
+            onPointerDown={stopPropagation}
+          >
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value: boolean | 'indeterminate') => row.toggleSelected(!!value)}
+              aria-label="Select row"
+              className="translate-y-[2px]"
+              onClick={stopPropagation}
+            />
+          </span>
+        )
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      id: 'actions',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.actions')} />
+      ),
+      cell: ({ row }) => (
+        <DataTableRowAction
+          schedule={row.original}
+          onDeleted={onDeleted}
+          onToggleEnabled={onToggleEnabled}
+          onEdit={onEdit ? () => onEdit(row.original) : undefined}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.scheduleName')} />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.original
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{schedule.name}</span>
+            {schedule.description && (
+              <span className="text-sm text-muted-foreground">{schedule.description}</span>
+            )}
           </div>
         )
-      }
-
-      return <span className="text-sm text-muted-foreground">-</span>
+      },
     },
-  },
-]
+    {
+      accessorKey: 'isEnabled',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.status')} />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.original
+        return <EnhancedSwitch schedule={schedule} onToggleEnabled={onToggleEnabled} />
+      },
+    },
+    {
+      accessorKey: 'recurrenceType',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.recurrence')} />
+      ),
+      cell: ({ row }) => {
+        const recurrenceType = row.getValue('recurrenceType') as RecurrenceType
+        return (
+          <div className="flex items-center">
+            <Badge variant="outline">{getRecurrenceTypeDisplayName(recurrenceType)}</Badge>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: 'automationPackageName',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.package')} />
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <span>{row.getValue('automationPackageName') || 'N/A'}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'botAgentName',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.agent')} />
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <span>{row.getValue('botAgentName') || 'N/A'}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'nextRunTime',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.nextRun')} />
+      ),
+      cell: ({ row }) => {
+        const nextRunTime = row.getValue('nextRunTime') as string | undefined
+        return (
+          <div className="flex items-center">
+            <span className="text-sm">{formatNextRunTime(nextRunTime)}</span>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: 'timeZoneId',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.timezone')} />
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <span className="text-sm text-muted-foreground">
+            {row.getValue('timeZoneId') || 'UTC'}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.created')} />
+      ),
+      cell: ({ row }) => {
+        const createdAt = row.getValue('createdAt') as string
+        const formatted = formatUtcToLocal(createdAt, { fallback: '-' })
+        return <span className="text-sm">{formatted}</span>
+      },
+    },
+    {
+      accessorKey: 'cronExpression',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('table.columns.cronExpression')} />
+      ),
+      cell: ({ row }) => {
+        const cronExpression = row.getValue('cronExpression') as string | undefined
+        const recurrenceType = row.original.recurrenceType
 
-// Default export for backward compatibility
-export const columns = createScheduleColumns()
+        if (recurrenceType === RecurrenceType.Advanced && cronExpression) {
+          return (
+            <div className="flex items-center">
+              <code className="text-xs bg-muted px-2 py-1 rounded">{cronExpression}</code>
+            </div>
+          )
+        }
+
+        return <span className="text-sm text-muted-foreground">-</span>
+      },
+    },
+  ]
+}
+
+// Export the hook under the old name for backward compatibility
+export const createScheduleColumns = useScheduleColumns
