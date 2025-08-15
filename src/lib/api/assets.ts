@@ -1,4 +1,5 @@
 import { api } from './client'
+import { getAuthToken } from '@/lib/auth/token-storage'
 
 export interface CreateAssetDto {
   key: string
@@ -60,6 +61,16 @@ export interface AssetDetailDto {
 export interface Agent {
   id: string
   name: string
+}
+
+export interface CsvImportResultDto {
+  totalRows: number
+  successfulImports: number
+  failedImports: number
+  errors: string[]
+  warnings: string[]
+  assetsCreated: number
+  assetsUpdated: number
 }
 
 // Get the current tenant from the URL path
@@ -293,4 +304,68 @@ export const getAssetAgents = async (id: string): Promise<BotAgentSummaryDto[]> 
 export const getAllAgents = async (): Promise<Agent[]> => {
   const tenant = getCurrentTenant()
   return api.get<Agent[]>(`${tenant}/api/agents`)
+}
+
+/**
+ * Export assets to CSV
+ * @param includeSecrets Whether to include actual secret values or use placeholders (default: false for security)
+ */
+export const exportAssetsToCsv = async (includeSecrets: boolean = false): Promise<Blob> => {
+  const tenant = getCurrentTenant()
+  
+  // Use fetchApi from client for proper authentication handling
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${getAuthToken()}`,
+      'Accept': 'text/csv',
+    },
+    credentials: 'include',
+  })
+  
+  if (!response.ok) {
+    // Try to get error message from response
+    let errorMessage = 'Failed to export assets'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.message || errorMessage
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`
+    }
+    throw new Error(errorMessage)
+  }
+  
+  return response.blob()
+}
+
+/**
+ * Import assets from CSV file
+ */
+export const importAssetsFromCsv = async (file: File): Promise<CsvImportResultDto> => {
+  const tenant = getCurrentTenant()
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${tenant}/api/assets/import/csv`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${getAuthToken()}`,
+    },
+    body: formData,
+    credentials: 'include',
+  })
+  
+  if (!response.ok) {
+    // Try to get error message from response
+    let errorMessage = 'Failed to import assets'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.message || errorMessage
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`
+    }
+    throw new Error(errorMessage)
+  }
+  
+  return response.json()
 }
