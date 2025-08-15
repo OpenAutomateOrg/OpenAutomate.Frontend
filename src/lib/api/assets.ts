@@ -1,5 +1,6 @@
 import { api } from './client'
 import { getAuthToken } from '@/lib/auth/token-storage'
+import type { CsvImportResultDto } from '@/types/assets'
 
 export interface CreateAssetDto {
   key: string
@@ -63,15 +64,7 @@ export interface Agent {
   name: string
 }
 
-export interface CsvImportResultDto {
-  totalRows: number
-  successfulImports: number
-  failedImports: number
-  errors: string[]
-  warnings: string[]
-  assetsCreated: number
-  assetsUpdated: number
-}
+// CsvImportResultDto is now imported from types
 
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {

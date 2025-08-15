@@ -10,7 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/use-toast'
 import { Download, Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react'
-import { exportAssetsToCsv, importAssetsFromCsv, type CsvImportResultDto } from '@/lib/api/assets'
+import { exportAssetsToCsv, importAssetsFromCsv } from '@/lib/api/assets'
+import type { CsvImportResultDto } from '@/types/assets'
 import { CsvTemplateHelper } from './csv-template-helper'
 
 interface CsvImportExportProps {

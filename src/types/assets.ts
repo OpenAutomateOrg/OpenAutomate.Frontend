@@ -77,6 +77,8 @@ export interface CsvImportResultDto {
   failedImports: number
   errors: string[]
   warnings: string[]
+  assetsCreated: number
+  assetsUpdated: number
 }
 
 export interface AssetCsvDto {
