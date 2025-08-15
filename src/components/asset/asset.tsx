@@ -29,8 +29,8 @@ import {
   type ODataQueryOptions,
   getAssetDetail,
   getAssetAgents,
-  type CsvImportResultDto,
 } from '@/lib/api/assets'
+import type { CsvImportResultDto } from '@/types/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
