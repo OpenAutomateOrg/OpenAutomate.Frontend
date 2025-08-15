@@ -15,6 +15,7 @@ import {
   type BotAgentSummaryDto,
 } from '@/lib/api/assets'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
+import { useLocale } from '@/providers/locale-provider'
 
 interface AssetDetailProps {
   readonly id: string
@@ -30,6 +31,8 @@ const AssetValueDisplay = ({
   showSecret: boolean
   onToggleSecret: () => void
 }) => {
+  const { t } = useLocale()
+
   // Check if type is String (handle both number 0 and string "String")
   if (asset.type === 0 || asset.type === '0' || asset.type === 'String') {
     return <div className="text-base font-semibold border-b pb-1">{asset.value ?? '-'}</div>
@@ -44,7 +47,7 @@ const AssetValueDisplay = ({
         type="button"
         className="ml-2 text-gray-500 hover:text-primary"
         onClick={onToggleSecret}
-        aria-label={showSecret ? 'Hide secret' : 'Show secret'}
+        aria-label={showSecret ? t('asset.detail.hideSecret') : t('asset.detail.showSecret')}
       >
         {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
@@ -54,10 +57,12 @@ const AssetValueDisplay = ({
 
 // Helper component for agents table
 const AgentsTable = ({ agents }: { agents: BotAgentSummaryDto[] | undefined }) => {
+  const { t } = useLocale()
+
   if ((agents?.length ?? 0) === 0) {
     return (
       <div className="h-[100px] flex items-center justify-center text-muted-foreground">
-        No authorized agents.
+        {t('asset.detail.noAgents')}
       </div>
     )
   }
@@ -67,8 +72,8 @@ const AgentsTable = ({ agents }: { agents: BotAgentSummaryDto[] | undefined }) =
       <table className="min-w-full text-sm">
         <thead className="bg-muted">
           <tr>
-            <th className="border px-3 py-2 text-left">Name</th>
-            <th className="border px-3 py-2 text-left">Machine Name</th>
+            <th className="border px-3 py-2 text-left">{t('agent.labels.name')}</th>
+            <th className="border px-3 py-2 text-left">{t('agent.labels.machineName')}</th>
           </tr>
         </thead>
         <tbody>
@@ -87,6 +92,7 @@ const AgentsTable = ({ agents }: { agents: BotAgentSummaryDto[] | undefined }) =
 export default function AssetDetail({ id }: AssetDetailProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLocale()
 
   // ✅ SWR for asset details - following guideline #8: use framework-level loaders
   const {
@@ -114,25 +120,25 @@ export default function AssetDetail({ id }: AssetDetailProps) {
     if (error) {
       console.error('Failed to load asset details:', error)
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: createSWRErrorMessage(error),
         variant: 'destructive',
       })
     }
-  }, [error, toast])
+  }, [error, toast, t])
 
   const handleBack = () => {
     router.back()
   }
 
   // ✅ Loading state handling
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div>{t('asset.detail.loading')}</div>
 
   // ✅ Error state handling - note: errors are also handled via toast in useEffect
   if (error && !asset) return <div className="text-red-500">{createSWRErrorMessage(error)}</div>
 
   // Handle case where asset is not found
-  if (!asset) return <div>Asset not found</div>
+  if (!asset) return <div>{t('asset.detail.notFound')}</div>
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -140,11 +146,11 @@ export default function AssetDetail({ id }: AssetDetailProps) {
         <CardHeader className="flex items-center justify-between border-b p-6 rounded-t-xl">
           <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t('common.back')}
           </Button>
           <div className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold">Asset Detail</span>
+            <span className="text-xl font-bold">{t('asset.detail.title')}</span>
           </div>
         </CardHeader>
         <CardContent className="p-8 space-y-8">
@@ -153,19 +159,21 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                  <Key className="w-4 h-4" /> Key
+                  <Key className="w-4 h-4" /> {t('asset.detail.key')}
                 </div>
                 <div className="text-base font-semibold border-b pb-1">{asset.key}</div>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                  <FileText className="w-4 h-4" /> Description
+                  <FileText className="w-4 h-4" /> {t('asset.detail.description')}
                 </div>
-                <div className="text-base font-semibold border-b pb-1">{asset.description}</div>
+                <div className="text-base font-semibold border-b pb-1">
+                  {asset.description || t('asset.detail.noDescription')}
+                </div>
               </div>{' '}
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                  <FileText className="w-4 h-4" /> Value
+                  <FileText className="w-4 h-4" /> {t('asset.detail.value')}
                 </div>
                 <AssetValueDisplay
                   asset={asset}
@@ -177,17 +185,17 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             <div className="flex flex-col gap-4">
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                  <FileText className="w-4 h-4" /> Type
+                  <FileText className="w-4 h-4" /> {t('asset.detail.type')}
                 </div>
                 <span>
                   {asset.type === 0 || asset.type === '0' || asset.type === 'String'
-                    ? 'String'
-                    : 'Secret'}
+                    ? t('asset.types.string')
+                    : t('asset.types.secret')}
                 </span>
               </div>
               <div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1 mt-4">
-                  <FileText className="w-4 h-4" /> Created At
+                  <FileText className="w-4 h-4" /> {t('asset.detail.createdBy')}
                 </div>
                 <div className="text-base font-semibold border-b pb-1">
                   {formatUtcToLocal(asset.createdAt, {
@@ -204,7 +212,7 @@ export default function AssetDetail({ id }: AssetDetailProps) {
             {' '}
             <div className="flex items-center gap-2 mb-2">
               <User className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Authorized Agents</h3>
+              <h3 className="text-lg font-semibold">{t('asset.detail.connectedAgents')}</h3>
             </div>
             <AgentsTable agents={agents} />
           </div>

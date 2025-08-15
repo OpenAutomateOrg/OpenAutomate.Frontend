@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { columns } from './columns'
+import { useUsersColumns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { InviteModal } from './invite-modal'
@@ -21,6 +21,7 @@ import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import useSWR from 'swr'
+import { useLocale } from '@/providers/locale-provider'
 
 export const usersSchema = z.object({
   email: z.string(),
@@ -50,6 +51,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function UsersInterface() {
+  const { t } = useLocale()
   const [searchEmail, setSearchEmail] = useState('')
   const [searchFirstName, setSearchFirstName] = useState('')
   const [searchLastName, setSearchLastName] = useState('')
@@ -177,21 +179,26 @@ export default function UsersInterface() {
   // Error state for display
   const [localError, setLocalError] = useState<string | null>(null)
   useEffect(() => {
-    if (error) setLocalError('Failed to load users')
+    if (error) setLocalError(t('administration.users.loadError'))
     else setLocalError(null)
-  }, [error])
+  }, [error, t])
 
-  // Fix for the TypeScript warning about row prop
-  const columnsWithAction: ColumnDef<UsersRow>[] = columns.map((col) =>
-    col.id === 'actions'
-      ? {
-          ...col,
-          cell: ({ row }: { row: Row<UsersRow> }) => (
-            <DataTableRowAction row={row} onDeleted={mutate} />
-          ),
-        }
-      : col,
-  )
+  // Get base columns using hook
+  const baseColumns = useUsersColumns()
+
+  // Create columns with action handlers
+  const columnsWithAction: ColumnDef<UsersRow>[] = useMemo(() => {
+    return baseColumns.map((col) =>
+      col.id === 'actions'
+        ? {
+            ...col,
+            cell: ({ row }: { row: Row<UsersRow> }) => (
+              <DataTableRowAction row={row} onDeleted={mutate} />
+            ),
+          }
+        : col,
+    )
+  }, [baseColumns, mutate])
 
   return (
     <div className="flex flex-col h-full w-full space-y-8">
@@ -204,7 +211,7 @@ export default function UsersInterface() {
             type="button"
             onClick={() => setTab('user')}
           >
-            User
+            {t('administration.users.tabs.users')}
           </button>
           <button
             className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -212,7 +219,7 @@ export default function UsersInterface() {
             type="button"
             onClick={() => setTab('invitation')}
           >
-            Invitation
+            {t('administration.users.tabs.invitations')}
           </button>
         </nav>
       </div>
@@ -220,13 +227,13 @@ export default function UsersInterface() {
       {tab === 'user' && (
         <>
           <div className="flex justify-between items-center w-full flex-wrap gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t('administration.users.title')}</h2>
             <div className="flex items-center space-x-2">
               <Button
                 onClick={() => setInviteOpen(true)}
                 className="flex items-center justify-center"
               >
-                <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                <PlusCircle className="mr-2 h-4 w-4" /> {t('administration.users.inviteUser')}
               </Button>
             </div>
           </div>

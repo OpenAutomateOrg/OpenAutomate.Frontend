@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/components/ui/use-toast'
 import { downloadExecutionLogs } from '@/lib/api/executions'
 import { createErrorToast } from '@/lib/utils/error-utils'
+import { useLocale } from '@/providers/locale-provider'
 
 interface DataTableRowActionsProps {
   readonly execution: ExecutionsRow
@@ -29,6 +30,7 @@ interface DataTableRowActionsProps {
 }
 
 export default function DataTableRowAction({ execution, onDeleted }: DataTableRowActionsProps) {
+  const { t } = useLocale()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -44,15 +46,15 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
       // For now, just simulate the deletion
       console.log('Delete execution:', execution.id)
       toast({
-        title: 'Delete Simulation',
-        description: 'Delete execution API not yet implemented.',
+        title: t('executions.actions.deleteSimulation'),
+        description: t('executions.actions.deleteNotImplemented'),
       })
 
       setDeleteDialogOpen(false)
       if (onDeleted) onDeleted()
     } catch (error) {
       console.error('Delete failed:', error)
-      let message = 'Failed to delete execution. Please try again.'
+      let message = t('executions.actions.deleteFailed')
       if (error && typeof error === 'object' && 'message' in error) {
         const errorMessage = (error as { message: unknown }).message
         if (
@@ -62,13 +64,13 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
             errorMessage.includes('forbidden') ||
             errorMessage.includes('permission'))
         ) {
-          message = 'You do not have permission to perform this action.'
+          message = t('executions.actions.noPermission')
         } else if (typeof errorMessage === 'string') {
           message = errorMessage
         }
       }
       toast({
-        title: 'Delete Failed',
+        title: t('executions.actions.deleteFailedTitle'),
         description: message,
         variant: 'destructive',
       })
@@ -80,8 +82,8 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
   const handleDownloadLogs = async () => {
     if (!execution.hasLogs) {
       toast({
-        title: 'No Logs Available',
-        description: 'This execution does not have logs available for download.',
+        title: t('executions.actions.noLogsTitle'),
+        description: t('executions.actions.noLogsDesc'),
         variant: 'destructive',
       })
       return
@@ -93,8 +95,8 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
       await downloadExecutionLogs(execution.id, fileName)
 
       toast({
-        title: 'Download Started',
-        description: 'Execution logs download has started.',
+        title: t('executions.actions.downloadStarted'),
+        description: t('executions.actions.downloadStartedDesc'),
       })
     } catch (error) {
       console.error('Failed to download logs:', error)
@@ -145,7 +147,11 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
               <FileText className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             )}
             <span>
-              {isDownloading ? 'Downloading...' : execution.hasLogs ? 'Download Logs' : 'No Logs'}
+              {isDownloading
+                ? t('executions.actions.downloading')
+                : execution.hasLogs
+                  ? t('executions.actions.downloadLogs')
+                  : t('executions.actions.noLogs')}
             </span>
           </DropdownMenuItem>
 
@@ -159,7 +165,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
             }}
           >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
-            <span>Delete</span>
+            <span>{t('common.delete')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -168,15 +174,15 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
         <DialogContent onInteractOutside={(e: Event) => e.preventDefault()}>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </DialogClose>
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>{t('executions.actions.confirmDelete')}</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete this execution? <br />
+            {t('executions.actions.confirmDeleteMessage')} <br />
             <span className="text-sm text-muted-foreground">
-              Execution ID: <b>{execution.id.substring(0, 8)}...</b>
+              {t('executions.actions.executionId')}: <b>{execution.id.substring(0, 8)}...</b>
             </span>
           </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
@@ -188,7 +194,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
               }}
               disabled={deleting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -200,7 +206,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
               disabled={deleting}
             >
               {deleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

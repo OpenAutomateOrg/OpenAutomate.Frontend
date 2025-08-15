@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { PlusCircle, Search, X, Filter, MoreHorizontal } from 'lucide-react'
+import { useLocale } from '@/providers/locale-provider'
 import {
   organizationInvitationsApi,
   OrganizationInvitationResponse,
@@ -121,6 +122,7 @@ function InvitationRowActions() {
 const STATUS_OPTIONS = ['All', 'Pending', 'Accepted', 'Expired', 'Revoked']
 
 export default function InvitationsList() {
+  const { t } = useLocale()
   const params = useParams()
   const tenant = params.tenant as string
   const [searchEmail, setSearchEmail] = useState('')
@@ -248,7 +250,7 @@ export default function InvitationsList() {
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             ref={emailInputRef}
-            placeholder="Search by Email"
+            placeholder={t('common.search.byEmail')}
             value={searchEmail}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               emailCursorRef.current = e.target.selectionStart

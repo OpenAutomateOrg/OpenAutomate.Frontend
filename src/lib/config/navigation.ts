@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
 } from 'lucide-react'
 import { Resources, Permissions } from '@/lib/constants/resources'
+import { useLocale } from '@/providers/locale-provider'
 
 // Translation keys for navigation items
 export const NAVIGATION_KEYS = {
@@ -30,6 +31,12 @@ export const NAVIGATION_KEYS = {
   help: 'navigation.help',
   support: 'navigation.support',
   settings: 'navigation.settings',
+  profile: 'navigation.profile',
+  notifications: 'navigation.notifications',
+  logout: 'navigation.logout',
+  dashboard: 'navigation.dashboard',
+  userManagement: 'navigation.userManagement',
+  agentManagement: 'navigation.agentManagement',
 } as const
 
 /**
@@ -78,292 +85,195 @@ export interface UserNavigationItem {
 }
 
 /**
- * Helper function to create translated navigation items
- */
-export const createTranslatedUserNavItems = (
-  createTenantUrl: (path: string) => string,
-  t: (key: string) => string
-): NavigationItem[] => [
-  {
-    title: t(NAVIGATION_KEYS.home),
-    url: createTenantUrl('/dashboard'),
-    icon: House,
-    isActive: true,
-  },
-  {
-    title: t(NAVIGATION_KEYS.automation),
-    icon: Cog,
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.executions),
-        url: createTenantUrl('/automation/executions'),
-        permission: {
-          resource: Resources.EXECUTION,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.schedule),
-        url: createTenantUrl('/automation/schedule'),
-        permission: {
-          resource: Resources.SCHEDULE,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.package),
-        url: createTenantUrl('/automation/package'),
-        permission: {
-          resource: Resources.PACKAGE,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: t(NAVIGATION_KEYS.agent),
-    url: createTenantUrl('/agent'),
-    icon: Bot,
-    permission: {
-      resource: Resources.AGENT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.agent),
-        url: createTenantUrl('/agent'),
-        permission: {
-          resource: Resources.AGENT,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: t(NAVIGATION_KEYS.asset),
-    url: createTenantUrl('/asset'),
-    icon: FileKey2,
-    permission: {
-      resource: Resources.ASSET,
-      level: Permissions.VIEW,
-    },
-  },
-  {
-    title: t(NAVIGATION_KEYS.administration),
-    icon: Settings2,
-    permission: {
-      resource: Resources.ORGANIZATION_UNIT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: t(NAVIGATION_KEYS.users),
-        url: createTenantUrl('/administration/users'),
-        permission: {
-          resource: Resources.USER,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.roles),
-        url: createTenantUrl('/administration/roles'),
-        permission: {
-          resource: Resources.USER,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.organizationUnits),
-        url: createTenantUrl('/administration/organization-unit'),
-        permission: {
-          resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: t(NAVIGATION_KEYS.subscription),
-        url: createTenantUrl('/administration/subscription'),
-        permission: {
-          resource: Resources.SUBSCRIPTION,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-]
-
-/**
- * Common navigation items for all users with tenant context
+ * Hook to create translated navigation items for all users with tenant context
  * Each item specifies the minimum permission required to view it
  */
-export const createUserNavItems = (createTenantUrl: (path: string) => string): NavigationItem[] => [
-  {
-    title: 'Home',
-    url: createTenantUrl('/dashboard'),
-    icon: House,
-    isActive: true,
-    // Dashboard requires no specific permission - available to all authenticated users
-  },
-  {
-    title: 'Automation',
-    icon: Cog,
-    items: [
-      {
-        title: 'Executions',
-        url: createTenantUrl('/automation/executions'),
-        permission: {
-          resource: Resources.EXECUTION,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: 'Schedule',
-        url: createTenantUrl('/automation/schedule'),
-        permission: {
-          resource: Resources.SCHEDULE,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: 'Package',
-        url: createTenantUrl('/automation/package'),
-        permission: {
-          resource: Resources.PACKAGE,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: 'Agent',
-    url: createTenantUrl('/agent'),
-    icon: Bot,
-    permission: {
-      resource: Resources.AGENT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: 'Agent',
-        url: createTenantUrl('/agent'),
-        permission: {
-          resource: Resources.AGENT,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-  {
-    title: 'Asset',
-    url: createTenantUrl('/asset'),
-    icon: FileKey2,
-    permission: {
-      resource: Resources.ASSET,
-      level: Permissions.VIEW,
-    },
-  },
-  {
-    title: 'Administration',
-    icon: Settings2,
-    permission: {
-      resource: Resources.ORGANIZATION_UNIT,
-      level: Permissions.VIEW,
-    },
-    items: [
-      {
-        title: 'Users',
-        url: createTenantUrl('/administration/users'),
-        permission: {
-          resource: Resources.USER,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: 'Roles',
-        url: createTenantUrl('/administration/roles'),
-        permission: {
-          resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.VIEW,
-        },
-      },
-      {
-        title: 'Organization Unit',
-        url: createTenantUrl('/administration/organizationUnit'),
-        permission: {
-          resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.UPDATE,
-        },
-      },
-      {
-        title: 'Subscription',
-        url: createTenantUrl('/administration/subscription'),
-        permission: {
-          resource: Resources.ORGANIZATION_UNIT,
-          level: Permissions.VIEW,
-        },
-      },
-    ],
-  },
-]
+export const useUserNavItems = (
+  createTenantUrl: (path: string) => string
+): NavigationItem[] => {
+  const { t } = useLocale();
 
-/**
- * Admin-only navigation items (system-level, not tenant-specific)
- */
-export const adminNavItems: NavigationItem[] = [
-  {
-    title: 'Dashboard',
-    url: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'User Management',
-    url: '/user-management',
-    icon: Users,
-  },
-  {
-    title: 'Organization Units',
-    url: '/org-unit-management',
-    icon: Building2,
-  },
-  {
-    title: 'Agent Management',
-    url: '/agent-management',
-    icon: Bot,
-  },
-]
-
-/**
- * Secondary navigation items (support, feedback, etc.)
- */
-export const secondaryNavItems: { title: string; url: string; icon: LucideIcon }[] = [
-  {
-    title: 'Support',
-    url: '#',
-    icon: LifeBuoy,
-  },
-]
-
-/**
- * User management navigation items
- */
-export const createUserManagementItems = (createTenantUrl: (path: string) => string) => ({
-  management: [
+  return [
     {
-      title: 'Profile',
-      url: createTenantUrl('/profile'),
-      icon: Sparkles,
+      title: t(NAVIGATION_KEYS.home),
+      url: createTenantUrl('/dashboard'),
+      icon: House,
+      isActive: true,
+      // Dashboard requires no specific permission - available to all authenticated users
     },
     {
-      title: 'Notifications',
+      title: t(NAVIGATION_KEYS.automation),
+      icon: Cog,
+      items: [
+        {
+          title: t(NAVIGATION_KEYS.executions),
+          url: createTenantUrl('/automation/executions'),
+          permission: {
+            resource: Resources.EXECUTION,
+            level: Permissions.VIEW,
+          },
+        },
+        {
+          title: t(NAVIGATION_KEYS.schedule),
+          url: createTenantUrl('/automation/schedule'),
+          permission: {
+            resource: Resources.SCHEDULE,
+            level: Permissions.VIEW,
+          },
+        },
+        {
+          title: t(NAVIGATION_KEYS.package),
+          url: createTenantUrl('/automation/package'),
+          permission: {
+            resource: Resources.PACKAGE,
+            level: Permissions.VIEW,
+          },
+        },
+      ],
+    },
+    {
+      title: t(NAVIGATION_KEYS.agent),
+      url: createTenantUrl('/agent'),
+      icon: Bot,
+      permission: {
+        resource: Resources.AGENT,
+        level: Permissions.VIEW,
+      },
+      items: [
+        {
+          title: t(NAVIGATION_KEYS.agent),
+          url: createTenantUrl('/agent'),
+          permission: {
+            resource: Resources.AGENT,
+            level: Permissions.VIEW,
+          },
+        },
+      ],
+    },
+    {
+      title: t(NAVIGATION_KEYS.asset),
+      url: createTenantUrl('/asset'),
+      icon: FileKey2,
+      permission: {
+        resource: Resources.ASSET,
+        level: Permissions.VIEW,
+      },
+    },
+    {
+      title: t(NAVIGATION_KEYS.administration),
+      icon: Settings2,
+      permission: {
+        resource: Resources.ORGANIZATION_UNIT,
+        level: Permissions.VIEW,
+      },
+      items: [
+        {
+          title: t(NAVIGATION_KEYS.users),
+          url: createTenantUrl('/administration/users'),
+          permission: {
+            resource: Resources.USER,
+            level: Permissions.VIEW,
+          },
+        },
+        {
+          title: t(NAVIGATION_KEYS.roles),
+          url: createTenantUrl('/administration/roles'),
+          permission: {
+            resource: Resources.ORGANIZATION_UNIT,
+            level: Permissions.VIEW,
+          },
+        },
+        {
+          title: t(NAVIGATION_KEYS.organizationUnits),
+          url: createTenantUrl('/administration/organizationUnit'),
+          permission: {
+            resource: Resources.ORGANIZATION_UNIT,
+            level: Permissions.UPDATE,
+          },
+        },
+        {
+          title: t(NAVIGATION_KEYS.subscription),
+          url: createTenantUrl('/administration/subscription'),
+          permission: {
+            resource: Resources.ORGANIZATION_UNIT,
+            level: Permissions.VIEW,
+          },
+        },
+      ],
+    },
+  ];
+}
+
+/**
+ * Hook for admin-only navigation items (system-level, not tenant-specific)
+ */
+export const useAdminNavItems = (): NavigationItem[] => {
+  const { t } = useLocale();
+
+  return [
+    {
+      title: t(NAVIGATION_KEYS.dashboard),
+      url: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
+      title: t(NAVIGATION_KEYS.userManagement),
+      url: '/user-management',
+      icon: Users,
+    },
+    {
+      title: t(NAVIGATION_KEYS.organizationUnits),
+      url: '/org-unit-management',
+      icon: Building2,
+    },
+    {
+      title: t(NAVIGATION_KEYS.agentManagement),
+      url: '/agent-management',
+      icon: Bot,
+    },
+  ];
+}
+
+/**
+ * Hook for secondary navigation items (support, feedback, etc.)
+ */
+export const useSecondaryNavItems = (): { title: string; url: string; icon: LucideIcon }[] => {
+  const { t } = useLocale();
+
+  return [
+    {
+      title: t(NAVIGATION_KEYS.support),
+      url: '#',
+      icon: LifeBuoy,
+    },
+  ];
+}
+
+/**
+ * Hook for user management navigation items
+ */
+export const useUserManagementItems = (createTenantUrl: (path: string) => string) => {
+  const { t } = useLocale();
+
+  return {
+    management: [
+      {
+        title: t(NAVIGATION_KEYS.profile),
+        url: createTenantUrl('/profile'),
+        icon: Sparkles,
+      },
+      {
+        title: t(NAVIGATION_KEYS.notifications),
+        url: '',
+        icon: Sparkles,
+      },
+    ],
+    logout: {
+      title: t(NAVIGATION_KEYS.logout),
       url: '',
-      icon: Sparkles,
     },
-  ],
-  logout: {
-    title: 'Log out',
-    url: '',
-  },
-})
+  };
+}
 
 /**
  * Create organization data structure

@@ -2,7 +2,7 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createRolesColumns } from './columns'
+import { useRolesColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from './create-edit-modal'
@@ -28,6 +28,7 @@ import { Pagination } from '@/components/ui/pagination'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { useToast } from '@/components/ui/use-toast'
+import { useLocale } from '@/providers/locale-provider'
 
 export const rolesSchema = z.object({
   id: z.string(),
@@ -46,6 +47,7 @@ export type RolesRow = z.infer<typeof rolesSchema> & {
 }
 
 export default function RolesInterface() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -191,6 +193,9 @@ export default function RolesInterface() {
     await mutateRoles()
   }, [mutateRoles])
 
+  // Get columns with refresh handler
+  const columns = useRolesColumns({ onRefresh: refreshRoles })
+
   // Initialize URL with default params if needed
   useEffect(() => {
     if (shouldInitializeUrl.current) {
@@ -216,7 +221,7 @@ export default function RolesInterface() {
   // Setup table instance
   const table = useReactTable({
     data: rolesData,
-    columns: createRolesColumns(refreshRoles),
+    columns,
     state: {
       sorting,
       columnVisibility,
@@ -316,7 +321,7 @@ export default function RolesInterface() {
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Roles</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t('administration.roles.title')}</h2>
             <p className="text-muted-foreground">
               Manage user roles and permissions within your organization.
             </p>
@@ -324,7 +329,7 @@ export default function RolesInterface() {
           <div className="flex items-center space-x-2">
             <Button onClick={handleCreateRole} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Create Role
+              {t('administration.roles.createRole')}
             </Button>
           </div>
         </div>
@@ -350,7 +355,7 @@ export default function RolesInterface() {
 
         <DataTable
           data={rolesData}
-          columns={createRolesColumns(refreshRoles)}
+          columns={columns}
           table={table}
           onRowClick={handleRowClick}
           isLoading={isLoading}

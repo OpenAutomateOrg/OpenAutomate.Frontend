@@ -1,4 +1,39 @@
 {
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "delete": "Xóa",
+    "deleting": "Đang xóa...",
+    "edit": "Chỉnh sửa",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "confirm": "Xác nhận",
+    "retry": "Thử lại",
+    "close": "Đóng",
+    "yes": "Có",
+    "no": "Không",
+    "accept": "Chấp nhận",
+    "reset": "Đặt lại",
+    "openMenu": "Mở menu",
+    "back": "Quay lại",
+    "search": {
+      "placeholder": "Tìm kiếm",
+      "byName": "Tìm kiếm theo tên",
+      "byEmail": "Tìm kiếm theo email",
+      "byFirstName": "Tìm kiếm theo tên",
+      "byLastName": "Tìm kiếm theo họ",
+      "byKey": "Tìm kiếm theo khóa...",
+      "byNameOrMachine": "Tìm kiếm theo tên hoặc tên máy...",
+      "byNameOrDescription": "Tìm kiếm theo tên hoặc mô tả...",
+      "agentsByNameOrMachine": "Tìm kiếm agent theo tên hoặc tên máy...",
+      "roles": "Tìm kiếm vai trò...",
+      "organizationUnits": "Tìm kiếm"
+    }
+  },
   "login": {
     "title": "Đăng nhập",
     "description": "Nhập email và mật khẩu để tiếp tục",
@@ -58,6 +93,73 @@
       "starting": "Đang bắt đầu...",
       "executionStarted": "Đã bắt đầu thực thi",
       "executionStartedDesc": "Thực thi đã bắt đầu thành công"
+    },
+    "columns": {
+      "actions": "Hành động",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "agent": "Agent",
+      "state": "Trạng thái",
+      "startTime": "Thời gian bắt đầu",
+      "endTime": "Thời gian kết thúc",
+      "source": "Nguồn",
+      "command": "Lệnh",
+      "schedules": "Lịch trình",
+      "taskId": "ID tác vụ",
+      "nextRunTime": "Thời gian chạy tiếp theo",
+      "schedule": "Lịch trình"
+    },
+    "filters": {
+      "filterAgent": "Lọc agent",
+      "allAgents": "Tất cả Agents",
+      "filterPackage": "Lọc gói",
+      "allPackages": "Tất cả gói",
+      "filterState": "Lọc trạng thái",
+      "allStates": "Tất cả trạng thái",
+      "active": "hoạt động",
+      "filter": "bộ lọc",
+      "filters": "bộ lọc"
+    },
+    "actions": {
+      "deleteSimulation": "Mô phỏng xóa",
+      "deleteNotImplemented": "API xóa thực thi chưa được triển khai.",
+      "deleteFailed": "Không thể xóa thực thi. Vui lòng thử lại.",
+      "noPermission": "Bạn không có quyền thực hiện hành động này.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "noLogsTitle": "Không có logs",
+      "noLogsDesc": "Thực thi này không có logs để tải xuống.",
+      "downloadStarted": "Đã bắt đầu tải xuống",
+      "downloadStartedDesc": "Đã bắt đầu tải xuống logs thực thi.",
+      "downloading": "Đang tải xuống...",
+      "downloadLogs": "Tải xuống Logs",
+      "viewLogs": "Xem Logs",
+      "noLogs": "Không có Logs",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa thực thi này?",
+      "executionId": "ID thực thi"
+    },
+    "detail": {
+      "loading": "Đang tải chi tiết thực thi...",
+      "failedToLoad": "Không thể tải thực thi",
+      "notFound": "Không tìm thấy thực thi",
+      "package": "Gói",
+      "scheduledExecution": "Thực thi đã lên lịch",
+      "inProgressExecution": "Thực thi đang tiến hành",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "botAgent": "Bot Agent",
+      "status": "Trạng thái",
+      "scheduledTime": "Thời gian lên lịch",
+      "timeUntilExecution": "Thời gian đến khi thực thi",
+      "executionType": "Loại thực thi",
+      "priority": "Ưu tiên",
+      "created": "Đã tạo",
+      "expectedDuration": "Thời lượng dự kiến",
+      "startTime": "Thời gian bắt đầu",
+      "runningDuration": "Thời lượng chạy",
+      "endTime": "Thời gian kết thúc",
+      "duration": "Thời lượng",
+      "hasLogs": "Có Logs"
     }
   },
   "package": {
@@ -68,7 +170,7 @@
     "retry": "Thử lại",
     "rowsLabel": "gói",
     "modal": {
-      "createTitle": "Tạo gói mới",
+      "createTitle": "Tạo gói tự động hóa mới",
       "editTitle": "Chỉnh sửa gói",
       "name": "Tên",
       "description": "Mô tả",
@@ -76,11 +178,46 @@
       "cancel": "Hủy",
       "save": "Lưu",
       "creating": "Đang tạo...",
-      "updating": "Đang cập nhật..."
+      "updating": "Đang cập nhật...",
+      "selectFile": "Vui lòng chọn file gói",
+      "validationError": "Lỗi xác thực",
+      "uploadSuccess": "Gói \"{name}\" đã được tải lên thành công",
+      "selectFileText": "Nhấp để chọn file gói bot (.zip)",
+      "supportedFiles": "Hỗ trợ file ZIP chứa bot.py",
+      "createButton": "Tạo gói"
     },
     "status": {
       "active": "Hoạt động",
       "inactive": "Không hoạt động"
+    },
+    "filters": {
+      "active": "hoạt động",
+      "filter": "bộ lọc",
+      "filters": "bộ lọc"
+    },
+    "actions": {
+      "editPackage": "Chỉnh sửa gói",
+      "editingPackage": "Đang chỉnh sửa gói",
+      "packageDeleted": "Gói đã được xóa",
+      "packageName": "Gói",
+      "hasBeenDeleted": "đã được xóa",
+      "deleteFailed": "Không thể xóa gói.",
+      "noPermission": "Bạn không có quyền thực hiện hành động này.",
+      "deleteFailedTitle": "Xóa thất bại",
+      "downloadingPackage": "Đang tải xuống gói",
+      "downloadingPackageDesc": "Đang tải xuống gói",
+      "version": "phiên bản",
+      "downloadFailed": "Tải xuống thất bại",
+      "noVersionsAvailable": "Không có phiên bản nào để tải xuống.",
+      "download": "Tải xuống",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa gói",
+      "deletePackage": "Xóa gói"
+    },
+    "detail": {
+      "loading": "Đang tải chi tiết gói...",
+      "notFound": "Không tìm thấy gói",
+      "packageInformation": "Thông tin gói"
     }
   },
   "schedule": {
@@ -89,6 +226,7 @@
     "loadError": "Không thể tải danh sách lịch trình. Vui lòng thử lại.",
     "retry": "Thử lại",
     "searchPlaceholder": "Tìm kiếm lịch trình theo tên...",
+    "clearSearch": "Xóa tìm kiếm",
     "rowsLabel": "lịch trình",
     "days": {
       "sunday": "Chủ nhật",
@@ -110,6 +248,30 @@
     "status": {
       "enabled": "Đã bật",
       "disabled": "Đã tắt"
+    },
+    "filters": {
+      "status": "Trạng thái",
+      "allStatuses": "Tất cả",
+      "type": "Loại",
+      "allTypes": "Tất cả loại"
+    },
+    "actions": {
+      "schedule": "Lịch trình",
+      "enabled": "Đã bật",
+      "disabled": "Đã tắt",
+      "hasBeenStatus": "đã được",
+      "enabledStatus": "bật",
+      "disabledStatus": "tắt",
+      "deleted": "Lịch trình đã xóa",
+      "deletedSuccessfully": "đã được xóa thành công",
+      "enable": "Bật",
+      "disable": "Tắt",
+      "enabling": "Đang bật",
+      "disabling": "Đang tắt",
+      "confirmDelete": "Xác nhận xóa",
+      "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa lịch trình này?",
+      "cannotBeUndone": "Hành động này không thể hoàn tác.",
+      "deleting": "Đang xóa..."
     },
     "modal": {
       "createTitle": "Tạo lịch trình",
@@ -260,12 +422,17 @@
     "administration": "Quản trị",
     "users": "Người dùng",
     "roles": "Vai trò",
-    "subscription": "Gói dịch vụ",
     "organizationUnits": "Đơn vị tổ chức",
+    "subscription": "Dịch vụ",
     "help": "Trợ giúp",
     "support": "Hỗ trợ",
     "settings": "Cài đặt",
-    "subscription": "Gói dịch vụ"
+    "profile": "Hồ sơ",
+    "notifications": "Thông báo",
+    "logout": "Đăng xuất",
+    "dashboard": "Trang chủ",
+    "userManagement": "Quản lý người dùng",
+    "agentManagement": "Quản lý Agent"
   },
   "dashboard": {
     "title": "Trang chủ",
@@ -289,6 +456,364 @@
       "users": "Người dùng",
       "organizationUnits": "Đơn vị tổ chức",
       "executions": "Thực thi"
+    }
+  },
+  "table": {
+    "columns": {
+      "actions": "Hành động",
+      "name": "Tên",
+      "description": "Mô tả",
+      "latestVersion": "Phiên bản mới nhất",
+      "versionCount": "Số lượng phiên bản",
+      "status": "Trạng thái",
+      "createdDate": "Ngày tạo",
+      "packageName": "Tên gói",
+      "packageVersion": "Phiên bản gói",
+      "agent": "Agent",
+      "state": "Trạng thái",
+      "startTime": "Thời gian bắt đầu",
+      "endTime": "Thời gian kết thúc",
+      "duration": "Thời lượng",
+      "scheduleName": "Tên lịch trình",
+      "recurrence": "Chu kỳ lặp",
+      "package": "Gói",
+      "nextRun": "Lần chạy tiếp theo",
+      "nextRunTime": "Thời gian chạy tiếp theo",
+      "timezone": "Múi giờ",
+      "created": "Đã tạo",
+      "cronExpression": "Biểu thức Cron",
+      "schedule": "Lịch trình",
+      "source": "Nguồn",
+      "command": "Lệnh",
+      "schedules": "Lịch trình",
+      "taskId": "ID tác vụ"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "noVersions": "Không có phiên bản"
+    }
+  },
+  "administration": {
+    "users": {
+      "title": "Người dùng",
+      "inviteUser": "Mời người dùng",
+      "emailPlaceholder": "Nhập email",
+      "firstNamePlaceholder": "Nhập tên",
+      "lastNamePlaceholder": "Nhập họ",
+      "searchRole": "Tìm theo vai trò",
+      "allRoles": "Tất cả vai trò",
+      "tabs": {
+        "users": "Người dùng",
+        "invitations": "Lời mời"
+      },
+      "columns": {
+        "action": "Hành động",
+        "email": "Email",
+        "firstName": "Tên",
+        "lastName": "Họ",
+        "roles": "Vai trò",
+        "joinedAt": "Ngày tham gia"
+      },
+      "tooltips": {
+        "moreRoles": "khác"
+      }
+    },
+    "roles": {
+      "title": "Vai trò",
+      "createRole": "Tạo vai trò",
+      "columns": {
+        "actions": "Hành động",
+        "name": "Tên",
+        "description": "Mô tả",
+        "permissions": "Quyền",
+        "created": "Ngày tạo"
+      },
+      "badges": {
+        "system": "Hệ thống",
+        "default": "Mặc định"
+      },
+      "placeholders": {
+        "noDescription": "Không có mô tả",
+        "noPermissions": "Không có quyền"
+      },
+      "tooltips": {
+        "morePermissions": "khác"
+      }
+    },
+    "organizationUnits": {
+      "title": "Đơn vị tổ chức",
+      "createUnit": "Tạo đơn vị",
+      "editUnit": "Chỉnh sửa đơn vị",
+      "deleteUnit": "Xóa đơn vị",
+      "columns": {
+        "action": "Hành động",
+        "name": "Tên",
+        "description": "Mô tả"
+      },
+      "form": {
+        "name": "Tên",
+        "nameRequired": "Tên là bắt buộc",
+        "namePlaceholder": "Nhập tên đơn vị tổ chức",
+        "description": "Mô tả",
+        "descriptionPlaceholder": "Nhập mô tả",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "create": "Tạo",
+        "update": "Cập nhật"
+      },
+      "actions": {
+        "edit": "Chỉnh sửa",
+        "delete": "Xóa",
+        "cancelDeletion": "Hủy xóa"
+      },
+      "messages": {
+        "saveSuccess": "Lưu đơn vị tổ chức thành công",
+        "saveError": "Không thể lưu đơn vị tổ chức",
+        "deleteSuccess": "Xóa đơn vị tổ chức thành công",
+        "deleteError": "Không thể xóa đơn vị tổ chức",
+        "loadError": "Không thể tải đơn vị tổ chức",
+        "deletionPending": "Đơn vị tổ chức được lên lịch xóa",
+        "deletionCancelled": "Hủy xóa thành công"
+      },
+      "dialogs": {
+        "deleteConfirm": {
+          "title": "Xóa đơn vị tổ chức",
+          "message": "Bạn có chắc chắn muốn xóa đơn vị tổ chức này? Hành động này không thể hoàn tác.",
+          "confirm": "Xóa",
+          "cancel": "Hủy"
+        },
+        "nameChangeWarning": {
+          "title": "Thay đổi tên tổ chức",
+          "message": "Thay đổi tên tổ chức sẽ ảnh hưởng đến cách người dùng truy cập tổ chức này. Bạn có chắc chắn muốn tiếp tục?",
+          "confirm": "Có, thay đổi tên",
+          "cancel": "Hủy"
+        },
+        "cancelDeletionConfirm": {
+          "title": "Hủy xóa",
+          "message": "Bạn có chắc chắn muốn hủy xóa đơn vị tổ chức này?",
+          "confirm": "Có, hủy xóa",
+          "cancel": "Không, giữ nguyên lịch xóa"
+        }
+      },
+      "status": {
+        "pending": "Đang chờ",
+        "active": "Hoạt động",
+        "deleting": "Đang xóa"
+      },
+      "search": {
+        "placeholder": "Tìm kiếm đơn vị tổ chức...",
+        "noResults": "Không có mô tả"
+      },
+      "deletion": {
+        "willBeDeleted": "Đơn vị tổ chức này sẽ được xóa trong",
+        "deleting": "Đang xóa đơn vị tổ chức..."
+      }
+    },
+    "subscription": {
+      "title": "Quản lý dịch vụ",
+      "description": "Quản lý dịch vụ và thanh toán của tổ chức bạn",
+      "loading": {
+        "title": "Quản lý dịch vụ",
+        "description": "Quản lý dịch vụ và thanh toán của tổ chức bạn"
+      },
+      "cards": {
+        "status": "Trạng thái",
+        "plan": "Gói dịch vụ",
+        "daysRemaining": "Số ngày còn lại",
+        "trialStatus": "Trạng thái dùng thử"
+      },
+      "placeholders": {
+        "noSubscription": "Không có đăng ký",
+        "noPlan": "Không có gói",
+        "notAvailable": "Không có",
+        "available": "Có sẵn",
+        "used": "Đã sử dụng",
+        "active": "Đang hoạt động",
+        "notAvailableStatus": "Không có sẵn"
+      },
+      "currentSubscription": {
+        "title": "Dịch vụ hiện tại",
+        "description": "Chi tiết về trạng thái dịch vụ hiện tại của bạn",
+        "status": "Trạng thái:",
+        "plan": "Gói dịch vụ:",
+        "trialEnds": "Dùng thử kết thúc:",
+        "nextBilling": "Thanh toán tiếp theo:",
+        "manageBilling": "Quản lý thanh toán",
+        "noActiveSubscription": "Không có dịch vụ đang hoạt động"
+      },
+      "freeTrial": {
+        "title": "Dùng thử miễn phí",
+        "description": "Bắt đầu dùng thử miễn phí để truy cập tất cả tính năng"
+      },
+      "badges": {
+        "trial": "Dùng thử",
+        "active": "Hoạt động",
+        "expired": "Hết hạn"
+      },
+      "trialManagement": "Quản lý dùng thử",
+      "eligible": {
+        "description": "Bạn có thể bắt đầu dùng thử miễn phí để khám phá tất cả tính năng cao cấp.",
+        "startTrial": "Bắt đầu dùng thử",
+        "activating": "Đang kích hoạt dùng thử..."
+      },
+      "active": {
+        "description": "Bạn có gói dùng thử đang hoạt động"
+      },
+      "expired": {
+        "description": "Thời gian dùng thử đã hết hạn. Nâng cấp để tiếp tục sử dụng tính năng cao cấp.",
+        "upgrade": "Nâng cấp ngay"
+      },
+      "used": {
+        "description": "Bạn đã sử dụng hết dùng thử miễn phí. Nâng cấp để tiếp tục sử dụng tính năng Pro.",
+        "upgradeButton": "Nâng cấp lên Pro"
+      },
+      "notEligible": {
+        "description": "Dùng thử miễn phí chỉ có sẵn cho đơn vị tổ chức đầu tiên của bạn. Nâng cấp để truy cập tính năng Pro.",
+        "upgradeButton": "Nâng cấp lên Pro"
+      },
+      "unknown": {
+        "description": "Không thể xác định trạng thái dùng thử"
+      },
+      "toast": {
+        "startingTrial": {
+          "title": "Đang bắt đầu dùng thử...",
+          "description": "Vui lòng đợi trong khi chúng tôi kích hoạt dùng thử miễn phí của bạn."
+        },
+        "trialStarted": {
+          "title": "Bắt đầu dùng thử thành công!",
+          "description": "Dùng thử miễn phí của bạn đã được kích hoạt. Đang làm mới trạng thái dịch vụ..."
+        },
+        "trialFailed": {
+          "title": "Không thể bắt đầu dùng thử",
+          "description": "Không thể bắt đầu dùng thử. Vui lòng thử lại."
+        },
+        "trialError": {
+          "title": "Lỗi khi bắt đầu dùng thử"
+        }
+      },
+      "billingHistory": {
+        "title": "Lịch sử thanh toán",
+        "description": "Hóa đơn và biên lai gần đây của bạn",
+        "tableHeaders": {
+          "date": "Ngày",
+          "status": "Trạng thái",
+          "amount": "Số tiền",
+          "invoice": "Hóa đơn"
+        },
+        "statuses": {
+          "refunded": "Đã hoàn tiền",
+          "paid": "Đã thanh toán"
+        },
+        "view": "Xem"
+      },
+      "accountInformation": {
+        "title": "Thông tin tài khoản",
+        "description": "Thông tin về tài khoản và việc sử dụng dùng thử của bạn",
+        "accountEmail": "Email tài khoản:",
+        "fullName": "Họ và tên:",
+        "trialUsed": "Đã sử dụng thử:",
+        "organizationUnits": "Đơn vị tổ chức:"
+      },
+      "paymentHistory": {
+        "title": "Lịch sử thanh toán",
+        "noPayments": "Không có lịch sử thanh toán",
+        "columns": {
+          "id": "ID",
+          "amount": "Số tiền",
+          "status": "Trạng thái",
+          "date": "Ngày",
+          "details": "Chi tiết"
+        }
+      }
+    }
+  },
+  "asset": {
+    "title": "Tài nguyên",
+    "create": "Tạo tài nguyên",
+    "loadError": "Không thể tải tài nguyên. Vui lòng thử lại.",
+    "retry": "Thử lại",
+    "rowsLabel": "tài nguyên",
+    "types": {
+      "string": "Chuỗi",
+      "secret": "Bí mật",
+      "all": "Tất cả loại",
+      "filter": "Lọc loại"
+    },
+    "columns": {
+      "actions": "Thao tác",
+      "key": "Khóa",
+      "type": "Loại",
+      "description": "Mô tả"
+    },
+    "form": {
+      "key": "Khóa",
+      "keyRequired": "Khóa là bắt buộc",
+      "keyPlaceholder": "Nhập khóa tài nguyên",
+      "keyVietnameseError": "Khóa không được chứa ký tự tiếng Việt có dấu.",
+      "keyExistsError": "Khóa đã tồn tại. Vui lòng chọn khóa khác.",
+      "keyExistsEditError": "Khóa này đã được sử dụng bởi tài nguyên khác. Vui lòng chọn khóa khác.",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Nhập mô tả (tùy chọn)",
+      "type": "Loại",
+      "typeRequired": "Loại là bắt buộc",
+      "selectType": "Chọn loại",
+      "typeCannotChange": "(Không thể thay đổi)",
+      "value": "Giá trị",
+      "valueRequired": "Giá trị là bắt buộc",
+      "valuePlaceholder": "Nhập giá trị chuỗi",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "create": "Tạo",
+      "update": "Cập nhật",
+      "createAsset": "Tạo tài nguyên",
+      "editAsset": "Chỉnh sửa tài nguyên"
+    },
+    "actions": {
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "openMenu": "Mở menu"
+    },
+    "messages": {
+      "saveSuccess": "Lưu tài nguyên thành công",
+      "saveError": "Không thể lưu tài nguyên",
+      "deleteSuccess": "Xóa tài nguyên thành công",
+      "deleteError": "Không thể xóa tài nguyên",
+      "loadError": "Không thể tải chi tiết tài nguyên"
+    },
+    "dialogs": {
+      "deleteConfirm": {
+        "title": "Xóa tài nguyên",
+        "message": "Bạn có chắc chắn muốn xóa tài nguyên này? Hành động này không thể hoàn tác.",
+        "confirm": "Xóa",
+        "cancel": "Hủy"
+      }
+    },
+    "detail": {
+      "title": "Chi tiết tài nguyên",
+      "key": "Khóa:",
+      "type": "Loại:",
+      "description": "Mô tả:",
+      "createdBy": "Tạo bởi:",
+      "value": "Giá trị:",
+      "connectedAgents": "Agents kết nối",
+      "noAgents": "Không có agent nào kết nối với tài nguyên này",
+      "noDescription": "Không có mô tả",
+      "loading": "Đang tải chi tiết tài nguyên...",
+      "notFound": "Không tìm thấy tài nguyên",
+      "hideSecret": "Ẩn bí mật",
+      "showSecret": "Hiện bí mật"
+    },
+    "csv": {
+      "exportSuccess": "Xuất tài nguyên thành công",
+      "exportFailed": "Không thể xuất tài nguyên",
+      "invalidFile": "File không hợp lệ",
+      "selectCsvFile": "Vui lòng chọn file CSV",
+      "fileTooLarge": "File quá lớn",
+      "fileSizeLimit": "Kích thước file phải nhỏ hơn 10MB",
+      "templateDownloaded": "Đã tải mẫu",
+      "templateDownloadedDesc": "Mẫu CSV đã được tải xuống để giúp bạn định dạng dữ liệu chính xác",
+      "downloadTemplate": "Tải mẫu"
     }
   }
 }

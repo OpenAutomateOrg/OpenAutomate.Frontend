@@ -3,6 +3,7 @@
 import { X, Search, Filter } from 'lucide-react'
 import React, { useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectTrigger,
@@ -49,6 +50,7 @@ export function UsersDataTableToolbar({
   ].filter(Boolean).length
 
   const isFiltered = activeFilterCount > 0
+  const { t } = useLocale()
   const emailInputRef = useRef<HTMLInputElement>(null)
   const firstNameInputRef = useRef<HTMLInputElement>(null)
   const lastNameInputRef = useRef<HTMLInputElement>(null)
@@ -96,7 +98,7 @@ export function UsersDataTableToolbar({
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           ref={emailInputRef}
-          placeholder="Search by Email"
+          placeholder={t('common.search.byEmail')}
           value={searchEmail}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             emailCursorRef.current = e.target.selectionStart
@@ -120,7 +122,7 @@ export function UsersDataTableToolbar({
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           ref={firstNameInputRef}
-          placeholder="Search by First Name"
+          placeholder={t('common.search.byFirstName')}
           value={searchFirstName}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             firstNameCursorRef.current = e.target.selectionStart
@@ -144,7 +146,7 @@ export function UsersDataTableToolbar({
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           ref={lastNameInputRef}
-          placeholder="Search by Last Name"
+          placeholder={t('common.search.byLastName')}
           value={searchLastName}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             lastNameCursorRef.current = e.target.selectionStart
@@ -174,14 +176,18 @@ export function UsersDataTableToolbar({
                     <Filter className="mr-2 h-4 w-4 shrink-0" />
                     <span
                       className="truncate"
-                      title={searchRole !== 'ALL' ? searchRole : 'All Roles'}
+                      title={
+                        searchRole !== 'ALL'
+                          ? searchRole
+                          : t('administration.users.filter.allRoles')
+                      }
                     >
-                      <SelectValue placeholder="All Roles" />
+                      <SelectValue placeholder={t('administration.users.filter.allRoles')} />
                     </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All Roles</SelectItem>
+                  <SelectItem value="ALL">{t('administration.users.filter.allRoles')}</SelectItem>
                   {roleOptions.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role}
@@ -190,7 +196,9 @@ export function UsersDataTableToolbar({
                 </SelectContent>
               </Select>
             </TooltipTrigger>
-            <TooltipContent>{searchRole !== 'ALL' ? searchRole : 'All Roles'}</TooltipContent>
+            <TooltipContent>
+              {searchRole !== 'ALL' ? searchRole : t('administration.users.filter.allRoles')}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

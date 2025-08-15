@@ -38,11 +38,13 @@ import {
 } from '@/lib/api/automation-packages'
 import { createErrorToast } from '@/lib/utils/error-utils'
 import { Input } from '@/components/ui/input'
+import { useLocale } from '@/providers/locale-provider'
 
 export default function PackageDetail() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLocale()
   const packageId = params.id as string
 
   // ✅ SWR for data fetching - following guideline #8: use framework-level loaders
@@ -214,7 +216,7 @@ export default function PackageDetail() {
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading package details...</span>
+          <span>{t('package.detail.loading')}</span>
         </div>
       </div>
     )
@@ -226,9 +228,9 @@ export default function PackageDetail() {
       <div className="flex h-full items-center justify-center">
         <Alert className="max-w-md">
           <AlertDescription>
-            {createSWRErrorMessage(error) ?? 'Package not found'}
+            {createSWRErrorMessage(error) ?? t('package.detail.notFound')}
             <Button variant="outline" size="sm" className="ml-2" onClick={() => mutate()}>
-              Retry
+              {t('common.retry')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -242,9 +244,9 @@ export default function PackageDetail() {
       <div className="flex h-full items-center justify-center">
         <Alert className="max-w-md">
           <AlertDescription>
-            Package not found
+            {t('package.detail.notFound')}
             <Button variant="outline" size="sm" className="ml-2" onClick={() => mutate()}>
-              Retry
+              {t('common.retry')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -263,7 +265,7 @@ export default function PackageDetail() {
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            {t('common.back')}
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{packageData.name}</h1>
@@ -467,13 +469,21 @@ export default function PackageDetail() {
               <label className="block mb-1 font-medium">Version Number</label>
               <Input
                 value={uploadVersion}
-                onChange={e => setUploadVersion(e.target.value)}
+                onChange={(e) => setUploadVersion(e.target.value)}
                 placeholder="Enter version number"
                 disabled={uploading}
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUploadDialogOpen(false)
+                  setUploadFile(null)
+                  setUploadVersion('')
+                }}
+                disabled={uploading}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>

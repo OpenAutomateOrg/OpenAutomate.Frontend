@@ -33,6 +33,7 @@ import {
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import type { RolesRow } from './roles'
+import { useLocale } from '@/providers/locale-provider'
 
 interface CreateEditModalProps {
   isOpen: boolean
@@ -47,6 +48,7 @@ interface ResourcePermission {
 }
 
 export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModalProps) {
+  const { t } = useLocale()
   const { toast } = useToast()
 
   // Resource selection state
@@ -70,12 +72,12 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     if (resourcesError) {
       console.error('Failed to load resources:', resourcesError)
       toast({
-        title: 'Error',
-        description: 'Failed to load available resources.',
+        title: t('common.error'),
+        description: t('administration.roles.modal.errors.loadResources'),
         variant: 'destructive',
       })
     }
-  }, [resourcesError, toast])
+  }, [resourcesError, toast, t])
 
   // ✅ Initialize form state directly from props (following guideline #4: use dynamic key to reset state)
   // Note: Parent component uses dynamic key: key={editingRole?.id ?? 'new'}

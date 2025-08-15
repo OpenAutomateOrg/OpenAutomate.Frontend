@@ -7,6 +7,7 @@ import React, { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectContent,
@@ -40,8 +41,9 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
-  searchPlaceholder = 'Search by ID or Agent...',
+  searchPlaceholder,
 }: DataTableToolbarProps<TData>) {
+  const { t } = useLocale()
   const isFiltered = table.getState().columnFilters.length > 0
 
   const [date, setDate] = React.useState<Date | undefined>(undefined)
@@ -126,7 +128,7 @@ export function DataTableToolbar<TData>({
         <div className="relative">
           <Input
             ref={searchInputRef}
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || t('common.search.placeholder')}
             value={searchValue}
             onChange={(event) => handleFilterChange(event.target.value)}
             className="h-10 pl-8 pr-8 w-full"
@@ -176,7 +178,7 @@ export function DataTableToolbar<TData>({
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter agent" />
+                  <SelectValue placeholder={t('executions.filters.filterAgent')} />
                   {(table.getColumn('agent')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
@@ -185,7 +187,7 @@ export function DataTableToolbar<TData>({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Agents</SelectItem>
+                <SelectItem value="all">{t('executions.filters.allAgents')}</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -217,7 +219,7 @@ export function DataTableToolbar<TData>({
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter package" />
+                  <SelectValue placeholder={t('executions.filters.filterPackage')} />
                   {(table.getColumn('packageName')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
@@ -226,7 +228,7 @@ export function DataTableToolbar<TData>({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Packages</SelectItem>
+                <SelectItem value="all">{t('executions.filters.allPackages')}</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -258,7 +260,7 @@ export function DataTableToolbar<TData>({
               <SelectTrigger className="h-10 sm:w-[180px]">
                 <div className="flex items-center">
                   <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Filter state" />
+                  <SelectValue placeholder={t('executions.filters.filterState')} />
                   {(table.getColumn('state')?.getFilterValue() as string | undefined) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1">
                       1
@@ -267,7 +269,7 @@ export function DataTableToolbar<TData>({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
+                <SelectItem value="all">{t('executions.filters.allStates')}</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -281,7 +283,10 @@ export function DataTableToolbar<TData>({
         {/* Active Filter Count Badge */}
         {activeFilterCount > 0 && (
           <Badge variant="secondary" className="rounded-sm px-1">
-            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+            {activeFilterCount} {t('executions.filters.active')}{' '}
+            {activeFilterCount === 1
+              ? t('executions.filters.filter')
+              : t('executions.filters.filters')}
           </Badge>
         )}
 
@@ -296,7 +301,7 @@ export function DataTableToolbar<TData>({
             className="h-8 px-2 lg:px-3"
             disabled={isFiltering}
           >
-            Reset
+            {t('common.reset')}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}

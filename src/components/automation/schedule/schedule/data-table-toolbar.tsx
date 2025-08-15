@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTableViewOptions } from '@/components/layout/table/data-table-view-options'
 import { Loader2, Search, X } from 'lucide-react'
+import { useLocale } from '@/providers/locale-provider'
 import {
   Select,
   SelectContent,
@@ -38,8 +39,8 @@ export function DataTableToolbar<TData>({
   searchValue = '',
   isFiltering = false,
   isPending = false,
-  searchPlaceholder = 'Search schedules...',
 }: DataTableToolbarProps<TData>) {
+  const { t } = useLocale()
   const isFiltered = table.getState().columnFilters.length > 0
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +88,7 @@ export function DataTableToolbar<TData>({
         <div className="relative flex items-center">
           <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={t('schedule.searchPlaceholder')}
             value={searchValue}
             onChange={handleSearchChange}
             className="h-8 w-[200px] pl-10 lg:w-[300px]"
@@ -103,19 +104,19 @@ export function DataTableToolbar<TData>({
               className="absolute right-1 h-6 w-6 p-0 hover:bg-transparent"
             >
               <X className="h-3 w-3" />
-              <span className="sr-only">Clear search</span>
+              <span className="sr-only">{t('schedule.clearSearch')}</span>
             </Button>
           )}
         </div>
 
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Status:</p>
+          <p className="text-sm font-medium">{t('schedule.filters.status')}:</p>
           <Select onValueChange={handleStatusFilterChange} defaultValue="all">
             <SelectTrigger className="h-8 w-[120px]">
-              <SelectValue placeholder="All" />
+              <SelectValue placeholder={t('schedule.filters.allStatuses')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">{t('schedule.filters.allStatuses')}</SelectItem>
               {statuses.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}
@@ -126,13 +127,13 @@ export function DataTableToolbar<TData>({
         </div>
         {/* Alternative Recurrence Type Filter using Select */}
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Type:</p>
+          <p className="text-sm font-medium">{t('schedule.filters.type')}:</p>
           <Select onValueChange={handleRecurrenceTypeFilterChange} defaultValue="all">
             <SelectTrigger className="h-8 w-[140px]">
-              <SelectValue placeholder="All Types" />
+              <SelectValue placeholder={t('schedule.filters.allTypes')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">{t('schedule.filters.allTypes')}</SelectItem>
               {recurrenceTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
@@ -144,7 +145,7 @@ export function DataTableToolbar<TData>({
         {/* Clear Filters Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={handleClearFilters} className="h-8 px-2 lg:px-3">
-            Reset
+            {t('common.reset')}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}

@@ -52,6 +52,9 @@ export default function PackageInterface() {
   const { updateUrl } = useUrlParams()
   const { toast } = useToast()
 
+  // Get column definitions using the new hook
+  const columns = createPackageColumns({})
+
   // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -312,7 +315,7 @@ export default function PackageInterface() {
   // Setup table instance with optimized configuration
   const table = useReactTable({
     data: packages,
-    columns: createPackageColumns(),
+    columns,
     state: {
       sorting,
       columnVisibility,
@@ -472,7 +475,7 @@ export default function PackageInterface() {
 
         <DataTable
           data={packages}
-          columns={createPackageColumns()}
+          columns={columns}
           onRowClick={handleRowClick}
           table={table}
           isLoading={isLoading}

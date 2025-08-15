@@ -23,6 +23,7 @@ import { RolesRow } from './roles'
 import { CreateEditModal } from './create-edit-modal'
 import { useToast } from '@/components/ui/use-toast'
 import { canModifyRole } from '@/lib/constants/resources'
+import { useLocale } from '@/providers/locale-provider'
 
 interface DataTableRowActionsProps {
   readonly row: Row<RolesRow>
@@ -30,6 +31,7 @@ interface DataTableRowActionsProps {
 }
 
 export default function DataTableRowAction({ row, onRefresh }: DataTableRowActionsProps) {
+  const { t } = useLocale()
   const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
@@ -41,8 +43,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
       toast({
-        title: 'Permission Denied',
-        description: 'This role cannot be edited. It is either a system role or a default role.',
+        title: t('administration.roles.actions.permissionDenied'),
+        description: t('administration.roles.actions.cannotEdit'),
         variant: 'destructive',
       })
       return
@@ -54,8 +56,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
     if (e) e.stopPropagation()
     if (!canModifyRole(row.original)) {
       toast({
-        title: 'Permission Denied',
-        description: 'This role cannot be deleted. It is either a system role or a default role.',
+        title: t('administration.roles.actions.permissionDenied'),
+        description: t('administration.roles.actions.cannotDelete'),
         variant: 'destructive',
       })
       return
@@ -76,12 +78,17 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
         status?: number
       }
       if (apiError.status === 403) {
-        return 'You do not have permission to perform this action'
+        return t('administration.roles.actions.noPermissionAction')
       }
-      return apiError.message || apiError.error || apiError.details || 'Failed to delete role.'
+      return (
+        apiError.message ||
+        apiError.error ||
+        apiError.details ||
+        t('administration.roles.actions.deleteFailed')
+      )
     }
 
-    return 'Failed to delete role.'
+    return t('administration.roles.actions.deleteFailed')
   }
 
   const getErrorDescription = (errorMessage: string): string => {
@@ -92,11 +99,11 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       lowerMessage.includes('assign') ||
       lowerMessage.includes('reference')
     ) {
-      return 'Cannot delete this role because it is currently assigned to one or more users. Please remove the role from all users before attempting to delete it.'
+      return t('administration.roles.actions.errorAssignedUsers')
     }
 
     if (lowerMessage.includes('constraint') || lowerMessage.includes('foreign key')) {
-      return 'Cannot delete this role because it is currently assigned to users. Please unassign this role from all users first.'
+      return t('administration.roles.actions.errorConstraint')
     }
 
     return errorMessage
@@ -108,8 +115,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       await rolesApi.deleteRole(row.original.id)
       setShowConfirm(false)
       toast({
-        title: 'Success',
-        description: 'Role deleted successfully.',
+        title: t('common.success'),
+        description: t('administration.roles.actions.deleteSuccess'),
       })
       if (onRefresh) onRefresh()
     } catch (err: unknown) {
@@ -118,7 +125,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       const description = getErrorDescription(errorMessage)
 
       toast({
-        title: 'Delete Failed',
+        title: t('administration.roles.actions.deleteFailedTitle'),
         description,
         variant: 'destructive',
       })
@@ -147,7 +154,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             className={!canModify ? 'cursor-not-allowed opacity-50' : ''}
           >
             <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span>Edit</span>
+            <span>{t('common.edit')}</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -156,7 +163,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             disabled={!canModify}
           >
             <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
-            <span>Delete</span>
+            <span>{t('common.delete')}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -178,14 +185,14 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>{t('administration.roles.actions.confirmDelete')}</DialogTitle>
           </DialogHeader>
           <div>
-            Are you sure you want to delete role <b>{row.original.name}</b>?
+            {t('administration.roles.actions.confirmDeleteMessage')} <b>{row.original.name}</b>?
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -193,7 +200,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
               onClick={confirmDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,39 @@
 {
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "accept": "Accept",
+    "reset": "Reset",
+    "openMenu": "Open menu",
+    "back": "Back",
+    "search": {
+      "placeholder": "Search",
+      "byName": "Search by Name",
+      "byEmail": "Search by Email",
+      "byFirstName": "By First Name",
+      "byLastName": "By Last Name",
+      "byKey": "Search by key...",
+      "byNameOrMachine": "Search by Name or Machine Name...",
+      "byNameOrDescription": "Search by name or description...",
+      "agentsByNameOrMachine": "Search agents by name or machine...",
+      "roles": "Search roles...",
+      "organizationUnits": "Search"
+    }
+  },
   "login": {
     "title": "Sign In",
     "description": "Enter your email and password to continue",
@@ -58,6 +93,73 @@
       "starting": "Starting...",
       "executionStarted": "Execution Started",
       "executionStartedDesc": "Execution started successfully"
+    },
+    "columns": {
+      "actions": "Actions",
+      "packageName": "Package Name",
+      "packageVersion": "Package Version",
+      "agent": "Agent",
+      "state": "State",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "source": "Source",
+      "command": "Command",
+      "schedules": "Schedules",
+      "taskId": "Task ID",
+      "nextRunTime": "Next Run Time",
+      "schedule": "Schedule"
+    },
+    "filters": {
+      "filterAgent": "Filter agent",
+      "allAgents": "All Agents",
+      "filterPackage": "Filter package",
+      "allPackages": "All Packages",
+      "filterState": "Filter state",
+      "allStates": "All States",
+      "active": "active",
+      "filter": "filter",
+      "filters": "filters"
+    },
+    "actions": {
+      "deleteSimulation": "Delete Simulation",
+      "deleteNotImplemented": "Delete execution API not yet implemented.",
+      "deleteFailed": "Failed to delete execution. Please try again.",
+      "noPermission": "You do not have permission to perform this action.",
+      "deleteFailedTitle": "Delete Failed",
+      "noLogsTitle": "No Logs Available",
+      "noLogsDesc": "This execution does not have logs available for download.",
+      "downloadStarted": "Download Started",
+      "downloadStartedDesc": "Execution logs download has started.",
+      "downloading": "Downloading...",
+      "downloadLogs": "Download Logs",
+      "viewLogs": "View Logs",
+      "noLogs": "No Logs",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete this execution?",
+      "executionId": "Execution ID"
+    },
+    "detail": {
+      "loading": "Loading execution details...",
+      "failedToLoad": "Failed to Load Execution",
+      "notFound": "Execution Not Found",
+      "package": "Package",
+      "scheduledExecution": "Scheduled Execution",
+      "inProgressExecution": "In Progress Execution",
+      "packageName": "Package Name",
+      "packageVersion": "Package Version",
+      "botAgent": "Bot Agent",
+      "status": "Status",
+      "scheduledTime": "Scheduled Time",
+      "timeUntilExecution": "Time Until Execution",
+      "executionType": "Execution Type",
+      "priority": "Priority",
+      "created": "Created",
+      "expectedDuration": "Expected Duration",
+      "startTime": "Start Time",
+      "runningDuration": "Running Duration",
+      "endTime": "End Time",
+      "duration": "Duration",
+      "hasLogs": "Has Logs"
     }
   },
   "package": {
@@ -68,7 +170,7 @@
     "retry": "Retry",
     "rowsLabel": "packages",
     "modal": {
-      "createTitle": "Create Package",
+      "createTitle": "Create New Automation Package",
       "editTitle": "Edit Package",
       "name": "Name",
       "description": "Description",
@@ -76,11 +178,46 @@
       "cancel": "Cancel",
       "save": "Save",
       "creating": "Creating...",
-      "updating": "Updating..."
+      "updating": "Updating...",
+      "selectFile": "Please select a package file",
+      "validationError": "Validation Error",
+      "uploadSuccess": "Package \"{name}\" uploaded successfully",
+      "selectFileText": "Click to select a bot package file (.zip)",
+      "supportedFiles": "ZIP files containing bot.py are supported",
+      "createButton": "Create Package"
     },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "filters": {
+      "active": "active",
+      "filter": "filter",
+      "filters": "filters"
+    },
+    "actions": {
+      "editPackage": "Edit package",
+      "editingPackage": "Editing package",
+      "packageDeleted": "Package deleted",
+      "packageName": "Package",
+      "hasBeenDeleted": "has been deleted",
+      "deleteFailed": "Failed to delete package.",
+      "noPermission": "You do not have permission to perform this action.",
+      "deleteFailedTitle": "Delete Failed",
+      "downloadingPackage": "Downloading package",
+      "downloadingPackageDesc": "Downloading package",
+      "version": "version",
+      "downloadFailed": "Download Failed",
+      "noVersionsAvailable": "No versions available to download.",
+      "download": "Download",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete package",
+      "deletePackage": "Delete Package"
+    },
+    "detail": {
+      "loading": "Loading package details...",
+      "notFound": "Package not found",
+      "packageInformation": "Package Information"
     }
   },
   "schedule": {
@@ -89,6 +226,7 @@
     "loadError": "Failed to load schedules. Please try again.",
     "retry": "Retry",
     "searchPlaceholder": "Search schedules by name...",
+    "clearSearch": "Clear search",
     "rowsLabel": "schedules",
     "days": {
       "sunday": "Sunday",
@@ -110,6 +248,30 @@
     "status": {
       "enabled": "Enabled",
       "disabled": "Disabled"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All",
+      "type": "Type",
+      "allTypes": "All Types"
+    },
+    "actions": {
+      "schedule": "Schedule",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "hasBeenStatus": "has been",
+      "enabledStatus": "enabled",
+      "disabledStatus": "disabled",
+      "deleted": "Schedule Deleted",
+      "deletedSuccessfully": "has been deleted successfully",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabling": "Enabling",
+      "disabling": "Disabling",
+      "confirmDelete": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete this schedule?",
+      "cannotBeUndone": "This action cannot be undone.",
+      "deleting": "Deleting..."
     },
     "modal": {
       "createTitle": "Create Schedule",
@@ -260,12 +422,17 @@
     "administration": "Administration",
     "users": "Users",
     "roles": "Roles",
-    "subscription": "Subscription",
     "organizationUnits": "Organization Units",
+    "subscription": "Subscription",
     "help": "Help",
     "support": "Support",
     "settings": "Settings",
-    "subscription": "Subscription"
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "dashboard": "Dashboard",
+    "userManagement": "User Management",
+    "agentManagement": "Agent Management"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -289,6 +456,364 @@
       "users": "Users",
       "organizationUnits": "Organization Units",
       "executions": "Executions"
+    }
+  },
+  "table": {
+    "columns": {
+      "actions": "Actions",
+      "name": "Name",
+      "description": "Description",
+      "latestVersion": "Latest Version",
+      "versionCount": "Version Count",
+      "status": "Status",
+      "createdDate": "Created Date",
+      "packageName": "Package Name",
+      "packageVersion": "Package Version",
+      "agent": "Agent",
+      "state": "State",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "duration": "Duration",
+      "scheduleName": "Schedule Name",
+      "recurrence": "Recurrence",
+      "package": "Package",
+      "nextRun": "Next Run",
+      "nextRunTime": "Next Run Time",
+      "timezone": "Timezone",
+      "created": "Created",
+      "cronExpression": "Cron Expression",
+      "schedule": "Schedule",
+      "source": "Source",
+      "command": "Command",
+      "schedules": "Schedules",
+      "taskId": "Task ID"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "noVersions": "No versions"
+    }
+  },
+  "administration": {
+    "users": {
+      "title": "Users",
+      "inviteUser": "Invite User",
+      "emailPlaceholder": "Enter email",
+      "firstNamePlaceholder": "Enter first name",
+      "lastNamePlaceholder": "Enter last name",
+      "searchRole": "Search by role",
+      "allRoles": "All Roles",
+      "tabs": {
+        "users": "Users",
+        "invitations": "Invitations"
+      },
+      "columns": {
+        "action": "Action",
+        "email": "Email",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "roles": "Roles",
+        "joinedAt": "Joined At"
+      },
+      "tooltips": {
+        "moreRoles": "more"
+      }
+    },
+    "roles": {
+      "title": "Roles",
+      "createRole": "Create Role",
+      "columns": {
+        "actions": "Actions",
+        "name": "Name",
+        "description": "Description",
+        "permissions": "Permissions",
+        "created": "Created"
+      },
+      "badges": {
+        "system": "System",
+        "default": "Default"
+      },
+      "placeholders": {
+        "noDescription": "No description",
+        "noPermissions": "No permissions"
+      },
+      "tooltips": {
+        "morePermissions": "more"
+      }
+    },
+    "organizationUnits": {
+      "title": "Organization Units",
+      "createUnit": "Create Unit",
+      "editUnit": "Edit Unit",
+      "deleteUnit": "Delete Unit",
+      "columns": {
+        "action": "Action",
+        "name": "Name",
+        "description": "Description"
+      },
+      "form": {
+        "name": "Name",
+        "nameRequired": "Name is required",
+        "namePlaceholder": "Enter organization unit name",
+        "description": "Description",
+        "descriptionPlaceholder": "Enter description",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create": "Create",
+        "update": "Update"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancelDeletion": "Cancel Deletion"
+      },
+      "messages": {
+        "saveSuccess": "Organization unit saved successfully",
+        "saveError": "Failed to save organization unit",
+        "deleteSuccess": "Organization unit deleted successfully",
+        "deleteError": "Failed to delete organization unit",
+        "loadError": "Failed to load organization unit",
+        "deletionPending": "Organization unit is scheduled for deletion",
+        "deletionCancelled": "Deletion cancelled successfully"
+      },
+      "dialogs": {
+        "deleteConfirm": {
+          "title": "Delete Organization Unit",
+          "message": "Are you sure you want to delete this organization unit? This action cannot be undone.",
+          "confirm": "Delete",
+          "cancel": "Cancel"
+        },
+        "nameChangeWarning": {
+          "title": "Change Organization Name",
+          "message": "Changing the organization name will affect how users access this organization. Are you sure you want to proceed?",
+          "confirm": "Yes, Change Name",
+          "cancel": "Cancel"
+        },
+        "cancelDeletionConfirm": {
+          "title": "Cancel Deletion",
+          "message": "Are you sure you want to cancel the deletion of this organization unit?",
+          "confirm": "Yes, Cancel Deletion",
+          "cancel": "No, Keep Deletion"
+        }
+      },
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "deleting": "Deleting"
+      },
+      "search": {
+        "placeholder": "Search organization units...",
+        "noResults": "No Description"
+      },
+      "deletion": {
+        "willBeDeleted": "This organization unit will be deleted in",
+        "deleting": "Deleting organization unit..."
+      }
+    },
+    "subscription": {
+      "title": "Subscription Management",
+      "description": "Manage your organization's subscription and billing",
+      "loading": {
+        "title": "Subscription Management",
+        "description": "Manage your organization's subscription and billing"
+      },
+      "cards": {
+        "status": "Status",
+        "plan": "Plan",
+        "daysRemaining": "Days Remaining",
+        "trialStatus": "Trial Status"
+      },
+      "placeholders": {
+        "noSubscription": "No Subscription",
+        "noPlan": "No Plan",
+        "notAvailable": "N/A",
+        "available": "Available",
+        "used": "Used",
+        "active": "Active",
+        "notAvailableStatus": "Not Available"
+      },
+      "currentSubscription": {
+        "title": "Current Subscription",
+        "description": "Details about your current subscription status",
+        "status": "Status:",
+        "plan": "Plan:",
+        "trialEnds": "Trial Ends:",
+        "nextBilling": "Next Billing:",
+        "manageBilling": "Manage Billing",
+        "noActiveSubscription": "No active subscription"
+      },
+      "freeTrial": {
+        "title": "Free Trial",
+        "description": "Start your free trial to access all features"
+      },
+      "badges": {
+        "trial": "Trial",
+        "active": "Active",
+        "expired": "Expired"
+      },
+      "trialManagement": "Trial Management",
+      "eligible": {
+        "description": "You can start a free trial to explore all premium features.",
+        "startTrial": "Start Free Trial",
+        "activating": "Activating Trial..."
+      },
+      "active": {
+        "description": "You have an active trial subscription"
+      },
+      "expired": {
+        "description": "Your trial has expired. Upgrade to continue using premium features.",
+        "upgrade": "Upgrade Now"
+      },
+      "used": {
+        "description": "You have already used your trial. Upgrade to continue using Pro features.",
+        "upgradeButton": "Upgrade to Pro"
+      },
+      "notEligible": {
+        "description": "Free trial is only available on your first organization unit. Upgrade to access Pro features.",
+        "upgradeButton": "Upgrade to Pro"
+      },
+      "unknown": {
+        "description": "Unable to determine trial status"
+      },
+      "toast": {
+        "startingTrial": {
+          "title": "Starting Trial...",
+          "description": "Please wait while we activate your free trial."
+        },
+        "trialStarted": {
+          "title": "Trial Started Successfully!",
+          "description": "Your free trial has been activated. Refreshing subscription status..."
+        },
+        "trialFailed": {
+          "title": "Failed to Start Trial",
+          "description": "Unable to start trial. Please try again."
+        },
+        "trialError": {
+          "title": "Error Starting Trial"
+        }
+      },
+      "billingHistory": {
+        "title": "Billing History",
+        "description": "Your recent invoices and receipts",
+        "tableHeaders": {
+          "date": "Date",
+          "status": "Status",
+          "amount": "Amount",
+          "invoice": "Invoice"
+        },
+        "statuses": {
+          "refunded": "Refunded",
+          "paid": "Paid"
+        },
+        "view": "View"
+      },
+      "accountInformation": {
+        "title": "Account Information",
+        "description": "Information about your account and trial usage",
+        "accountEmail": "Account Email:",
+        "fullName": "Full Name:",
+        "trialUsed": "Trial Used:",
+        "organizationUnits": "Organization Units:"
+      },
+      "paymentHistory": {
+        "title": "Payment History",
+        "noPayments": "No payment history available",
+        "columns": {
+          "id": "ID",
+          "amount": "Amount",
+          "status": "Status",
+          "date": "Date",
+          "details": "Details"
+        }
+      }
+    }
+  },
+  "asset": {
+    "title": "Assets",
+    "create": "Create Asset",
+    "loadError": "Failed to load assets. Please try again.",
+    "retry": "Retry",
+    "rowsLabel": "assets",
+    "types": {
+      "string": "String",
+      "secret": "Secret",
+      "all": "All Types",
+      "filter": "Filter type"
+    },
+    "columns": {
+      "actions": "Actions",
+      "key": "Key",
+      "type": "Type",
+      "description": "Description"
+    },
+    "form": {
+      "key": "Key",
+      "keyRequired": "Key is required",
+      "keyPlaceholder": "Enter asset key",
+      "keyVietnameseError": "Key must not contain Vietnamese characters or accents.",
+      "keyExistsError": "Key already exists. Please choose a unique key.",
+      "keyExistsEditError": "This key is already used by another asset. Please choose a different key.",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter description (optional)",
+      "type": "Type",
+      "typeRequired": "Type is required",
+      "selectType": "Select type",
+      "typeCannotChange": "(Cannot be changed)",
+      "value": "Value",
+      "valueRequired": "Value is required",
+      "valuePlaceholder": "Type a string value",
+      "save": "Save",
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update",
+      "createAsset": "Create Asset",
+      "editAsset": "Edit Asset"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "openMenu": "Open menu"
+    },
+    "messages": {
+      "saveSuccess": "Asset saved successfully",
+      "saveError": "Failed to save asset",
+      "deleteSuccess": "Asset deleted successfully",
+      "deleteError": "Failed to delete asset",
+      "loadError": "Failed to load asset details"
+    },
+    "dialogs": {
+      "deleteConfirm": {
+        "title": "Delete Asset",
+        "message": "Are you sure you want to delete this asset? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "detail": {
+      "title": "Asset Details",
+      "key": "Key:",
+      "type": "Type:",
+      "description": "Description:",
+      "createdBy": "Created By:",
+      "value": "Value:",
+      "connectedAgents": "Connected Agents",
+      "noAgents": "No agents connected to this asset",
+      "noDescription": "No description provided",
+      "loading": "Loading asset details...",
+      "notFound": "Asset not found",
+      "hideSecret": "Hide secret",
+      "showSecret": "Show secret"
+    },
+    "csv": {
+      "exportSuccess": "Assets exported successfully",
+      "exportFailed": "Failed to export assets",
+      "invalidFile": "Invalid File",
+      "selectCsvFile": "Please select a CSV file",
+      "fileTooLarge": "File Too Large",
+      "fileSizeLimit": "File size must be less than 10MB",
+      "templateDownloaded": "Template Downloaded",
+      "templateDownloadedDesc": "CSV template has been downloaded to help you format your data correctly",
+      "downloadTemplate": "Download Template"
     }
   }
 }
