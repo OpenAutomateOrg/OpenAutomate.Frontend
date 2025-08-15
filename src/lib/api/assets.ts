@@ -1,5 +1,4 @@
-import { api } from './client'
-import { getAuthToken } from '@/lib/auth/token-storage'
+import { api, fetchApi, fetchBlob } from './client'
 import type { CsvImportResultDto } from '@/types/assets'
 
 export interface CreateAssetDto {
@@ -305,30 +304,16 @@ export const getAllAgents = async (): Promise<Agent[]> => {
  */
 export const exportAssetsToCsv = async (includeSecrets: boolean = false): Promise<Blob> => {
   const tenant = getCurrentTenant()
-  
-  // Use fetchApi from client for proper authentication handling
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${getAuthToken()}`,
-      'Accept': 'text/csv',
-    },
-    credentials: 'include',
-  })
-  
-  if (!response.ok) {
-    // Try to get error message from response
-    let errorMessage = 'Failed to export assets'
-    try {
-      const errorData = await response.json()
-      errorMessage = errorData.message || errorMessage
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`
+
+  return fetchBlob(
+    `/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`,
+    {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/csv',
+      },
     }
-    throw new Error(errorMessage)
-  }
-  
-  return response.blob()
+  )
 }
 
 /**
@@ -338,27 +323,12 @@ export const importAssetsFromCsv = async (file: File): Promise<CsvImportResultDt
   const tenant = getCurrentTenant()
   const formData = new FormData()
   formData.append('file', file)
-  
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${tenant}/api/assets/import/csv`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${getAuthToken()}`,
+
+  return fetchApi<CsvImportResultDto>(
+    `/${tenant}/api/assets/import/csv`,
+    {
+      method: 'POST',
     },
-    body: formData,
-    credentials: 'include',
-  })
-  
-  if (!response.ok) {
-    // Try to get error message from response
-    let errorMessage = 'Failed to import assets'
-    try {
-      const errorData = await response.json()
-      errorMessage = errorData.message || errorMessage
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`
-    }
-    throw new Error(errorMessage)
-  }
-  
-  return response.json()
+    formData
+  )
 }

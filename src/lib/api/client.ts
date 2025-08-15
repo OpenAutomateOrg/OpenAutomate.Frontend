@@ -382,3 +382,73 @@ export const api = {
   delete: <T>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),
 }
+
+/**
+ * Generic function to make API requests that return Blob data (e.g., file downloads)
+ */
+export async function fetchBlob(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<Blob> {
+  const url = getFullUrl(endpoint)
+  const headers = prepareHeaders(options)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    })
+
+    // Handle successful responses
+    if (response.ok) {
+      return response.blob()
+    }
+
+    // Handle 401 Unauthorized responses
+    if (response.status === 401) {
+      // Skip token refresh for login and refresh-token endpoints
+      if (endpoint.includes('refresh-token') || endpoint.includes('login')) {
+        notifyTokenExpired()
+        throw await createApiError(response)
+      }
+
+      try {
+        const newToken = await refreshToken()
+        if (!newToken) {
+          throw await createApiError(response)
+        }
+
+        // Retry with new token
+        const retryHeaders = prepareHeaders(options)
+        retryHeaders.Authorization = `Bearer ${newToken}`
+
+        const retriedResponse = await fetch(url, {
+          ...options,
+          headers: retryHeaders,
+          credentials: 'include',
+        })
+
+        if (retriedResponse.ok) {
+          return retriedResponse.blob()
+        }
+        throw await createApiError(retriedResponse)
+      } catch {
+        notifyTokenExpired()
+        throw await createApiError(response)
+      }
+    }
+
+    // For all other error responses, create and throw an API error
+    throw await createApiError(response)
+  } catch (error) {
+    // If it's already an ApiError, rethrow it
+    if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+      throw error
+    }
+    // Convert network errors to structured ApiError objects
+    handleNetworkError(error)
+    // This line should never be reached since handleNetworkError always throws
+    throw new Error('Unexpected error in fetchBlob')
+  }
+}
