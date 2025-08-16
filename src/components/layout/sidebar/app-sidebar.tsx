@@ -22,10 +22,8 @@ import {
   createOrganizationData,
   filterNavigationByPermissions,
 } from '@/lib/config/navigation'
-import { useLocale } from '@/providers/locale-provider'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { t } = useLocale()
   const { user, hasPermission, isSystemAdmin, userProfile } = useAuth()
   const params = useParams()
   const tenant = params.tenant as string
@@ -68,35 +66,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // Regular users get filtered navigation based on permissions
     const userItems = createUserNavItems(createTenantUrl)
 
-    // Debug logging
-    console.log('Navigation Debug:', {
-      userItemsCount: userItems.length,
-      userItems: userItems.map((item) => ({
-        title: item.title,
-        url: item.url,
-        hasPermission: item.permission
-          ? hasPermission(item.permission.resource, item.permission.level)
-          : true,
-      })),
-      t: !!t,
-      hasPermission: !!hasPermission,
-    })
-
     // Filter items based on permissions
     const filteredUser = filterNavigationByPermissions(userItems, hasPermission)
-
-    // Debug filtered results
-    console.log('Filtered navigation:', {
-      originalCount: userItems.length,
-      filteredCount: filteredUser.length,
-      filtered: filteredUser.map((item) => ({ title: item.title, url: item.url })),
-    })
 
     return {
       user: filteredUser.length > 0 ? filteredUser : userItems,
       admin: [], // Regular users don't get admin items
     }
-  }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin, t])
+  }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin])
 
   /**
    * User data for the footer
