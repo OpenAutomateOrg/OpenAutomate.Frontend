@@ -251,7 +251,7 @@ export default function ExecutionsInterface() {
     let tabFilter = ''
     switch (tab) {
       case 'inprogress':
-        tabFilter = "status eq 'Running' or status eq 'Pending'"
+        tabFilter = "status eq 'Queued' or status eq 'Starting' or status eq 'Running'"
         break
       case 'scheduled':
         tabFilter = "status eq 'Scheduled'"
@@ -535,7 +535,7 @@ export default function ExecutionsInterface() {
       // Apply tab filtering
       filteredData = filteredData.filter((row) => {
         if (tab === 'inprogress') {
-          return row.state === 'Running' || row.state === 'Pending'
+          return row.state === 'Queued' || row.state === 'Starting' || row.state === 'Running'
         } else if (tab === 'scheduled') {
           return row.state === 'Scheduled'
         } else if (tab === 'historical') {
@@ -620,7 +620,7 @@ export default function ExecutionsInterface() {
       // Apply tab filtering to get accurate count
       const filteredCount = fallbackExecutions.filter((execution) => {
         if (tab === 'inprogress') {
-          return execution.status === 'Running' || execution.status === 'Pending'
+          return execution.status === 'Queued' || execution.status === 'Starting' || execution.status === 'Running'
         } else if (tab === 'scheduled') {
           return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
@@ -1061,8 +1061,9 @@ export default function ExecutionsInterface() {
             <ProgressToolbar
               table={table}
               statuses={[
+                { value: 'Queued', label: t('executions.status.queued') },
+                { value: 'Starting', label: t('executions.status.starting') },
                 { value: 'Running', label: t('executions.status.running') },
-                { value: 'Pending', label: t('executions.status.pending') },
               ]}
               onSearch={handleSearch}
               onStatusChange={handleStatusFilterChange}

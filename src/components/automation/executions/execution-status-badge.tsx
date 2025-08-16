@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, Clock, Play } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, Clock, Play, Timer } from 'lucide-react'
 import { useLocale } from '@/providers/locale-provider'
 
 interface ExecutionStatusBadgeProps {
@@ -12,6 +12,20 @@ export default function ExecutionStatusBadge({ status, className }: ExecutionSta
 
   const getStatusConfig = (status: string) => {
     switch (status.toLowerCase()) {
+      case 'queued':
+        return {
+          variant: 'secondary' as const,
+          icon: Clock,
+          label: t('executions.status.queued'),
+          className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        }
+      case 'starting':
+        return {
+          variant: 'secondary' as const,
+          icon: Timer,
+          label: t('executions.status.starting'),
+          className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+        }
       case 'pending':
         return {
           variant: 'secondary' as const,
