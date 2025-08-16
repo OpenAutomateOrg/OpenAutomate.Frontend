@@ -16,7 +16,6 @@ import { useAuth } from '@/hooks/use-auth'
 // Import navigation configuration
 import {
   createUserNavItems,
-  createTranslatedUserNavItems,
   adminNavItems,
   secondaryNavItems,
   createUserManagementItems,
@@ -67,10 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Regular users get filtered navigation based on permissions
-    // Use translated items if translation function is available, otherwise fallback to original
-    const userItems = t
-      ? createTranslatedUserNavItems(createTenantUrl, t)
-      : createUserNavItems(createTenantUrl)
+    const userItems = createUserNavItems(createTenantUrl)
 
     // Debug logging
     console.log('Navigation Debug:', {
@@ -97,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     })
 
     return {
-      user: filteredUser.length > 0 ? filteredUser : userItems, // Fallback to unfiltered if empty
+      user: filteredUser.length > 0 ? filteredUser : userItems,
       admin: [], // Regular users don't get admin items
     }
   }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin, t])
