@@ -70,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const filteredUser = filterNavigationByPermissions(userItems, hasPermission)
 
     return {
-      user: filteredUser,
+      user: filteredUser.length > 0 ? filteredUser : userItems,
       admin: [], // Regular users don't get admin items
     }
   }, [createTenantUrl, hasPermission, userProfile, isSystemAdmin])

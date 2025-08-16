@@ -9,9 +9,10 @@ import { getAutomationPackagesODataTotal } from '@/lib/api/automation-packages'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { usePathname } from 'next/navigation'
+import { useLocale } from '@/providers/locale-provider'
 
 export function SectionCards() {
-  // const { t } = useLocale()
+  const { t } = useLocale()
   const pathname = usePathname()
 
   const tenant = pathname.split('/')[1]
@@ -48,7 +49,7 @@ export function SectionCards() {
     <div className=" *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-5 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-white  dark:*:data-[slot=card]:bg-neutral-900 ">
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardTitle>Users</CardTitle>
+          <CardTitle>{t('sectionCard.user')}</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
               {totalUsers.toLocaleString()}
@@ -56,13 +57,13 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="text-muted-foreground"> Total organization users</div>
+          <div className="text-muted-foreground"> {t('sectionCard.totalUsers')}</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardTitle>Agents</CardTitle>
+          <CardTitle>{t('sectionCard.agent')}</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600  text-2xl font-semibold tabular-nums">
               {totalAgents.toLocaleString()}
@@ -70,13 +71,13 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="text-muted-foreground"> Total active agents</div>
+          <div className="text-muted-foreground"> {t('sectionCard.totalAgents')}</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardTitle>Assets</CardTitle>
+          <CardTitle>{t('sectionCard.assets')}</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
               {totalAssets.toLocaleString()}
@@ -84,13 +85,13 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="text-muted-foreground">Resources under control</div>
+          <div className="text-muted-foreground">{t('sectionCard.totalAssets')}</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardTitle>Schedules</CardTitle>
+          <CardTitle>{t('sectionCard.schedules')}</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
               {totalSchedules.toLocaleString()}
@@ -98,13 +99,13 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="text-muted-foreground">Scheduled tasks</div>
+          <div className="text-muted-foreground">{t('sectionCard.totalSchedules')}</div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader className="relative">
-          <CardTitle>Packages</CardTitle>
+          <CardTitle>{t('sectionCard.packages')}</CardTitle>
           <div className="flex justify-end">
             <CardDescription className="@[250px]/card:text-3xl text-orange-600 text-2xl font-semibold tabular-nums">
               {totalPackages.toLocaleString()}
@@ -112,7 +113,7 @@ export function SectionCards() {
           </div>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1 text-sm">
-          <div className="text-muted-foreground">Automation packages</div>
+          <div className="text-muted-foreground">{t('sectionCard.totalPackages')}</div>
         </CardFooter>
       </Card>
     </div>

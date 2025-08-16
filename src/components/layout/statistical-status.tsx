@@ -7,6 +7,7 @@ import { swrKeys } from '@/lib/config/swr-config'
 import useSWR from 'swr'
 import { useMemo } from 'react'
 import { usePathname } from 'next/navigation'
+import { useLocale } from '@/providers/locale-provider'
 
 // Helper function to get status-specific colors
 const getStatusColor = (status: string): string => {
@@ -25,6 +26,7 @@ const getStatusColor = (status: string): string => {
 }
 
 export function StatisticalStatus() {
+  const { t } = useLocale()
   const pathname = usePathname()
   const tenant = pathname.split('/')[1]
   // Fetch executions data for status counting
@@ -77,7 +79,7 @@ export function StatisticalStatus() {
       <Card className="flex flex-col h-full flex-1">
         <CardHeader className="items-center pb-4">
           <CardTitle className="flex items-center justify-between text-lg font-medium w-full">
-            <span>Execution Status</span>
+            <span>{t('dashboard.statisticalStatus.title')}</span>
             <Info className="w-5 h-5 text-muted-foreground" />
           </CardTitle>
         </CardHeader>
@@ -90,13 +92,13 @@ export function StatisticalStatus() {
               >
                 <CardContent className="p-4 flex flex-col items-center justify-center space-y-3">
                   <div className="px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ">
-                    {status.label}
+                    {t(`dashboard.statisticalStatus.${status.label.toLowerCase()}`)}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
                     {status.count.toLocaleString()}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {status.label.toLowerCase()} jobs
+                    {t(`dashboard.statisticalStatus.${status.label.toLowerCase()}Jobs`)}
                   </div>
                 </CardContent>
               </Card>

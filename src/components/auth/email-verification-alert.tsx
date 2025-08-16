@@ -7,6 +7,7 @@ import { authApi } from '@/lib/api/auth'
 import { extractErrorMessage } from '@/lib/utils/error-utils'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { useLocale } from '@/providers/locale-provider'
 
 interface EmailVerificationAlertProps {
   readonly email: string
@@ -14,6 +15,7 @@ interface EmailVerificationAlertProps {
 }
 
 export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerificationAlertProps) {
+  const { t } = useLocale()
   const [isResending, setIsResending] = useState(false)
   const [resendStatus, setResendStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -33,7 +35,8 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
       console.error('Failed to resend verification email:', error)
 
       // Use the shared utility function to extract error message
-      const displayError = extractErrorMessage(error) ?? 'Failed to resend. Please try again.'
+      const displayError =
+        extractErrorMessage(error) ?? t('auth.emailVerification.error.description')
       setErrorMessage(displayError)
     } finally {
       setIsResending(false)
@@ -49,7 +52,9 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
         disabled={isResending}
       >
         {isResending && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
-        {isResending ? 'Sending...' : 'Resend verification email'}
+        {isResending
+          ? t('auth.emailVerification.sending')
+          : t('auth.emailVerification.resendButton')}
       </Button>
 
       {resendStatus === 'success' && (
@@ -59,8 +64,10 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
         >
           <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
           <div>
-            <AlertTitle className="font-semibold">Verification email sent!</AlertTitle>
-            <AlertDescription>Please check your inbox.</AlertDescription>
+            <AlertTitle className="font-semibold">
+              {t('auth.emailVerification.success.title')}
+            </AlertTitle>
+            <AlertDescription>{t('auth.emailVerification.success.description')}</AlertDescription>
           </div>
         </Alert>
       )}
@@ -69,9 +76,11 @@ export function EmailVerificationAlert({ email, onResendSuccess }: EmailVerifica
         <Alert variant="destructive" className="animate-fade-in">
           <AlertCircle className="h-5 w-5 text-red-500" />
           <div>
-            <AlertTitle className="font-semibold">Failed to resend</AlertTitle>
+            <AlertTitle className="font-semibold">
+              {t('auth.emailVerification.error.title')}
+            </AlertTitle>
             <AlertDescription>
-              {errorMessage ?? 'Failed to resend. Please try again.'}
+              {errorMessage ?? t('auth.emailVerification.error.description')}
             </AlertDescription>
           </div>
         </Alert>

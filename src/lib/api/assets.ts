@@ -1,4 +1,5 @@
-import { api } from './client'
+import { api, fetchApi, fetchBlob } from './client'
+import type { CsvImportResultDto } from '@/types/assets'
 
 export interface CreateAssetDto {
   key: string
@@ -61,6 +62,8 @@ export interface Agent {
   id: string
   name: string
 }
+
+// CsvImportResultDto is now imported from types
 
 // Get the current tenant from the URL path
 const getCurrentTenant = (): string => {
@@ -293,4 +296,39 @@ export const getAssetAgents = async (id: string): Promise<BotAgentSummaryDto[]> 
 export const getAllAgents = async (): Promise<Agent[]> => {
   const tenant = getCurrentTenant()
   return api.get<Agent[]>(`${tenant}/api/agents`)
+}
+
+/**
+ * Export assets to CSV
+ * @param includeSecrets Whether to include actual secret values or use placeholders (default: false for security)
+ */
+export const exportAssetsToCsv = async (includeSecrets: boolean = false): Promise<Blob> => {
+  const tenant = getCurrentTenant()
+
+  return fetchBlob(
+    `/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`,
+    {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/csv',
+      },
+    }
+  )
+}
+
+/**
+ * Import assets from CSV file
+ */
+export const importAssetsFromCsv = async (file: File): Promise<CsvImportResultDto> => {
+  const tenant = getCurrentTenant()
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return fetchApi<CsvImportResultDto>(
+    `/${tenant}/api/assets/import/csv`,
+    {
+      method: 'POST',
+    },
+    formData
+  )
 }

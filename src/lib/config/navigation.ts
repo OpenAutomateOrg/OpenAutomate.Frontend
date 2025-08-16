@@ -13,6 +13,25 @@ import {
 } from 'lucide-react'
 import { Resources, Permissions } from '@/lib/constants/resources'
 
+// Translation keys for navigation items
+export const NAVIGATION_KEYS = {
+  home: 'navigation.home',
+  automation: 'navigation.automation',
+  executions: 'navigation.executions',
+  schedule: 'navigation.schedule',
+  package: 'navigation.package',
+  agent: 'navigation.agent',
+  asset: 'navigation.asset',
+  administration: 'navigation.administration',
+  users: 'navigation.users',
+  roles: 'navigation.roles',
+  organizationUnits: 'navigation.organizationUnits',
+  subscription: 'navigation.subscription',
+  help: 'navigation.help',
+  support: 'navigation.support',
+  settings: 'navigation.settings',
+} as const
+
 /**
  * Interface for navigation items with permission requirements
  * Compatible with NavMain component interface
@@ -57,6 +76,7 @@ export interface UserNavigationItem {
   url: string
   icon: LucideIcon
 }
+
 
 /**
  * Common navigation items for all users with tenant context
