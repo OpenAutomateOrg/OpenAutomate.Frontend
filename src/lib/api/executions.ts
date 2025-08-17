@@ -85,6 +85,15 @@ function processODataResponse<T>(response: unknown): ODataResponse<T> {
     return { value: [] }
   }
 
+  // Handle case where response is a plain array (backend returning array directly)
+  if (Array.isArray(response)) {
+    console.log('Converting plain array response to OData format')
+    return {
+      value: response as T[],
+      '@odata.count': response.length,
+    }
+  }
+
   const result = response as Record<string, unknown>
 
   return {
@@ -137,17 +146,12 @@ export const getExecutionsWithOData = async (
     safeOptions.$top = 10 // Default to 10 items if not specified
   }
 
-  // Add cache busting parameter for pagination requests
-  const timestamp = new Date().getTime()
-
   const queryString = buildODataQueryString(safeOptions)
   let endpoint = `${tenant}/odata/Executions`
 
-  // Add the query string with cache busting
+  // Add the query string
   if (queryString) {
-    endpoint += `?${queryString}&_t=${timestamp}`
-  } else {
-    endpoint += `?_t=${timestamp}`
+    endpoint += `?${queryString}`
   }
 
   console.log(`Fetching executions with endpoint: ${endpoint}`)

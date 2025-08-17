@@ -35,6 +35,8 @@ const getStatusBadgeClass = (status: string) => {
         case 'running':
         case 'in progress':
             return 'bg-blue-100 text-blue-700 border-blue-300'
+        case 'starting':
+            return 'bg-orange-100 text-orange-700 border-orange-300'
         case 'pending':
         case 'queued':
             return 'bg-yellow-100 text-yellow-700 border-yellow-300'

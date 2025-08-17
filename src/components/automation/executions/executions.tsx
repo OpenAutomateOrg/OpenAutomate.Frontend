@@ -102,19 +102,24 @@ export default function ExecutionsInterface() {
 
   // Initialize state from URL params
   const initColumnFilters = (): ColumnFiltersState => {
+    // Temporarily disable ALL column filters for In Progress tab to test
+    if (tab === 'inprogress') {
+      console.log('🔍 Disabling ALL column filters for In Progress tab (debugging)')
+      return []
+    }
+
     const filters: ColumnFiltersState = []
 
     const searchFilter = searchParams.get('search')
     if (searchFilter) {
-      if (tab === 'inprogress' || tab === 'historical') {
-        filters.push({ id: 'agent', value: searchFilter })
-      } else {
-        filters.push({ id: 'packageName', value: searchFilter })
-      }
+      filters.push({ id: 'packageName', value: searchFilter })
     }
 
+    // Apply status filter for other tabs
     const statusFilter = searchParams.get('status')
-    if (statusFilter) filters.push({ id: 'state', value: statusFilter })
+    if (statusFilter) {
+      filters.push({ id: 'state', value: statusFilter })
+    }
 
     return filters
   }
@@ -231,7 +236,7 @@ export default function ExecutionsInterface() {
               return `contains(tolower(botAgentName), '${value.toLowerCase()}')`
             }
             if (column === 'state' && value) {
-              return `state eq '${value}'`
+              return `Status eq '${value}'`
             }
             return `contains(tolower(${column}), '${value.toLowerCase()}')`
           } else if (Array.isArray(value)) {
@@ -251,13 +256,13 @@ export default function ExecutionsInterface() {
     let tabFilter = ''
     switch (tab) {
       case 'inprogress':
-        tabFilter = "status eq 'Running' or status eq 'Pending'"
+        tabFilter = "Status eq 'Queued' or Status eq 'Starting' or Status eq 'Running'"
         break
       case 'scheduled':
-        tabFilter = "status eq 'Scheduled'"
+        tabFilter = "Status eq 'Scheduled'"
         break
       case 'historical':
-        tabFilter = "status eq 'Completed' or status eq 'Failed' or status eq 'Cancelled'"
+        tabFilter = "Status eq 'Completed' or Status eq 'Failed' or Status eq 'Cancelled'"
         break
     }
 
@@ -281,10 +286,11 @@ export default function ExecutionsInterface() {
     isLoading,
     mutate: mutateExecutions,
   } = useSWR(swrKey, () => getExecutionsWithOData(queryParams), {
-    dedupingInterval: 0, // Disable deduping to ensure fresh data on pagination change
-    revalidateOnFocus: false, // Prevent auto revalidation on window focus
-    revalidateIfStale: false, // Only revalidate when explicitly called
-    keepPreviousData: false, // Don't keep previous data when fetching new data
+    dedupingInterval: 2000, // Prevent duplicate requests within 2 seconds
+    revalidateOnFocus: false, // Disable aggressive revalidation
+    revalidateIfStale: true, // Only revalidate if data is actually stale
+    keepPreviousData: true, // Keep previous data while fetching new data for better UX
+    refreshInterval: tab === 'inprogress' ? 30000 : 0, // Refresh every 30 seconds for In Progress tab (much less aggressive)
   })
 
   // Fallback to regular executions API if OData fails or returns empty data
@@ -293,14 +299,16 @@ export default function ExecutionsInterface() {
     getAllExecutions,
   )
 
-  // Debug logging for data sources
-  console.log('📊 Data source debug:', {
-    hasODataResponse: !!executionsResponse?.value,
-    oDataCount: executionsResponse?.value?.length || 0,
-    hasFallback: !!fallbackExecutions,
-    fallbackCount: fallbackExecutions?.length || 0,
-    hasError: !!executionsError,
-  })
+  // Debug logging for data sources (only when there are issues)
+  if (executionsError || (executionsResponse?.value?.length === 0 && fallbackExecutions)) {
+    console.log('📊 Data source debug:', {
+      hasODataResponse: !!executionsResponse?.value,
+      oDataCount: executionsResponse?.value?.length || 0,
+      hasFallback: !!fallbackExecutions,
+      fallbackCount: fallbackExecutions?.length || 0,
+      hasError: !!executionsError,
+    })
+  }
 
   // Combined loading state
   const isDataLoading = isLoading || (executionsError && !fallbackExecutions)
@@ -395,102 +403,103 @@ export default function ExecutionsInterface() {
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops
 
+  // Helper function to filter data by tab
+  const filterByTab = useCallback((data: ExecutionsRow[], currentTab: string) => {
+    return data.filter((row) => {
+      if (currentTab === 'inprogress') {
+        return row.state === 'Running' || row.state === 'Pending'
+      } else if (currentTab === 'scheduled') {
+        return row.state === 'Scheduled'
+      } else if (currentTab === 'historical') {
+        return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
+      }
+      return true
+    })
+  }, [])
+
+  // Helper function to apply sorting
+  const applySorting = useCallback((data: ExecutionsRow[], sortConfig: SortingState) => {
+    if (sortConfig.length === 0) return data
+
+    return [...data].sort((a, b) => {
+      const sort = sortConfig[0]
+      const aValue = a[sort.id as keyof ExecutionsRow]
+      const bValue = b[sort.id as keyof ExecutionsRow]
+
+      // Handle date sorting
+      if (sort.id === 'startTime' || sort.id === 'endTime') {
+        const dateA = new Date(aValue as string)
+        const dateB = new Date(bValue as string)
+
+        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
+        if (isNaN(dateA.getTime())) return 1
+        if (isNaN(dateB.getTime())) return -1
+
+        const result = dateA.getTime() - dateB.getTime()
+        return sort.desc ? -result : result
+      }
+
+      // Handle string sorting
+      const result = String(aValue).localeCompare(String(bValue))
+      return sort.desc ? -result : result
+    })
+  }, [])
+
+  // Helper function to apply search and state filters
+  const applyFilters = useCallback((data: ExecutionsRow[], search: string, filters: ColumnFiltersState) => {
+    let filtered = data
+
+    // Apply search filtering
+    if (search) {
+      filtered = filtered.filter((row) =>
+        row.agent?.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    // Apply state filter
+    const stateFilter = filters.find((filter) => filter.id === 'state')?.value as string
+    if (stateFilter) {
+      filtered = filtered.filter((row) => row.state === stateFilter)
+    }
+
+    return filtered
+  }, [])
+
+  // Helper function to process fallback data
+  const processFallbackData = useCallback(() => {
+    if (tab === 'inprogress') {
+      console.log('⚠️ Using fallback data for In Progress tab - OData filtering may not work correctly')
+    }
+
+    const transformedData = fallbackExecutions!.map(transformExecutionToRow)
+    let filteredData = filterByTab(transformedData, tab)
+    filteredData = applySorting(filteredData, sorting)
+    filteredData = applyFilters(filteredData, searchValue, columnFilters)
+
+    const filteredLength = filteredData.length
+    const start = pagination.pageIndex * pagination.pageSize
+    const end = start + pagination.pageSize
+    const paginatedData = filteredData.slice(start, end)
+
+    // Update total count
+    if (totalCount !== filteredLength) {
+      setTimeout(() => {
+        setTotalCount(filteredLength)
+        totalCountRef.current = filteredLength
+      }, 0)
+    }
+
+    return paginatedData
+  }, [fallbackExecutions, transformExecutionToRow, tab, filterByTab, applySorting, sorting, applyFilters, searchValue, columnFilters, pagination, totalCount])
+
   // Transform data during render
   const executions = useMemo(() => {
     // Use fallback data if OData response is empty
-    if (
-      fallbackExecutions &&
+    const shouldUseFallback = fallbackExecutions &&
       (!executionsResponse?.value || executionsResponse.value.length === 0)
-    ) {
-      console.log('⚠️ Using fallback data - this will ignore OData sorting!', pagination)
 
-      // Transform fallback data
-      const transformedData = fallbackExecutions.map((execution) =>
-        transformExecutionToRow(execution),
-      )
-
-      // Apply manual filtering for fallback data
-      let filteredData = transformedData
-
-      // 1. Apply tab filtering
-      filteredData = filteredData.filter((row) => {
-        if (tab === 'inprogress') {
-          return row.state === 'Running' || row.state === 'Pending'
-        } else if (tab === 'scheduled') {
-          return row.state === 'Scheduled'
-        } else if (tab === 'historical') {
-          return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
-        }
-        return true
-      })
-
-      // 1.5. Apply sorting to fallback data (since OData sorting is not available)
-      if (sorting.length > 0) {
-        filteredData.sort((a, b) => {
-          const sort = sorting[0] // Take first sort
-          const aValue = a[sort.id as keyof ExecutionsRow]
-          const bValue = b[sort.id as keyof ExecutionsRow]
-
-          // Handle date sorting for startTime/endTime
-          if (sort.id === 'startTime' || sort.id === 'endTime') {
-            const dateA = new Date(aValue as string)
-            const dateB = new Date(bValue as string)
-
-            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
-            if (isNaN(dateA.getTime())) return 1
-            if (isNaN(dateB.getTime())) return -1
-
-            const result = dateA.getTime() - dateB.getTime()
-            return sort.desc ? -result : result
-          }
-
-          // Handle string sorting
-          const result = String(aValue).localeCompare(String(bValue))
-          return sort.desc ? -result : result
-        })
-        console.log(
-          `🔄 Applied client-side sorting: ${sorting[0].id} ${sorting[0].desc ? 'desc' : 'asc'}`,
-        )
-      }
-
-      // 2. Apply search filtering if search value exists - search by Agent only
-      if (searchValue) {
-        filteredData = filteredData.filter((row) => {
-          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
-          return agentMatch
-        })
-      }
-
-      // 3. Apply state filter if exists
-      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
-      if (stateFilter) {
-        filteredData = filteredData.filter((row) => row.state === stateFilter)
-      }
-
-      // Store filtered data length for later use in useEffect
-      const filteredLength = filteredData.length
-
-      // 4. Apply pagination manually for fallback data
-      const start = pagination.pageIndex * pagination.pageSize
-      const end = start + pagination.pageSize
-
-      console.log(
-        `Slicing fallback data from ${start} to ${end} out of ${filteredData.length} items`,
-      )
-
-      const paginatedData = filteredData.slice(start, end)
-      console.log(`Returning ${paginatedData.length} items from fallback data`)
-
-      // Set totalCount outside of useMemo to avoid circular dependency
-      if (totalCount !== filteredLength) {
-        // Queue an update for the next render cycle
-        setTimeout(() => {
-          setTotalCount(filteredLength)
-          totalCountRef.current = filteredLength
-        }, 0)
-      }
-
-      return paginatedData
+    if (shouldUseFallback) {
+      return processFallbackData()
     }
 
     // Otherwise use OData response
@@ -499,68 +508,39 @@ export default function ExecutionsInterface() {
       return []
     }
 
-    console.log(
-      `✅ Using OData response with ${executionsResponse.value.length} items (sorting preserved)`,
-    )
-    console.log(
-      '📋 First 3 execution start times:',
-      executionsResponse.value.slice(0, 3).map((e) => ({
-        id: e.id.substring(0, 8),
-        startTime: e.startTime,
-        status: e.status,
-      })),
-    )
-    return executionsResponse.value.map((execution) => transformExecutionToRow(execution))
+    const transformedRows = executionsResponse.value.map(transformExecutionToRow)
+
+    console.log(`✅ OData returned ${executionsResponse.value.length} executions, transformed to ${transformedRows.length} rows`)
+    console.log('📋 Execution statuses from OData:', executionsResponse.value.map(e => ({
+      id: e.id.substring(0, 8),
+      status: e.status
+    })))
+    console.log('📋 Transformed row states:', transformedRows.map(r => ({
+      id: r.id.substring(0, 8),
+      State: r.State
+    })))
+
+    return transformedRows
   }, [
     executionsResponse,
     fallbackExecutions,
     transformExecutionToRow,
-    tab,
-    searchValue,
-    columnFilters,
-    pagination,
-    totalCount,
-    sorting, // Add sorting dependency for client-side sorting
+    processFallbackData,
   ])
 
   // Update totalCount from filteredData in a separate useEffect
   useEffect(() => {
-    if (
-      fallbackExecutions &&
+    const shouldUseFallback = fallbackExecutions &&
       (!executionsResponse?.value || executionsResponse.value.length === 0)
-    ) {
-      // Calculate filtered length using same logic as in useMemo
-      let filteredData = fallbackExecutions.map((execution) => transformExecutionToRow(execution))
 
-      // Apply tab filtering
-      filteredData = filteredData.filter((row) => {
-        if (tab === 'inprogress') {
-          return row.state === 'Running' || row.state === 'Pending'
-        } else if (tab === 'scheduled') {
-          return row.state === 'Scheduled'
-        } else if (tab === 'historical') {
-          return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
-        }
-        return true
-      })
-
-      // Apply search filtering
-      if (searchValue) {
-        filteredData = filteredData.filter((row) => {
-          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
-          return agentMatch
-        })
-      }
-
-      // Apply state filter
-      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
-      if (stateFilter) {
-        filteredData = filteredData.filter((row) => row.state === stateFilter)
-      }
+    if (shouldUseFallback) {
+      // Calculate filtered length using helper functions
+      const transformedData = fallbackExecutions!.map(transformExecutionToRow)
+      let filteredData = filterByTab(transformedData, tab)
+      filteredData = applyFilters(filteredData, searchValue, columnFilters)
 
       // Update total count if different
       if (totalCount !== filteredData.length) {
-        console.log('Updating total count from fallback data:', filteredData.length)
         setTotalCount(filteredData.length)
         totalCountRef.current = filteredData.length
       }
@@ -569,7 +549,9 @@ export default function ExecutionsInterface() {
     fallbackExecutions,
     executionsResponse,
     transformExecutionToRow,
+    filterByTab,
     tab,
+    applyFilters,
     searchValue,
     columnFilters,
     totalCount,
@@ -620,7 +602,7 @@ export default function ExecutionsInterface() {
       // Apply tab filtering to get accurate count
       const filteredCount = fallbackExecutions.filter((execution) => {
         if (tab === 'inprogress') {
-          return execution.status === 'Running' || execution.status === 'Pending'
+          return execution.status === 'Queued' || execution.status === 'Starting' || execution.status === 'Running'
         } else if (tab === 'scheduled') {
           return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
@@ -751,6 +733,16 @@ export default function ExecutionsInterface() {
     columns = HistoricalColumns
   }
 
+
+
+  // Debug logging for table state
+  console.log('🔍 Table state debug:', {
+    dataLength: executionsData.length,
+    columnFilters: columnFilters,
+    tab: tab,
+    hasActiveFilters: columnFilters.length > 0
+  })
+
   const table = useReactTable({
     data: executionsData,
     columns,
@@ -763,6 +755,13 @@ export default function ExecutionsInterface() {
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    // Use manual filtering since we're doing server-side filtering via OData
+    manualFiltering: true,
+    manualSorting: true,
+    manualPagination: true,
+    // Ensure no client-side filtering is applied
+    enableColumnFilters: false,
+    enableGlobalFilter: false,
     onSortingChange: (updater) => {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater
       setSorting(newSorting)
@@ -779,23 +778,18 @@ export default function ExecutionsInterface() {
           page: '1',
         })
       }
-      mutateExecutions()
+      // Remove mutateExecutions() - SWR will automatically refetch when the key changes
     },
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: (updater) => {
-      console.log('Pagination change triggered')
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater
-      console.log('Current pagination:', pagination, 'New pagination:', newPagination)
-
       setPagination(newPagination)
       updateUrl(pathname, {
         page: (newPagination.pageIndex + 1).toString(),
         size: newPagination.pageSize.toString(),
       })
-
-      console.log('Forcing data reload for pagination change')
-      mutateExecutions()
+      // Remove mutateExecutions() - SWR will automatically refetch when the key changes
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -803,10 +797,7 @@ export default function ExecutionsInterface() {
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true,
     pageCount,
-    manualSorting: true,
-    manualFiltering: true,
     getRowId: (row) => row.id,
   })
 
@@ -831,8 +822,7 @@ export default function ExecutionsInterface() {
             page: '1', // Reset to first page when filter changes
           })
 
-          // Force reload data when search changes
-          mutateExecutions()
+          // SWR will automatically refetch when the key changes due to URL update
         }
 
         setIsPending(false)
@@ -882,23 +872,27 @@ export default function ExecutionsInterface() {
     }
   }, [executionsError, fallbackExecutions, toast])
 
-  // ✅ Auto-refresh data when execution status changes to terminal states
-  // Client-only: Real-time data synchronization
+  // ✅ Auto-refresh data when execution status changes (SIMPLIFIED AND DEBOUNCED)
   useEffect(() => {
-    const terminalStatuses = ['Completed', 'Failed', 'Cancelled']
-    const hasTerminalUpdate = Object.values(executionStatuses).some((status) =>
-      terminalStatuses.includes(status.status),
-    )
-
-    if (hasTerminalUpdate) {
-      // Debounce the refresh to avoid excessive API calls
+    if (Object.keys(executionStatuses).length > 0 && tab === 'inprogress') {
+      // Only refresh for In Progress tab and with longer debounce
       const refreshTimeout = setTimeout(() => {
         mutateExecutions()
-      }, 1000)
+      }, 3000) // Increased debounce to 3 seconds
 
       return () => clearTimeout(refreshTimeout)
     }
-  }, [executionStatuses, mutateExecutions])
+  }, [executionStatuses, mutateExecutions, tab])
+
+  // Remove periodic refresh - SWR's refreshInterval handles this more efficiently
+
+  // ✅ Auto-adjust page size for In Progress tab to show more executions
+  useEffect(() => {
+    if (tab === 'inprogress' && pagination.pageSize < 25) {
+      setPagination(prev => ({ ...prev, pageSize: 25 }))
+      updateUrl(pathname, { size: '25' })
+    }
+  }, [tab, pagination.pageSize, setPagination, updateUrl, pathname])
 
   const handleCreateSuccess = useCallback(
     (newExecution?: { id: string; packageName: string; botAgentName: string }) => {
@@ -918,7 +912,7 @@ export default function ExecutionsInterface() {
               id: newExecution.id,
               packageName: newExecution.packageName,
               botAgentName: newExecution.botAgentName,
-              status: 'Pending',
+              status: 'Queued', // Start with Queued status for new executions
               startTime: new Date().toISOString(), // This is already UTC format
               endTime: undefined,
               packageVersion: undefined,
@@ -1061,8 +1055,9 @@ export default function ExecutionsInterface() {
             <ProgressToolbar
               table={table}
               statuses={[
+                { value: 'Queued', label: t('executions.status.queued') },
+                { value: 'Starting', label: t('executions.status.starting') },
                 { value: 'Running', label: t('executions.status.running') },
-                { value: 'Pending', label: t('executions.status.pending') },
               ]}
               onSearch={handleSearch}
               onStatusChange={handleStatusFilterChange}
@@ -1070,6 +1065,7 @@ export default function ExecutionsInterface() {
               isFiltering={isDataLoading}
               isPending={isPending}
             />
+
             <DataTable
               data={executionsData}
               columns={ProgressColumns}
