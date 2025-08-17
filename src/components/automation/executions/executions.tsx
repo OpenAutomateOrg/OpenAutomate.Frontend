@@ -403,105 +403,103 @@ export default function ExecutionsInterface() {
   // ✅ SWR automatically refetches when queryParams change, no manual reload needed
   // Removed problematic useEffect hooks that caused infinite loops
 
+  // Helper function to filter data by tab
+  const filterByTab = useCallback((data: ExecutionsRow[], currentTab: string) => {
+    return data.filter((row) => {
+      if (currentTab === 'inprogress') {
+        return row.state === 'Running' || row.state === 'Pending'
+      } else if (currentTab === 'scheduled') {
+        return row.state === 'Scheduled'
+      } else if (currentTab === 'historical') {
+        return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
+      }
+      return true
+    })
+  }, [])
+
+  // Helper function to apply sorting
+  const applySorting = useCallback((data: ExecutionsRow[], sortConfig: SortingState) => {
+    if (sortConfig.length === 0) return data
+
+    return [...data].sort((a, b) => {
+      const sort = sortConfig[0]
+      const aValue = a[sort.id as keyof ExecutionsRow]
+      const bValue = b[sort.id as keyof ExecutionsRow]
+
+      // Handle date sorting
+      if (sort.id === 'startTime' || sort.id === 'endTime') {
+        const dateA = new Date(aValue as string)
+        const dateB = new Date(bValue as string)
+
+        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
+        if (isNaN(dateA.getTime())) return 1
+        if (isNaN(dateB.getTime())) return -1
+
+        const result = dateA.getTime() - dateB.getTime()
+        return sort.desc ? -result : result
+      }
+
+      // Handle string sorting
+      const result = String(aValue).localeCompare(String(bValue))
+      return sort.desc ? -result : result
+    })
+  }, [])
+
+  // Helper function to apply search and state filters
+  const applyFilters = useCallback((data: ExecutionsRow[], search: string, filters: ColumnFiltersState) => {
+    let filtered = data
+
+    // Apply search filtering
+    if (search) {
+      filtered = filtered.filter((row) =>
+        row.agent?.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    // Apply state filter
+    const stateFilter = filters.find((filter) => filter.id === 'state')?.value as string
+    if (stateFilter) {
+      filtered = filtered.filter((row) => row.state === stateFilter)
+    }
+
+    return filtered
+  }, [])
+
+  // Helper function to process fallback data
+  const processFallbackData = useCallback(() => {
+    if (tab === 'inprogress') {
+      console.log('⚠️ Using fallback data for In Progress tab - OData filtering may not work correctly')
+    }
+
+    const transformedData = fallbackExecutions!.map(transformExecutionToRow)
+    let filteredData = filterByTab(transformedData, tab)
+    filteredData = applySorting(filteredData, sorting)
+    filteredData = applyFilters(filteredData, searchValue, columnFilters)
+
+    const filteredLength = filteredData.length
+    const start = pagination.pageIndex * pagination.pageSize
+    const end = start + pagination.pageSize
+    const paginatedData = filteredData.slice(start, end)
+
+    // Update total count
+    if (totalCount !== filteredLength) {
+      setTimeout(() => {
+        setTotalCount(filteredLength)
+        totalCountRef.current = filteredLength
+      }, 0)
+    }
+
+    return paginatedData
+  }, [fallbackExecutions, transformExecutionToRow, tab, filterByTab, applySorting, sorting, applyFilters, searchValue, columnFilters, pagination, totalCount])
+
   // Transform data during render
   const executions = useMemo(() => {
     // Use fallback data if OData response is empty
-    if (
-      fallbackExecutions &&
+    const shouldUseFallback = fallbackExecutions &&
       (!executionsResponse?.value || executionsResponse.value.length === 0)
-    ) {
-      // Only log fallback usage once per tab change
-      if (tab === 'inprogress') {
-        console.log('⚠️ Using fallback data for In Progress tab - OData filtering may not work correctly')
-      }
 
-      // Transform fallback data
-      const transformedData = fallbackExecutions.map((execution) =>
-        transformExecutionToRow(execution),
-      )
-
-      // Apply manual filtering for fallback data
-      let filteredData = transformedData
-
-      // 1. Apply tab filtering
-      filteredData = filteredData.filter((row) => {
-        if (tab === 'inprogress') {
-          return row.state === 'Running' || row.state === 'Pending'
-        } else if (tab === 'scheduled') {
-          return row.state === 'Scheduled'
-        } else if (tab === 'historical') {
-          return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
-        }
-        return true
-      })
-
-      // 1.5. Apply sorting to fallback data (since OData sorting is not available)
-      if (sorting.length > 0) {
-        filteredData.sort((a, b) => {
-          const sort = sorting[0] // Take first sort
-          const aValue = a[sort.id as keyof ExecutionsRow]
-          const bValue = b[sort.id as keyof ExecutionsRow]
-
-          // Handle date sorting for startTime/endTime
-          if (sort.id === 'startTime' || sort.id === 'endTime') {
-            const dateA = new Date(aValue as string)
-            const dateB = new Date(bValue as string)
-
-            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0
-            if (isNaN(dateA.getTime())) return 1
-            if (isNaN(dateB.getTime())) return -1
-
-            const result = dateA.getTime() - dateB.getTime()
-            return sort.desc ? -result : result
-          }
-
-          // Handle string sorting
-          const result = String(aValue).localeCompare(String(bValue))
-          return sort.desc ? -result : result
-        })
-        console.log(
-          `🔄 Applied client-side sorting: ${sorting[0].id} ${sorting[0].desc ? 'desc' : 'asc'}`,
-        )
-      }
-
-      // 2. Apply search filtering if search value exists - search by Agent only
-      if (searchValue) {
-        filteredData = filteredData.filter((row) => {
-          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
-          return agentMatch
-        })
-      }
-
-      // 3. Apply state filter if exists
-      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
-      if (stateFilter) {
-        filteredData = filteredData.filter((row) => row.state === stateFilter)
-      }
-
-      // Store filtered data length for later use in useEffect
-      const filteredLength = filteredData.length
-
-      // 4. Apply pagination manually for fallback data
-      const start = pagination.pageIndex * pagination.pageSize
-      const end = start + pagination.pageSize
-
-      const paginatedData = filteredData.slice(start, end)
-
-      // Only log pagination details if there are issues
-      if (paginatedData.length === 0 && filteredData.length > 0) {
-        console.log(`⚠️ Pagination issue: ${filteredData.length} filtered items but 0 on current page`)
-      }
-
-      // Set totalCount outside of useMemo to avoid circular dependency
-      if (totalCount !== filteredLength) {
-        // Queue an update for the next render cycle
-        setTimeout(() => {
-          setTotalCount(filteredLength)
-          totalCountRef.current = filteredLength
-        }, 0)
-      }
-
-      return paginatedData
+    if (shouldUseFallback) {
+      return processFallbackData()
     }
 
     // Otherwise use OData response
@@ -510,7 +508,7 @@ export default function ExecutionsInterface() {
       return []
     }
 
-    const transformedRows = executionsResponse.value.map((execution) => transformExecutionToRow(execution))
+    const transformedRows = executionsResponse.value.map(transformExecutionToRow)
 
     console.log(`✅ OData returned ${executionsResponse.value.length} executions, transformed to ${transformedRows.length} rows`)
     console.log('📋 Execution statuses from OData:', executionsResponse.value.map(e => ({
@@ -527,48 +525,19 @@ export default function ExecutionsInterface() {
     executionsResponse,
     fallbackExecutions,
     transformExecutionToRow,
-    tab,
-    searchValue,
-    columnFilters,
-    pagination,
-    totalCount,
-    sorting, // Add sorting dependency for client-side sorting
+    processFallbackData,
   ])
 
   // Update totalCount from filteredData in a separate useEffect
   useEffect(() => {
-    if (
-      fallbackExecutions &&
+    const shouldUseFallback = fallbackExecutions &&
       (!executionsResponse?.value || executionsResponse.value.length === 0)
-    ) {
-      // Calculate filtered length using same logic as in useMemo
-      let filteredData = fallbackExecutions.map((execution) => transformExecutionToRow(execution))
 
-      // Apply tab filtering
-      filteredData = filteredData.filter((row) => {
-        if (tab === 'inprogress') {
-          return row.state === 'Queued' || row.state === 'Starting' || row.state === 'Running'
-        } else if (tab === 'scheduled') {
-          return row.state === 'Scheduled'
-        } else if (tab === 'historical') {
-          return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
-        }
-        return true
-      })
-
-      // Apply search filtering
-      if (searchValue) {
-        filteredData = filteredData.filter((row) => {
-          const agentMatch = row.agent?.toLowerCase().includes(searchValue.toLowerCase())
-          return agentMatch
-        })
-      }
-
-      // Apply state filter
-      const stateFilter = columnFilters.find((filter) => filter.id === 'state')?.value as string
-      if (stateFilter) {
-        filteredData = filteredData.filter((row) => row.state === stateFilter)
-      }
+    if (shouldUseFallback) {
+      // Calculate filtered length using helper functions
+      const transformedData = fallbackExecutions!.map(transformExecutionToRow)
+      let filteredData = filterByTab(transformedData, tab)
+      filteredData = applyFilters(filteredData, searchValue, columnFilters)
 
       // Update total count if different
       if (totalCount !== filteredData.length) {
@@ -580,7 +549,9 @@ export default function ExecutionsInterface() {
     fallbackExecutions,
     executionsResponse,
     transformExecutionToRow,
+    filterByTab,
     tab,
+    applyFilters,
     searchValue,
     columnFilters,
     totalCount,
