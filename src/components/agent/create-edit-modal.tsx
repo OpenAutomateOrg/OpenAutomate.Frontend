@@ -156,12 +156,33 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
     }
   }
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, type: 'key' | 'url') => {
     navigator.clipboard.writeText(text)
     toast({
       title: 'Copied',
-      description: 'Machine key copied to clipboard',
+      description: type === 'key' ? 'Agent key copied to clipboard' : 'Orchestrator URL copied to clipboard',
     })
+  }
+
+  // Get current tenant slug from URL
+  const getCurrentTenantSlug = (): string => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.split('/')
+      // URL format: /[tenant]/...
+      if (path.length > 1 && path[1]) {
+        return path[1]
+      }
+    }
+    return ''
+  }
+
+  // Generate Orchestrator URL
+  const getOrchestratorUrl = (): string => {
+    const tenantSlug = getCurrentTenantSlug()
+    if (typeof window !== 'undefined' && tenantSlug) {
+      return `${window.location.origin}/${tenantSlug}`
+    }
+    return ''
   }
 
   const resetForm = () => {
@@ -243,23 +264,25 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
             </div>
           </form>
         ) : (
-          // Success state giữ nguyên
+          // Success state with Agent Key and Orchestrator URL
           <div className="space-y-4 px-6 py-4">
             <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md text-sm">
               <p className="font-medium text-green-800 dark:text-green-300 mb-2">
                 Agent created successfully!
               </p>
               <p className="text-green-700 dark:text-green-400 mb-4">
-                Please copy the machine key below. It will only be shown once.
+                Please copy the agent key and orchestrator URL below. The agent key will only be shown once.
               </p>
             </div>
+
+            {/* Agent Key */}
             <div className="space-y-1">
-              <label htmlFor="machine-key" className="block text-sm font-medium">
-                Machine Key
+              <label htmlFor="agent-key" className="block text-sm font-medium">
+                Agent Key
               </label>
               <div className="flex">
                 <Input
-                  id="machine-key"
+                  id="agent-key"
                   value={createdAgent.machineKey}
                   readOnly
                   className="flex-1 bg-muted font-mono text-xs"
@@ -267,8 +290,33 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => copyToClipboard(createdAgent.machineKey)}
+                  onClick={() => copyToClipboard(createdAgent.machineKey, 'key')}
                   className="ml-2"
+                  title="Copy Agent Key"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Orchestrator URL */}
+            <div className="space-y-1">
+              <label htmlFor="orchestrator-url" className="block text-sm font-medium">
+                Orchestrator URL
+              </label>
+              <div className="flex">
+                <Input
+                  id="orchestrator-url"
+                  value={getOrchestratorUrl()}
+                  readOnly
+                  className="flex-1 bg-muted font-mono text-xs"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyToClipboard(getOrchestratorUrl(), 'url')}
+                  className="ml-2"
+                  title="Copy Orchestrator URL"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
