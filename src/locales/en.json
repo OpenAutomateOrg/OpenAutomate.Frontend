@@ -30,6 +30,8 @@
       "historical": "Historical"
     },
     "status": {
+      "queued": "Queued",
+      "starting": "Starting",
       "running": "Running",
       "pending": "Pending",
       "scheduled": "Scheduled",

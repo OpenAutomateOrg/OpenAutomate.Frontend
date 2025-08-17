@@ -30,6 +30,8 @@
       "historical": "Lịch sử"
     },
     "status": {
+      "queued": "Đang xếp hàng",
+      "starting": "Đang khởi động",
       "running": "Đang chạy",
       "pending": "Đang chờ",
       "scheduled": "Đã lên lịch",
