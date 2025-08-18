@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         {/* Lemon Squeezy overlay script for embedded checkout */}
         <script src="https://assets.lemonsqueezy.com/lemon.js" defer />
         <LocaleProvider>

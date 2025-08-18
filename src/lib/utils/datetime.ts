@@ -1,13 +1,17 @@
 import { isValid } from 'date-fns'
 import { parseISO } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
 /**
  * Datetime utility functions for handling timezone conversions and formatting
  *
  * Key principles:
- * - Receive UTC from backend, display in user's local timezone
- * - Send UTC to backend from user's local input
- * - Centralized date handling to ensure consistency across the app
+ * - Backend ALWAYS sends UTC timestamps with 'Z' suffix (e.g., "2025-08-17T10:30:00.000Z")
+ * - Frontend ALWAYS converts UTC to user's local timezone for display
+ * - Frontend ALWAYS sends UTC timestamps to backend
+ * - All datetime handling goes through these utilities for consistency
+ * 
+ * Updated for UTC-only backend strategy (August 2025)
  */
 
 /**
@@ -92,15 +96,14 @@ export function formatUtcToLocal(
     let date: Date
 
     if (typeof utcDate === 'string') {
-      // Handle the case where backend sends UTC time without 'Z' suffix
-      // If the string doesn't end with 'Z' and doesn't have timezone info, assume it's UTC
-      let dateString = utcDate
-      if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
-        // Add 'Z' to indicate UTC timezone
-        dateString = dateString.replace(/(\.\d+)?$/, '$1Z')
+      // Handle backend UTC strings that may be missing 'Z' suffix
+      let dateString = utcDate.trim()
+      
+      // If it looks like ISO format but lacks timezone info, assume UTC
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?$/.test(dateString)) {
+        dateString += 'Z'
       }
 
-      // Create Date object from UTC string - this automatically converts to local timezone
       date = new Date(dateString)
     } else {
       // Already a Date object
@@ -265,4 +268,151 @@ export function validateUtcFormat(dateString: string): boolean {
     return false
   }
   return true
+}
+
+/**
+ * Create a UTC datetime string for schedule submission
+ * Takes local date/time inputs and converts to UTC for backend
+ * 
+ * @param date - Selected date (local)
+ * @param timeString - Time string like "17:30" or "5:30 PM"
+ * @returns UTC ISO string for backend submission
+ * 
+ * @example
+ * createUtcDateTimeString(new Date('2025-08-17'), '17:30') 
+ * // Returns "2025-08-17T10:30:00.000Z" (for Vietnam timezone UTC+7)
+ */
+export function createUtcDateTimeString(date: Date, timeString: string): string {
+  // Parse time string to get hours and minutes
+  const timeMatch = timeString.match(/(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
+  if (!timeMatch) {
+    throw new Error(`Invalid time format: ${timeString}`);
+  }
+
+  let hours = parseInt(timeMatch[1], 10);
+  const minutes = parseInt(timeMatch[2], 10);
+  const isPM = timeMatch[3]?.toUpperCase() === 'PM';
+  
+  // Convert to 24-hour format if needed
+  if (isPM && hours !== 12) {
+    hours += 12;
+  } else if (!isPM && hours === 12) {
+    hours = 0;
+  }
+
+  // Create a new date with the specified time in local timezone
+  const localDateTime = new Date(date);
+  localDateTime.setHours(hours, minutes, 0, 0);
+
+  // Convert to UTC ISO string for backend
+  return localDateTime.toISOString();
+}
+
+/**
+ * Get the user's current IANA timezone identifier
+ * 
+ * @returns IANA timezone ID (e.g., "Asia/Ho_Chi_Minh", "America/New_York")
+ */
+export function getUserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Format next run time with relative context
+ * Shows both absolute time and relative time (e.g., "Aug 17, 2025, 5:35 PM (in 5 minutes)")
+ * 
+ * @param utcNextRunTime - UTC datetime string from backend
+ * @returns Formatted string with context
+ */
+export function formatNextRunTimeWithContext(utcNextRunTime: string | null | undefined): string {
+  if (!utcNextRunTime) return 'Not scheduled';
+
+  try {
+    const nextRun = new Date(utcNextRunTime);
+    const now = new Date();
+    const diffMinutes = Math.round((nextRun.getTime() - now.getTime()) / (1000 * 60));
+
+    const absoluteTime = formatUtcToLocal(utcNextRunTime, {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    const relativeContext = getRelativeTimeContext(diffMinutes);
+    return relativeContext ? `${absoluteTime} (${relativeContext})` : absoluteTime;
+  } catch (error) {
+    console.warn('Error formatting next run time:', error, utcNextRunTime);
+    return 'Invalid time';
+  }
+}
+
+/**
+ * Helper function to generate relative time context
+ * @param diffMinutes - Difference in minutes (negative for past, positive for future)
+ * @returns Relative time string or null if no context needed
+ */
+function getRelativeTimeContext(diffMinutes: number): string | null {
+  const absDiffMinutes = Math.abs(diffMinutes);
+  const isPast = diffMinutes < 0;
+
+  if (absDiffMinutes < 60) {
+    return formatMinutesContext(absDiffMinutes, isPast);
+  }
+  
+  if (absDiffMinutes < 1440) {
+    const hours = Math.round(absDiffMinutes / 60);
+    return formatHoursContext(hours, isPast);
+  }
+
+  return null; // No context for times beyond 24 hours
+}
+
+/**
+ * Format minutes-based relative context
+ */
+function formatMinutesContext(minutes: number, isPast: boolean): string {
+  const plural = minutes !== 1 ? 's' : '';
+  return isPast ? `${minutes} minute${plural} ago` : `in ${minutes} minute${plural}`;
+}
+
+/**
+ * Format hours-based relative context
+ */
+function formatHoursContext(hours: number, isPast: boolean): string {
+  const plural = hours !== 1 ? 's' : '';
+  return isPast ? `${hours} hour${plural} ago` : `in ${hours} hour${plural}`;
+}
+
+/**
+ * Safely format a relative time string with error handling
+ * @param utcDateString - UTC datetime string from backend
+ * @param options - Options for formatting
+ * @returns Formatted relative time or fallback string
+ */
+export function safeFormatRelativeTime(
+  utcDateString: string | null | undefined, 
+  options: { 
+    addSuffix?: boolean;
+    fallback?: string;
+    prefix?: string;
+  } = {}
+): string {
+  const { addSuffix = true, fallback = 'Date pending', prefix = '' } = options;
+  
+  if (!utcDateString) return fallback;
+  
+  try {
+    const date = parseUtcDate(utcDateString);
+    if (!date) {
+      console.warn('Invalid date string for relative formatting:', utcDateString);
+      return fallback;
+    }
+    
+    // Use imported formatDistanceToNow function
+    const relativeTime = formatDistanceToNow(date, { addSuffix });
+    
+    return prefix ? `${prefix} ${relativeTime}` : relativeTime;
+  } catch (error) {
+    console.error('Error formatting relative time:', error, utcDateString);
+    return fallback;
+  }
 }
