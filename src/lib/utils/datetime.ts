@@ -96,15 +96,14 @@ export function formatUtcToLocal(
     let date: Date
 
     if (typeof utcDate === 'string') {
-      // Handle the case where backend sends UTC time without 'Z' suffix
-      // If the string doesn't end with 'Z' and doesn't have timezone info, assume it's UTC
-      let dateString = utcDate
-      if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
-        // Add 'Z' to indicate UTC timezone
-        dateString = dateString.replace(/(\.\d+)?$/, '$1Z')
+      // Handle backend UTC strings that may be missing 'Z' suffix
+      let dateString = utcDate.trim()
+      
+      // If it looks like ISO format but lacks timezone info, assume UTC
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?$/.test(dateString)) {
+        dateString += 'Z'
       }
 
-      // Create Date object from UTC string - this automatically converts to local timezone
       date = new Date(dateString)
     } else {
       // Already a Date object

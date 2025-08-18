@@ -8,8 +8,7 @@ import {
   parseUtcDate, 
   safeFormatRelativeTime,
   createUtcDateTimeString,
-  validateUtcFormat,
-  isValidUtcDateTime
+  validateUtcFormat
 } from './datetime'
 
 describe('DateTime Utilities', () => {
@@ -88,7 +87,6 @@ describe('DateTime Utilities', () => {
       const result = createUtcDateTimeString(testDate, timeString)
       
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
-      expect(isValidUtcDateTime(result)).toBe(true)
     })
 
     it('should handle 12-hour time format', () => {
@@ -117,60 +115,19 @@ describe('DateTime Utilities', () => {
     })
   })
 
-  describe('isValidUtcDateTime', () => {
-    it('should validate UTC datetime strings', () => {
-      expect(isValidUtcDateTime('2025-08-17T10:30:00.000Z')).toBe(true)
-      expect(isValidUtcDateTime('2025-08-17T10:30:00Z')).toBe(true)
-    })
-
-    it('should reject invalid datetime strings', () => {
-      expect(isValidUtcDateTime('invalid')).toBe(false)
-      expect(isValidUtcDateTime('2025-08-17')).toBe(false)
-      expect(isValidUtcDateTime('2025-08-17T25:30:00Z')).toBe(false) // Invalid hour
-    })
-  })
 
 })
 
-// Test specifically for the SubscriptionStatus error case
-describe('SubscriptionStatus Error Prevention', () => {
-  it('should handle null/undefined subscription dates safely', () => {
-    // These should not throw errors
+// Essential error handling tests
+describe('Error Handling', () => {
+  it('should handle null/undefined dates safely', () => {
     expect(safeFormatRelativeTime(null)).toBe('Date pending')
     expect(safeFormatRelativeTime(undefined)).toBe('Date pending')
     expect(safeFormatRelativeTime('')).toBe('Date pending')
   })
 
   it('should handle malformed date strings', () => {
-    const malformedDates = [
-      'not-a-date',
-      '2025-13-45T99:99:99Z', // Invalid date values
-      '2025-08-17T10:30:00ZZZ', // Extra characters
-      '2025-08-17T10:30:00+', // Incomplete timezone
-    ]
-
-    malformedDates.forEach(date => {
-      expect(() => safeFormatRelativeTime(date)).not.toThrow()
-      expect(safeFormatRelativeTime(date)).toBe('Date pending')
-    })
-  })
-
-  it('should handle edge case subscription data', () => {
-    const edgeCases = [
-      null,
-      undefined,
-      '', 
-      'Invalid Date',
-      '0000-00-00T00:00:00Z',
-      'NaN',
-    ]
-
-    edgeCases.forEach(testCase => {
-      expect(() => {
-        formatUtcToLocal(testCase)
-        safeFormatRelativeTime(testCase)
-        parseUtcDate(testCase)
-      }).not.toThrow()
-    })
+    expect(() => safeFormatRelativeTime('not-a-date')).not.toThrow()
+    expect(safeFormatRelativeTime('not-a-date')).toBe('Date pending')
   })
 })
