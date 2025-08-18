@@ -1,13 +1,17 @@
 import { isValid } from 'date-fns'
 import { parseISO } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
 /**
  * Datetime utility functions for handling timezone conversions and formatting
  *
  * Key principles:
- * - Receive UTC from backend, display in user's local timezone
- * - Send UTC to backend from user's local input
- * - Centralized date handling to ensure consistency across the app
+ * - Backend ALWAYS sends UTC timestamps with 'Z' suffix (e.g., "2025-08-17T10:30:00.000Z")
+ * - Frontend ALWAYS converts UTC to user's local timezone for display
+ * - Frontend ALWAYS sends UTC timestamps to backend
+ * - All datetime handling goes through these utilities for consistency
+ * 
+ * Updated for UTC-only backend strategy (August 2025)
  */
 
 /**
@@ -265,4 +269,133 @@ export function validateUtcFormat(dateString: string): boolean {
     return false
   }
   return true
+}
+
+/**
+ * Create a UTC datetime string for schedule submission
+ * Takes local date/time inputs and converts to UTC for backend
+ * 
+ * @param date - Selected date (local)
+ * @param timeString - Time string like "17:30" or "5:30 PM"
+ * @returns UTC ISO string for backend submission
+ * 
+ * @example
+ * createUtcDateTimeString(new Date('2025-08-17'), '17:30') 
+ * // Returns "2025-08-17T10:30:00.000Z" (for Vietnam timezone UTC+7)
+ */
+export function createUtcDateTimeString(date: Date, timeString: string): string {
+  // Parse time string to get hours and minutes
+  const timeMatch = timeString.match(/(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
+  if (!timeMatch) {
+    throw new Error(`Invalid time format: ${timeString}`);
+  }
+
+  let hours = parseInt(timeMatch[1], 10);
+  const minutes = parseInt(timeMatch[2], 10);
+  const isPM = timeMatch[3]?.toUpperCase() === 'PM';
+  
+  // Convert to 24-hour format if needed
+  if (isPM && hours !== 12) {
+    hours += 12;
+  } else if (!isPM && hours === 12) {
+    hours = 0;
+  }
+
+  // Create a new date with the specified time in local timezone
+  const localDateTime = new Date(date);
+  localDateTime.setHours(hours, minutes, 0, 0);
+
+  // Convert to UTC ISO string for backend
+  return localDateTime.toISOString();
+}
+
+/**
+ * Get the user's current IANA timezone identifier
+ * 
+ * @returns IANA timezone ID (e.g., "Asia/Ho_Chi_Minh", "America/New_York")
+ */
+export function getUserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Format next run time with relative context
+ * Shows both absolute time and relative time (e.g., "Aug 17, 2025, 5:35 PM (in 5 minutes)")
+ * 
+ * @param utcNextRunTime - UTC datetime string from backend
+ * @returns Formatted string with context
+ */
+export function formatNextRunTimeWithContext(utcNextRunTime: string | null | undefined): string {
+  if (!utcNextRunTime) return 'Not scheduled';
+
+  try {
+    const nextRun = new Date(utcNextRunTime);
+    const now = new Date();
+    const diffMs = nextRun.getTime() - now.getTime();
+    const diffMinutes = Math.round(diffMs / (1000 * 60));
+
+    // Format the absolute time
+    const absoluteTime = formatUtcToLocal(utcNextRunTime, {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    // Add relative context
+    if (diffMinutes < 0) {
+      const absDiffMinutes = Math.abs(diffMinutes);
+      if (absDiffMinutes < 60) {
+        return `${absoluteTime} (${absDiffMinutes} minute${absDiffMinutes !== 1 ? 's' : ''} ago)`;
+      } else if (absDiffMinutes < 1440) {
+        const hours = Math.round(absDiffMinutes / 60);
+        return `${absoluteTime} (${hours} hour${hours !== 1 ? 's' : ''} ago)`;
+      }
+    } else if (diffMinutes > 0) {
+      if (diffMinutes < 60) {
+        return `${absoluteTime} (in ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''})`;
+      } else if (diffMinutes < 1440) {
+        const hours = Math.round(diffMinutes / 60);
+        return `${absoluteTime} (in ${hours} hour${hours !== 1 ? 's' : ''})`;
+      }
+    }
+
+    return absoluteTime;
+  } catch (error) {
+    console.warn('Error formatting next run time:', error, utcNextRunTime);
+    return 'Invalid time';
+  }
+}
+
+/**
+ * Safely format a relative time string with error handling
+ * @param utcDateString - UTC datetime string from backend
+ * @param options - Options for formatting
+ * @returns Formatted relative time or fallback string
+ */
+export function safeFormatRelativeTime(
+  utcDateString: string | null | undefined, 
+  options: { 
+    addSuffix?: boolean;
+    fallback?: string;
+    prefix?: string;
+  } = {}
+): string {
+  const { addSuffix = true, fallback = 'Date pending', prefix = '' } = options;
+  
+  if (!utcDateString) return fallback;
+  
+  try {
+    const date = parseUtcDate(utcDateString);
+    if (!date) {
+      console.warn('Invalid date string for relative formatting:', utcDateString);
+      return fallback;
+    }
+    
+    // Use imported formatDistanceToNow function
+    const relativeTime = formatDistanceToNow(date, { addSuffix });
+    
+    return prefix ? `${prefix} ${relativeTime}` : relativeTime;
+  } catch (error) {
+    console.error('Error formatting relative time:', error, utcDateString);
+    return fallback;
+  }
 }

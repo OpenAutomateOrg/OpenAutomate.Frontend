@@ -28,6 +28,7 @@ import {
   CreateScheduleDto,
   RecurrenceType,
 } from '@/lib/api/schedules'
+import { createUtcDateTimeString } from '@/lib/utils/datetime'
 import {
   getAllAutomationPackages,
   AutomationPackageResponseDto,
@@ -295,14 +296,10 @@ export function CreateEditModal({
     switch (recurrence.type) {
       case RecurrenceType.Once:
         if (recurrence.startDate && recurrence.dailyHour && recurrence.dailyMinute) {
-          const date = new Date(recurrence.startDate)
-          date.setHours(
-            parseInt(recurrence.dailyHour, 10),
-            parseInt(recurrence.dailyMinute, 10),
-            0,
-            0,
-          )
-          oneTimeExecution = date.toISOString()
+          // Create UTC datetime string using the new utility
+          // This converts local time to UTC for backend submission
+          const timeString = `${recurrence.dailyHour}:${recurrence.dailyMinute}`
+          oneTimeExecution = createUtcDateTimeString(recurrence.startDate, timeString)
         } else {
           throw new Error('Please select both date and time for one-time schedule')
         }
