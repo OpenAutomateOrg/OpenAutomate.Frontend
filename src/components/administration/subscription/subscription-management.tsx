@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
+import { parseUtcDate } from '@/lib/utils/datetime'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import { subscriptionApi, type PaymentItem } from '@/lib/api/subscription'
@@ -311,14 +312,20 @@ export default function SubscriptionManagement() {
                 {subscription.isInTrial && subscription.trialEndsAt && (
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Trial Ends:</span>
-                    <span>{format(new Date(subscription.trialEndsAt + 'Z'), 'PPp')}</span>
+                    <span>{(() => {
+                      const date = parseUtcDate(subscription.trialEndsAt);
+                      return date ? format(date, 'PPp') : 'Date pending';
+                    })()}</span>
                   </div>
                 )}
 
                 {subscription.renewsAt && (
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Next Billing:</span>
-                    <span>{format(new Date(subscription.renewsAt + 'Z'), 'PP')}</span>
+                    <span>{(() => {
+                      const date = parseUtcDate(subscription.renewsAt);
+                      return date ? format(date, 'PP') : 'Date pending';
+                    })()}</span>
                   </div>
                 )}
 

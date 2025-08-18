@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronRight, PlusCircle, RefreshCw } from 'lucide-react'
+import { ChevronRight, PlusCircle, RefreshCw, LogOut } from 'lucide-react'
 import { CreateOrganizationUnitForm } from '@/components/forms/create-organization-unit-form'
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
 
 // Client component that uses search params
 function TenantSelectorContent() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth()
   const { organizationUnits, isLoading, error, selectOrganizationUnit, refresh } =
     useOrganizationUnits()
   const router = useRouter()
@@ -127,13 +127,24 @@ function TenantSelectorContent() {
           <div className="mb-4">
             <Image src="/logo-oa.png" alt="OpenAutomate Logo" width={500} height={76} priority />
           </div>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="relative h-8 w-8 rounded-full overflow-hidden border">
-              <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">
-                {user?.firstName?.[0] ?? user?.email?.[0] ?? 'U'}
+          <div className="flex items-center justify-between w-full mt-2">
+            <div className="flex items-center gap-2">
+              <div className="relative h-8 w-8 rounded-full overflow-hidden border">
+                <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">
+                  {user?.firstName?.[0] ?? user?.email?.[0] ?? 'U'}
+                </div>
               </div>
+              <p className="text-muted-foreground">{user?.email}</p>
             </div>
-            <p className="text-muted-foreground">{user?.email}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => logout()}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
 
@@ -263,16 +274,6 @@ function TenantSelectorContent() {
           </Button>
         </div>
 
-        {/* Need to sign in with another account */}
-        <div className="mt-2 text-center">
-          <Button
-            variant="link"
-            className="text-primary underline"
-            onClick={() => router.push('/login?signout=true')}
-          >
-            Need to sign in to another account?
-          </Button>
-        </div>
       </div>
     </div>
   )

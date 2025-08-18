@@ -38,7 +38,7 @@ export function LoginForm() {
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, isSystemAdmin } = useAuth()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
@@ -93,7 +93,7 @@ export function LoginForm() {
     setError(null)
 
     try {
-      await login({
+      const loginResponse = await login({
         email: data.email,
         password: data.password,
       })
@@ -103,9 +103,15 @@ export function LoginForm() {
         router.push(returnUrl)
         return
       }
+      
+      // Check system role from the fresh login response, not context state
+      const isAdmin = loginResponse?.systemRole === 'Admin' || 
+                     loginResponse?.systemRole === 'SystemAdmin' || 
+                     loginResponse?.systemRole === 1
+
       // Normal redirect if not from invitation
-      if (isSystemAdmin) {
-        router.push('/dashboard') // Default redirect to system admin dashboard
+      if (isAdmin) {
+        router.push('/dashboard') // Redirect to system admin dashboard
       } else if (returnUrl && !isInvitation) {
         router.push(returnUrl)
       } else {

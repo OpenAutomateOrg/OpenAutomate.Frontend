@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
+import { parseUtcDate } from '@/lib/utils/datetime'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -56,11 +57,9 @@ export function ChartBarInteractive({
         let createdDate: string
         try {
           if (user.createdAt) {
-            // If the date contains microseconds, truncate to milliseconds for better parsing
-            const dateStr = user.createdAt.includes('.')
-              ? user.createdAt.split('.')[0] + 'Z'
-              : user.createdAt
-            createdDate = new Date(dateStr).toISOString().split('T')[0]
+            // Use the parseUtcDate utility for safe parsing
+            const parsedDate = parseUtcDate(user.createdAt)
+            createdDate = parsedDate ? parsedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
           } else {
             createdDate = new Date().toISOString().split('T')[0]
           }
@@ -83,11 +82,9 @@ export function ChartBarInteractive({
         let createdDate: string
         try {
           if (orgUnit.createdAt) {
-            // If the date contains microseconds, truncate to milliseconds for better parsing
-            const dateStr = orgUnit.createdAt.includes('.')
-              ? orgUnit.createdAt.split('.')[0] + 'Z'
-              : orgUnit.createdAt
-            createdDate = new Date(dateStr).toISOString().split('T')[0]
+            // Use the parseUtcDate utility for safe parsing
+            const parsedDate = parseUtcDate(orgUnit.createdAt)
+            createdDate = parsedDate ? parsedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
           } else {
             // Fallback to today's date if createdAt is missing
             createdDate = new Date().toISOString().split('T')[0]

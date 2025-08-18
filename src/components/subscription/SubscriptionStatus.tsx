@@ -21,7 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
-import { formatDistanceToNow } from 'date-fns'
+import { parseUtcDate, formatUtcToLocal, safeFormatRelativeTime } from '@/lib/utils/datetime'
 
 export function SubscriptionStatus() {
   const { subscription, isLoading, mutate } = useSubscription()
@@ -94,7 +94,10 @@ export function SubscriptionStatus() {
           </CardTitle>
           {subscription.renewsAt ? (
             <CardDescription>
-              Renews {formatDistanceToNow(new Date(subscription.renewsAt + 'Z'), { addSuffix: true })}
+              {safeFormatRelativeTime(subscription.renewsAt, { 
+                prefix: 'Renews',
+                fallback: 'Renewal date pending' 
+              })}
             </CardDescription>
           ) : null}
         </CardHeader>
@@ -145,28 +148,31 @@ export function SubscriptionStatus() {
 
   const getExpirationText = () => {
     if (subscription.isInTrial && subscription.trialEndsAt) {
-      // Parse as UTC and convert to local time for display
-      const trialEndTime = new Date(subscription.trialEndsAt + 'Z') // Add Z to ensure UTC parsing
+      const trialEndTime = parseUtcDate(subscription.trialEndsAt)
+      if (!trialEndTime) return 'Trial end date pending'
+      
       const now = new Date()
-
-      if (trialEndTime > now) {
-        const expiresIn = formatDistanceToNow(trialEndTime, { addSuffix: true })
-        return `Trial expires ${expiresIn}`
-      } else {
-        const expiredTime = formatDistanceToNow(trialEndTime, { addSuffix: true })
-        return `Trial expired ${expiredTime}`
-      }
+      const prefix = trialEndTime > now ? 'Trial expires' : 'Trial expired'
+      return safeFormatRelativeTime(subscription.trialEndsAt, { 
+        prefix,
+        fallback: 'Trial end date pending' 
+      })
     }
+    
     if (subscription.isActive && subscription.renewsAt) {
-      const renewTime = new Date(subscription.renewsAt + 'Z')
-      const renewsIn = formatDistanceToNow(renewTime, { addSuffix: true })
-      return `Renews ${renewsIn}`
+      return safeFormatRelativeTime(subscription.renewsAt, { 
+        prefix: 'Renews',
+        fallback: 'Renewal date pending' 
+      })
     }
+    
     if (subscription.endsAt) {
-      const endTime = new Date(subscription.endsAt + 'Z')
-      const endedTime = formatDistanceToNow(endTime, { addSuffix: true })
-      return `Ended ${endedTime}`
+      return safeFormatRelativeTime(subscription.endsAt, { 
+        prefix: 'Ended',
+        fallback: 'End date unknown' 
+      })
     }
+    
     return ''
   }
 
@@ -234,7 +240,7 @@ export function SubscriptionStatus() {
                 <TableBody>
                   {paymentsData.items.map((p: PaymentItem) => (
                     <TableRow key={p.orderId}>
-                      <TableCell>{new Date(p.paymentDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{formatUtcToLocal(p.paymentDate, { dateStyle: 'short' })}</TableCell>
                       <TableCell>{p.isRefunded ? 'Refunded' : 'Paid'}</TableCell>
                       <TableCell className="text-right">
                         {p.amount.toLocaleString(undefined, { style: 'currency', currency: p.currency })}

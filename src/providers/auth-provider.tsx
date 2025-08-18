@@ -305,14 +305,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         // Log authentication success with standard logger
         logger.success(`User logged in: ${userData.email}`)
 
-        // For system admins, redirect to system admin dashboard
-        if (userData.systemRole === SystemRole.Admin || userData.systemRole === 'Admin') {
-          router.push('/systemAdmin/dashboard')
-        } else {
-          // For regular users, redirect to tenant selector to choose organization
-          router.push(config.paths.auth.organizationSelector)
-        }
-
+        // Return user data - let the calling component handle redirects
         return userData
       } catch (err: unknown) {
         // Use proper error message extraction
