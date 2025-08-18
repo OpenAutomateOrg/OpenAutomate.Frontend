@@ -317,7 +317,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [router, fetchAndUpdateUserProfile],
+    [fetchAndUpdateUserProfile],
   )
 
   // Register function
