@@ -331,38 +331,56 @@ export function formatNextRunTimeWithContext(utcNextRunTime: string | null | und
   try {
     const nextRun = new Date(utcNextRunTime);
     const now = new Date();
-    const diffMs = nextRun.getTime() - now.getTime();
-    const diffMinutes = Math.round(diffMs / (1000 * 60));
+    const diffMinutes = Math.round((nextRun.getTime() - now.getTime()) / (1000 * 60));
 
-    // Format the absolute time
     const absoluteTime = formatUtcToLocal(utcNextRunTime, {
       dateStyle: 'medium',
       timeStyle: 'short'
     });
 
-    // Add relative context
-    if (diffMinutes < 0) {
-      const absDiffMinutes = Math.abs(diffMinutes);
-      if (absDiffMinutes < 60) {
-        return `${absoluteTime} (${absDiffMinutes} minute${absDiffMinutes !== 1 ? 's' : ''} ago)`;
-      } else if (absDiffMinutes < 1440) {
-        const hours = Math.round(absDiffMinutes / 60);
-        return `${absoluteTime} (${hours} hour${hours !== 1 ? 's' : ''} ago)`;
-      }
-    } else if (diffMinutes > 0) {
-      if (diffMinutes < 60) {
-        return `${absoluteTime} (in ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''})`;
-      } else if (diffMinutes < 1440) {
-        const hours = Math.round(diffMinutes / 60);
-        return `${absoluteTime} (in ${hours} hour${hours !== 1 ? 's' : ''})`;
-      }
-    }
-
-    return absoluteTime;
+    const relativeContext = getRelativeTimeContext(diffMinutes);
+    return relativeContext ? `${absoluteTime} (${relativeContext})` : absoluteTime;
   } catch (error) {
     console.warn('Error formatting next run time:', error, utcNextRunTime);
     return 'Invalid time';
   }
+}
+
+/**
+ * Helper function to generate relative time context
+ * @param diffMinutes - Difference in minutes (negative for past, positive for future)
+ * @returns Relative time string or null if no context needed
+ */
+function getRelativeTimeContext(diffMinutes: number): string | null {
+  const absDiffMinutes = Math.abs(diffMinutes);
+  const isPast = diffMinutes < 0;
+
+  if (absDiffMinutes < 60) {
+    return formatMinutesContext(absDiffMinutes, isPast);
+  }
+  
+  if (absDiffMinutes < 1440) {
+    const hours = Math.round(absDiffMinutes / 60);
+    return formatHoursContext(hours, isPast);
+  }
+
+  return null; // No context for times beyond 24 hours
+}
+
+/**
+ * Format minutes-based relative context
+ */
+function formatMinutesContext(minutes: number, isPast: boolean): string {
+  const plural = minutes !== 1 ? 's' : '';
+  return isPast ? `${minutes} minute${plural} ago` : `in ${minutes} minute${plural}`;
+}
+
+/**
+ * Format hours-based relative context
+ */
+function formatHoursContext(hours: number, isPast: boolean): string {
+  const plural = hours !== 1 ? 's' : '';
+  return isPast ? `${hours} hour${plural} ago` : `in ${hours} hour${plural}`;
 }
 
 /**
