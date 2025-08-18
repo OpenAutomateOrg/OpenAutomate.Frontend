@@ -828,7 +828,7 @@ export default function ExecutionsInterface() {
         setIsPending(false)
       }, 500)
     },
-    [table, updateUrl, pathname, tab, mutateExecutions],
+    [table, updateUrl, pathname, tab],
   )
 
   // Handle status filter change
