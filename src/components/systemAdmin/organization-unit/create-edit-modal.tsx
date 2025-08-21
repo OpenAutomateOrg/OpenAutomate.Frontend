@@ -8,6 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -60,6 +61,10 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
           <DialogTitle>Create new roles</DialogTitle>
+          <DialogDescription>
+            Create a new role and assign users to it. You can add members to this role after
+            creation.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

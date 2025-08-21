@@ -6,7 +6,7 @@ import { useState, useMemo, useCallback } from 'react'
 import useSWR from 'swr'
 import { adminApi } from '@/lib/api/admin'
 import { DataTable } from '@/components/layout/table/data-table'
-import { userColumns } from './columns'
+import { UserColumns } from './columns'
 import { DataTableToolbar } from './data-table-toolbar'
 import { Pagination } from '@/components/ui/pagination'
 import { SystemRole, User } from '@/types/auth'
@@ -82,7 +82,7 @@ export default function UserManagementPage() {
   // Setup table instance
   const table = useReactTable({
     data: filteredUsers,
-    columns: userColumns,
+    columns: UserColumns,
     state: {
       sorting,
       columnVisibility,
@@ -211,7 +211,7 @@ export default function UserManagementPage() {
             />
 
             <DataTable
-              columns={userColumns}
+              columns={UserColumns}
               data={filteredUsers}
               table={table}
               isLoading={isLoading}

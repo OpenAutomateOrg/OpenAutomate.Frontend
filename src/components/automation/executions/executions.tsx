@@ -2,7 +2,7 @@
 
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createColumns as createHistoricalColumns } from './historical/columns'
+import { CreateColumns as createHistoricalColumns } from './historical/columns'
 import { createInProgressColumns } from './inProgress/columns'
 import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
@@ -446,29 +446,32 @@ export default function ExecutionsInterface() {
   }, [])
 
   // Helper function to apply search and state filters
-  const applyFilters = useCallback((data: ExecutionsRow[], search: string, filters: ColumnFiltersState) => {
-    let filtered = data
+  const applyFilters = useCallback(
+    (data: ExecutionsRow[], search: string, filters: ColumnFiltersState) => {
+      let filtered = data
 
-    // Apply search filtering
-    if (search) {
-      filtered = filtered.filter((row) =>
-        row.agent?.toLowerCase().includes(search.toLowerCase())
-      )
-    }
+      // Apply search filtering
+      if (search) {
+        filtered = filtered.filter((row) => row.agent?.toLowerCase().includes(search.toLowerCase()))
+      }
 
-    // Apply state filter
-    const stateFilter = filters.find((filter) => filter.id === 'state')?.value as string
-    if (stateFilter) {
-      filtered = filtered.filter((row) => row.state === stateFilter)
-    }
+      // Apply state filter
+      const stateFilter = filters.find((filter) => filter.id === 'state')?.value as string
+      if (stateFilter) {
+        filtered = filtered.filter((row) => row.state === stateFilter)
+      }
 
-    return filtered
-  }, [])
+      return filtered
+    },
+    [],
+  )
 
   // Helper function to process fallback data
   const processFallbackData = useCallback(() => {
     if (tab === 'inprogress') {
-      console.log('⚠️ Using fallback data for In Progress tab - OData filtering may not work correctly')
+      console.log(
+        '⚠️ Using fallback data for In Progress tab - OData filtering may not work correctly',
+      )
     }
 
     const transformedData = fallbackExecutions!.map(transformExecutionToRow)
@@ -490,13 +493,25 @@ export default function ExecutionsInterface() {
     }
 
     return paginatedData
-  }, [fallbackExecutions, transformExecutionToRow, tab, filterByTab, applySorting, sorting, applyFilters, searchValue, columnFilters, pagination, totalCount])
+  }, [
+    fallbackExecutions,
+    transformExecutionToRow,
+    tab,
+    filterByTab,
+    applySorting,
+    sorting,
+    applyFilters,
+    searchValue,
+    columnFilters,
+    pagination,
+    totalCount,
+  ])
 
   // Transform data during render
   const executions = useMemo(() => {
     // Use fallback data if OData response is empty
-    const shouldUseFallback = fallbackExecutions &&
-      (!executionsResponse?.value || executionsResponse.value.length === 0)
+    const shouldUseFallback =
+      fallbackExecutions && (!executionsResponse?.value || executionsResponse.value.length === 0)
 
     if (shouldUseFallback) {
       return processFallbackData()
@@ -510,28 +525,31 @@ export default function ExecutionsInterface() {
 
     const transformedRows = executionsResponse.value.map(transformExecutionToRow)
 
-    console.log(`✅ OData returned ${executionsResponse.value.length} executions, transformed to ${transformedRows.length} rows`)
-    console.log('📋 Execution statuses from OData:', executionsResponse.value.map(e => ({
-      id: e.id.substring(0, 8),
-      status: e.status
-    })))
-    console.log('📋 Transformed row states:', transformedRows.map(r => ({
-      id: r.id.substring(0, 8),
-      State: r.State
-    })))
+    console.log(
+      `✅ OData returned ${executionsResponse.value.length} executions, transformed to ${transformedRows.length} rows`,
+    )
+    console.log(
+      '📋 Execution statuses from OData:',
+      executionsResponse.value.map((e) => ({
+        id: e.id.substring(0, 8),
+        status: e.status,
+      })),
+    )
+    console.log(
+      '📋 Transformed row states:',
+      transformedRows.map((r) => ({
+        id: r.id.substring(0, 8),
+        State: r.State,
+      })),
+    )
 
     return transformedRows
-  }, [
-    executionsResponse,
-    fallbackExecutions,
-    transformExecutionToRow,
-    processFallbackData,
-  ])
+  }, [executionsResponse, fallbackExecutions, transformExecutionToRow, processFallbackData])
 
   // Update totalCount from filteredData in a separate useEffect
   useEffect(() => {
-    const shouldUseFallback = fallbackExecutions &&
-      (!executionsResponse?.value || executionsResponse.value.length === 0)
+    const shouldUseFallback =
+      fallbackExecutions && (!executionsResponse?.value || executionsResponse.value.length === 0)
 
     if (shouldUseFallback) {
       // Calculate filtered length using helper functions
@@ -602,7 +620,11 @@ export default function ExecutionsInterface() {
       // Apply tab filtering to get accurate count
       const filteredCount = fallbackExecutions.filter((execution) => {
         if (tab === 'inprogress') {
-          return execution.status === 'Queued' || execution.status === 'Starting' || execution.status === 'Running'
+          return (
+            execution.status === 'Queued' ||
+            execution.status === 'Starting' ||
+            execution.status === 'Running'
+          )
         } else if (tab === 'scheduled') {
           return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
@@ -733,14 +755,12 @@ export default function ExecutionsInterface() {
     columns = HistoricalColumns
   }
 
-
-
   // Debug logging for table state
   console.log('🔍 Table state debug:', {
     dataLength: executionsData.length,
     columnFilters: columnFilters,
     tab: tab,
-    hasActiveFilters: columnFilters.length > 0
+    hasActiveFilters: columnFilters.length > 0,
   })
 
   const table = useReactTable({
@@ -889,7 +909,7 @@ export default function ExecutionsInterface() {
   // ✅ Auto-adjust page size for In Progress tab to show more executions
   useEffect(() => {
     if (tab === 'inprogress' && pagination.pageSize < 25) {
-      setPagination(prev => ({ ...prev, pageSize: 25 }))
+      setPagination((prev) => ({ ...prev, pageSize: 25 }))
       updateUrl(pathname, { size: '25' })
     }
   }, [tab, pagination.pageSize, setPagination, updateUrl, pathname])

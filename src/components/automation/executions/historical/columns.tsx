@@ -15,7 +15,7 @@ interface CreateHistoricalColumnsProps {
   onDeleted?: () => void
 }
 
-export const createColumns = ({
+export const CreateColumns = ({
   onDeleted,
 }: CreateHistoricalColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
@@ -201,4 +201,4 @@ export const createColumns = ({
 ]
 
 // Default export for backward compatibility
-export const columns = createColumns()
+export const columns = CreateColumns()

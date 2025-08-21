@@ -10,7 +10,7 @@ import { DataTableColumnHeader } from '@/components/layout/table/data-table-colu
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 // import { DataTableRowActions } from '@/components/layout/table/data-table-row-actions'
 
-export const columns: ColumnDef<OrganizationUnit>[] = [
+export const OrganizationUnitColumns: ColumnDef<OrganizationUnit>[] = [
   {
     id: 'select',
     header: ({ table }) => (
