@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -399,6 +400,11 @@ export function CreateEditModal({
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>{mode === 'edit' ? 'Edit Schedule' : 'Create Schedule'}</DialogTitle>
+          <DialogDescription>
+            {mode === 'edit'
+              ? 'Modify the schedule settings, trigger conditions, and execution targets for your automation.'
+              : 'Set up a new scheduled automation with trigger conditions and execution targets.'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">

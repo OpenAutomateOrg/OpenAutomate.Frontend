@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
@@ -411,11 +412,11 @@ export default function PackageDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Version</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}?
+              This action cannot be undone.
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete version {deleteVersionDialog.version?.versionNumber}?
-            This action cannot be undone.
-          </div>
           <DialogFooter>
             <Button
               variant="outline"
@@ -435,11 +436,11 @@ export default function PackageDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Package</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this package and all its versions? This action cannot
+              be undone.
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete this package and all its versions? This action cannot be
-            undone.
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletePackageDialog(false)}>
               Cancel
@@ -461,19 +462,32 @@ export default function PackageDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload New Package Version</DialogTitle>
+            <DialogDescription>
+              Upload a new version of this automation package. Provide a version number and select
+              the package file.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block mb-1 font-medium">Version Number</label>
+              <label htmlFor="upload-version-input" className="block mb-1 font-medium">Version Number</label>
               <Input
+                id="upload-version-input"
                 value={uploadVersion}
-                onChange={e => setUploadVersion(e.target.value)}
+                onChange={(e) => setUploadVersion(e.target.value)}
                 placeholder="Enter version number"
                 disabled={uploading}
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => { setUploadDialogOpen(false); setUploadFile(null); setUploadVersion('') }} disabled={uploading}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUploadDialogOpen(false)
+                  setUploadFile(null)
+                  setUploadVersion('')
+                }}
+                disabled={uploading}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUploadVersion} disabled={!uploadVersion || uploading}>

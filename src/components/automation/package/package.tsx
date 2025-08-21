@@ -2,7 +2,7 @@
 
 import { PlusCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createPackageColumns } from '@/components/automation/package/columns'
+import { CreatePackageColumns } from '@/components/automation/package/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { CreateEditModal } from '@/components/automation/package/create-edit-modal'
@@ -312,7 +312,7 @@ export default function PackageInterface() {
   // Setup table instance with optimized configuration
   const table = useReactTable({
     data: packages,
-    columns: createPackageColumns(),
+    columns: CreatePackageColumns(refreshPackages),
     state: {
       sorting,
       columnVisibility,
@@ -472,7 +472,7 @@ export default function PackageInterface() {
 
         <DataTable
           data={packages}
-          columns={createPackageColumns()}
+          columns={CreatePackageColumns(refreshPackages)}
           onRowClick={handleRowClick}
           table={table}
           isLoading={isLoading}

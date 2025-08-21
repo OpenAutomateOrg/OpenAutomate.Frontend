@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Pencil, Trash } from 'lucide-react'
@@ -436,11 +437,11 @@ export default function OrganizationUnitProfile() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Warning</DialogTitle>
+              <DialogDescription>
+                If you change the name, the tenant will also change, which will result in a changed
+                URL and the Bot agent will be disconnected. Do you still want to proceed?
+              </DialogDescription>
             </DialogHeader>
-            <div>
-              If you change the name, the tenant will also change, which will result in a changed
-              URL and the Bot agent will be disconnected. Do you still want to proceed?
-            </div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
@@ -464,10 +465,11 @@ export default function OrganizationUnitProfile() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this organization unit? It will be deleted in 7
+                days.
+              </DialogDescription>
             </DialogHeader>
-            <div>
-              Are you sure you want to delete this organization unit? It will be deleted in 7 days.
-            </div>
             <DialogFooter className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowDeleteConfirmation(false)}>
                 Cancel

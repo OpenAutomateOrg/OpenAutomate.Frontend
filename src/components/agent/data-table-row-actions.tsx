@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { deleteBotAgent } from '@/lib/api/bot-agents'
@@ -49,8 +50,7 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
     }
   }
 
-  const handleDelete = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation()
+  const handleDelete = () => {
     setShowConfirm(true)
   }
 
@@ -96,28 +96,41 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+          <Button
+            variant="ghost"
+            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+            aria-label={`Actions for agent ${row.original.name}`}
+          >
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Open actions menu for {row.original.name}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
           className="w-[160px]"
-          onClick={(e) => e.stopPropagation()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          sideOffset={5}
         >
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEdit()
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete()
+            }}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash className="mr-2 h-4 w-4" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -128,10 +141,11 @@ export default function DataTableRowAction({ row, onRefresh, onEdit }: DataTable
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete agent <b>{row.original.name}</b>? This action cannot
+              be undone.
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete agent <b>{row.original.name}</b>?
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>
               Cancel

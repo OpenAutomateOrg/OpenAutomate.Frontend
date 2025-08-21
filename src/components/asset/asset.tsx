@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createColumns } from './columns'
+import { CreateColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
 import { z } from 'zod'
@@ -314,7 +314,7 @@ export default function AssetInterface() {
   }, [mutateAssets])
 
   const tableColumns = useMemo(
-    () => createColumns(handleEditAsset, refreshAssets),
+    () => CreateColumns(handleEditAsset, refreshAssets),
     [handleEditAsset, refreshAssets],
   )
 

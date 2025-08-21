@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
@@ -138,11 +139,11 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
             disabled={!execution.hasLogs || isDownloading}
           >
             {isDownloading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : execution.hasLogs ? (
-              <Download className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Download className="mr-2 h-4 w-4 text-muted-foreground" />
             ) : (
-              <FileText className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
             )}
             <span>
               {isDownloading ? 'Downloading...' : execution.hasLogs ? 'View Logs' : 'No Logs'}
@@ -158,7 +159,7 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
               setDeleteDialogOpen(true)
             }}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash className="mr-2 h-4 w-4 text-destructive" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -172,13 +173,13 @@ export default function DataTableRowAction({ execution, onDeleted }: DataTableRo
           </DialogClose>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this execution? <br />
+              <span className="text-sm text-muted-foreground">
+                Execution ID: <b>{execution.id.substring(0, 8)}...</b>
+              </span>
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete this execution? <br />
-            <span className="text-sm text-muted-foreground">
-              Execution ID: <b>{execution.id.substring(0, 8)}...</b>
-            </span>
-          </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"
