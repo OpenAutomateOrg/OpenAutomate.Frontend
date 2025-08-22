@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
@@ -94,31 +95,26 @@ export default function DataTableRowAction({
     }
   }
 
-  // Create a handler that stops propagation for all events
-  const stopPropagation = (e: React.MouseEvent) => {
-    e.stopPropagation()
-  }
-
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild onClick={stopPropagation}>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-            aria-label="Open menu"
-            onClick={stopPropagation}
+            aria-label={`Actions for schedule ${schedule.name}`}
+            onClick={(e) => e.stopPropagation()}
           >
             <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">Open actions menu for {schedule.name}</span>
           </Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
           align="start"
           className="w-[180px]"
-          onClick={stopPropagation}
-          onPointerDown={stopPropagation}
-          onMouseDown={stopPropagation}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          sideOffset={5}
         >
           <DropdownMenuItem
             onClick={(e: React.MouseEvent) => {
@@ -126,7 +122,7 @@ export default function DataTableRowAction({
               handleEdit()
             }}
           >
-            <Edit className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Edit className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
 
@@ -137,13 +133,15 @@ export default function DataTableRowAction({
             }}
             disabled={toggling}
           >
-            {toggling ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : schedule.isEnabled ? (
-              <PowerOff className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            ) : (
-              <Power className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            )}
+            {(() => {
+              if (toggling) {
+                return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              }
+              if (schedule.isEnabled) {
+                return <PowerOff className="mr-2 h-4 w-4" />
+              }
+              return <Power className="mr-2 h-4 w-4" />
+            })()}
             <span>
               {toggling
                 ? `${schedule.isEnabled ? 'Disabling' : 'Enabling'}...`
@@ -162,7 +160,7 @@ export default function DataTableRowAction({
               setDeleteDialogOpen(true)
             }}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash className="mr-2 h-4 w-4" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -176,15 +174,15 @@ export default function DataTableRowAction({
           </DialogClose>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this schedule? <br />
+              <span className="text-sm text-muted-foreground">
+                Schedule: <b>{schedule.name}</b>
+              </span>
+              <br />
+              <span className="text-sm text-muted-foreground">This action cannot be undone.</span>
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete this schedule? <br />
-            <span className="text-sm text-muted-foreground">
-              Schedule: <b>{schedule.name}</b>
-            </span>
-            <br />
-            <span className="text-sm text-muted-foreground">This action cannot be undone.</span>
-          </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button
               variant="outline"

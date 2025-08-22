@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -97,6 +98,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       <DialogContent className="sm:max-w-[600px] p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Package' : 'Create New Automation Package'}</DialogTitle>
+          <DialogDescription >
+            Upload a new automation package by selecting a ZIP file containing your bot code. You
+            can optionally specify a version number.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

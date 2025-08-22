@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Header } from '@/components/layout/header'
 import { Icons } from '@/components/ui/icons'
 import { ResetPasswordForm } from '@/components/forms/reset-password-form'
 
@@ -42,7 +41,6 @@ export default function ResetPasswordPage(props: any) {
 
   return (
     <>
-      <Header />
       <div className="container flex-1 flex items-center justify-center py-12">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">

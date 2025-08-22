@@ -141,10 +141,10 @@ export function CreateEditModal({
     } else if (vietnameseRegex.test(key)) {
       setKeyError('Key must not contain Vietnamese characters or accents.')
       valid = false
-    } else if (!isEditing && existingKeys.includes(key.trim())) {
-      setKeyError('Key already exists. Please choose a unique key.')
-      valid = false
-    } else if (isEditing && existingKeys.includes(key.trim()) && key.trim() !== asset?.key) {
+    } else if (
+      existingKeys.includes(key.trim()) &&
+      (!isEditing || (isEditing && key.trim() !== asset?.key))
+    ) {
       setKeyError('Key already exists. Please choose a unique key.')
       valid = false
     }

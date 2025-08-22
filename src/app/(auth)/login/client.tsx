@@ -2,8 +2,10 @@
 
 import React, { Suspense } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LoginForm } from '@/components/forms/login-form'
 import { Icons } from '@/components/ui/icons'
+import { useAuth } from '@/hooks/use-auth'
 
 // Loading fallback for the login form
 function LoginFormLoading() {
@@ -17,6 +19,8 @@ function LoginFormLoading() {
 }
 
 export function LoginClient() {
+  const router = useRouter()
+  const { isAuthenticated, isLoading, user, isSystemAdmin } = useAuth()
   const [returnUrl, setReturnUrl] = React.useState('')
 
   React.useEffect(() => {
@@ -25,6 +29,44 @@ export function LoginClient() {
       setReturnUrl(searchParams.get('returnUrl') ?? '')
     }
   }, [])
+
+  // Check if user is already authenticated and redirect
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      // If user is already signed in, redirect them
+      if (returnUrl) {
+        router.push(returnUrl)
+      } else {
+        // Different default redirect based on user role
+        const defaultRoute = isSystemAdmin ? '/dashboard' : '/tenant-selector'
+        router.push(defaultRoute)
+      }
+    }
+  }, [isLoading, isAuthenticated, user, returnUrl, router, isSystemAdmin])
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex justify-center py-8">
+          <Icons.Spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+        <p className="text-center text-sm text-muted-foreground">Checking authentication...</p>
+      </div>
+    )
+  }
+
+  // Don't render login form if user is authenticated
+  if (isAuthenticated) {
+    return (
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex justify-center py-8">
+          <Icons.Spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+        <p className="text-center text-sm text-muted-foreground">Redirecting...</p>
+      </div>
+    )
+  }
 
   const registerUrl = returnUrl
     ? `/register?returnUrl=${encodeURIComponent(returnUrl)}`

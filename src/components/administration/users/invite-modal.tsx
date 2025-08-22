@@ -6,6 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
@@ -84,6 +85,9 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
       <DialogContent className="sm:max-w-[400px] p-6">
         <DialogHeader>
           <DialogTitle>Invite User</DialogTitle>
+          <DialogDescription>
+            Send an invitation email to a new user to join this organization.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">

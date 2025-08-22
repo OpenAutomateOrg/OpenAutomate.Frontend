@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react'
 import { Row } from '@tanstack/react-table'
-import { MoreHorizontal, Download, Pencil, Trash } from 'lucide-react'
+import { MoreHorizontal, Trash } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -16,15 +17,18 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { AutomationPackageResponseDto } from '@/lib/api/automation-packages'
+import {
+  AutomationPackageResponseDto,
+  deleteAutomationPackage,
+} from '@/lib/api/automation-packages'
 import { useToast } from '@/components/ui/use-toast'
+import { createErrorToast } from '@/lib/utils/error-utils'
 
 interface DataTableRowActionsProps {
-  row: Row<AutomationPackageResponseDto>
-  onRefresh?: () => void
+  readonly row: Row<AutomationPackageResponseDto>
+  readonly onRefresh?: () => void
 }
 
 export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps) {
@@ -32,118 +36,88 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
   const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
 
-  const handleEdit = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation()
-    // Implement edit functionality
-    toast({
-      title: 'Edit package',
-      description: `Editing package: ${row.original.name}`,
-    })
-  }
-
-  const handleDelete = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation()
+  const handleDelete = () => {
     setShowConfirm(true)
   }
 
   const confirmDelete = async () => {
     setIsDeleting(true)
     try {
-      // Implement delete functionality
+      await deleteAutomationPackage(row.original.id)
+
       toast({
         title: 'Package deleted',
-        description: `Package ${row.original.name} has been deleted.`,
+        description: `Package "${row.original.name}" has been deleted successfully.`,
+        variant: 'default',
       })
+
       setShowConfirm(false)
-      if (onRefresh) onRefresh()
+      onRefresh?.()
     } catch (err: unknown) {
       setShowConfirm(false)
-      let message = 'Failed to delete package.'
-      if (err && typeof err === 'object' && 'message' in err) {
-        const errorMessage = (err as { message: unknown }).message
-        if (
-          typeof errorMessage === 'string' &&
-          (errorMessage.includes('403') ||
-            errorMessage.includes('Forbidden') ||
-            errorMessage.includes('forbidden') ||
-            errorMessage.includes('permission'))
-        ) {
-          message = 'You do not have permission to perform this action.'
-        } else if (typeof errorMessage === 'string') {
-          message = errorMessage
-        }
-      }
-      toast({
-        title: 'Delete Failed',
-        description: message,
-        variant: 'destructive',
-      })
+      toast(createErrorToast(err))
     } finally {
       setIsDeleting(false)
     }
   }
 
-  const handleDownload = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation()
-    // Get the latest version for download
-    const versions = row.original.versions
-    if (versions && versions.length > 0) {
-      const latestVersion = versions.sort(
-        (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-      )[0]
-      toast({
-        title: 'Downloading package',
-        description: `Downloading package: ${row.original.name} version: ${latestVersion.versionNumber}`,
-      })
-    } else {
-      toast({
-        title: 'Download Failed',
-        description: 'No versions available to download.',
-        variant: 'destructive',
-      })
-    }
-  }
-
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+          <Button
+            variant="ghost"
+            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+            aria-label={`Actions for package ${row.original.name}`}
+          >
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Open actions menu for {row.original.name}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem onClick={handleDownload}>
-            <Download className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span>Download</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+        <DropdownMenuContent
+          align="end"
+          className="w-[160px]"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          sideOffset={5}
+        >
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete()
+            }}
+            disabled={isDeleting}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
-            <span>Delete</span>
+            <Trash className="mr-2 h-4 w-4" />
+            <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Confirm Delete Dialog */}
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm} modal={true}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            if (isDeleting) e.preventDefault()
+          }}
+          aria-describedby="delete-description"
+        >
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>Confirm Delete Package</DialogTitle>
+            <DialogDescription id="delete-description">
+              Are you sure you want to delete package &ldquo;{row.original.name}&rdquo;? This will
+              also delete all versions of this package. This action cannot be undone.
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete package <b>{row.original.name}</b>?
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirm(false)}
+              disabled={isDeleting}
+              autoFocus
+            >
               Cancel
             </Button>
             <Button
@@ -151,8 +125,9 @@ export function DataTableRowActions({ row, onRefresh }: DataTableRowActionsProps
               className="text-white dark:text-neutral-900"
               onClick={confirmDelete}
               disabled={isDeleting}
+              aria-describedby="delete-description"
             >
-              Delete
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
