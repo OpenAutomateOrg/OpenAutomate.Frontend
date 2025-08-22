@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 
   // Webpack configuration for memory optimization
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev }) => {
     // Memory optimization for development
     if (dev) {
       // Limit memory usage for webpack cache
@@ -32,9 +32,17 @@ const nextConfig: NextConfig = {
             },
             vendor: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
+              name: 'vendor',
               priority: -10,
               chunks: 'all',
+              enforce: true,
+            },
+            styles: {
+              name: 'styles',
+              test: /\.(css|scss|sass)$/,
+              chunks: 'all',
+              priority: 10,
+              enforce: true,
             },
           },
         },

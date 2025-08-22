@@ -3,7 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { User } from '@/types/auth'
 
-export const userColumns: ColumnDef<User>[] = [
+export const UserColumns: ColumnDef<User>[] = [
   {
     id: 'select',
     header: ({ table }) => (

@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/use-toast'
@@ -18,7 +25,7 @@ interface CsvImportExportProps {
   onImportComplete?: (result: CsvImportResultDto) => void
 }
 
-export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
+export function CsvImportExport({ onImportComplete }: Readonly<CsvImportExportProps>) {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -82,7 +89,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
         return
       }
 
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
+        // 10MB limit
         toast({
           title: 'File Too Large',
           description: 'File size must be less than 10MB',
@@ -184,13 +192,15 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                     <strong>Optional columns:</strong> Description
                   </div>
                   <div>
-                    <strong>Type values:</strong> &quot;String&quot; or &quot;Secret&quot; (defaults to &quot;String&quot; if empty)
+                    <strong>Type values:</strong> &quot;String&quot; or &quot;Secret&quot; (defaults
+                    to &quot;String&quot; if empty)
                   </div>
                   <div>
                     <strong>Description:</strong> Can be empty or up to 500 characters
                   </div>
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                    <strong>🔄 Update Behavior:</strong> If an asset with the same Key already exists, it will be updated with new values.
+                    <strong>🔄 Update Behavior:</strong> If an asset with the same Key already
+                    exists, it will be updated with new values.
                   </div>
                   <div className="mt-2">
                     <CsvTemplateHelper />
@@ -226,10 +236,7 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleImport}
-              disabled={!selectedFile || isImporting}
-            >
+            <Button onClick={handleImport} disabled={!selectedFile || isImporting}>
               {isImporting ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -302,8 +309,11 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                   <AlertTitle>Errors ({importResult.errors.length})</AlertTitle>
                   <AlertDescription>
                     <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
-                      {importResult.errors.map((error, index) => (
-                        <div key={index} className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-500">
+                      {importResult.errors.map((error) => (
+                        <div
+                          key={error}
+                          className="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-500"
+                        >
                           {error}
                         </div>
                       ))}
@@ -315,9 +325,7 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
           )}
 
           <DialogFooter>
-            <Button onClick={() => setShowResultDialog(false)}>
-              Close
-            </Button>
+            <Button onClick={() => setShowResultDialog(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -327,6 +335,9 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Export Assets to CSV</DialogTitle>
+            <DialogDescription>
+              Export your assets to a CSV file with optional inclusion of secret values.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -346,7 +357,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Security Warning</AlertTitle>
                 <AlertDescription>
-                  Secret values will be exported in plain text. Ensure the CSV file is handled securely and not shared inappropriately.
+                  Secret values will be exported in plain text. Ensure the CSV file is handled
+                  securely and not shared inappropriately.
                 </AlertDescription>
               </Alert>
             )}
@@ -356,7 +368,8 @@ export function CsvImportExport({ onImportComplete }: CsvImportExportProps) {
                 <FileText className="h-4 w-4" />
                 <AlertTitle>Default Export</AlertTitle>
                 <AlertDescription>
-                  Secret values will be exported as <code>***ENCRYPTED***</code> placeholders for security.
+                  Secret values will be exported as <code>***ENCRYPTED***</code> placeholders for
+                  security.
                 </AlertDescription>
               </Alert>
             )}

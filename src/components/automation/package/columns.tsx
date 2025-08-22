@@ -9,8 +9,11 @@ import {
 } from '@/lib/api/automation-packages'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
+import { DataTableRowActions } from './data-table-row-actions'
 
-export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[] => [
+export const CreatePackageColumns = (
+  onDeleted?: () => void,
+): ColumnDef<AutomationPackageResponseDto>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -35,6 +38,15 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 40,
+  },
+  {
+    id: 'actions',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+    cell: ({ row }) => <DataTableRowActions row={row} onRefresh={onDeleted} />,
+    enableSorting: false,
+    enableHiding: false,
+    size: 60,
   },
   {
     accessorKey: 'name',
@@ -50,7 +62,7 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
     header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
     cell: ({ row }) => (
       <div className="flex items-center">
-        <span className="max-w-md truncate" title={row.getValue('description') as string}>
+        <span className="max-w-md truncate" title={row.getValue('description')}>
           {row.getValue('description')}
         </span>
       </div>
@@ -98,7 +110,7 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
     accessorKey: 'isActive',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const isActive = row.getValue('isActive') as boolean
+      const isActive = row.getValue('isActive')
 
       return (
         <div className="flex items-center">
@@ -119,12 +131,15 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
     accessorKey: 'createdAt',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
-      const createdAt = row.getValue('createdAt') as string
-      const formattedDate = formatUtcToLocal(createdAt, {
-        dateStyle: 'medium',
-        timeStyle: undefined, // Only show date, no time
-        fallback: 'Invalid date',
-      })
+      const createdAt = row.getValue('createdAt')
+      const formattedDate = formatUtcToLocal(
+        createdAt as string | Date | null | undefined,
+        {
+          dateStyle: 'medium',
+          timeStyle: undefined, // Only show date, no time
+          fallback: 'Invalid date',
+        }
+      )
 
       return (
         <div className="flex items-center">
@@ -136,4 +151,4 @@ export const createPackageColumns = (): ColumnDef<AutomationPackageResponseDto>[
 ]
 
 // Export a default columns array for backward compatibility
-export const columns = createPackageColumns()
+export const columns = CreatePackageColumns()

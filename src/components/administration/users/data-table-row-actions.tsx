@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog'
 import { deleteOrganizationUnitUser } from '@/lib/api/organization-unit-user'
@@ -73,7 +74,7 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
             <MoreHorizontal className="h-4 w-4" />
@@ -95,7 +96,7 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
             onClick={() => setOpen(true)}
           >
             <span className="min-w-[1.25rem] flex justify-center">
-              <Trash className="w-4 h-4 text-destructive" aria-hidden="true" />
+              <Trash className="w-4 h-4 text-destructive" />
             </span>
             <span>Delete</span>
           </DropdownMenuItem>
@@ -115,10 +116,10 @@ export default function DataTableRowAction({ row, onDeleted }: DataTableRowActio
           </DialogClose>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user <b>{row.original.email}</b>?
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete this user <b>{row.original.email}</b>?
-          </div>
           <DialogFooter className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={deleting}>
               Cancel

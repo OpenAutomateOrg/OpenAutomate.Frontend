@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { columns } from './columns'
+import { OrganizationUnitColumns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
@@ -191,7 +191,7 @@ function OrganizationUnitAdminInterfaceContent() {
 
   const table = useReactTable({
     data: paginatedData,
-    columns,
+    columns: OrganizationUnitColumns,
     state: {
       sorting,
       columnVisibility,
@@ -410,7 +410,7 @@ function OrganizationUnitAdminInterfaceContent() {
 
             <DataTable
               data={paginatedData}
-              columns={columns}
+              columns={OrganizationUnitColumns}
               onRowClick={handleRowClick}
               table={table}
               isLoading={loading}

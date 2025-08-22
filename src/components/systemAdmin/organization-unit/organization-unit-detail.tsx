@@ -557,8 +557,10 @@ export default function OrganizationUnitDetail({ id }: OrganizationUnitDetailPro
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel the deletion of this organization unit?
+            </DialogDescription>
           </DialogHeader>
-          <div>Are you sure you want to cancel the deletion of this organization unit?</div>
           <DialogFooter>
             <Button
               variant="outline"

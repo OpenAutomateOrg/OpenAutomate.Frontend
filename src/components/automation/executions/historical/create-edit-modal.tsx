@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -51,6 +52,9 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
       <DialogContent className="sm:max-w-[800px] p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
+          <DialogDescription>
+            Review and configure the execution details for your automation task.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">

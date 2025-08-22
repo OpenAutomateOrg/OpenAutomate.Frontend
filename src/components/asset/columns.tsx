@@ -9,7 +9,7 @@ import DataTableRowAction from './data-table-row-actions'
 
 type EditFunctionType = (asset: AssetRow) => void
 
-export const createColumns = (
+export const CreateColumns = (
   onEdit?: EditFunctionType,
   onDeleted?: () => void,
 ): ColumnDef<AssetRow>[] => [
@@ -118,4 +118,4 @@ export const createColumns = (
 ]
 
 // Maintain backward compatibility
-export const columns = createColumns()
+export const columns = CreateColumns()

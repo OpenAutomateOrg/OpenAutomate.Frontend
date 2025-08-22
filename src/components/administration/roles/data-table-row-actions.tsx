@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { rolesApi } from '@/lib/api/roles'
@@ -146,7 +147,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             disabled={!canModify}
             className={!canModify ? 'cursor-not-allowed opacity-50' : ''}
           >
-            <Pencil className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -155,7 +156,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
             onClick={handleDelete}
             disabled={!canModify}
           >
-            <Trash className="mr-2 h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash className="mr-2 h-4 w-4 text-destructive" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -179,10 +180,10 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete role <b>{row.original.name}</b>?
+            </DialogDescription>
           </DialogHeader>
-          <div>
-            Are you sure you want to delete role <b>{row.original.name}</b>?
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>
               Cancel

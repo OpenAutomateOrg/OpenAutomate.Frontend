@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -160,7 +161,8 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
     navigator.clipboard.writeText(text)
     toast({
       title: 'Copied',
-      description: type === 'key' ? 'Agent key copied to clipboard' : 'Orchestrator URL copied to clipboard',
+      description:
+        type === 'key' ? 'Agent key copied to clipboard' : 'Orchestrator URL copied to clipboard',
     })
   }
 
@@ -213,6 +215,11 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
           <DialogTitle className="text-xl font-bold">
             {isEditing ? 'Edit Agent' : 'Create a new Agent'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? 'Update the agent configuration and settings.'
+              : 'Create a new bot agent to execute automation tasks.'}
+          </DialogDescription>
         </DialogHeader>
         {!createdAgent ? (
           <form className="space-y-4 px-6 py-4">
@@ -271,7 +278,8 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
                 Agent created successfully!
               </p>
               <p className="text-green-700 dark:text-green-400 mb-4">
-                Please copy the agent key and orchestrator URL below. The agent key will only be shown once.
+                Please copy the agent key and orchestrator URL below. The agent key will only be
+                shown once.
               </p>
             </div>
 
