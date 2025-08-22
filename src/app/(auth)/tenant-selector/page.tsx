@@ -182,7 +182,7 @@ function TenantSelectorContent() {
             <Card className="p-6 mt-6">
               {showCreateForm ? (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Create New Organization</h3>
+                  <h3 className="text-lg font-medium">Create New Organization Unit</h3>
                   <CreateOrganizationUnitForm
                     onSuccess={handleOrganizationCreated}
                     onCancel={() => setShowCreateForm(false)}
@@ -194,7 +194,7 @@ function TenantSelectorContent() {
                   onClick={() => setShowCreateForm(true)}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Create New Organization
+                  Create New Organization Unit
                 </Button>
               )}
             </Card>
@@ -235,12 +235,12 @@ function TenantSelectorContent() {
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full mt-4 border-dashed">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Create New Organization
+                  Create New Organization Unit
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Organization</DialogTitle>
+                  <DialogTitle>Create New Organization Unit</DialogTitle>
                   <DialogDescription>
                     Create a new organization unit to manage your automation processes.
                   </DialogDescription>
