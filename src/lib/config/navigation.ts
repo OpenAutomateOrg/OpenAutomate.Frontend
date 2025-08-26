@@ -77,7 +77,6 @@ export interface UserNavigationItem {
   icon: LucideIcon
 }
 
-
 /**
  * Common navigation items for all users with tenant context
  * Each item specifies the minimum permission required to view it
@@ -210,11 +209,6 @@ export const adminNavItems: NavigationItem[] = [
     title: 'Organization Units',
     url: '/org-unit-management',
     icon: Building2,
-  },
-  {
-    title: 'Agent Management',
-    url: '/agent-management',
-    icon: Bot,
   },
 ]
 

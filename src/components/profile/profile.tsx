@@ -172,7 +172,7 @@ export default function Profile() {
             <div className="space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">System Role</Label>
               <div className="flex items-center gap-2">
-                {user?.systemRole === 0 || user?.systemRole === "User" ? (
+                {user?.systemRole === 0 || user?.systemRole === 'User' ? (
                   <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1">
                     {/* User Icon Placeholder */}
                     User

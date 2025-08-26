@@ -98,7 +98,7 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
       <DialogContent className="sm:max-w-[600px] p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Package' : 'Create New Automation Package'}</DialogTitle>
-          <DialogDescription >
+          <DialogDescription>
             Upload a new automation package by selecting a ZIP file containing your bot code. You
             can optionally specify a version number.
           </DialogDescription>

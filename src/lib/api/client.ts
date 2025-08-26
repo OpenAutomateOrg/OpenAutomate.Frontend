@@ -386,10 +386,7 @@ export const api = {
 /**
  * Generic function to make API requests that return Blob data (e.g., file downloads)
  */
-export async function fetchBlob(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<Blob> {
+export async function fetchBlob(endpoint: string, options: RequestInit = {}): Promise<Blob> {
   const url = getFullUrl(endpoint)
   const headers = prepareHeaders(options)
 

@@ -59,7 +59,9 @@ export function ChartBarInteractive({
           if (user.createdAt) {
             // Use the parseUtcDate utility for safe parsing
             const parsedDate = parseUtcDate(user.createdAt)
-            createdDate = parsedDate ? parsedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            createdDate = parsedDate
+              ? parsedDate.toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0]
           } else {
             createdDate = new Date().toISOString().split('T')[0]
           }
@@ -84,7 +86,9 @@ export function ChartBarInteractive({
           if (orgUnit.createdAt) {
             // Use the parseUtcDate utility for safe parsing
             const parsedDate = parseUtcDate(orgUnit.createdAt)
-            createdDate = parsedDate ? parsedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            createdDate = parsedDate
+              ? parsedDate.toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0]
           } else {
             // Fallback to today's date if createdAt is missing
             createdDate = new Date().toISOString().split('T')[0]
@@ -121,7 +125,7 @@ export function ChartBarInteractive({
     <Card className="py-0 dark:*:data-[slot=card]:bg-neutral-900 ">
       <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-0">
-          <CardTitle>System Statistics - Interactive</CardTitle>
+          <CardTitle>System Statistics</CardTitle>
           <CardDescription>Showing system data for the last 30 days</CardDescription>
         </div>
         <div className="flex">

@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -148,7 +148,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div>
       <Card className="border rounded-md shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between border-b p-4">
           <div className="flex items-center space-x-4">
@@ -156,14 +156,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
-            <div className="flex items-center space-x-2">
-              <CardTitle className="text-xl">{role.name}</CardTitle>
-              {role.isSystemAuthority && (
-                <Badge variant="secondary" className="text-xs">
-                  System Role
-                </Badge>
-              )}
-            </div>
+            <div className="flex items-center space-x-2"></div>
           </div>
 
           {!role.isSystemAuthority && (
@@ -172,12 +165,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDelete}
-                className="text-destructive hover:text-destructive"
-              >
+              <Button variant="destructive" size="sm" onClick={handleDelete}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>

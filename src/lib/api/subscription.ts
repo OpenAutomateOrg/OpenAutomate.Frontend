@@ -64,10 +64,7 @@ export interface PagedResult<T> {
   totalPages: number
 }
 
-export const getPayments = async (
-  page = 1,
-  pageSize = 25,
-): Promise<PagedResult<PaymentItem>> => {
+export const getPayments = async (page = 1, pageSize = 25): Promise<PagedResult<PaymentItem>> => {
   const endpoints = createEndpoints()
   const url = `${endpoints.listPayments}?page=${page}&pageSize=${pageSize}`
   return api.get<PagedResult<PaymentItem>>(url)
@@ -93,7 +90,9 @@ export interface CustomerPortalResponse {
 
 export const getCheckoutUrl = async (redirectUrl?: string): Promise<CheckoutResponse> => {
   const endpoints = createEndpoints()
-  const url = redirectUrl ? `${endpoints.checkout}?redirectUrl=${encodeURIComponent(redirectUrl)}` : endpoints.checkout
+  const url = redirectUrl
+    ? `${endpoints.checkout}?redirectUrl=${encodeURIComponent(redirectUrl)}`
+    : endpoints.checkout
   return api.get<CheckoutResponse>(url)
 }
 
@@ -114,7 +113,9 @@ export const openCheckout = async (redirectTo: string = 'subscription/success'):
 
 // Opens Lemon Squeezy overlay when lemon.js is available; otherwise falls back to new tab
 // Pass redirectTo to send users straight to Orchestrator after payment
-export const openCheckoutOverlay = async (redirectTo: string = 'subscription/success'): Promise<void> => {
+export const openCheckoutOverlay = async (
+  redirectTo: string = 'subscription/success',
+): Promise<void> => {
   if (typeof window === 'undefined') return
 
   // Build absolute redirect URL per-tenant
@@ -181,7 +182,10 @@ export const openCheckoutOverlay = async (redirectTo: string = 'subscription/suc
       } else if (typeof payload === 'object' && payload !== null) {
         eventName = (payload as { event?: string }).event
       }
-      if (eventName === 'Checkout.Success' || (typeof eventName === 'string' && /Success/i.test(eventName))) {
+      if (
+        eventName === 'Checkout.Success' ||
+        (typeof eventName === 'string' && /Success/i.test(eventName))
+      ) {
         window.removeEventListener('message', onMessage)
         redirected = true
         stopPolling()
@@ -193,10 +197,13 @@ export const openCheckoutOverlay = async (redirectTo: string = 'subscription/suc
   }
   window.addEventListener('message', onMessage)
   // Safety cleanup after 10 minutes
-  window.setTimeout(() => {
-    window.removeEventListener('message', onMessage)
-    stopPolling()
-  }, 10 * 60 * 1000)
+  window.setTimeout(
+    () => {
+      window.removeEventListener('message', onMessage)
+      stopPolling()
+    },
+    10 * 60 * 1000,
+  )
 
   const waitForLemonJs = async (timeoutMs = 8000): Promise<boolean> => {
     const start = Date.now()
