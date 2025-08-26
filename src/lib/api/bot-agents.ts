@@ -9,9 +9,8 @@ export interface BotAgentResponseDto {
   id: string
   name: string
   machineName: string
-  machineKey: string
+  machineKey: string | null
   status: string
-  lastConnected: string
   isActive: boolean
 }
 

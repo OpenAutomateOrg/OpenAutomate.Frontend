@@ -1,12 +1,11 @@
 'use client'
 
-import { ColumnDef, Column, Row } from '@tanstack/react-table'
+import { ColumnDef } from '@tanstack/react-table'
 
 import { Checkbox } from '@/components/ui/checkbox'
 import type { AgentRow } from './agent'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import DataTableRowAction from './data-table-row-actions'
-import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 export const createAgentColumns = (
   onRefresh?: () => void,
@@ -87,25 +86,6 @@ export const createAgentColumns = (
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
             {status}
           </span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: 'lastConnected',
-    header: ({ column }: { column: Column<AgentRow> }) => (
-      <DataTableColumnHeader column={column} title="Last Connected" />
-    ),
-    cell: ({ row }: { row: Row<AgentRow> }) => {
-      const rawValue = row.getValue('lastConnected')
-      const lastConnected =
-        typeof rawValue === 'string' ? rawValue : rawValue ? String(rawValue) : null
-
-      const formattedDate = formatUtcToLocal(lastConnected, { fallback: 'Never' })
-
-      return (
-        <div className="flex items-center">
-          <span>{formattedDate}</span>
         </div>
       )
     },

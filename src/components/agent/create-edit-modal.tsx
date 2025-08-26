@@ -291,14 +291,14 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
               <div className="flex">
                 <Input
                   id="agent-key"
-                  value={createdAgent.machineKey}
+                  value={createdAgent.machineKey || ''}
                   readOnly
                   className="flex-1 bg-muted font-mono text-xs"
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => copyToClipboard(createdAgent.machineKey, 'key')}
+                  onClick={() => copyToClipboard(createdAgent.machineKey || '', 'key')}
                   className="ml-2"
                   title="Copy Agent Key"
                 >
