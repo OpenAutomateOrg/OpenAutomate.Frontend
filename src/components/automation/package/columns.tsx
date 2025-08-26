@@ -132,14 +132,11 @@ export const CreatePackageColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created Date" />,
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt')
-      const formattedDate = formatUtcToLocal(
-        createdAt as string | Date | null | undefined,
-        {
-          dateStyle: 'medium',
-          timeStyle: undefined, // Only show date, no time
-          fallback: 'Invalid date',
-        }
-      )
+      const formattedDate = formatUtcToLocal(createdAt as string | Date | null | undefined, {
+        dateStyle: 'medium',
+        timeStyle: undefined, // Only show date, no time
+        fallback: 'Invalid date',
+      })
 
       return (
         <div className="flex items-center">

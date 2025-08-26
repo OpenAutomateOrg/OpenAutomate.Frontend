@@ -1,8 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { CreateColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { CreateEditModal } from '@/components/asset/create-edit-modal'
@@ -29,6 +37,7 @@ import {
   type ODataQueryOptions,
   getAssetDetail,
   getAssetAgents,
+  deleteAsset,
 } from '@/lib/api/assets'
 import type { CsvImportResultDto } from '@/types/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
@@ -57,6 +66,7 @@ export default function AssetInterface() {
 
   // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -430,6 +440,44 @@ export default function AssetInterface() {
   // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
   const handleAssetCreated = () => mutateAssets()
 
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    const selectedAssetIds = Object.keys(rowSelection)
+
+    if (selectedAssetIds.length === 0) {
+      return
+    }
+
+    try {
+      // Delete all selected assets
+      await Promise.all(selectedAssetIds.map((id) => deleteAsset(id)))
+
+      // Show success toast
+      toast({
+        title: 'Assets Deleted',
+        description: `Successfully deleted ${selectedAssetIds.length} asset(s).`,
+        duration: 3000,
+      })
+
+      // Clear selection and close dialog
+      setRowSelection({})
+      setDeleteDialogOpen(false)
+
+      // Refresh data
+      await mutateAssets()
+    } catch (error) {
+      console.error('Failed to delete assets:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete assets. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const handleRowClick = (row: AssetRow) => {
     const isAdmin = pathname.startsWith('/admin')
     const tenant = pathname.split('/')[1]
@@ -461,6 +509,15 @@ export default function AssetInterface() {
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Create
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              className="flex items-center justify-center"
+              disabled={Object.keys(rowSelection).length === 0}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected
             </Button>
           </div>
         </div>
@@ -542,6 +599,27 @@ export default function AssetInterface() {
         existingKeys={assets.map((item: AssetRow) => item.key)}
         asset={selectedAsset}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Assets</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {Object.keys(rowSelection).length} selected asset(s)?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

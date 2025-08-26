@@ -1,7 +1,15 @@
 'use client'
 
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { createScheduleColumns } from './schedule/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
@@ -19,6 +27,7 @@ import {
   getRecurrenceTypeDisplayName,
   enableSchedule,
   disableSchedule,
+  deleteSchedule,
 } from '@/lib/api/schedules'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
@@ -153,6 +162,7 @@ export default function ScheduleInterface() {
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState<ScheduleData | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -796,6 +806,40 @@ export default function ScheduleInterface() {
     setIsCreateModalOpen(true)
   }
 
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    const selectedScheduleIds = Object.keys(rowSelection)
+
+    if (selectedScheduleIds.length === 0) {
+      return
+    }
+
+    try {
+      // Delete all selected schedules
+      await Promise.all(selectedScheduleIds.map((id) => deleteSchedule(id)))
+
+      // Show success toast
+      toast({
+        title: 'Schedules Deleted',
+        description: `Successfully deleted ${selectedScheduleIds.length} schedule(s).`,
+        duration: 3000,
+      })
+
+      // Clear selection and close dialog
+      setRowSelection({})
+      setDeleteDialogOpen(false)
+
+      // Refresh data
+      await Promise.all([mutateSchedules(), mutateFallbackSchedules()])
+    } catch (error) {
+      console.error('Failed to delete schedules:', error)
+      toast(createErrorToast(error))
+    }
+  }
+
   const handleRowClick = (row: ScheduleResponseDto) => {
     const isAdmin = pathname.startsWith('/admin')
     const route = isAdmin
@@ -833,6 +877,15 @@ export default function ScheduleInterface() {
             <Button onClick={handleCreateClick} className="flex items-center justify-center">
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('schedule.createSchedule')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              className="flex items-center justify-center"
+              disabled={Object.keys(rowSelection).length === 0}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected
             </Button>
           </div>
         </div>
@@ -927,6 +980,27 @@ export default function ScheduleInterface() {
         editingSchedule={editingSchedule}
         onSuccess={handleCreateSuccess}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Schedules</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {Object.keys(rowSelection).length} selected
+              schedule(s)? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

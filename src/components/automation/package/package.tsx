@@ -1,7 +1,15 @@
 'use client'
 
-import { PlusCircle, Loader2 } from 'lucide-react'
+import { PlusCircle, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { CreatePackageColumns } from '@/components/automation/package/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -26,6 +34,7 @@ import {
   getAutomationPackagesWithOData,
   type ODataQueryOptions,
   AutomationPackageResponseDto,
+  deleteAutomationPackage,
 } from '@/lib/api/automation-packages'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
@@ -54,6 +63,7 @@ export default function PackageInterface() {
 
   // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -421,6 +431,45 @@ export default function PackageInterface() {
     router.push(route)
   }
 
+  // Delete handlers
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    const selectedPackageIds = Object.keys(rowSelection)
+
+    if (selectedPackageIds.length === 0) {
+      return
+    }
+
+    try {
+      // Delete all selected packages
+      await Promise.all(selectedPackageIds.map((id) => deleteAutomationPackage(id)))
+
+      // Show success toast
+      toast({
+        title: 'Packages Deleted',
+        description: `Successfully deleted ${selectedPackageIds.length} package(s).`,
+        duration: 3000,
+      })
+
+      // Clear selection and close dialog
+      setRowSelection({})
+      setDeleteDialogOpen(false)
+
+      // Refresh data
+      await mutatePackages()
+    } catch (error) {
+      console.error('Failed to delete packages:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete packages. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const statusOptions = [
     { value: 'all', label: 'Show All' },
     { value: 'true', label: t('package.status.active') },
@@ -446,6 +495,15 @@ export default function PackageInterface() {
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               {t('package.create')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              className="flex items-center justify-center"
+              disabled={Object.keys(rowSelection).length === 0}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected
             </Button>
           </div>
         </div>
@@ -521,6 +579,27 @@ export default function PackageInterface() {
         mode={modalMode}
         onSuccess={refreshPackages}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Packages</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {Object.keys(rowSelection).length} selected
+              package(s)? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

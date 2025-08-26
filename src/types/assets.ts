@@ -65,7 +65,7 @@ export interface Agent {
 
 export enum AssetType {
   String = 0,
-  Secret = 1
+  Secret = 1,
 }
 
 /**

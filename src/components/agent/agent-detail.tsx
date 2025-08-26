@@ -133,62 +133,60 @@ export default function AgentDetail({ id }: AgentDetailProps) {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <Card className="border rounded-md shadow-sm">
-        <CardHeader className="flex items-center justify-between border-b p-4">
-          <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-            onClick={() => {
-              window.location.href = config.downloads.agentInstallerUrl
-            }}
-          >
-            <Download className="h-4 w-4" />
-            Download Agent
-          </Button>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <DetailBlock label="Name">{agent.name}</DetailBlock>
-              <DetailBlock label="Machine name">{agent.machineName}</DetailBlock>
-            </div>
-            <div className="space-y-4">
-              <DetailBlock label="Status">
-                <Badge variant="outline" className={getStatusBadgeClass(statusToDisplay)}>
-                  {statusToDisplay}
-                </Badge>
-              </DetailBlock>
-            </div>
+    <Card className="border rounded-md shadow-sm">
+      <CardHeader className="flex items-center justify-between border-b py-2">
+        <Button size="sm" className="gap-1" onClick={handleBack}>
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={() => {
+            window.location.href = config.downloads.agentInstallerUrl
+          }}
+        >
+          <Download className="h-4 w-4" />
+          Download Agent
+        </Button>
+      </CardHeader>
+      <CardContent className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <DetailBlock label="Name">{agent.name}</DetailBlock>
+            <DetailBlock label="Machine name">{agent.machineName}</DetailBlock>
           </div>
+          <div className="space-y-4">
+            <DetailBlock label="Status">
+              <Badge variant="outline" className={getStatusBadgeClass(statusToDisplay)}>
+                {statusToDisplay}
+              </Badge>
+            </DetailBlock>
+          </div>
+        </div>
 
-          {/* Connection Information Section */}
-          <div className="mt-8 pt-6 border-t">
-            <h3 className="text-lg font-semibold mb-4">Connection Information</h3>
+        {/* Connection Information Section */}
+        <div className="mt-8 pt-6 border-t">
+          <h3 className="text-lg font-semibold mb-4">Connection Information</h3>
 
-            <div className="grid grid-cols-1 gap-4">
-              {/* Connection URL */}
-              <div className="bg-muted p-4 rounded-md">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Connection URL</span>
-                </div>
-                <div className="bg-card p-2 rounded border text-sm font-mono overflow-x-auto">
-                  {`${frontendUrl}/${tenant}`}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Use this URL to connect your bot agent to the OpenAutomate platform.
-                </p>
+          <div className="grid grid-cols-1 gap-4">
+            {/* Connection URL */}
+            <div className="bg-muted p-4 rounded-md">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Connection URL</span>
               </div>
+              <div className="bg-card p-2 rounded border text-sm font-mono overflow-x-auto">
+                {`${frontendUrl}/${tenant}`}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Use this URL to connect your bot agent to the OpenAutomate platform.
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

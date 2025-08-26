@@ -22,11 +22,7 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="hover:border-orange-600 gap-2 px-2 sm:px-4 py-1 sm:py-2 min-w-0"
-        >
+        <Button size="sm" className="gap-2 px-2 sm:px-4 py-1 sm:py-2 min-w-0">
           <Globe className="h-4 w-4" />
           <span className="hidden xs:inline-block sm:inline-block text-xs sm:text-base">
             {languages.find((lang) => lang.code === locale)?.name || 'Language'}{' '}
@@ -38,7 +34,7 @@ export function LanguageSwitcher() {
           <DropdownMenuItem
             key={language.code}
             onClick={() => setLocale(language.code as Locale)}
-            className={(language.code === locale ? 'font-bold ' : '') + 'text-xs sm:text-base'}
+            className={(language.code === locale ? 'font-bold ' : '') + ' text-xs sm:text-base'}
           >
             {language.name}
           </DropdownMenuItem>

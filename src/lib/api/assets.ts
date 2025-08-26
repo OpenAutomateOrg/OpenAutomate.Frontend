@@ -305,15 +305,12 @@ export const getAllAgents = async (): Promise<Agent[]> => {
 export const exportAssetsToCsv = async (includeSecrets: boolean = false): Promise<Blob> => {
   const tenant = getCurrentTenant()
 
-  return fetchBlob(
-    `/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`,
-    {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/csv',
-      },
-    }
-  )
+  return fetchBlob(`/${tenant}/api/assets/export/csv?includeSecrets=${includeSecrets}`, {
+    method: 'GET',
+    headers: {
+      Accept: 'text/csv',
+    },
+  })
 }
 
 /**
@@ -329,6 +326,6 @@ export const importAssetsFromCsv = async (file: File): Promise<CsvImportResultDt
     {
       method: 'POST',
     },
-    formData
+    formData,
   )
 }
