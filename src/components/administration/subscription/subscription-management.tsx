@@ -96,7 +96,8 @@ const renderTrialManagement = (
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Free trial is only available on your first organization unit. Upgrade to access Pro features.
+            Free trial is only available on your first organization unit. Upgrade to access Pro
+            features.
           </p>
           <Button className="w-full" onClick={() => subscriptionApi.openCheckoutOverlay()}>
             Upgrade to Pro
@@ -121,9 +122,8 @@ export default function SubscriptionManagement() {
   const { toast } = useToast()
 
   // Billing history (SWR per guide, no manual useEffect)
-  const { data: paymentsData, isLoading: isPaymentsLoading } = useSWR(
-    swrKeys.subscription(),
-    () => subscriptionApi.getPayments(1, 50),
+  const { data: paymentsData, isLoading: isPaymentsLoading } = useSWR(swrKeys.subscription(), () =>
+    subscriptionApi.getPayments(1, 50),
   )
 
   const handleStartTrial = async () => {
@@ -222,9 +222,6 @@ export default function SubscriptionManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Subscription Management</h1>
-          <p className="text-muted-foreground">
-            Manage your organization&apos;s subscription and billing
-          </p>
         </div>
       </div>
 
@@ -312,20 +309,24 @@ export default function SubscriptionManagement() {
                 {subscription.isInTrial && subscription.trialEndsAt && (
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Trial Ends:</span>
-                    <span>{(() => {
-                      const date = parseUtcDate(subscription.trialEndsAt);
-                      return date ? format(date, 'PPp') : 'Date pending';
-                    })()}</span>
+                    <span>
+                      {(() => {
+                        const date = parseUtcDate(subscription.trialEndsAt)
+                        return date ? format(date, 'PPp') : 'Date pending'
+                      })()}
+                    </span>
                   </div>
                 )}
 
                 {subscription.renewsAt && (
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Next Billing:</span>
-                    <span>{(() => {
-                      const date = parseUtcDate(subscription.renewsAt);
-                      return date ? format(date, 'PP') : 'Date pending';
-                    })()}</span>
+                    <span>
+                      {(() => {
+                        const date = parseUtcDate(subscription.renewsAt)
+                        return date ? format(date, 'PP') : 'Date pending'
+                      })()}
+                    </span>
                   </div>
                 )}
 
@@ -394,7 +395,10 @@ export default function SubscriptionManagement() {
                     <TableCell>{format(new Date(p.paymentDate), 'PP')}</TableCell>
                     <TableCell>{p.isRefunded ? 'Refunded' : 'Paid'}</TableCell>
                     <TableCell className="text-right">
-                      {p.amount.toLocaleString(undefined, { style: 'currency', currency: p.currency })}
+                      {p.amount.toLocaleString(undefined, {
+                        style: 'currency',
+                        currency: p.currency,
+                      })}
                     </TableCell>
                     <TableCell>
                       <Button
