@@ -51,7 +51,6 @@ export const agentSchema = z.object({
   name: z.string(),
   machineName: z.string(),
   status: z.string(),
-  lastConnected: z.string(),
 })
 
 export type AgentRow = z.infer<typeof agentSchema>
