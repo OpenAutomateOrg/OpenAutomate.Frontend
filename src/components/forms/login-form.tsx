@@ -89,6 +89,96 @@ export function LoginForm() {
   }, [isExpired, needVerification, emailParam, getValues, setValue])
 
   // Form submit handler
+  // Helper: determine default redirect after login
+  function handleRedirectAfterLogin(
+    loginResponse: { systemRole?: string | number } | undefined | void,
+  ) {
+    const isAdmin =
+      loginResponse?.systemRole === 'Admin' ||
+      loginResponse?.systemRole === 'SystemAdmin' ||
+      loginResponse?.systemRole === 1
+
+    if (isInvitation) {
+      router.push(returnUrl)
+      return
+    }
+
+    if (isAdmin) {
+      router.push('/dashboard')
+      return
+    }
+
+    if (returnUrl) {
+      router.push(returnUrl)
+      return
+    }
+
+    router.push('/tenant-selector')
+  }
+
+  // Helper: check if an error indicates email verification required
+  function isVerificationError(errMsg: string, code?: string | undefined): boolean {
+    const lower = (errMsg || '').toLowerCase()
+    return (
+      lower.includes('verify') ||
+      lower.includes('verification') ||
+      lower.includes('email not verified') ||
+      code === 'EMAIL_NOT_VERIFIED'
+    )
+  }
+
+  // Helper: map backend errors to form fields and return a display message
+  function normalizeAndMapErrors(error: unknown): string {
+    let message = 'Login failed. Please try again.'
+
+    if (typeof error !== 'object' || error === null) return message
+
+    const axiosError = error as {
+      response?: {
+        data?: {
+          message?: string
+          code?: string
+          errors?: Record<string, string | string[]>
+        }
+      }
+      message?: string
+    }
+
+    message = axiosError.response?.data?.message ?? axiosError.message ?? message
+
+    const fieldErrors = axiosError.response?.data?.errors
+    if (fieldErrors) {
+      const emailErr = fieldErrors['email'] || fieldErrors['Email']
+      const passwordErr = fieldErrors['password'] || fieldErrors['Password']
+      if (emailErr) {
+        const msg = Array.isArray(emailErr) ? emailErr.join(', ') : emailErr
+        form.setError('email', { type: 'server', message: msg })
+      }
+      if (passwordErr) {
+        const msg = Array.isArray(passwordErr) ? passwordErr.join(', ') : passwordErr
+        form.setError('password', { type: 'server', message: msg })
+      }
+    } else {
+      const lowerMsg = (message || '').toLowerCase()
+      if (
+        axiosError.response?.data?.code === 'EMAIL_NOT_FOUND' ||
+        lowerMsg.includes('email not found') ||
+        lowerMsg.includes('user not found')
+      ) {
+        form.setError('email', { type: 'server', message })
+        form.setFocus('email')
+      } else if (
+        axiosError.response?.data?.code === 'INCORRECT_PASSWORD' ||
+        lowerMsg.includes('incorrect password') ||
+        lowerMsg.includes('invalid credentials')
+      ) {
+        form.setError('password', { type: 'server', message })
+      }
+    }
+
+    return message
+  }
+
   async function onSubmit(data: FormData) {
     setIsLoading(true)
     setError(null)
@@ -99,96 +189,23 @@ export function LoginForm() {
         password: data.password,
       })
 
-      // If this login is from an invitation, redirect to the invitation page
-      if (isInvitation) {
-        router.push(returnUrl)
+      handleRedirectAfterLogin(loginResponse)
+    } catch (error: unknown) {
+      const axiosErr = (error as { response?: { data?: { code?: string } } }) || {}
+      const message = normalizeAndMapErrors(error)
+
+      if (isVerificationError(message, axiosErr.response?.data?.code)) {
+        setUnverifiedEmail(data.email)
+        setIsEmailVerificationError(true)
+        setError(
+          'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
+        )
         return
       }
 
-      // Check system role from the fresh login response, not context state
-      const isAdmin =
-        loginResponse?.systemRole === 'Admin' ||
-        loginResponse?.systemRole === 'SystemAdmin' ||
-        loginResponse?.systemRole === 1
-
-      // Normal redirect if not from invitation
-      if (isAdmin) {
-        router.push('/dashboard') // Redirect to system admin dashboard
-      } else if (returnUrl && !isInvitation) {
-        router.push(returnUrl)
-      } else {
-        router.push('/tenant-selector') // Default redirect to tenant selector
-      }
-    } catch (error: unknown) {
-      let errorMessage = 'Login failed. Please try again.'
-
-      if (typeof error === 'object' && error !== null) {
-        const axiosError = error as {
-          response?: {
-            data?: {
-              message?: string
-              code?: string
-              errors?: Record<string, string | string[]>
-            }
-          }
-          message?: string
-        }
-        errorMessage = axiosError.response?.data?.message ?? axiosError.message ?? errorMessage
-
-        // Inline field mapping if backend provides errors object
-        const fieldErrors = axiosError.response?.data?.errors
-        if (fieldErrors) {
-          const emailErr = fieldErrors['email'] || fieldErrors['Email']
-          const passwordErr = fieldErrors['password'] || fieldErrors['Password']
-          if (emailErr) {
-            const msg = Array.isArray(emailErr) ? emailErr.join(', ') : emailErr
-            form.setError('email', { type: 'server', message: msg })
-          }
-          if (passwordErr) {
-            const msg = Array.isArray(passwordErr) ? passwordErr.join(', ') : passwordErr
-            form.setError('password', { type: 'server', message: msg })
-          }
-        }
-
-        // Heuristics from message/code when errors object is not present
-        const lowerMsg = (errorMessage || '').toLowerCase()
-        if (
-          axiosError.response?.data?.code === 'EMAIL_NOT_FOUND' ||
-          lowerMsg.includes('email not found') ||
-          lowerMsg.includes('user not found')
-        ) {
-          form.setError('email', { type: 'server', message: errorMessage })
-          // focus email so user can correct
-          form.setFocus('email')
-        } else if (
-          axiosError.response?.data?.code === 'INCORRECT_PASSWORD' ||
-          lowerMsg.includes('incorrect password') ||
-          lowerMsg.includes('invalid credentials')
-        ) {
-          form.setError('password', { type: 'server', message: errorMessage })
-        }
-
-        // Check if this is an email verification error
-        if (
-          errorMessage.toLowerCase().includes('verify') ||
-          errorMessage.toLowerCase().includes('verification') ||
-          errorMessage.toLowerCase().includes('email not verified') ||
-          axiosError.response?.data?.code === 'EMAIL_NOT_VERIFIED'
-        ) {
-          // Set the unverified email and show verification error
-          setUnverifiedEmail(data.email)
-          setIsEmailVerificationError(true)
-          setError(
-            'Please verify your email address before logging in. Check your inbox for a verification link or request a new one.',
-          )
-          return
-        }
-      }
-
-      // Reset verification error state for other errors
       setIsEmailVerificationError(false)
       setUnverifiedEmail(null)
-      setError(errorMessage)
+      setError(message)
     } finally {
       setIsLoading(false)
     }
