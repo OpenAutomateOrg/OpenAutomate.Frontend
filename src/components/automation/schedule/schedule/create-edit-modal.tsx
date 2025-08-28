@@ -411,7 +411,7 @@ export function CreateEditModal({
           <BasicInfoSection formData={formData} onUpdate={updateFormData} />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-2 mb-4">
+            <TabsList className="grid grid-cols-2 mb-4 w-full">
               <TabsTrigger value="trigger">Trigger</TabsTrigger>
               <TabsTrigger value="executionTarget">Execution Target</TabsTrigger>
             </TabsList>

@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -11,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ChevronDownIcon } from 'lucide-react'
 import { RecurrenceType } from '@/lib/api/schedules'
 import type { ScheduleFormData } from '../create-edit-modal'
 
@@ -138,22 +134,9 @@ interface ConfigurationProps {
   updateMonthSelection?: (month: string, checked: boolean) => void
 }
 
-function OnceConfiguration({
-  recurrence,
-  onUpdate,
-  startDateOpen,
-  setStartDateOpen,
-}: ConfigurationProps) {
+function OnceConfiguration({ recurrence, onUpdate }: ConfigurationProps) {
   return (
     <div className="space-y-4">
-      <DatePicker
-        label="Start Date"
-        required
-        date={recurrence.startDate}
-        onDateChange={(date) => onUpdate({ startDate: date })}
-        isOpen={startDateOpen}
-        setIsOpen={setStartDateOpen}
-      />
       <TimeSelector
         label="At:"
         hour={recurrence.dailyHour ?? '09'}
@@ -161,6 +144,102 @@ function OnceConfiguration({
         onHourChange={(hour) => onUpdate({ dailyHour: hour })}
         onMinuteChange={(minute) => onUpdate({ dailyMinute: minute })}
       />
+
+      <div className=" flex items-center gap-2">
+        <label className="text-sm font-medium">
+          Start Date <span className="text-red-500">*</span>
+        </label>
+
+        <div className="flex gap-2">
+          <Select
+            value={recurrence.startDate ? recurrence.startDate.getDate().toString() : ''}
+            onValueChange={(day) => {
+              const currentDate = recurrence.startDate || new Date()
+              const newDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                parseInt(day),
+              )
+              onUpdate({ startDate: newDate })
+            }}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue placeholder="Day" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 31 }, (_, i) => (
+                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                  {i + 1}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={recurrence.startDate ? recurrence.startDate.getMonth().toString() : ''}
+            onValueChange={(month) => {
+              const currentDate = recurrence.startDate || new Date()
+              const newDate = new Date(
+                currentDate.getFullYear(),
+                parseInt(month),
+                currentDate.getDate(),
+              )
+              onUpdate({ startDate: newDate })
+            }}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+              ].map((month, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={recurrence.startDate ? recurrence.startDate.getFullYear().toString() : ''}
+            onValueChange={(year) => {
+              const currentDate = recurrence.startDate || new Date()
+              const newDate = new Date(
+                parseInt(year),
+                currentDate.getMonth(),
+                currentDate.getDate(),
+              )
+              onUpdate({ startDate: newDate })
+            }}
+          >
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 10 }, (_, i) => {
+                const year = new Date().getFullYear() + i
+                return (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                )
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   )
 }
@@ -257,59 +336,6 @@ function RecurringConfiguration({ recurrence, onUpdate }: ConfigurationProps) {
           {recurrence.type === RecurrenceType.Hourly ? 'Hours' : 'minute(s)'}
         </span>
       </div>
-    </div>
-  )
-}
-
-// ✅ Reusable UI Components
-interface DatePickerProps {
-  label: string
-  required?: boolean
-  date?: Date
-  onDateChange: (date?: Date) => void
-  isOpen: boolean
-  setIsOpen: (open: boolean) => void
-  minDate?: Date
-}
-
-function DatePicker({
-  label,
-  required,
-  date,
-  onDateChange,
-  isOpen,
-  setIsOpen,
-  minDate,
-}: DatePickerProps) {
-  return (
-    <div className="grid gap-2">
-      <label className="text-sm font-medium">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between font-normal">
-            {date ? date.toLocaleDateString() : 'Select date'}
-            <ChevronDownIcon className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={date}
-            captionLayout="dropdown"
-            disabled={(date) => {
-              const today = new Date(new Date().setHours(0, 0, 0, 0))
-              const min = minDate ? new Date(minDate) : today
-              return date < min
-            }}
-            onSelect={(date) => {
-              onDateChange(date || undefined)
-              setIsOpen(false)
-            }}
-          />
-        </PopoverContent>
-      </Popover>
     </div>
   )
 }
