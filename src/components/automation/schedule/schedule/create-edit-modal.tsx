@@ -107,7 +107,7 @@ export function CreateEditModal({
     agentId: editingSchedule?.agentId ?? '',
     timezone: editingSchedule?.timezone ?? 'Asia/Ho_Chi_Minh',
     recurrence: {
-      type: (editingSchedule?.recurrence?.type as RecurrenceType) ?? RecurrenceType.Daily,
+      type: (editingSchedule?.recurrence?.type as RecurrenceType) ?? RecurrenceType.Once,
       value: editingSchedule?.recurrence?.value ?? '1',
       startTime: editingSchedule?.recurrence?.startTime ?? '09:00',
       dailyHour: editingSchedule?.recurrence?.dailyHour ?? '09',
@@ -173,7 +173,7 @@ export function CreateEditModal({
         agentId: editingSchedule.agentId ?? '',
         timezone: editingSchedule.timezone ?? 'Asia/Ho_Chi_Minh',
         recurrence: {
-          type: (rec.type as RecurrenceType) ?? RecurrenceType.Daily,
+          type: (rec.type as RecurrenceType) ?? RecurrenceType.Once,
           value: rec.value ?? '1',
           startDate,
           dailyHour,
@@ -219,7 +219,7 @@ export function CreateEditModal({
         agentId: '',
         timezone: 'Asia/Ho_Chi_Minh',
         recurrence: {
-          type: RecurrenceType.Daily,
+          type: RecurrenceType.Once,
           value: '1',
           startTime: '09:00',
           dailyHour: '09',
