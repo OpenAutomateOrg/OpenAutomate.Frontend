@@ -49,7 +49,10 @@ export function CreateEditModal({ isOpen, onClose, mode }: ItemModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] p-6">
+      <DialogContent
+        className="sm:max-w-[800px] p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Agent' : 'Create a new Agent'}</DialogTitle>
           <DialogDescription>
