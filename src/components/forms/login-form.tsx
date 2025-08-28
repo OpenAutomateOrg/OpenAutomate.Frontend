@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
 import { config } from '@/lib/config/config'
 import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Form validation schema
 const formSchema = z.object({
@@ -38,7 +39,7 @@ export function LoginForm() {
   // Suspense boundary by the parent that renders this component
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login } = useAuth()
+  const { login, error: authError } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
@@ -123,10 +124,49 @@ export function LoginForm() {
 
       if (typeof error === 'object' && error !== null) {
         const axiosError = error as {
-          response?: { data?: { message?: string; code?: string } }
+          response?: {
+            data?: {
+              message?: string
+              code?: string
+              errors?: Record<string, string | string[]>
+            }
+          }
           message?: string
         }
         errorMessage = axiosError.response?.data?.message ?? axiosError.message ?? errorMessage
+
+        // Inline field mapping if backend provides errors object
+        const fieldErrors = axiosError.response?.data?.errors
+        if (fieldErrors) {
+          const emailErr = fieldErrors['email'] || fieldErrors['Email']
+          const passwordErr = fieldErrors['password'] || fieldErrors['Password']
+          if (emailErr) {
+            const msg = Array.isArray(emailErr) ? emailErr.join(', ') : emailErr
+            form.setError('email', { type: 'server', message: msg })
+          }
+          if (passwordErr) {
+            const msg = Array.isArray(passwordErr) ? passwordErr.join(', ') : passwordErr
+            form.setError('password', { type: 'server', message: msg })
+          }
+        }
+
+        // Heuristics from message/code when errors object is not present
+        const lowerMsg = (errorMessage || '').toLowerCase()
+        if (
+          axiosError.response?.data?.code === 'EMAIL_NOT_FOUND' ||
+          lowerMsg.includes('email not found') ||
+          lowerMsg.includes('user not found')
+        ) {
+          form.setError('email', { type: 'server', message: errorMessage })
+          // focus email so user can correct
+          form.setFocus('email')
+        } else if (
+          axiosError.response?.data?.code === 'INCORRECT_PASSWORD' ||
+          lowerMsg.includes('incorrect password') ||
+          lowerMsg.includes('invalid credentials')
+        ) {
+          form.setError('password', { type: 'server', message: errorMessage })
+        }
 
         // Check if this is an email verification error
         if (
@@ -154,15 +194,16 @@ export function LoginForm() {
     }
   }
 
+  const displayError = error || authError || null
+
   return (
     <div className="grid gap-6">
-      {error && (
-        <div className="flex items-center gap-3 p-4 mb-2 rounded-lg border border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-950 shadow-sm fade-in">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300">
-            <AlertCircle className="w-6 h-6" />
-          </span>
-          <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
-        </div>
+      {displayError && (
+        <Alert variant="destructive" role="alert" aria-live="assertive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Login failed</AlertTitle>
+          <AlertDescription className="text-sm">{displayError}</AlertDescription>
+        </Alert>
       )}
 
       {/* Show resend verification button if this is an email verification error */}
