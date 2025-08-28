@@ -84,7 +84,10 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] p-6">
+      <DialogContent
+        className="sm:max-w-[800px] p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Invite Users</DialogTitle>
         </DialogHeader>

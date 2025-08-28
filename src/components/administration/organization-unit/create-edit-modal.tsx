@@ -57,7 +57,10 @@ export function CreateEditModal({ isOpen, onClose }: ItemModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] p-6">
+      <DialogContent
+        className="sm:max-w-[800px] p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Create new roles</DialogTitle>
         </DialogHeader>

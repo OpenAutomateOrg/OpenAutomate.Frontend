@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Calendar } from '@/components/ui/calendar'
@@ -281,19 +281,43 @@ function DatePicker({
   setIsOpen,
   minDate,
 }: DatePickerProps) {
+  const calendarRef = React.useRef<HTMLDivElement>(null)
+
+  // Handle clicks outside the calendar
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen, setIsOpen])
+
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2 relative">
       <label className="text-sm font-medium">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between font-normal">
-            {date ? date.toLocaleDateString() : 'Select date'}
-            <ChevronDownIcon className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+      <Button
+        variant="outline"
+        className="w-full justify-between font-normal"
+        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+      >
+        {date ? date.toLocaleDateString() : 'Select date'}
+        <ChevronDownIcon className="h-4 w-4" />
+      </Button>
+
+      {isOpen && (
+        <div
+          ref={calendarRef}
+          className="absolute bottom-full left-0 z-[100] mb-1 bg-popover text-popover-foreground rounded-md border shadow-md"
+          style={{ zIndex: 100 }}
+        >
           <Calendar
             mode="single"
             selected={date}
@@ -308,8 +332,8 @@ function DatePicker({
               setIsOpen(false)
             }}
           />
-        </PopoverContent>
-      </Popover>
+        </div>
+      )}
     </div>
   )
 }

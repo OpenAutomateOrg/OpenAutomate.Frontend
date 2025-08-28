@@ -34,8 +34,7 @@ if not exist ".env.local" (
     echo NEXT_PUBLIC_APP_URL=http://localhost:3001
     echo NEXT_PUBLIC_APP_DOMAIN=localhost
     echo NEXT_PUBLIC_N8N_WEBHOOK_URL=
-    echo # Optional: override agent download URL
-    echo # NEXT_PUBLIC_AGENT_DOWNLOAD_URL=
+    echo NEXT_PUBLIC_AGENT_DOWNLOAD_URL=https://download.openautomate.io/OpenAutomate-Agent-Setup.exe
     ) > ".env.local"
     echo Configuration file created (.env.local)
 ) else (
