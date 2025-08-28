@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
 import { ChevronDownIcon } from 'lucide-react'
 import { RecurrenceType } from '@/lib/api/schedules'
 import type { ScheduleFormData } from '../create-edit-modal'
