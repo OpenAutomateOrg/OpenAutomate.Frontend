@@ -138,3 +138,11 @@ export const deleteOrganizationUnitUser = async (userId: string): Promise<void> 
   const tenant = getCurrentTenant()
   await api.delete<void>(`${tenant}/api/ou/users/${userId}`)
 }
+
+/**
+ * Bulk delete organization unit users
+ */
+export const bulkDeleteOrganizationUnitUsers = async (userIds: string[]): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.deleteWithData(`${tenant}/api/bulk-delete/remove-users`, { ids: userIds })
+}

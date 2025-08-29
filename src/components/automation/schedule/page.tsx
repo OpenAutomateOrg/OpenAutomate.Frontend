@@ -28,6 +28,7 @@ import {
   enableSchedule,
   disableSchedule,
   deleteSchedule,
+  bulkDeleteSchedules,
 } from '@/lib/api/schedules'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
@@ -818,8 +819,12 @@ export default function ScheduleInterface() {
     }
 
     try {
-      // Delete all selected schedules
-      await Promise.all(selectedScheduleIds.map((id) => deleteSchedule(id)))
+      // Use bulk delete if multiple schedules, single delete if one schedule
+      if (selectedScheduleIds.length > 1) {
+        await bulkDeleteSchedules(selectedScheduleIds)
+      } else {
+        await deleteSchedule(selectedScheduleIds[0])
+      }
 
       // Show success toast
       toast({

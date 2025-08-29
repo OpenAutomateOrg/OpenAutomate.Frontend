@@ -36,6 +36,7 @@ import {
   type ODataQueryOptions,
   BotAgentResponseDto,
   deleteBotAgent,
+  bulkDeleteBotAgents,
 } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
@@ -504,8 +505,12 @@ export default function AgentInterface() {
     }
 
     try {
-      // Delete all selected agents
-      await Promise.all(selectedAgentIds.map((id) => deleteBotAgent(id)))
+      // Use bulk delete if multiple agents, single delete if one agent
+      if (selectedAgentIds.length > 1) {
+        await bulkDeleteBotAgents(selectedAgentIds)
+      } else {
+        await deleteBotAgent(selectedAgentIds[0])
+      }
 
       // Show success toast
       toast({
