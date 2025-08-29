@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useSubscription } from '@/hooks/use-subscription'
 // merged import below for subscriptionApi and PaymentItem
-import { TrialStatus } from '@/types/subscription'
+import { TrialStatus, type SubscriptionStatus } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
 import { ExternalLink } from 'lucide-react'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
-import { subscriptionApi, type PaymentItem } from '@/lib/api/subscription'
+import { subscriptionApi, type PaymentItem, type PagedResult } from '@/lib/api/subscription'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { parseUtcDate, formatUtcToLocal, safeFormatRelativeTime } from '@/lib/utils/datetime'
 
 // Helper functions moved outside component to reduce complexity
-const getStatusIcon = (subscription: any) => {
+const getStatusIcon = (subscription: SubscriptionStatus) => {
   if (subscription.isActive && subscription.isInTrial) {
     return <Clock className="h-5 w-5 text-blue-500" />
   }
@@ -34,7 +34,7 @@ const getStatusIcon = (subscription: any) => {
   return <AlertCircle className="h-5 w-5 text-red-500" />
 }
 
-const getStatusBadge = (subscription: any) => {
+const getStatusBadge = (subscription: SubscriptionStatus) => {
   if (subscription.isInTrial) {
     return <Badge variant="secondary">Trial</Badge>
   }
@@ -44,7 +44,7 @@ const getStatusBadge = (subscription: any) => {
   return <Badge variant="destructive">Expired</Badge>
 }
 
-const getExpirationText = (subscription: any) => {
+const getExpirationText = (subscription: SubscriptionStatus) => {
   if (subscription.isInTrial && subscription.trialEndsAt) {
     const trialEndTime = parseUtcDate(subscription.trialEndsAt)
     if (!trialEndTime) return 'Trial end date pending'
@@ -109,7 +109,13 @@ const EligibleTrialCard = ({ handleStartTrial, isStartingTrial }: { handleStartT
 )
 
 // Component for active trial status
-const ActiveTrialCard = ({ subscription, paymentsData }: { subscription: any, paymentsData: any }) => (
+const ActiveTrialCard = ({
+  subscription,
+  paymentsData
+}: {
+  subscription: SubscriptionStatus
+  paymentsData: PagedResult<PaymentItem> | undefined
+}) => (
   <Card className="w-full">
     <CardHeader>
       <CardTitle className="flex items-center justify-between">
