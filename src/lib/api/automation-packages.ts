@@ -162,6 +162,14 @@ export const deleteAutomationPackage = async (id: string): Promise<void> => {
 }
 
 /**
+ * Bulk delete automation packages
+ */
+export const bulkDeleteAutomationPackages = async (ids: string[]): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.deleteWithData(`${tenant}/api/bulk-delete/packages`, { ids })
+}
+
+/**
  * Delete a specific package version
  */
 export const deletePackageVersion = async (packageId: string, version: string): Promise<void> => {

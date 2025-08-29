@@ -278,6 +278,14 @@ export const deleteAsset = async (id: string): Promise<void> => {
 }
 
 /**
+ * Bulk delete assets
+ */
+export const bulkDeleteAssets = async (ids: string[]): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.post(`${tenant}/api/bulk-delete/assets`, { ids })
+}
+
+/**
  * Get asset details (including associated agents)
  */
 export const getAssetDetail = async (id: string): Promise<AssetDetailDto> => {

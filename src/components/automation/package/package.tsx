@@ -35,6 +35,7 @@ import {
   type ODataQueryOptions,
   AutomationPackageResponseDto,
   deleteAutomationPackage,
+  bulkDeleteAutomationPackages,
 } from '@/lib/api/automation-packages'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
@@ -444,8 +445,12 @@ export default function PackageInterface() {
     }
 
     try {
-      // Delete all selected packages
-      await Promise.all(selectedPackageIds.map((id) => deleteAutomationPackage(id)))
+      // Use bulk delete if multiple packages, single delete if one package
+      if (selectedPackageIds.length > 1) {
+        await bulkDeleteAutomationPackages(selectedPackageIds)
+      } else {
+        await deleteAutomationPackage(selectedPackageIds[0])
+      }
 
       // Show success toast
       toast({
