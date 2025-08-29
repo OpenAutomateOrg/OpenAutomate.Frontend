@@ -22,6 +22,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { AlertCircle } from 'lucide-react'
 import { config } from '@/lib/config/config'
 import { EmailVerificationAlert } from '@/components/auth/email-verification-alert'
+import { useToast } from '@/components/ui/use-toast'
+import { extractErrorMessage } from '@/lib/utils/error-utils'
 
 // Form validation schema
 const formSchema = z.object({
@@ -39,6 +41,7 @@ export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login } = useAuth()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
   const [error, setError] = React.useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = React.useState<string | null>(null)
@@ -118,16 +121,16 @@ export function LoginForm() {
         router.push('/tenant-selector') // Default redirect to tenant selector
       }
     } catch (error: unknown) {
-      let errorMessage = 'Login failed. Please try again.'
+      // Extract user-friendly error message using the utility function
+      const errorMessage = extractErrorMessage(error)
 
+      // Check if this is an email verification error
       if (typeof error === 'object' && error !== null) {
         const axiosError = error as {
           response?: { data?: { message?: string; code?: string } }
           message?: string
         }
-        errorMessage = axiosError.response?.data?.message ?? axiosError.message ?? errorMessage
 
-        // Check if this is an email verification error
         if (
           errorMessage.toLowerCase().includes('verify') ||
           errorMessage.toLowerCase().includes('verification') ||
@@ -148,6 +151,14 @@ export function LoginForm() {
       setIsEmailVerificationError(false)
       setUnverifiedEmail(null)
       setError(errorMessage)
+
+      // Show toast notification for consistent error handling
+      toast({
+        title: 'Login Failed',
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 8000, // Longer duration for login errors so users can read them
+      })
     } finally {
       setIsLoading(false)
     }

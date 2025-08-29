@@ -17,9 +17,12 @@ export interface ExecutionResponseDto {
   errorMessage?: string
   logOutput?: string
   hasLogs?: boolean
+  scheduleId?: string
+  source: string
   botAgentName?: string
   packageName?: string
   packageVersion?: string
+  scheduleName?: string
 }
 
 export interface UpdateExecutionStatusDto {
