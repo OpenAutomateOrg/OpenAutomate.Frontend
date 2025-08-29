@@ -24,6 +24,7 @@ import {
   organizationUnitUserApi,
   AuthorityDto,
   deleteOrganizationUnitUser,
+  bulkDeleteOrganizationUnitUsers,
 } from '@/lib/api/organization-unit-user'
 import { UsersDataTableToolbar } from './data-table-toolbar'
 import DataTableRowAction from './data-table-row-actions'
@@ -220,8 +221,12 @@ export default function UsersInterface() {
     }
 
     try {
-      // Delete all selected users
-      await Promise.all(selectedUserIds.map((id) => deleteOrganizationUnitUser(id)))
+      // Use bulk delete if multiple users, single delete if one user
+      if (selectedUserIds.length > 1) {
+        await bulkDeleteOrganizationUnitUsers(selectedUserIds)
+      } else {
+        await deleteOrganizationUnitUser(selectedUserIds[0])
+      }
 
       // Show success toast
       toast({

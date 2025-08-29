@@ -381,6 +381,24 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),
+
+  deleteWithData: <T, D = unknown>(endpoint: string, data?: D, options?: RequestInit) => {
+    const { body, headers: bodyHeaders } = prepareRequestBody(data)
+
+    return fetchApi<T>(
+      endpoint,
+      {
+        ...options,
+        method: 'DELETE',
+        body,
+        headers: {
+          ...bodyHeaders,
+          ...options?.headers, // Allow options to override
+        },
+      },
+      data,
+    )
+  },
 }
 
 /**

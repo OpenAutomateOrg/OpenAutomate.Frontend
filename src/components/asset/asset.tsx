@@ -38,6 +38,7 @@ import {
   getAssetDetail,
   getAssetAgents,
   deleteAsset,
+  bulkDeleteAssets,
 } from '@/lib/api/assets'
 import type { CsvImportResultDto } from '@/types/assets'
 import { useUrlParams } from '@/hooks/use-url-params'
@@ -174,13 +175,21 @@ export default function AssetInterface() {
   // ✅ Transform data during render (following guideline #1: prefer deriving data during render)
   const assets = useMemo(() => {
     if (!assetsResponse?.value) return []
-    return assetsResponse.value.map((asset: AssetRow) => ({
+    const transformedAssets = assetsResponse.value.map((asset: AssetRow) => ({
       id: asset.id,
       key: asset.key,
       type: asset.type, // Keep the original type value from API (can be string or number)
       description: asset.description,
       createdBy: asset.createdBy,
     }))
+
+    console.log('Transformed assets:', transformedAssets)
+    console.log(
+      'Asset IDs:',
+      transformedAssets.map((a) => a.id),
+    )
+
+    return transformedAssets
   }, [assetsResponse])
 
   // Calculate page count based on total count
@@ -376,6 +385,7 @@ export default function AssetInterface() {
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    getRowId: (row) => row.id, // Essential for row selection to work
     manualPagination: true,
     pageCount,
     manualSorting: true,
@@ -440,20 +450,38 @@ export default function AssetInterface() {
   // ✅ Simple handlers using SWR mutate (following guideline #8: use framework-level loaders)
   const handleAssetCreated = () => mutateAssets()
 
+  // Debug effect to track row selection changes
+  useEffect(() => {
+    console.log('Row selection changed:', rowSelection)
+    console.log('Selected asset IDs:', Object.keys(rowSelection))
+  }, [rowSelection])
+
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true)
   }
 
   const handleDeleteConfirm = async () => {
+    console.log('Delete confirm called')
+    console.log('Current rowSelection state:', rowSelection)
+    console.log('Object.keys(rowSelection):', Object.keys(rowSelection))
+    console.log('Assets data:', assets)
+
     const selectedAssetIds = Object.keys(rowSelection)
 
     if (selectedAssetIds.length === 0) {
+      console.log('No assets selected, returning early')
       return
     }
 
     try {
-      // Delete all selected assets
-      await Promise.all(selectedAssetIds.map((id) => deleteAsset(id)))
+      // Use bulk delete if multiple assets, single delete if one asset
+      if (selectedAssetIds.length > 1) {
+        console.log('Using bulk delete for IDs:', selectedAssetIds)
+        await bulkDeleteAssets(selectedAssetIds)
+      } else {
+        console.log('Using single delete for ID:', selectedAssetIds[0])
+        await deleteAsset(selectedAssetIds[0])
+      }
 
       // Show success toast
       toast({

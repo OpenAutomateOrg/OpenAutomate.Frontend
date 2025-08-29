@@ -257,6 +257,14 @@ export const deleteBotAgent = async (id: string): Promise<void> => {
 }
 
 /**
+ * Bulk delete bot agents
+ */
+export const bulkDeleteBotAgents = async (ids: string[]): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.deleteWithData(`${tenant}/api/bulk-delete/agents`, { ids })
+}
+
+/**
  * Update a bot agent
  */
 export const updateBotAgent = async (

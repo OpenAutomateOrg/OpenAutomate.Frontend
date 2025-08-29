@@ -259,6 +259,14 @@ export const deleteSchedule = async (id: string): Promise<void> => {
 }
 
 /**
+ * Bulk delete schedules
+ */
+export const bulkDeleteSchedules = async (ids: string[]): Promise<void> => {
+  const tenant = getCurrentTenant()
+  await api.deleteWithData(`${tenant}/api/bulk-delete/schedules`, { ids })
+}
+
+/**
  * Enable a schedule
  */
 export const enableSchedule = async (id: string): Promise<ScheduleResponseDto> => {

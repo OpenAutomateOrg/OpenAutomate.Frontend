@@ -28,7 +28,7 @@ const getToastIcon = (variant?: string) => {
 const getToastStyles = (variant?: string) => {
   switch (variant) {
     case 'destructive':
-      return 'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100'
+      return 'border-red-200 bg-red-50 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100'
     case 'success':
       return 'border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100'
     case 'warning':
