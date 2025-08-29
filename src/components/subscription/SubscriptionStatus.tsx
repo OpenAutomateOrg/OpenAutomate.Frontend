@@ -116,14 +116,7 @@ export function SubscriptionStatus() {
           </CardTitle>
           {description && (
             <CardDescription>
-<<<<<<< Updated upstream
-              {safeFormatRelativeTime(subscription.renewsAt, {
-                prefix: 'Renews',
-                fallback: 'Renewal date pending',
-              })}
-=======
               {description}
->>>>>>> Stashed changes
             </CardDescription>
           )}
         </CardHeader>
