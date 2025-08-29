@@ -26,7 +26,6 @@
     "createExecution": "Tạo thực thi",
     "tabs": {
       "inProgress": "Đang thực hiện",
-      "scheduled": "Đã lên lịch",
       "historical": "Lịch sử"
     },
     "status": {

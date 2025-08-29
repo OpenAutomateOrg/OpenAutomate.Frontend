@@ -335,9 +335,9 @@ export default function ExecutionsInterface() {
         State: currentStatus,
         'Start Time': formattedStartTime,
         'End Time': formattedEndTime,
-        Source: 'Manual', // Assuming manual trigger for now
+        Source: execution.source || 'Manual',
         Command: 'execute',
-        Schedules: 'Once', // For immediate executions
+        Schedules: execution.source === 'Scheduled' ? (execution.scheduleName || 'Scheduled') : 'Once',
         'Task Id': execution.id,
         'Created Date': formatUtcToLocal(execution.startTime, {
           dateStyle: 'medium',
@@ -357,9 +357,9 @@ export default function ExecutionsInterface() {
         state: currentStatus,
         startTime: execution.startTime, // Keep RAW data here for column formatting
         endTime: execution.endTime, // Keep RAW data here for column formatting
-        source: 'Manual',
+        source: execution.source || 'Manual',
         command: 'execute',
-        schedules: 'Once',
+        schedules: execution.source === 'Scheduled' ? (execution.scheduleName || 'Scheduled') : 'Once',
         taskId: execution.id,
         createdDate: formatUtcToLocal(execution.startTime, {
           dateStyle: 'medium',
@@ -403,8 +403,6 @@ export default function ExecutionsInterface() {
     return data.filter((row) => {
       if (currentTab === 'inprogress') {
         return row.state === 'Running' || row.state === 'Pending'
-      } else if (currentTab === 'scheduled') {
-        return row.state === 'Scheduled'
       } else if (currentTab === 'historical') {
         return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
       }
@@ -931,6 +929,7 @@ export default function ExecutionsInterface() {
               logOutput: undefined,
               botAgentId: '',
               packageId: '',
+              source: 'Manual', // Manual execution source for user-triggered executions
             }
 
             return {
@@ -1076,6 +1075,9 @@ export default function ExecutionsInterface() {
             />
           </>
         )}
+
+        
+
         {tab === 'historical' && (
           <>
             <HistoricalToolbar
