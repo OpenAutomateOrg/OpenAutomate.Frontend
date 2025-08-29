@@ -29,7 +29,7 @@ const typeConfig = {
     icon: AlertCircle,
     variant: 'destructive' as const,
     className:
-      'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-100',
+      'border-red-200 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-100',
     iconClassName: 'text-red-600 dark:text-red-400',
     titleClassName: 'text-red-800 dark:text-red-100',
     descriptionClassName: 'text-red-700 dark:text-red-200',
