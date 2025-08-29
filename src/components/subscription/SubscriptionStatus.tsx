@@ -84,21 +84,48 @@ export function SubscriptionStatus() {
 
   // If subscription is active (paid or trial), hide any trial upgrade prompts
   if (subscription?.isActive) {
+    // Determine if this is a trial or paid subscription
+    const isTrialActive = subscription.isInTrial
+    const planTitle = isTrialActive ? 'Trial' : `${subscription.planName || 'Pro'} Plan Active`
+    const iconColor = isTrialActive ? 'text-blue-500' : 'text-green-500'
+
+    // Determine the appropriate description based on trial vs paid status
+    let description = null
+    if (isTrialActive && subscription.trialEndsAt) {
+      description = safeFormatRelativeTime(subscription.trialEndsAt, {
+        prefix: 'Expires',
+        fallback: 'Trial end date pending'
+      })
+    } else if (!isTrialActive && subscription.renewsAt) {
+      description = safeFormatRelativeTime(subscription.renewsAt, {
+        prefix: 'Renews',
+        fallback: 'Renewal date pending'
+      })
+    }
+
     return (
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            {subscription.planName || 'Pro'} Plan Active
+            {isTrialActive ? (
+              <Clock className={`h-5 w-5 ${iconColor}`} />
+            ) : (
+              <CheckCircle className={`h-5 w-5 ${iconColor}`} />
+            )}
+            {planTitle}
           </CardTitle>
-          {subscription.renewsAt ? (
+          {description && (
             <CardDescription>
+<<<<<<< Updated upstream
               {safeFormatRelativeTime(subscription.renewsAt, {
                 prefix: 'Renews',
                 fallback: 'Renewal date pending',
               })}
+=======
+              {description}
+>>>>>>> Stashed changes
             </CardDescription>
-          ) : null}
+          )}
         </CardHeader>
         <CardContent>
           <Button
