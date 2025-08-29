@@ -95,7 +95,10 @@ export function CreateEditModal({ isOpen, onClose, mode, onSuccess }: ItemModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] p-6">
+      <DialogContent
+        className="sm:max-w-[600px] p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Package' : 'Create New Automation Package'}</DialogTitle>
           <DialogDescription>

@@ -775,7 +775,7 @@ export default function ScheduleInterface() {
               name: newSchedule.name,
               description: '',
               isEnabled: true,
-              recurrenceType: RecurrenceType.Daily,
+              recurrenceType: RecurrenceType.Once,
               timeZoneId: 'UTC',
               automationPackageId: '',
               botAgentId: '',
