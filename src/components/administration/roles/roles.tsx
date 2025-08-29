@@ -317,9 +317,6 @@ export default function RolesInterface() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Roles</h2>
-            <p className="text-muted-foreground">
-              Manage user roles and permissions within your organization.
-            </p>
           </div>
           <div className="flex items-center space-x-2">
             <Button onClick={handleCreateRole} className="flex items-center justify-center">

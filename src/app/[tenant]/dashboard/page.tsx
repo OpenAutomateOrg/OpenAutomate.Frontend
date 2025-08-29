@@ -1,6 +1,6 @@
 import { SectionCards } from '@/components/layout/section-card/section-cards'
 import { ChartPieLabel } from '@/components/layout/charts/chart-pie-label'
-import { StatisticalStatus } from '@/components/layout/statistical-status'
+import { StatisticalStatus } from '@/components/layout/statistical-status/statistical-status'
 
 export default function DashBoard() {
   return (

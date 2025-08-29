@@ -273,7 +273,6 @@ function TenantSelectorContent() {
               : 'Disable auto-redirect to default organization'}
           </Button>
         </div>
-
       </div>
     </div>
   )

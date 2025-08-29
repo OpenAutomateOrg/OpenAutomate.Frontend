@@ -1,7 +1,15 @@
 'use client'
 
-import { PlusCircle, Download } from 'lucide-react'
+import { PlusCircle, Download, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { createAgentColumns } from './columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -27,6 +35,7 @@ import {
   getBotAgentById,
   type ODataQueryOptions,
   BotAgentResponseDto,
+  deleteBotAgent,
 } from '@/lib/api/bot-agents'
 import { useUrlParams } from '@/hooks/use-url-params'
 import { Pagination } from '@/components/ui/pagination'
@@ -55,6 +64,7 @@ export default function AgentInterface() {
 
   // UI State management
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingAgent, setEditingAgent] = useState<BotAgentResponseDto | null>(null)
   const [rowSelection, setRowSelection] = useState({})
@@ -481,6 +491,45 @@ export default function AgentInterface() {
     setEditingAgent(null)
   }
 
+  // Delete handlers
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    const selectedAgentIds = Object.keys(rowSelection)
+
+    if (selectedAgentIds.length === 0) {
+      return
+    }
+
+    try {
+      // Delete all selected agents
+      await Promise.all(selectedAgentIds.map((id) => deleteBotAgent(id)))
+
+      // Show success toast
+      toast({
+        title: 'Agents Deleted',
+        description: `Successfully deleted ${selectedAgentIds.length} agent(s).`,
+        duration: 3000,
+      })
+
+      // Clear selection and close dialog
+      setRowSelection({})
+      setDeleteDialogOpen(false)
+
+      // Refresh data
+      await mutateAgents()
+    } catch (error) {
+      console.error('Failed to delete agents:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete agents. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const handleRowClick = (row: AgentRow) => {
     const isAdmin = pathname.startsWith('/admin')
     const route = isAdmin ? `/admin/agent/${row.id}` : `/${tenant}/agent/${row.id}`
@@ -513,6 +562,15 @@ export default function AgentInterface() {
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Create
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              className="flex items-center justify-center"
+              disabled={Object.keys(rowSelection).length === 0}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected
             </Button>
           </div>
         </div>
@@ -590,6 +648,27 @@ export default function AgentInterface() {
         agent={editingAgent}
         onSuccess={handleAgentCreated}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Agents</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {Object.keys(rowSelection).length} selected agent(s)?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

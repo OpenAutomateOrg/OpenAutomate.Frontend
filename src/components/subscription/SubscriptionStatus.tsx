@@ -28,9 +28,8 @@ export function SubscriptionStatus() {
   const [isStartingTrial, setIsStartingTrial] = useState(false)
   const { toast } = useToast()
   // Optional: lightweight recent payments preview for user dashboard
-  const { data: paymentsData } = useSWR(
-    swrKeys.subscription(),
-    () => subscriptionApi.getPayments(1, 5),
+  const { data: paymentsData } = useSWR(swrKeys.subscription(), () =>
+    subscriptionApi.getPayments(1, 5),
   )
 
   const handleStartTrial = async () => {
@@ -94,15 +93,19 @@ export function SubscriptionStatus() {
           </CardTitle>
           {subscription.renewsAt ? (
             <CardDescription>
-              {safeFormatRelativeTime(subscription.renewsAt, { 
+              {safeFormatRelativeTime(subscription.renewsAt, {
                 prefix: 'Renews',
-                fallback: 'Renewal date pending' 
+                fallback: 'Renewal date pending',
               })}
             </CardDescription>
           ) : null}
         </CardHeader>
         <CardContent>
-          <Button variant="outline" className="w-full" onClick={() => subscriptionApi.openCustomerPortal()}>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => subscriptionApi.openCustomerPortal()}
+          >
             Manage Billing
           </Button>
         </CardContent>
@@ -150,29 +153,29 @@ export function SubscriptionStatus() {
     if (subscription.isInTrial && subscription.trialEndsAt) {
       const trialEndTime = parseUtcDate(subscription.trialEndsAt)
       if (!trialEndTime) return 'Trial end date pending'
-      
+
       const now = new Date()
       const prefix = trialEndTime > now ? 'Trial expires' : 'Trial expired'
-      return safeFormatRelativeTime(subscription.trialEndsAt, { 
+      return safeFormatRelativeTime(subscription.trialEndsAt, {
         prefix,
-        fallback: 'Trial end date pending' 
+        fallback: 'Trial end date pending',
       })
     }
-    
+
     if (subscription.isActive && subscription.renewsAt) {
-      return safeFormatRelativeTime(subscription.renewsAt, { 
+      return safeFormatRelativeTime(subscription.renewsAt, {
         prefix: 'Renews',
-        fallback: 'Renewal date pending' 
+        fallback: 'Renewal date pending',
       })
     }
-    
+
     if (subscription.endsAt) {
-      return safeFormatRelativeTime(subscription.endsAt, { 
+      return safeFormatRelativeTime(subscription.endsAt, {
         prefix: 'Ended',
-        fallback: 'End date unknown' 
+        fallback: 'End date unknown',
       })
     }
-    
+
     return ''
   }
 
@@ -240,10 +243,15 @@ export function SubscriptionStatus() {
                 <TableBody>
                   {paymentsData.items.map((p: PaymentItem) => (
                     <TableRow key={p.orderId}>
-                      <TableCell>{formatUtcToLocal(p.paymentDate, { dateStyle: 'short' })}</TableCell>
+                      <TableCell>
+                        {formatUtcToLocal(p.paymentDate, { dateStyle: 'short' })}
+                      </TableCell>
                       <TableCell>{p.isRefunded ? 'Refunded' : 'Paid'}</TableCell>
                       <TableCell className="text-right">
-                        {p.amount.toLocaleString(undefined, { style: 'currency', currency: p.currency })}
+                        {p.amount.toLocaleString(undefined, {
+                          style: 'currency',
+                          currency: p.currency,
+                        })}
                       </TableCell>
                       <TableCell>
                         <Button

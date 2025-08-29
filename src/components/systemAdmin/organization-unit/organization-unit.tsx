@@ -326,14 +326,13 @@ function OrganizationUnitAdminInterfaceContent() {
   }, [])
 
   return (
-    <div className="h-full overflow-y-auto bg-background p-6">
+    <div className="h-full overflow-y-auto bg-background py-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Organization Units
           </h1>
-          <p className="text-muted-foreground">Manage organization units and their structure</p>
         </div>
 
         {/* Stats Cards */}

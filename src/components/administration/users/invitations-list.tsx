@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import { PlusCircle, Search, X, Filter, MoreHorizontal } from 'lucide-react'
+import { Search, X, Filter, MoreHorizontal } from 'lucide-react'
 import {
   organizationInvitationsApi,
   OrganizationInvitationResponse,
@@ -225,21 +225,6 @@ export default function InvitationsList() {
   return (
     <div className="flex flex-col h-full w-full space-y-8">
       {/* Header Row */}
-      <div className="flex justify-between items-center w-full flex-wrap gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">Invitations</h2>
-        <div className="flex items-center space-x-2">
-          {count > 0 && (
-            <div className="text-sm text-muted-foreground">
-              <span>
-                Total: {count} invitation{count !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-          <Button onClick={() => setInviteOpen(true)} className="flex items-center justify-center">
-            <PlusCircle className="mr-2 h-4 w-4" /> Invite User
-          </Button>
-        </div>
-      </div>
 
       {/* Filters Toolbar */}
       <div className="flex flex-wrap items-center gap-2 mb-2 w-full">
@@ -334,12 +319,6 @@ export default function InvitationsList() {
           </Button>
         </div>
       )}
-      {!isLoading && invitations.length === 0 && !error && (
-        <div className="text-center py-10 text-muted-foreground">
-          <p>No invitations found.</p>
-        </div>
-      )}
-
       {/* Invite User Modal */}
       <InviteModal
         isOpen={inviteOpen}

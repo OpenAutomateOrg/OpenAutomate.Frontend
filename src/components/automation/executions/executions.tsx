@@ -837,7 +837,7 @@ export default function ExecutionsInterface() {
         setIsPending(false)
       }, 500)
     },
-    [table, updateUrl, pathname, tab],
+    [table, updateUrl, pathname],
   )
 
   // Handle status filter change
@@ -1007,6 +1007,18 @@ export default function ExecutionsInterface() {
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         {/* Tabs */}
         <div className="mb-4 border-b w-full">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold tracking-tight">{t('executions.title')}</h2>
+            <div />
+            {/* Only show Create Execution button for In Progress tab */}
+            {tab === 'inprogress' && (
+              <Button onClick={handleCreateClick} className="flex items-center justify-center">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {t('executions.createExecution')}
+              </Button>
+            )}
+          </div>
+
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -1025,19 +1037,6 @@ export default function ExecutionsInterface() {
               {t('executions.tabs.historical')}
             </button>
           </nav>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">{t('executions.title')}</h2>
-          <div className="flex items-center space-x-2">
-            {/* Only show Create Execution button for In Progress tab */}
-            {tab === 'inprogress' && (
-              <Button onClick={handleCreateClick} className="flex items-center justify-center">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {t('executions.createExecution')}
-              </Button>
-            )}
-          </div>
         </div>
 
         {executionsError && !fallbackExecutions && (
@@ -1076,7 +1075,7 @@ export default function ExecutionsInterface() {
             />
           </>
         )}
-
+        
         {tab === 'historical' && (
           <>
             <HistoricalToolbar

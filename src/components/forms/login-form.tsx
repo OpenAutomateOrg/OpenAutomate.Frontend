@@ -106,11 +106,12 @@ export function LoginForm() {
         router.push(returnUrl)
         return
       }
-      
+
       // Check system role from the fresh login response, not context state
-      const isAdmin = loginResponse?.systemRole === 'Admin' || 
-                     loginResponse?.systemRole === 'SystemAdmin' || 
-                     loginResponse?.systemRole === 1
+      const isAdmin =
+        loginResponse?.systemRole === 'Admin' ||
+        loginResponse?.systemRole === 'SystemAdmin' ||
+        loginResponse?.systemRole === 1
 
       // Normal redirect if not from invitation
       if (isAdmin) {

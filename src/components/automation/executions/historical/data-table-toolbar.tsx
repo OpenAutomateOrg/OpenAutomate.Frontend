@@ -107,7 +107,7 @@ export function DataTableToolbar<TData>({
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full justify-start text-left font-normal',
+                    'w-full justify-start text-left font-normal border-black',
                     !date && 'text-muted-foreground',
                   )}
                   disabled={isFiltering}
