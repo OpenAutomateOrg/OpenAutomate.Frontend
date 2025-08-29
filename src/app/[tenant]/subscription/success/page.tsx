@@ -48,7 +48,6 @@ export default function SubscriptionSuccessPage() {
     }
   }, [mutate, router])
 
-
   const handleGoToSubscription = () => {
     router.push('../administration/subscription')
   }

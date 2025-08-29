@@ -62,7 +62,14 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
   const [deleting, setDeleting] = useState(false)
 
   // ✅ Use custom hook for schedule data and actions
-  const { schedule, isLoading, error, toggleStatus, deleteScheduleAction, mutate: refreshSchedule } = useSchedule(id)
+  const {
+    schedule,
+    isLoading,
+    error,
+    toggleStatus,
+    deleteScheduleAction,
+    mutate: refreshSchedule,
+  } = useSchedule(id)
 
   // ✅ Use custom hook for agent data
   const { agent, mutate: refreshAgent } = useBotAgent(schedule?.botAgentId || null)
@@ -134,12 +141,13 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
         </Card>
       </div>
     )
-  } return (
-    <div className="container mx-auto pt-6 pb-2 px-4 space-y-6">
+  }
+  return (
+    <div>
       {/* Header with Back Button and Actions */}
       <Card className="border rounded-md shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between p-4">
-          <Button variant="ghost" size="sm" className="gap-1" onClick={handleBack}>
+        <CardHeader className="flex flex-row items-center justify-between  py-2">
+          <Button size="sm" className="gap-1" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
             Back to Schedules
           </Button>
@@ -152,10 +160,7 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
-            <Button
-              variant={schedule.isEnabled ? "secondary" : "default"}
-              onClick={toggleStatus}
-            >
+            <Button variant={schedule.isEnabled ? 'secondary' : 'default'} onClick={toggleStatus}>
               {schedule.isEnabled ? (
                 <>
                   <Pause className="h-4 w-4 mr-2" />
@@ -170,121 +175,111 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
             </Button>
           </div>
         </CardHeader>
-      </Card>
-
-      {/* Main Schedule Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Basic Information */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Schedule Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <DetailBlock label="Name">{schedule.name}</DetailBlock>
-                <DetailBlock label="Description">
-                  {schedule.description || 'No description provided'}
-                </DetailBlock>
-                <DetailBlock label="Status">
-                  <Badge variant="outline" className={getStatusBadgeClass(schedule.isEnabled)}>
-                    {schedule.isEnabled ? 'Enabled' : 'Disabled'}
-                  </Badge>
-                </DetailBlock>
-              </div>
-              <div className="space-y-4">
-                <DetailBlock label="Recurrence Type">
-                  {formatRecurrenceType(schedule.recurrenceType)}
-                </DetailBlock>
-                <DetailBlock label="Time Zone">{schedule.timeZoneId}</DetailBlock>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Execution Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Execution Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {schedule.nextRunTime && (
-              <DetailBlock label="Next Run Time">
-                <div className="text-sm font-medium text-blue-600">
-                  {formattedData?.nextRunDate}
+        {/* Main Schedule Information */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+          {/* Basic Information */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Schedule Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <DetailBlock label="Name">{schedule.name}</DetailBlock>
+                  <DetailBlock label="Status">
+                    <Badge variant="outline" className={getStatusBadgeClass(schedule.isEnabled)}>
+                      {schedule.isEnabled ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </DetailBlock>
                 </div>
-              </DetailBlock>
-            )}
-            <DetailBlock label="Created">
-              {formattedData?.createdDate}
-            </DetailBlock>
-            <DetailBlock label="Last Updated">
-              {formattedData?.updatedDate}
-            </DetailBlock>
-          </CardContent>
-        </Card>
-      </div>
+                <div className="space-y-4">
+                  <DetailBlock label="Recurrence Type">
+                    {formatRecurrenceType(schedule.recurrenceType)}
+                  </DetailBlock>
+                  <DetailBlock label="Time Zone">{schedule.timeZoneId}</DetailBlock>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Resource Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Automation Package
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailBlock label="Package Name">
-              {schedule.automationPackageName || 'N/A'}
-            </DetailBlock>
-          </CardContent>
-        </Card>
+          {/* Execution Details */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Execution Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {schedule.nextRunTime && (
+                <DetailBlock label="Next Run Time">
+                  <div className="text-sm font-medium text-blue-600">
+                    {formattedData?.nextRunDate}
+                  </div>
+                </DetailBlock>
+              )}
+              <DetailBlock label="Created">{formattedData?.createdDate}</DetailBlock>
+              <DetailBlock label="Last Updated">{formattedData?.updatedDate}</DetailBlock>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              Bot Agent
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DetailBlock label="Agent Name">
-                {schedule.botAgentName || 'N/A'}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Automation Package
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DetailBlock label="Package Name">
+                {schedule.automationPackageName || 'N/A'}
               </DetailBlock>
-              <DetailBlock label="Machine Name">
-                {agent?.machineName || 'N/A'}
-              </DetailBlock>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Bot Agent
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DetailBlock label="Agent Name">{schedule.botAgentName || 'N/A'}</DetailBlock>
+                <DetailBlock label="Machine Name">{agent?.machineName || 'N/A'}</DetailBlock>
+              </div>
+            </CardContent>
+          </Card>
+          {/* Resource Information */}
+        </div>
+      </Card>
 
       {/* Edit Modal */}
       <CreateEditModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         mode="edit"
-        editingSchedule={schedule ? {
-          id: schedule.id,
-          name: schedule.name,
-          packageId: schedule.automationPackageId,
-          packageVersion: 'latest',
-          agentId: schedule.botAgentId,
-          timezone: schedule.timeZoneId,
-          recurrence: {
-            type: schedule.recurrenceType,
-            value: '1',
-          },
-          oneTimeExecution: schedule.oneTimeExecution || '',
-        } : null}
+        editingSchedule={
+          schedule
+            ? {
+                id: schedule.id,
+                name: schedule.name,
+                packageId: schedule.automationPackageId,
+                packageVersion: 'latest',
+                agentId: schedule.botAgentId,
+                timezone: schedule.timeZoneId,
+                recurrence: {
+                  type: schedule.recurrenceType,
+                  value: '1',
+                },
+                oneTimeExecution: schedule.oneTimeExecution || '',
+              }
+            : null
+        }
       />
 
       {/* Delete Confirmation Dialog */}
@@ -293,7 +288,8 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
           <DialogHeader>
             <DialogTitle>Delete Schedule</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{schedule?.name}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;{schedule?.name}&quot;? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-3">
@@ -304,11 +300,7 @@ export default function ScheduleDetail({ id }: Readonly<ScheduleDetailProps>) {
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleting}
-            >
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
               {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
             </Button>

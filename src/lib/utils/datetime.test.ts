@@ -3,16 +3,15 @@
  * Run with: npm test -- datetime.test.ts
  */
 
-import { 
-  formatUtcToLocal, 
-  parseUtcDate, 
+import {
+  formatUtcToLocal,
+  parseUtcDate,
   safeFormatRelativeTime,
   createUtcDateTimeString,
-  validateUtcFormat
+  validateUtcFormat,
 } from './datetime'
 
 describe('DateTime Utilities', () => {
-  
   describe('parseUtcDate', () => {
     it('should parse valid UTC dates', () => {
       const validUtcDate = '2025-08-17T10:30:00.000Z'
@@ -53,7 +52,7 @@ describe('DateTime Utilities', () => {
     it('should use custom formatting options', () => {
       const result = formatUtcToLocal(testUtcDate, {
         dateStyle: 'short',
-        timeStyle: 'short'
+        timeStyle: 'short',
       })
       expect(result).toBeTruthy()
     })
@@ -69,7 +68,9 @@ describe('DateTime Utilities', () => {
 
     it('should return fallback for invalid dates', () => {
       expect(safeFormatRelativeTime(null)).toBe('Date pending')
-      expect(safeFormatRelativeTime('invalid', { fallback: 'Custom fallback' })).toBe('Custom fallback')
+      expect(safeFormatRelativeTime('invalid', { fallback: 'Custom fallback' })).toBe(
+        'Custom fallback',
+      )
     })
 
     it('should handle past dates', () => {
@@ -85,7 +86,7 @@ describe('DateTime Utilities', () => {
       const testDate = new Date('2025-08-17')
       const timeString = '17:30'
       const result = createUtcDateTimeString(testDate, timeString)
-      
+
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
 
@@ -93,7 +94,7 @@ describe('DateTime Utilities', () => {
       const testDate = new Date('2025-08-17')
       const timeString = '5:30 PM'
       const result = createUtcDateTimeString(testDate, timeString)
-      
+
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
 
@@ -114,8 +115,6 @@ describe('DateTime Utilities', () => {
       expect(validateUtcFormat('2025-08-17 10:30:00')).toBe(false)
     })
   })
-
-
 })
 
 // Essential error handling tests

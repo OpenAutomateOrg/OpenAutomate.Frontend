@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { LanguageSwitcher } from '@/components/layout/language-switcher'
+import { LanguageSwitcher } from '@/components/layout/language-switcher/language-switcher'
 
 import { useSidebar } from '@/components/ui/sidebar'
 
@@ -23,7 +23,7 @@ export function SiteHeader() {
         <Link className="font-bold text-xl text-orange-600" href="">
           OpenAutomate
         </Link>
-        <div className="w-full flex items-center justify-end sm:ml-auto sm:w-auto">
+        <div className="flex items-center gap-2 ml-auto">
           <LanguageSwitcher />
           <ThemeToggle />
         </div>

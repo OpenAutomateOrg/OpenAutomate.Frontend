@@ -258,69 +258,69 @@ export default function PackageDetail() {
   )
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <Card className="border rounded-md shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+      <CardHeader className="flex flex-row items-center justify-between border-b py-2">
+        <div className="flex items-center gap-4">
+          <Button size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{packageData.name}</h1>
-            <p className="text-muted-foreground">{packageData.description}</p>
-          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant={packageData.isActive ? 'default' : 'secondary'}>
-            {packageData.isActive ? 'Active' : 'Inactive'}
-          </Badge>
+        <div className="flex items-center gap-4">
           <Button variant="destructive" onClick={handleDeletePackage}>
             <Trash2 className="h-4 w-4 mr-2" />
             Delete Package
           </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
         {/* Package Info */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Package className="h-5 w-5 mr-2" />
-                Package Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <p className="text-sm text-muted-foreground">{packageData.name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Description</label>
-                <p className="text-sm text-muted-foreground">{packageData.description}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Created</label>
-                <p className="text-sm text-muted-foreground flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(packageData.createdAt)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Total Versions</label>
-                <p className="text-sm text-muted-foreground">{packageData.versions.length}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Status</label>
-                <Badge variant={packageData.isActive ? 'default' : 'secondary'}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 mr-2" />
+              Package Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <p className="text-sm text-muted-foreground">{packageData.name}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <p className="text-sm text-muted-foreground">{packageData.description}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Created</label>
+              <p className="text-sm text-muted-foreground flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                {formatDate(packageData.createdAt)}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Total Versions</label>
+              <p className="text-sm text-muted-foreground">{packageData.versions.length}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={packageData.isActive ? 'default' : 'secondary'}
+                  className={
+                    packageData.isActive
+                      ? 'bg-green-100 text-green-800 border-green-300'
+                      : 'bg-gray-100 text-gray-600 border-gray-300'
+                  }
+                >
                   {packageData.isActive ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Versions List */}
         <div className="lg:col-span-2">
@@ -349,13 +349,13 @@ export default function PackageDetail() {
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-4">
                           <div className="flex flex-col">
+                            <p className="text-sm text-muted-foreground mt-1">{version.fileName}</p>
                             <div className="flex items-center space-x-2">
                               <Badge variant={index === 0 ? 'default' : 'secondary'}>
                                 v{version.versionNumber}
                               </Badge>
                               {index === 0 && <Badge variant="outline">Latest</Badge>}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">{version.fileName}</p>
                           </div>
                         </div>
 
@@ -469,7 +469,9 @@ export default function PackageDetail() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label htmlFor="upload-version-input" className="block mb-1 font-medium">Version Number</label>
+              <label htmlFor="upload-version-input" className="block mb-1 font-medium">
+                Version Number
+              </label>
               <Input
                 id="upload-version-input"
                 value={uploadVersion}
@@ -497,6 +499,6 @@ export default function PackageDetail() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   )
 }

@@ -318,26 +318,20 @@ export default function OrganizationUnitProfile() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h2 className="text-lg font-bold">Organization Unit Information</h2>
-              <div className="text-sm text-muted-foreground">Details of your organization unit</div>
             </div>
             {!isEditing && !showDeletionStatus && (
               <div className="flex gap-2 ml-auto">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 border-gray-300 hover:border-[#FF6A1A] hover:bg-[#FFF3EC] rounded-lg font-medium"
+                  className="flex items-center gap-2 "
                   onClick={handleEdit}
                 >
                   <Pencil className="h-4 w-4" />
                   Edit
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 border-red-300 hover:border-red-500 hover:bg-red-50 rounded-lg font-medium text-red-600 hover:text-red-600"
-                  onClick={handleDelete}
-                >
-                  <Trash className="h-4 w-4 text-red-600" />
+                <Button variant="destructive" size="sm" onClick={handleDelete}>
+                  <Trash className="h-4 w-4" />
                   Delete
                 </Button>
               </div>

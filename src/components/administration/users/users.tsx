@@ -1,8 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { columns } from './columns'
 
 import { DataTable } from '@/components/layout/table/data-table'
@@ -15,10 +23,12 @@ import {
   getOrganizationUnitUsersWithOData,
   organizationUnitUserApi,
   AuthorityDto,
+  deleteOrganizationUnitUser,
 } from '@/lib/api/organization-unit-user'
 import { UsersDataTableToolbar } from './data-table-toolbar'
 import DataTableRowAction from './data-table-row-actions'
 import { Pagination } from '@/components/ui/pagination'
+import { useToast } from '@/components/ui/use-toast'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import useSWR from 'swr'
 
@@ -56,7 +66,9 @@ export default function UsersInterface() {
   const [searchRole, setSearchRole] = useState<string>('ALL')
 
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [tab, setTab] = useState<'user' | 'invitation'>('user')
+  const [rowSelection, setRowSelection] = useState({})
 
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(10)
@@ -71,6 +83,8 @@ export default function UsersInterface() {
   const debouncedLastName = useDebounce(searchLastName, 400)
 
   const tenant = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : ''
+  const { toast } = useToast()
+
   const { data: allRoles } = useSWR<AuthorityDto[]>(tenant ? `ou-roles-${tenant}` : null, () =>
     organizationUnitUserApi.getRolesInOrganizationUnit(tenant),
   )
@@ -193,10 +207,86 @@ export default function UsersInterface() {
       : col,
   )
 
+  // Delete handlers
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    const selectedUserIds = Object.keys(rowSelection)
+
+    if (selectedUserIds.length === 0) {
+      return
+    }
+
+    try {
+      // Delete all selected users
+      await Promise.all(selectedUserIds.map((id) => deleteOrganizationUnitUser(id)))
+
+      // Show success toast
+      toast({
+        title: 'Users Deleted',
+        description: `Successfully deleted ${selectedUserIds.length} user(s).`,
+        duration: 3000,
+      })
+
+      // Clear selection and close dialog
+      setRowSelection({})
+      setDeleteDialogOpen(false)
+
+      // Refresh data
+      await mutate()
+    } catch (error) {
+      console.error('Failed to delete users:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete users. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-full w-full space-y-8">
       {/* Tabs */}
       <div className="mb-4 border-b w-full">
+        <div className="flex justify-between items-center w-full flex-wrap gap-2">
+          {tab === 'user' && (
+            <>
+              <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => setInviteOpen(true)}
+                  className="flex items-center justify-center"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteClick}
+                  className="flex items-center justify-center"
+                  disabled={Object.keys(rowSelection).length === 0}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected
+                </Button>
+              </div>
+            </>
+          )}
+          {tab === 'invitation' && (
+            <>
+              <h2 className="text-2xl font-bold tracking-tight">Invitations</h2>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => setInviteOpen(true)}
+                  className="flex items-center justify-center"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
         <nav className="flex space-x-8" aria-label="Tabs">
           <button
             className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -218,66 +308,73 @@ export default function UsersInterface() {
       </div>
 
       {tab === 'user' && (
-        <>
-          <div className="flex justify-between items-center w-full flex-wrap gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">Users</h2>
-            <div className="flex items-center space-x-2">
-              <Button
-                onClick={() => setInviteOpen(true)}
-                className="flex items-center justify-center"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" /> Invite User
+        <div className="flex flex-col gap-4 w-full">
+          <UsersDataTableToolbar
+            searchEmail={searchEmail}
+            setSearchEmail={setSearchEmail}
+            searchFirstName={searchFirstName}
+            setSearchFirstName={setSearchFirstName}
+            searchLastName={searchLastName}
+            setSearchLastName={setSearchLastName}
+            searchRole={searchRole}
+            setSearchRole={setSearchRole}
+            roleOptions={roleOptions}
+            loading={isLoading}
+            onReset={() => {
+              setSearchEmail('')
+              setSearchFirstName('')
+              setSearchLastName('')
+              setSearchRole('ALL')
+            }}
+          />
+          <DataTable
+            columns={columnsWithAction}
+            data={users.map(mapOrganizationUnitUserToUsersRow)}
+            isLoading={isLoading}
+            totalCount={totalCount}
+          />
+          <Pagination
+            currentPage={pageIndex + 1}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            totalPages={totalPages}
+            isUnknownTotalCount={isUnknownTotalCount}
+            onPageChange={(page) => setPageIndex(page - 1)}
+            onPageSizeChange={setPageSize}
+          />
+          {localError && (
+            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+              <p className="text-red-800 dark:text-red-300">{localError}</p>
+              <Button variant="outline" className="mt-2" onClick={() => mutate()}>
+                Retry
               </Button>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-4 w-full">
-            <UsersDataTableToolbar
-              searchEmail={searchEmail}
-              setSearchEmail={setSearchEmail}
-              searchFirstName={searchFirstName}
-              setSearchFirstName={setSearchFirstName}
-              searchLastName={searchLastName}
-              setSearchLastName={setSearchLastName}
-              searchRole={searchRole}
-              setSearchRole={setSearchRole}
-              roleOptions={roleOptions}
-              loading={isLoading}
-              onReset={() => {
-                setSearchEmail('')
-                setSearchFirstName('')
-                setSearchLastName('')
-                setSearchRole('ALL')
-              }}
-            />
-            <DataTable
-              columns={columnsWithAction}
-              data={users.map(mapOrganizationUnitUserToUsersRow)}
-              isLoading={isLoading}
-              totalCount={totalCount}
-            />
-            <Pagination
-              currentPage={pageIndex + 1}
-              pageSize={pageSize}
-              totalCount={totalCount}
-              totalPages={totalPages}
-              isUnknownTotalCount={isUnknownTotalCount}
-              onPageChange={(page) => setPageIndex(page - 1)}
-              onPageSizeChange={setPageSize}
-            />
-            {localError && (
-              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800">
-                <p className="text-red-800 dark:text-red-300">{localError}</p>
-                <Button variant="outline" className="mt-2" onClick={() => mutate()}>
-                  Retry
-                </Button>
-              </div>
-            )}
-            <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
-          </div>
-        </>
+          )}
+          <InviteModal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
+        </div>
       )}
       {tab === 'invitation' && <InvitationsList />}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Users</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {Object.keys(rowSelection).length} selected user(s)?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

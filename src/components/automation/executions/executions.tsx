@@ -4,7 +4,6 @@ import { PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreateColumns as createHistoricalColumns } from './historical/columns'
 import { createInProgressColumns } from './inProgress/columns'
-import { columns as ScheduledColumns } from './scheduled/columns'
 import { DataTable } from '@/components/layout/table/data-table'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import CreateExecutionModal from './create-execution-modal'
@@ -13,7 +12,6 @@ import { z } from 'zod'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { DataTableToolbar as HistoricalToolbar } from './historical/data-table-toolbar'
 import { DataTableToolbar as ProgressToolbar } from './inProgress/data-table-toolbar'
-import { DataTableToolbar as ScheduledToolbar } from './scheduled/data-table-toolbar'
 import { useToast } from '@/components/ui/use-toast'
 import {
   getExecutionsWithOData,
@@ -87,7 +85,7 @@ export default function ExecutionsInterface() {
 
   // UI State management
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [tab, setTab] = useState<'inprogress' | 'scheduled' | 'historical'>('inprogress')
+  const [tab, setTab] = useState<'inprogress' | 'historical'>('inprogress')
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -258,9 +256,6 @@ export default function ExecutionsInterface() {
       case 'inprogress':
         tabFilter = "Status eq 'Queued' or Status eq 'Starting' or Status eq 'Running'"
         break
-      case 'scheduled':
-        tabFilter = "Status eq 'Scheduled'"
-        break
       case 'historical':
         tabFilter = "Status eq 'Completed' or Status eq 'Failed' or Status eq 'Cancelled'"
         break
@@ -408,8 +403,6 @@ export default function ExecutionsInterface() {
     return data.filter((row) => {
       if (currentTab === 'inprogress') {
         return row.state === 'Running' || row.state === 'Pending'
-      } else if (currentTab === 'scheduled') {
-        return row.state === 'Scheduled'
       } else if (currentTab === 'historical') {
         return row.state === 'Completed' || row.state === 'Failed' || row.state === 'Cancelled'
       }
@@ -625,8 +618,6 @@ export default function ExecutionsInterface() {
             execution.status === 'Starting' ||
             execution.status === 'Running'
           )
-        } else if (tab === 'scheduled') {
-          return execution.status === 'Scheduled'
         } else if (tab === 'historical') {
           return (
             execution.status === 'Completed' ||
@@ -749,8 +740,6 @@ export default function ExecutionsInterface() {
   let columns
   if (tab === 'inprogress') {
     columns = ProgressColumns
-  } else if (tab === 'scheduled') {
-    columns = ScheduledColumns
   } else {
     columns = HistoricalColumns
   }
@@ -831,7 +820,7 @@ export default function ExecutionsInterface() {
 
       searchDebounceTimeout.current = setTimeout(() => {
         // Use the same column for all tabs - we're searching by Agent name only
-        const searchColumn = tab === 'scheduled' ? 'packageName' : 'agent'
+        const searchColumn = 'agent'
         const column = table.getColumn(searchColumn)
 
         if (column) {
@@ -848,7 +837,7 @@ export default function ExecutionsInterface() {
         setIsPending(false)
       }, 500)
     },
-    [table, updateUrl, pathname, tab],
+    [table, updateUrl, pathname],
   )
 
   // Handle status filter change
@@ -981,14 +970,12 @@ export default function ExecutionsInterface() {
       route = `${baseRoute}/historical/${row.id}`
     } else if (tab === 'inprogress') {
       route = `${baseRoute}/inprogress/${row.id}`
-    } else if (tab === 'scheduled') {
-      route = `${baseRoute}/scheduled/${row.id}`
     }
 
     router.push(route)
   }
 
-  const handleTabChange = (newTab: 'inprogress' | 'scheduled' | 'historical') => {
+  const handleTabChange = (newTab: 'inprogress' | 'historical') => {
     setTab(newTab)
     // Reset pagination to first page when tab changes
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
@@ -1020,6 +1007,18 @@ export default function ExecutionsInterface() {
       <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
         {/* Tabs */}
         <div className="mb-4 border-b w-full">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold tracking-tight">{t('executions.title')}</h2>
+            <div />
+            {/* Only show Create Execution button for In Progress tab */}
+            {tab === 'inprogress' && (
+              <Button onClick={handleCreateClick} className="flex items-center justify-center">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {t('executions.createExecution')}
+              </Button>
+            )}
+          </div>
+
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
@@ -1031,14 +1030,6 @@ export default function ExecutionsInterface() {
             </button>
             <button
               className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
-              data-active={tab === 'scheduled'}
-              type="button"
-              onClick={() => handleTabChange('scheduled')}
-            >
-              {t('executions.tabs.scheduled')}
-            </button>
-            <button
-              className="px-3 py-2 font-medium text-sm border-b-2 border-transparent hover:border-primary hover:text-primary data-[active=true]:border-primary data-[active=true]:text-primary"
               data-active={tab === 'historical'}
               type="button"
               onClick={() => handleTabChange('historical')}
@@ -1046,19 +1037,6 @@ export default function ExecutionsInterface() {
               {t('executions.tabs.historical')}
             </button>
           </nav>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">{t('executions.title')}</h2>
-          <div className="flex items-center space-x-2">
-            {/* Only show Create Execution button for In Progress tab */}
-            {tab === 'inprogress' && (
-              <Button onClick={handleCreateClick} className="flex items-center justify-center">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {t('executions.createExecution')}
-              </Button>
-            )}
-          </div>
         </div>
 
         {executionsError && !fallbackExecutions && (
@@ -1097,27 +1075,9 @@ export default function ExecutionsInterface() {
             />
           </>
         )}
-        {tab === 'scheduled' && (
-          <>
-            <ScheduledToolbar
-              table={table}
-              statuses={[{ value: 'Scheduled', label: t('executions.status.scheduled') }]}
-              onSearch={handleSearch}
-              onStatusChange={handleStatusFilterChange}
-              searchValue={searchValue}
-              isFiltering={isDataLoading}
-              isPending={isPending}
-            />
-            <DataTable
-              data={executionsData}
-              columns={ScheduledColumns}
-              onRowClick={handleRowClick}
-              table={table}
-              isLoading={isDataLoading}
-              totalCount={totalCount}
-            />
-          </>
-        )}
+
+        
+
         {tab === 'historical' && (
           <>
             <HistoricalToolbar
