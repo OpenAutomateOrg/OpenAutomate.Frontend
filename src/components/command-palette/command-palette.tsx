@@ -137,7 +137,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       description: 'View help and documentation',
       icon: <FileText className="h-4 w-4" />,
       action: () => {
-        window.open('https://docs.openautomate.com', '_blank')
+        window.open('https://docs.openautomate.io', '_blank')
         onOpenChange(false)
       },
       category: 'Quick Actions',
