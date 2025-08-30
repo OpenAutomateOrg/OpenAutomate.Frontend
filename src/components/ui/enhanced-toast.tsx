@@ -20,7 +20,7 @@ const typeConfig = {
     icon: CheckCircle,
     variant: 'default' as const,
     className:
-      'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-100',
+      'border-green-200 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-800 dark:text-green-100',
     iconClassName: 'text-green-600 dark:text-green-400',
     titleClassName: 'text-green-800 dark:text-green-100',
     descriptionClassName: 'text-green-700 dark:text-green-200',

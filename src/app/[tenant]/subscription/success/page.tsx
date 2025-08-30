@@ -22,6 +22,7 @@ export default function SubscriptionSuccessPage() {
         toast({
           title: 'Payment Successful!',
           description: 'Your subscription has been activated. Thank you for your purchase.',
+          variant: 'success',
         })
       } catch (error) {
         console.error('Error refreshing subscription:', error)
