@@ -161,7 +161,7 @@ export function PermissionMatrix({
       
       {/* Help Text */}
       <div className="text-xs text-muted-foreground">
-        <p>Select the permission level for each resource. Resources with "none" permission will not be included in the role.</p>
+        <p>Select the permission level for each resource. Resources with &quot;none&quot; permission will not be included in the role.</p>
       </div>
     </div>
   )
