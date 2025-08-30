@@ -6,6 +6,7 @@ export interface CreateAssetDto {
   description: string
   value: string
   type: number
+  isGlobal?: boolean
   botAgentIds: string[]
 }
 
@@ -13,6 +14,7 @@ export interface UpdateAssetDto {
   key: string
   description: string
   value: string
+  isGlobal: boolean
 }
 
 export interface AssetResponseDto {
@@ -20,6 +22,7 @@ export interface AssetResponseDto {
   key: string
   type: number | string // Allow both number and string type from API
   description: string
+  isGlobal: boolean
   createdBy: string
   createdAt?: string
   updatedAt?: string

@@ -8,6 +8,7 @@ export interface AssetResponseDto {
   value: string
   description: string
   isEncrypted: boolean
+  isGlobal: boolean
   type: AssetType
   createdAt: string
   lastModifiedAt?: string
@@ -19,6 +20,7 @@ export interface AssetListResponseDto {
   description: string
   type: AssetType
   isEncrypted: boolean
+  isGlobal: boolean
   createdAt: string
   lastModifiedAt?: string
   authorizedBotAgentsCount: number
@@ -29,6 +31,7 @@ export interface CreateAssetDto {
   value: string
   description: string
   type: AssetType
+  isGlobal?: boolean
   botAgentIds?: string[]
 }
 
@@ -36,6 +39,7 @@ export interface UpdateAssetDto {
   value: string
   description: string
   key: string
+  isGlobal: boolean
 }
 
 export interface AssetDetailDto {
@@ -44,6 +48,7 @@ export interface AssetDetailDto {
   value: string
   description: string
   isEncrypted: boolean
+  isGlobal: boolean
   type: AssetType
   createdAt: string
   lastModifiedAt?: string
@@ -86,4 +91,5 @@ export interface AssetCsvDto {
   value: string
   description: string
   type: string
+  isGlobal?: boolean
 }

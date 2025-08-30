@@ -53,7 +53,7 @@ export class NotificationManager {
     this.toastFunction({
       title: options?.title || 'Success',
       description: message,
-      variant: 'default',
+      variant: 'success',
       duration: options?.duration || 4000, // Shorter for success messages
       action: options?.action,
     })
@@ -75,7 +75,7 @@ export class NotificationManager {
     this.toastFunction({
       title: options?.title || 'Warning',
       description: message,
-      variant: 'default',
+      variant: 'warning',
       duration: options?.duration || 6000, // Medium duration for warnings
       action: options?.action,
     })

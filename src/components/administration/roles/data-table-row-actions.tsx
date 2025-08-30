@@ -111,6 +111,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       toast({
         title: 'Success',
         description: 'Role deleted successfully.',
+        variant: 'success',
       })
       if (onRefresh) onRefresh()
     } catch (err: unknown) {

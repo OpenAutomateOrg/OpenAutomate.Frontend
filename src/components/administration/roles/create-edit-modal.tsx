@@ -210,6 +210,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       toast({
         title: 'Success',
         description: 'Role updated successfully.',
+        variant: 'success',
       })
     } else {
       console.log('Creating role with data:', roleData)
@@ -217,6 +218,7 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       toast({
         title: 'Success',
         description: 'Role created successfully.',
+        variant: 'success',
       })
     }
   }

@@ -61,6 +61,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
       toast({
         title: 'Success',
         description: 'Role deleted successfully.',
+        variant: 'success',
       })
       router.back()
     } catch (error) {
