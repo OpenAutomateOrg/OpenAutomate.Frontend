@@ -238,7 +238,6 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
       {/* Edit Modal */}
       <CreateEditModal
-        key={role.id} // ✅ Dynamic key to reset component state
         isOpen={isEditModalOpen}
         onClose={handleModalClose}
         editingRole={{
