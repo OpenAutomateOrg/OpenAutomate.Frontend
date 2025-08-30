@@ -385,7 +385,6 @@ export default function RolesInterface() {
       </div>
 
       <CreateEditModal
-        key={editingRole?.id ?? 'new'} // Dynamic key to reset component state
         isOpen={isModalOpen}
         onClose={(shouldReload) => {
           setIsModalOpen(false)

@@ -12,27 +12,17 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Trash2 } from 'lucide-react'
+
 import { useToast } from '@/components/ui/use-toast'
 import {
   rolesApi,
-  PermissionLevels,
-  getPermissionDescription,
-  isValidPermissionLevel,
   type CreateRoleDto,
   type UpdateRoleDto,
 } from '@/lib/api/roles'
 import useSWR from 'swr'
 import { swrKeys } from '@/lib/config/swr-config'
 import type { RolesRow } from './roles'
+import { PermissionMatrix } from './permission-matrix'
 
 interface CreateEditModalProps {
   isOpen: boolean
@@ -49,9 +39,7 @@ interface ResourcePermission {
 export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModalProps) {
   const { toast } = useToast()
 
-  // Resource selection state
-  const [selectedResource, setSelectedResource] = useState('')
-  const [selectedPermission, setSelectedPermission] = useState('')
+  // Form state
   const [isLoading, setIsLoading] = useState(false)
 
   // ✅ SWR for available resources - following guideline #8: use framework-level loaders
@@ -104,54 +92,12 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }, [editingRole, availableResources])
 
-  const handleAddResourcePermission = () => {
-    if (!selectedResource || !selectedPermission) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please select both a resource and permission level.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const permission = parseInt(selectedPermission)
-    if (!isValidPermissionLevel(permission)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Invalid permission level selected.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    // Check if resource already has permission
-    const existingIndex = resourcePermissions.findIndex((p) => p.resourceName === selectedResource)
-    const resource = availableResources?.find((r) => r.resourceName === selectedResource)
-
-    const newPermission: ResourcePermission = {
-      resourceName: selectedResource,
-      permission,
-      displayName: resource?.displayName ?? selectedResource,
-    }
-
-    if (existingIndex >= 0) {
-      // Update existing permission
-      const updated = [...resourcePermissions]
-      updated[existingIndex] = newPermission
-      setResourcePermissions(updated)
-    } else {
-      // Add new permission
-      setResourcePermissions([...resourcePermissions, newPermission])
-    }
-
-    // Reset selection
-    setSelectedResource('')
-    setSelectedPermission('')
+  // Handle permission changes from the matrix
+  const handlePermissionsChange = (newPermissions: ResourcePermission[]) => {
+    setResourcePermissions(newPermissions)
   }
 
-  const handleRemoveResourcePermission = (resourceName: string) => {
-    setResourcePermissions((prev) => prev.filter((p) => p.resourceName !== resourceName))
-  }
+
   // Helper function to validate form data
   const validateForm = (): string | null => {
     if (!roleName.trim()) {
@@ -210,7 +156,6 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       toast({
         title: 'Success',
         description: 'Role updated successfully.',
-        variant: 'success',
       })
     } else {
       console.log('Creating role with data:', roleData)
@@ -218,7 +163,6 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
       toast({
         title: 'Success',
         description: 'Role created successfully.',
-        variant: 'success',
       })
     }
   }
@@ -254,14 +198,16 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
     }
   }
 
-  const availableResourcesForSelection =
-    availableResources?.filter(
-      (resource) => !resourcePermissions.some((p) => p.resourceName === resource.resourceName),
-    ) ?? []
+  // Do not render the dialog at all when closed to guarantee overlay unmount
+  if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+    <Dialog modal={false} open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{editingRole ? 'Edit Role' : 'Create New Role'}</DialogTitle>
@@ -299,109 +245,12 @@ export function CreateEditModal({ isOpen, onClose, editingRole }: CreateEditModa
             </div>
 
             {/* Resource Permissions */}
-            <div className="grid gap-4">
-              <Label>Resource Permissions</Label>
-
-              {/* Add Resource Permission */}
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Select value={selectedResource} onValueChange={setSelectedResource}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select resource" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {loadingResources ? (
-                        <SelectItem value="loading" disabled>
-                          Loading...
-                        </SelectItem>
-                      ) : (
-                        availableResourcesForSelection.map((resource) => (
-                          <SelectItem key={resource.resourceName} value={resource.resourceName}>
-                            {resource.displayName}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Select value={selectedPermission} onValueChange={setSelectedPermission}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Permission level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={PermissionLevels.NO_ACCESS.toString()}>
-                        {getPermissionDescription(PermissionLevels.NO_ACCESS)}
-                      </SelectItem>
-                      <SelectItem value={PermissionLevels.VIEW.toString()}>
-                        {getPermissionDescription(PermissionLevels.VIEW)}
-                      </SelectItem>{' '}
-                      <SelectItem value={PermissionLevels.CREATE.toString()}>
-                        {getPermissionDescription(PermissionLevels.CREATE)}
-                      </SelectItem>
-                      <SelectItem value={PermissionLevels.UPDATE.toString()}>
-                        {getPermissionDescription(PermissionLevels.UPDATE)}
-                      </SelectItem>
-                      <SelectItem value={PermissionLevels.DELETE.toString()}>
-                        {getPermissionDescription(PermissionLevels.DELETE)}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleAddResourcePermission}
-                  disabled={!selectedResource || !selectedPermission}
-                  variant="outline"
-                >
-                  Add Permission
-                </Button>
-              </div>
-
-              {/* Current Resource Permissions */}
-              <div className="space-y-2">
-                {loadingResources && editingRole ? (
-                  <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg border-dashed">
-                    Loading existing permissions...
-                  </div>
-                ) : resourcePermissions.length > 0 ? (
-                  <div className="grid gap-2">
-                    <div className="text-sm font-medium">
-                      {editingRole ? 'Current Permissions:' : 'Assigned Permissions:'}
-                    </div>
-                    {resourcePermissions.map((perm) => (
-                      <div
-                        key={perm.resourceName}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="font-medium">{perm.displayName}</span>
-                          <Badge variant="outline">
-                            {getPermissionDescription(perm.permission)}
-                          </Badge>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveResourcePermission(perm.resourceName)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg border-dashed">
-                    No permissions assigned. Add permissions above to define what this role can
-                    access.
-                  </div>
-                )}
-              </div>
-            </div>
+            <PermissionMatrix
+              availableResources={availableResources ?? []}
+              currentPermissions={resourcePermissions}
+              onPermissionsChange={handlePermissionsChange}
+              isLoading={loadingResources}
+            />
           </div>
 
           <DialogFooter>

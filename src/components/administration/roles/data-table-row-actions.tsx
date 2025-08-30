@@ -48,7 +48,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
       })
       return
     }
-    setShowEdit(true)
+    // Defer opening the modal to the next tick to allow dropdown to fully close
+    setTimeout(() => setShowEdit(true), 0)
   }
 
   const handleDelete = (e?: React.MouseEvent) => {
@@ -131,7 +132,7 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
             <MoreHorizontal className="h-4 w-4" />
@@ -142,6 +143,8 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
           align="start"
           className="w-[160px]"
           onClick={(e) => e.stopPropagation()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          sideOffset={5}
         >
           <DropdownMenuItem
             onClick={handleEdit}
@@ -165,7 +168,6 @@ export default function DataTableRowAction({ row, onRefresh }: DataTableRowActio
 
       {/* Edit Modal */}
       <CreateEditModal
-        key={row.original.id} // Dynamic key to reset component state
         isOpen={showEdit}
         onClose={(shouldReload) => {
           setShowEdit(false)
