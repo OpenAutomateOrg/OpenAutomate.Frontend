@@ -52,6 +52,7 @@ export const assetSchema = z.object({
   key: z.string(),
   type: z.union([z.number(), z.string()]), // Allow both number and string
   description: z.string(),
+  isGlobal: z.boolean(),
   createdBy: z.string(),
 })
 
@@ -180,6 +181,7 @@ export default function AssetInterface() {
       key: asset.key,
       type: asset.type, // Keep the original type value from API (can be string or number)
       description: asset.description,
+      isGlobal: asset.isGlobal,
       createdBy: asset.createdBy,
     }))
 
@@ -487,6 +489,7 @@ export default function AssetInterface() {
       toast({
         title: 'Assets Deleted',
         description: `Successfully deleted ${selectedAssetIds.length} asset(s).`,
+        variant: 'success',
         duration: 3000,
       })
 
@@ -525,6 +528,7 @@ export default function AssetInterface() {
                 toast({
                   title: 'Import Completed',
                   description: `${result.successfulImports} assets imported successfully`,
+                  variant: 'success',
                 })
               }}
             />

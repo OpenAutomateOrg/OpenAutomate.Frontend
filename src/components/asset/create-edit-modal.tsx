@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -58,6 +59,7 @@ export function CreateEditModal({
   const [key, setKey] = useState('')
   const [type, setType] = useState<number>(0)
   const [description, setDescription] = useState('')
+  const [isGlobal, setIsGlobal] = useState<boolean>(true)
   const [submitting, setSubmitting] = useState(false)
   const params = useParams()
   const tenant = params.tenant || ''
@@ -107,6 +109,7 @@ export function CreateEditModal({
 
     setValue(asset.value ?? '')
     setDescription(asset.description || '')
+    setIsGlobal(asset.isGlobal ?? true)
     setAddedAgents(asset.agents?.filter((agent: Agent) => agent?.id && agent?.name) ?? [])
     setTimeout(() => {
       ;[keyInputRef, valueInputRef, descInputRef].forEach((ref) => {
@@ -183,10 +186,10 @@ export function CreateEditModal({
 
   const submitAsset = async (agentIds: string[]) => {
     if (isEditing && asset?.id) {
-      await updateAsset(asset.id, { key, description, value }, agentIds)
+      await updateAsset(asset.id, { key, description, value, isGlobal }, agentIds)
       notify.handleSuccess('updated', `Asset "${key}"`)
     } else {
-      await createAsset({ key, description, value, type: Number(type), botAgentIds: agentIds })
+      await createAsset({ key, description, value, type: Number(type), isGlobal, botAgentIds: agentIds })
       notify.handleSuccess('created', `Asset "${key}"`)
     }
   }
@@ -217,6 +220,7 @@ export function CreateEditModal({
     setKey('')
     setType(0)
     setDescription('')
+    setIsGlobal(true)
     setSelectedAgentId('')
     setAddedAgents([])
     setKeyError(null)
@@ -390,6 +394,27 @@ export function CreateEditModal({
               )}
             </div>
           </form>
+
+          {/* Global Asset Toggle */}
+          <div className="mt-6 p-4 border rounded-lg bg-muted/50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="isGlobal" className="text-sm font-medium">
+                  Global Asset
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  When enabled, this asset is accessible by all agents in this organization unit.
+                  When disabled, only explicitly authorized agents can access this asset.
+                </p>
+              </div>
+              <Switch
+                id="isGlobal"
+                checked={isGlobal}
+                onCheckedChange={setIsGlobal}
+              />
+            </div>
+          </div>
+
           <div className="mt-6">
             <Label htmlFor="agent" className="text-sm font-medium flex items-center gap-1">
               <User className="w-4 h-4 text-muted-foreground" />

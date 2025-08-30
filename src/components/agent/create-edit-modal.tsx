@@ -102,6 +102,7 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
       toast({
         title: 'Success',
         description: 'Agent updated successfully',
+        variant: 'success',
       })
       return updated
     } else {
@@ -109,6 +110,7 @@ export function CreateEditModal({ isOpen, onClose, mode, agent, onSuccess }: Ite
       toast({
         title: 'Success',
         description: 'Agent created successfully',
+        variant: 'success',
       })
       return created
     }

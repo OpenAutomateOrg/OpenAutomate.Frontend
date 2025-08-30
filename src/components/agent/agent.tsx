@@ -516,6 +516,7 @@ export default function AgentInterface() {
       toast({
         title: 'Agents Deleted',
         description: `Successfully deleted ${selectedAgentIds.length} agent(s).`,
+        variant: 'success',
         duration: 3000,
       })
 
