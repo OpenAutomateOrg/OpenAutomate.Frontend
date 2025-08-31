@@ -303,8 +303,8 @@ function DatePicker({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <Button
-        variant="outline"
-        className="w-full justify-between font-normal"
+        variant="outlineCommon"
+        className="w-full justify-between"
         onClick={() => setIsOpen(!isOpen)}
         type="button"
       >

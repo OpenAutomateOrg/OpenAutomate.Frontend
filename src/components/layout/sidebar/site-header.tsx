@@ -33,7 +33,7 @@ export function SiteHeader() {
         {/* Command Palette Search Bar */}
         <div className="w-104">
           <Button
-            variant="outline"
+            variant="outlineCommon"
             className="w-full justify-start text-sm text-muted-foreground h-8 px-3"
             onClick={openPalette}
           >

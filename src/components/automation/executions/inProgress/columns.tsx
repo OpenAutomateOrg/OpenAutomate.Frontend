@@ -8,7 +8,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import type { ExecutionsRow } from '../executions'
 import { DataTableColumnHeader } from '@/components/layout/table/data-table-column-header'
 import ExecutionStatusBadge from '../execution-status-badge'
-import DataTableRowAction from './data-table-row-actions'
 import { formatUtcToLocal } from '@/lib/utils/datetime'
 
 interface CreateInProgressColumnsProps {
@@ -16,7 +15,6 @@ interface CreateInProgressColumnsProps {
 }
 
 export const createInProgressColumns = ({
-  onDeleted,
 }: CreateInProgressColumnsProps = {}): ColumnDef<ExecutionsRow>[] => [
   {
     id: 'select',
@@ -53,13 +51,6 @@ export const createInProgressColumns = ({
         </span>
       )
     },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    id: 'actions',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-    cell: ({ row }) => <DataTableRowAction execution={row.original} onDeleted={onDeleted} />,
     enableSorting: false,
     enableHiding: false,
   },
