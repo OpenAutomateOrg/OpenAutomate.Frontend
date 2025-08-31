@@ -105,7 +105,7 @@ export function Pagination({
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            variant="outline"
+            variant="outlineCommon"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => goToPage(1)}
             disabled={!canPreviousPage || isLoading}
@@ -114,7 +114,7 @@ export function Pagination({
             <ChevronsLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlineCommon"
             className="h-8 w-8 p-0"
             onClick={() => changePage(-1)}
             disabled={!canPreviousPage || isLoading}
@@ -123,7 +123,7 @@ export function Pagination({
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlineCommon"
             className="h-8 w-8 p-0"
             onClick={() => changePage(1)}
             disabled={!canNextPage || isLoading}
@@ -132,7 +132,7 @@ export function Pagination({
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlineCommon"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => goToPage(displayedTotalPages)}
             disabled={!canNextPage || isLoading}
