@@ -569,15 +569,16 @@ export default function AgentInterface() {
               <PlusCircle className="mr-2 h-4 w-4" />
               Create
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteClick}
-              className="flex items-center justify-center"
-              disabled={Object.keys(rowSelection).length === 0}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Selected
-            </Button>
+            {Object.keys(rowSelection).length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleDeleteClick}
+                className="flex items-center justify-center"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            )}
           </div>
         </div>
 
