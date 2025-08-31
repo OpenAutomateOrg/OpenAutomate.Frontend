@@ -173,9 +173,9 @@ export function DataTable<TData, TValue>({
                     {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {
                       let cellClass = 'px-2 sm:px-4 whitespace-nowrap'
                       if (cell.column.id === 'select') {
-                        cellClass = 'w-12 min-w-[48px] max-w-[48px] px-1 sm:px-2'
+                        cellClass = 'w-12 min-w-[48px] max-w-[48px] px-1 sm:px-4'
                       } else if (cell.column.id === 'actions') {
-                        cellClass = 'w-16 min-w-[60px] max-w-[60px] px-1 sm:px-2'
+                        cellClass = 'w-16 min-w-[60px] max-w-[60px] px-1 sm:px-4'
                       }
                       return (
                         <TableCell
