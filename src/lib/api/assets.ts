@@ -285,7 +285,7 @@ export const deleteAsset = async (id: string): Promise<void> => {
  */
 export const bulkDeleteAssets = async (ids: string[]): Promise<void> => {
   const tenant = getCurrentTenant()
-  await api.post(`${tenant}/api/bulk-delete/assets`, { ids })
+  await api.deleteWithData(`${tenant}/api/bulk-delete/assets`, { ids })
 }
 
 /**
