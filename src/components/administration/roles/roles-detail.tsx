@@ -53,6 +53,11 @@ export default function RolesDetail({ id }: RolesDetailProps) {
     setIsEditModalOpen(true)
   }
 
+  // Check if role should be read-only based on role name
+  const isReadOnlyRole = Boolean(
+    role?.name && ['DEVELOPER', 'OWNER', 'USER'].includes(role.name.toUpperCase()),
+  )
+
   const handleDelete = async () => {
     if (!role) return
 
@@ -162,7 +167,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
           {!role.isSystemAuthority && (
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleEdit}>
+              <Button variant="outline" size="sm" onClick={handleEdit} disabled={isReadOnlyRole}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -224,7 +229,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
               ) : (
                 <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
                   <p>No permissions assigned to this role.</p>
-                  {!role.isSystemAuthority && (
+                  {!role.isSystemAuthority && !isReadOnlyRole && (
                     <Button variant="outline" onClick={handleEdit} className="mt-2">
                       Add Permissions
                     </Button>
