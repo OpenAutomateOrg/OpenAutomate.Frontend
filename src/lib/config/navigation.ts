@@ -224,7 +224,7 @@ export const secondaryNavItems: { title: string; url: string; icon: LucideIcon }
 ]
 
 /**
- * User management navigation items
+ * User management navigation items for regular users
  */
 export const createUserManagementItems = (createTenantUrl: (path: string) => string) => ({
   management: [
@@ -236,6 +236,23 @@ export const createUserManagementItems = (createTenantUrl: (path: string) => str
     {
       title: 'Notifications',
       url: '',
+      icon: Sparkles,
+    },
+  ],
+  logout: {
+    title: 'Log out',
+    url: '',
+  },
+})
+
+/**
+ * System admin user management navigation items
+ */
+export const createSystemAdminUserManagementItems = () => ({
+  management: [
+    {
+      title: 'Profile',
+      url: '/settings/profile',
       icon: Sparkles,
     },
   ],
