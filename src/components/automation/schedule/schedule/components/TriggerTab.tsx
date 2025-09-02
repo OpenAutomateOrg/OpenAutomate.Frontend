@@ -34,14 +34,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
     }
   }
 
-  const updateMonthSelection = (month: string, checked: boolean) => {
-    const currentMonths = recurrence.selectedMonths ?? []
-    if (checked) {
-      onUpdate({ selectedMonths: [...currentMonths, month] })
-    } else {
-      onUpdate({ selectedMonths: currentMonths.filter((m) => m !== month) })
-    }
-  }
+
 
   return (
     <div className="space-y-4">
@@ -62,7 +55,6 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
             <SelectItem value={RecurrenceType.Hourly}>Hourly</SelectItem>
             <SelectItem value={RecurrenceType.Daily}>Daily</SelectItem>
             <SelectItem value={RecurrenceType.Weekly}>Weekly</SelectItem>
-            <SelectItem value={RecurrenceType.Monthly}>Monthly</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -99,17 +91,7 @@ export function TriggerTab({ recurrence, onUpdate }: TriggerTabProps) {
         />
       )}
 
-      {recurrence.type === RecurrenceType.Monthly && (
-        <MonthlyConfiguration
-          recurrence={recurrence}
-          onUpdate={onUpdate}
-          updateMonthSelection={updateMonthSelection}
-          startDateOpen={startDateOpen}
-          setStartDateOpen={setStartDateOpen}
-          endDateOpen={endDateOpen}
-          setEndDateOpen={setEndDateOpen}
-        />
-      )}
+
 
       {(recurrence.type === RecurrenceType.Minutes ||
         recurrence.type === RecurrenceType.Hourly) && (
@@ -198,43 +180,7 @@ function WeeklyConfiguration({ recurrence, onUpdate, updateDaySelection }: Confi
   )
 }
 
-function MonthlyConfiguration({ recurrence, onUpdate, updateMonthSelection }: ConfigurationProps) {
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ]
-  const selectedMonths = recurrence.selectedMonths ?? []
 
-  return (
-    <div className="space-y-4">
-      <TimeSelector
-        label="At:"
-        hour={recurrence.monthlyHour ?? '00'}
-        minute={recurrence.monthlyMinute ?? '00'}
-        onHourChange={(hour) => onUpdate({ monthlyHour: hour })}
-        onMinuteChange={(minute) => onUpdate({ monthlyMinute: minute })}
-      />
-
-      <MonthlyOptions recurrence={recurrence} onUpdate={onUpdate} />
-
-      <MonthSelector
-        months={months}
-        selectedMonths={selectedMonths}
-        onMonthToggle={updateMonthSelection!}
-      />
-    </div>
-  )
-}
 
 function RecurringConfiguration({ recurrence, onUpdate }: ConfigurationProps) {
   return (
@@ -406,124 +352,6 @@ function DaySelector({ days, selectedDays, onDayToggle }: DaySelectorProps) {
   )
 }
 
-interface MonthSelectorProps {
-  months: string[]
-  selectedMonths: string[]
-  onMonthToggle: (month: string, checked: boolean) => void
-}
 
-function MonthSelector({ months, selectedMonths, onMonthToggle }: MonthSelectorProps) {
-  return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-4">
-        {months.map((month) => (
-          <div key={month} className="flex items-center space-x-2">
-            <Checkbox
-              id={month}
-              checked={selectedMonths.includes(month)}
-              onCheckedChange={(checked) => onMonthToggle(month, !!checked)}
-            />
-            <label htmlFor={month} className="text-sm font-medium">
-              {month}
-            </label>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
-interface MonthlyOptionsProps {
-  recurrence: ScheduleFormData['recurrence']
-  onUpdate: (updates: Partial<ScheduleFormData['recurrence']>) => void
-}
 
-function MonthlyOptions({ recurrence, onUpdate }: MonthlyOptionsProps) {
-  return (
-    <div className="space-y-3">
-      <span className="text-sm font-medium">On:</span>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center space-x-2">
-            <input
-              type="radio"
-              id="day-option"
-              name="monthly-on"
-              checked={recurrence.monthlyOnType === 'day'}
-              onChange={() => onUpdate({ monthlyOnType: 'day' })}
-            />
-            <label htmlFor="day-option" className="text-sm font-medium">
-              Day
-            </label>
-          </div>
-          <Select
-            value={recurrence.selectedDay ?? '31'}
-            onValueChange={(value) => onUpdate({ selectedDay: value })}
-            disabled={recurrence.monthlyOnType !== 'day'}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Select day" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 31 }, (_, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                  {i + 1}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center space-x-2">
-            <input
-              type="radio"
-              id="the-option"
-              name="monthly-on"
-              checked={recurrence.monthlyOnType === 'the'}
-              onChange={() => onUpdate({ monthlyOnType: 'the' })}
-            />
-            <label htmlFor="the-option" className="text-sm font-medium">
-              The
-            </label>
-          </div>
-          <Select
-            value={recurrence.selectedOrdinal ?? '2nd'}
-            onValueChange={(value) => onUpdate({ selectedOrdinal: value })}
-            disabled={recurrence.monthlyOnType !== 'the'}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1st">1st</SelectItem>
-              <SelectItem value="2nd">2nd</SelectItem>
-              <SelectItem value="3rd">3rd</SelectItem>
-              <SelectItem value="4th">4th</SelectItem>
-              <SelectItem value="5th">5th</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={recurrence.selectedWeekday ?? 'Wednesday'}
-            onValueChange={(value) => onUpdate({ selectedWeekday: value })}
-            disabled={recurrence.monthlyOnType !== 'the'}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Monday">Monday</SelectItem>
-              <SelectItem value="Tuesday">Tuesday</SelectItem>
-              <SelectItem value="Wednesday">Wednesday</SelectItem>
-              <SelectItem value="Thursday">Thursday</SelectItem>
-              <SelectItem value="Friday">Friday</SelectItem>
-              <SelectItem value="Saturday">Saturday</SelectItem>
-              <SelectItem value="Sunday">Sunday</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  )
-}

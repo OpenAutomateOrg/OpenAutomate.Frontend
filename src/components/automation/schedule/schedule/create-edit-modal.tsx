@@ -58,13 +58,6 @@ export interface ScheduleFormData {
     weeklyHour?: string
     weeklyMinute?: string
     selectedDays?: string[]
-    monthlyHour?: string
-    monthlyMinute?: string
-    monthlyOnType?: 'day' | 'the'
-    selectedDay?: string
-    selectedOrdinal?: string
-    selectedWeekday?: string
-    selectedMonths?: string[]
     startDate?: Date
   }
 }
@@ -121,26 +114,7 @@ export function CreateEditModal({
         'Thursday',
         'Friday',
       ],
-      monthlyHour: editingSchedule?.recurrence?.monthlyHour ?? '09',
-      monthlyMinute: editingSchedule?.recurrence?.monthlyMinute ?? '00',
-      monthlyOnType: editingSchedule?.recurrence?.monthlyOnType ?? 'day',
-      selectedDay: editingSchedule?.recurrence?.selectedDay ?? '1',
-      selectedOrdinal: editingSchedule?.recurrence?.selectedOrdinal ?? '1st',
-      selectedWeekday: editingSchedule?.recurrence?.selectedWeekday ?? 'Monday',
-      selectedMonths: editingSchedule?.recurrence?.selectedMonths ?? [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ],
+
     },
   })
 
@@ -188,26 +162,7 @@ export function CreateEditModal({
             'Thursday',
             'Friday',
           ],
-          monthlyHour: rec.monthlyHour ?? '09',
-          monthlyMinute: rec.monthlyMinute ?? '00',
-          monthlyOnType: rec.monthlyOnType ?? 'day',
-          selectedDay: rec.selectedDay ?? '1',
-          selectedOrdinal: rec.selectedOrdinal ?? '1st',
-          selectedWeekday: rec.selectedWeekday ?? 'Monday',
-          selectedMonths: rec.selectedMonths ?? [
-            'January',
-            'February',
-            'March',
-            'April',
-            'May',
-            'June',
-            'July',
-            'August',
-            'September',
-            'October',
-            'November',
-            'December',
-          ],
+
         },
       })
     }
@@ -227,26 +182,6 @@ export function CreateEditModal({
           weeklyHour: '09',
           weeklyMinute: '00',
           selectedDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          monthlyHour: '09',
-          monthlyMinute: '00',
-          monthlyOnType: 'day',
-          selectedDay: '1',
-          selectedOrdinal: '1st',
-          selectedWeekday: 'Monday',
-          selectedMonths: [
-            'January',
-            'February',
-            'March',
-            'April',
-            'May',
-            'June',
-            'July',
-            'August',
-            'September',
-            'October',
-            'November',
-            'December',
-          ],
         },
       })
     }
@@ -323,11 +258,7 @@ export function CreateEditModal({
           cronExpression = `0 ${recurrence.weeklyMinute} ${recurrence.weeklyHour} * * ${days}`
         }
         break
-      case RecurrenceType.Monthly:
-        if (recurrence.monthlyOnType === 'day' && recurrence.selectedDay) {
-          cronExpression = `0 ${recurrence.monthlyMinute} ${recurrence.monthlyHour} ${recurrence.selectedDay} * *`
-        }
-        break
+
       case RecurrenceType.Hourly:
         cronExpression = `0 0 */${recurrence.value} * * *`
         break

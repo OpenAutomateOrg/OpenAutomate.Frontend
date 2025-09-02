@@ -49,7 +49,6 @@ const formatRecurrenceType = (type: RecurrenceType): string => {
     [RecurrenceType.Hourly]: 'Hourly',
     [RecurrenceType.Daily]: 'Daily',
     [RecurrenceType.Weekly]: 'Weekly',
-    [RecurrenceType.Monthly]: 'Monthly',
     [RecurrenceType.Advanced]: 'Advanced (Cron)',
   }
   return typeMap[type] || type
