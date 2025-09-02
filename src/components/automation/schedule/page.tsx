@@ -86,18 +86,7 @@ function parseWeeklyCron(cron: string) {
   return { weeklyHour: hour, weeklyMinute: minute, selectedDays: days }
 }
 
-function parseMonthlyCron(cron: string) {
-  const parts = cron.split(' ')
-  const minute = parts[1]
-  const hour = parts[2]
-  const day = parts[3]
-  return {
-    monthlyHour: hour,
-    monthlyMinute: minute,
-    monthlyOnType: 'day' as const,
-    selectedDay: day,
-  }
-}
+
 
 function parseHourlyCron(cron: string) {
   const parts = cron.split(' ')
@@ -127,8 +116,6 @@ function mapApiScheduleToEditingSchedule(apiSchedule: ScheduleResponseDto): Sche
       recurrence = { ...recurrence, ...parseDailyCron(apiSchedule.cronExpression) }
     } else if (recurrenceType === RecurrenceType.Weekly) {
       recurrence = { ...recurrence, ...parseWeeklyCron(apiSchedule.cronExpression) }
-    } else if (recurrenceType === RecurrenceType.Monthly) {
-      recurrence = { ...recurrence, ...parseMonthlyCron(apiSchedule.cronExpression) }
     } else if (recurrenceType === RecurrenceType.Hourly) {
       recurrence = { ...recurrence, ...parseHourlyCron(apiSchedule.cronExpression) }
     } else if (recurrenceType === RecurrenceType.Minutes) {

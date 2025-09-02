@@ -50,7 +50,6 @@ export enum RecurrenceType {
   Hourly = 'Hourly',
   Daily = 'Daily',
   Weekly = 'Weekly',
-  Monthly = 'Monthly',
   Advanced = 'Advanced',
 }
 
@@ -320,8 +319,6 @@ export const getRecurrenceTypeDisplayName = (type: RecurrenceType): string => {
       return 'Daily'
     case RecurrenceType.Weekly:
       return 'Weekly'
-    case RecurrenceType.Monthly:
-      return 'Monthly'
     case RecurrenceType.Advanced:
       return 'Custom (Cron)'
     default:
