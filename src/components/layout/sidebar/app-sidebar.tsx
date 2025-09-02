@@ -19,6 +19,7 @@ import {
   adminNavItems,
   secondaryNavItems,
   createUserManagementItems,
+  createSystemAdminUserManagementItems,
   createOrganizationData,
   filterNavigationByPermissions,
 } from '@/lib/config/navigation'
@@ -91,7 +92,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   /**
    * User navigation items for profile management
    */
-  const navUserItem = createUserManagementItems(createTenantUrl)
+  const navUserItem = isSystemAdmin
+    ? createSystemAdminUserManagementItems()
+    : createUserManagementItems(createTenantUrl)
   /**
    * Show loading state while navigation is being determined
    */
