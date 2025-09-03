@@ -55,7 +55,7 @@ export default function RolesDetail({ id }: RolesDetailProps) {
 
   // Check if role should be read-only based on role name
   const isReadOnlyRole = Boolean(
-    role?.name && ['DEVELOPER', 'OWNER', 'USER'].includes(role.name.toUpperCase()),
+    role?.name && ['DEVELOPER', 'OWNER', 'BUSINESS USER'].includes(role.name.toUpperCase()),
   )
 
   const handleDelete = async () => {
